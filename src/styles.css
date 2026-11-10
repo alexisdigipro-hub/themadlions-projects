@@ -9664,3 +9664,49 @@ html[data-theme][data-theme] body .settings-cols > section.set-chat > .roarme-pa
   html[data-theme] body .content > .office-hub:has(> :is(.rem-app, .office.office-frame)) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
   html[data-theme] body .office-hub > :is(.rem-app, .office.office-frame) { flex: 1 1 auto; height: auto; min-height: 0; }
 }
+
+/* Locked until paid (Alex, 10 Nov): a delivery whose files wait for the final payment. In the delivery window a glass
+   switch row, amber when on; in Share's list an amber "Awaiting payment" chip with its dot and the coin button lit;
+   on the client's page a kind word in a soft tile, the files by name with a padlock and no buttons
+   (the links never reach the page: share_get, supabase/delivery_lock.sql). */
+:root { --paylock: #e0a23a; }
+.paylock-switch { font: inherit; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px 10px 10px; border-radius: 18px; cursor: pointer; text-align: left; color: var(--text); background: color-mix(in srgb, var(--text) 5%, transparent); border: 1px solid var(--line-soft); transition: background .2s ease, border-color .2s ease, transform .12s ease; }
+.paylock-switch:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
+.paylock-switch:active { transform: scale(.99); }
+.paylock-ico { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); background: color-mix(in srgb, var(--text) 7%, transparent); border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); transition: color .2s ease, background .2s ease; }
+.paylock-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.paylock-text b { font-size: 14px; font-weight: 650; }
+.paylock-text small { font-size: 12px; color: var(--muted); }
+.paylock-track { flex: none; position: relative; width: 44px; height: 26px; border-radius: 999px; background: color-mix(in srgb, var(--text) 14%, transparent); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .25); transition: background .2s ease; }
+.paylock-track i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .3); transition: transform .22s cubic-bezier(.3, .7, .3, 1.2); }
+.paylock-switch.on { border-color: color-mix(in srgb, var(--paylock) 50%, transparent); background: color-mix(in srgb, var(--paylock) 10%, transparent); }
+.paylock-switch.on .paylock-ico { color: var(--paylock); background: color-mix(in srgb, var(--paylock) 16%, transparent); border-color: color-mix(in srgb, var(--paylock) 40%, transparent); }
+.paylock-switch.on .paylock-track { background: var(--paylock); }
+.paylock-switch.on .paylock-track i { transform: translateX(18px); }
+html body .modal.glass-form.glass-form .paylock-switch { color: #eef3fa; border-color: var(--gf-edge); background: rgba(255, 255, 255, .05); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05); }
+html body .modal.glass-form.glass-form .paylock-switch.on { border-color: color-mix(in srgb, var(--paylock) 55%, transparent); background: color-mix(in srgb, var(--paylock) 11%, rgba(255, 255, 255, .03)); }
+html body .modal.glass-form.glass-form .paylock-text small { color: rgba(214, 224, 238, .6); }
+
+/* the chip and the list's button: as high as the list's own tag rules so the amber is not painted over */
+html[data-theme] body .deliveries .deliv-row .deliv-tags .deliv-tag.t-paylock { display: inline-flex; align-items: center; gap: 6px; color: color-mix(in srgb, var(--paylock) 88%, var(--text)); background: color-mix(in srgb, var(--paylock) 16%, transparent); border: 0; font-weight: 600; }
+html[data-theme] body .deliveries .deliv-row .deliv-tags .deliv-tag.t-paylock::before { content: ''; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--paylock); }
+html[data-theme] body .deliveries .deliv-tools .deliv-tool.deliv-tool-pay.on { color: var(--paylock); border-color: color-mix(in srgb, var(--paylock) 45%, transparent); background: color-mix(in srgb, var(--paylock) 12%, transparent); }
+
+/* the client's page */
+.pub.dlv .dlv-paylock { box-sizing: border-box; width: 100%; max-width: 860px; margin: 30px auto 0; padding: 28px 28px 24px; border-radius: var(--est-r, 14px); background: var(--tile, rgba(255, 255, 255, .04)); text-align: center; }
+.pub.dlv .dlv-paylock-ico { width: 46px; height: 46px; margin: 0 auto 14px; border-radius: 50%; display: grid; place-items: center; color: var(--paylock); background: color-mix(in srgb, var(--paylock) 14%, transparent); border: 1px solid color-mix(in srgb, var(--paylock) 32%, transparent); }
+.pub.dlv .dlv-paylock-ico svg { width: 20px; height: 20px; }
+.pub.dlv .dlv-paylock h2 { margin: 0 0 10px; font-size: 22px; font-weight: 500; letter-spacing: -.01em; color: var(--text); text-transform: none; }
+.pub.dlv .dlv-paylock > p { max-width: 600px; margin: 0 auto; font-size: 15px; line-height: 1.7; color: color-mix(in srgb, var(--text) 76%, var(--bg)); text-wrap: pretty; }
+.pub.dlv.dlv-site .dlv-paylock .dlv-each.plain { max-width: none; margin-top: 22px; text-align: left; }
+.pub.dlv.dlv-site .dlv-paylock .dlv-each li { background: color-mix(in srgb, var(--text) 4%, transparent); }
+.pub.dlv.dlv-site .dlv-paylock .dlv-each li:hover { background: color-mix(in srgb, var(--text) 4%, transparent); }
+.pub.dlv.dlv-site .dlv-paylock .dlv-each li::before { background: var(--paylock); }
+.pub.dlv .dlv-each-lock { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--muted); border: 1px solid var(--line-soft); }
+.pub.dlv .dlv-each-lock svg { width: 15px; height: 15px; }
+@media (max-width: 520px) {
+  .pub.dlv .dlv-paylock { margin-top: 24px; padding: 22px 16px 18px; }
+  .pub.dlv .dlv-paylock h2 { font-size: 20px; }
+  .pub.dlv .dlv-paylock > p { font-size: 14.5px; }
+  .pub.dlv.dlv-site .dlv-paylock .dlv-each li { flex-wrap: nowrap; }
+}

@@ -170,14 +170,17 @@ export default function PublicDelivery() {
           {/* Final Deliverables' message to the client (Alex, 22 Oct), where the big button was */}
           {d.message && <p className="dlv-message" lang="el">{d.message}</p>}
 
+          {/* Locked until paid (Alex, 10 Nov): the database sent no download addresses at all (supabase/delivery_lock.sql),
+              so the files show by name only, under a kind word */}
+          {d.payLocked && <PayLocked files={d.files || []} thumbs={d.thumbs || []} />}
           {/* one file or a bare link: the big button here; several files (Alex, 12 Oct) get one button per file and
               Download all under them, as wide as the files' tiles (Alex, 22 Oct) */}
-          {!(d.files?.length > 1) && (d.files?.length === 1 ? (
+          {!d.payLocked && !(d.files?.length > 1) && (d.files?.length === 1 ? (
             <button type="button" className="dlv-btn" onClick={() => downloadFiles(d.files, d.link)}>{stageAction(d.stage)}</button>
           ) : (
             <a className="dlv-btn" href={safe(d.link)} target="_blank" rel="noreferrer">{stageAction(d.stage)}</a>
           ))}
-          {d.files?.length > 1 && (
+          {!d.payLocked && d.files?.length > 1 && (
             <ul className="plain dlv-each">
               {d.files.map((f) => (
                 <li key={f.url}>
@@ -196,23 +199,23 @@ export default function PublicDelivery() {
               ))}
             </ul>
           )}
-          {d.files?.length > 1 && (
+          {!d.payLocked && d.files?.length > 1 && (
             <button type="button" className="dlv-btn dlv-all" onClick={() => downloadFiles(d.files, d.link)}>Download all {d.files.length} files</button>
           )}
           {/* one file uploaded to pCloud: Save to Photos under the big button, on a phone */}
-          {!(d.files?.length > 1) && d.files?.length === 1 && (
+          {!d.payLocked && !(d.files?.length > 1) && d.files?.length === 1 && (
             <div className="dlv-one-photos"><SaveToPhotos file={d.files[0]} /></div>
           )}
           {/* one line with dots instead of three stacked greys */}
-          <p className="dlv-meta">
+          {!d.payLocked && <p className="dlv-meta">
             {[
               d.linkLabel,
               d.linkExpires ? `Until ${fmt(d.linkExpires)}` : '',
             ].filter(Boolean).map((t, i) => <span key={i}>{t}</span>)}
             {d.password && <span>Password <b className="dlv-pass">{d.password}</b></span>}
-          </p>
+          </p>}
           {/* thumbnails (Alex, 22 Oct): each shown as it is, with its own Download */}
-          {d.thumbs?.length > 0 && (
+          {!d.payLocked && d.thumbs?.length > 0 && (
             <div className="dlv-thumbs">
               <h2>{d.thumbs.length > 1 ? 'Thumbnails' : 'Thumbnail'}</h2>
               <ul className="dlv-thumb-grid">
@@ -273,6 +276,42 @@ export default function PublicDelivery() {
           {d.company?.footer && <p className="dlv-foot">{d.company.footer}</p>}
         </footer>
       </div>
+    </div>
+  )
+}
+
+const sizeOf = (n) => (n > 0 ? (n > 1e9 ? `${(n / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(n / 1e6))} MB`) : '')
+const LockIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="5" y="11" width="14" height="9" rx="2.5" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />
+  </svg>
+)
+
+/* The page of a delivery locked until paid (Alex, 10 Nov, his words): the files are ready and wait for the final
+   payment. Names and sizes only, no buttons: there is nothing here to download with. */
+function PayLocked({ files, thumbs }) {
+  const items = [
+    ...files.filter((f) => f.name).map((f) => ({ name: f.name, meta: sizeOf(f.size) })),
+    ...thumbs.filter((t) => t.name).map((t) => ({ name: t.name, meta: t.w && t.h ? `${t.w} × ${t.h}` : 'Thumbnail' })),
+  ]
+  return (
+    <div className="dlv-paylock" role="status">
+      <span className="dlv-paylock-ico"><LockIcon /></span>
+      <h2>Almost there</h2>
+      <p>Your files are ready and waiting for you. They will open as soon as the final payment is settled. Thank you so much for trusting us with this project, it truly means a lot. If the payment is already on its way, just let us know and we will open them right away.</p>
+      {items.length > 0 && (
+        <ul className="plain dlv-each dlv-each-locked" aria-label="Files waiting">
+          {items.map((f, i) => (
+            <li key={i}>
+              <span className="dlv-each-text">
+                <span className="dlv-each-name">{f.name}</span>
+                {f.meta && <span className="dlv-each-size">{f.meta}</span>}
+              </span>
+              <span className="dlv-each-lock" title="Opens once the payment is settled"><LockIcon /></span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

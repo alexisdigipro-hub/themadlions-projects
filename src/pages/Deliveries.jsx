@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { ACT_ICON, Act, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
-import { deliveryUrl, estimateUrl, getShareRow, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, tokenOf, deckUrl } from '../lib/shares.js'
+import { deliveryUrl, estimateUrl, getShareRow, listShares, payLockedView, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, tokenOf, deckUrl } from '../lib/shares.js'
 import { amount, estimateTotals } from '../lib/estimate.js'
 import { EstimateSheet } from './PublicEstimate.jsx'
 import EstimateLookEditor from '../components/EstimateLookEditor.jsx'
@@ -67,6 +67,8 @@ const emptyDelivery = () => ({
   message: '', // and its opening message
   creditsText: '', // and its credits, one "Role: Name" a line
   thumbs: [], // thumbnails the client can see and download: [{ name, path, url, dl, size, w, h }]
+  payLock: false, // Locked until paid (Alex, 10 Nov): the page opens, the files do not (shares.pay_locked, supabase/delivery_lock.sql)
+  wasLocked: false, // it was locked when opened, so publishing writes the lock off again even when the box is unticked
 })
 
 const emptyEstimate = () => ({
@@ -88,6 +90,8 @@ const ICO = {
   trash: ico(<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />),
   plus: ico(<path d="M12 5v14M5 12h14" />),
   eye: ico(<><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></>),
+  // Locked until paid / Mark as paid (Alex, 10 Nov): a coin, so it is never mistaken for Close's padlock
+  coin: ico(<><circle cx="12" cy="12" r="9" /><path d="M15 8.8a3.6 3.6 0 1 0 0 6.4M7.5 11h6M7.5 13.2h6" /></>),
 }
 const tool = (icon, text) => <>{icon}<span className="dt-t">{text}</span></>
 
@@ -187,6 +191,7 @@ export default function Deliveries() {
       recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
       contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
       pin: r.pin || '', fine: d.fine || '', message: d.message || '', creditsText: d.creditsText || '', thumbs: d.thumbs || [], pcFolder: d.pcFolder || '', label: d.label || '',
+      payLock: !!r.pay_locked, wasLocked: !!r.pay_locked,
     })
   }
   const creditsOf = (projectId) => creditsFromProject(state.projects.find((x) => x.id === projectId), state.workspace.name, { users: state.users || [], settings: state.settings })
@@ -366,7 +371,10 @@ export default function Deliveries() {
       const targets = [{ ref, recipient: null }]
       let firstUrl = ''
       for (const t of targets) {
-        const url = await publishShare({ workspaceId: state.workspace.id, kind: 'delivery', ref: t.ref, data: { ...data, recipient: t.recipient }, userId: user?.id })
+        // the lock rides in the same write as the data, so a locked page is never out unlocked for a moment; it is only
+        // sent when it is on or was on, so publishing still works before delivery_lock.sql has been run
+        const extra = draft.payLock || draft.wasLocked ? { pay_locked: !!draft.payLock } : undefined
+        const url = await publishShare({ workspaceId: state.workspace.id, kind: 'delivery', ref: t.ref, data: { ...data, recipient: t.recipient }, userId: user?.id, extra })
         if (!firstUrl) firstUrl = url
       }
       await reopenQuietly({ workspaceId: state.workspace.id, ref })
@@ -374,7 +382,7 @@ export default function Deliveries() {
       try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: '', pin: '' }) } catch {}
       if (targets.length === 1) {
         await navigator.clipboard.writeText(deliveryUrl(tokenOf(firstUrl))).catch(() => {})
-        toast('Delivery page published, link copied', 'ok')
+        toast(draft.payLock ? 'Delivery page published, locked until paid. Link copied' : 'Delivery page published, link copied', 'ok')
       } else {
         toast(`${targets.length} pages published, one per person. Copy each link from the list.`, 'ok')
       }
@@ -586,9 +594,18 @@ export default function Deliveries() {
     } catch (e) { toast(e.message, 'error') }
   }
 
+  /* Locked until paid from the list, in one click (Alex, 10 Nov): the same link, its files open or not */
+  const setPayLock = async (ref, on) => {
+    try {
+      await setShareState({ workspaceId: state.workspace.id, ref, payLocked: on })
+      toast(on ? 'Locked until paid. The client sees the page, not the files.' : 'Marked as paid. The files open on the same link.', 'ok')
+      reload()
+    } catch (e) { toast(e.message, 'error') }
+  }
+
   return (
     <div className={`deliveries${look === 'list' ? ' share-list' : ''}${inRoardino ? ' in-roardino' : ''}`}>
-      {emailing && <EmailWindow link={emailing.url} build={() => deliveryEmail(emailing.data || {}, emailing.url, state.workspace.name, { stageLabel, stageAction })} to={emailing.data?.contactEmail || emailing.data?.contact?.email || ''} onClose={() => setEmailing(null)} />}
+      {emailing && <EmailWindow link={emailing.url} build={() => deliveryEmail(emailing.pay_locked ? payLockedView(emailing.data || {}) : emailing.data || {}, emailing.url, state.workspace.name, { stageLabel, stageAction })} to={emailing.data?.contactEmail || emailing.data?.contact?.email || ''} onClose={() => setEmailing(null)} />}
       {/* on a phone (Alex, 15 Oct): no title, the filters as a glass capsule and a round + on one line;
           the + offers New delivery and, for administrators, New cost estimation */}
       {mobile && (
@@ -670,10 +687,11 @@ export default function Deliveries() {
                   <strong>{r.name}{r.version ? <span className="muted deliv-tver"> · {r.version}</span> : null}</strong>
                   <div className="small muted">{r.sub}</div>
                   {/* one strip of small tags instead of three grey lines that all looked the same */}
-                  {(one && (g.shut || r.opens !== undefined || last) || (look === 'list' && !mobile)) && (
+                  {(one && (g.shut || r.opens !== undefined || last) || (look === 'list' && !mobile) || r.pay_locked) && (
                     <div className="deliv-tags">
                       <span className={`deliv-tag deliv-stage-in ${r.badgeClass}`}>{r.badge}</span>
                       {g.shut && <span className="deliv-tag t-shut">Closed</span>}
+                      {r.isDelivery && r.pay_locked && <span className="deliv-tag t-paylock" title="Locked until paid: the client sees the page, not the files">Awaiting payment</span>}
                       {r.opens === undefined ? null
                         : r.opens > 0
                           ? <span className="deliv-tag t-open" title="Opened">{ICO.eye}<span className="dt-w">Opened </span>{r.opens}&#215;{r.opened_at ? ` · ${fmtDate(r.opened_at.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''}</span>
@@ -693,6 +711,9 @@ export default function Deliveries() {
                   {one && <a className="deliv-tool" href={r.url} target="_blank" rel="noreferrer" title="Open" aria-label="Open">{tool(ICO.open, 'Open')}</a>}
                   {editable && r.isDelivery && singleTarget && <button className="deliv-tool" title="Update" aria-label="Update" onClick={() => openDelivery(r)}>{tool(ICO.edit, 'Update')}</button>}
                   {editable && isAdmin && r.isEstimate && singleTarget && <button className="deliv-tool" title="Update" aria-label="Update" onClick={() => openEstimate(r)}>{tool(ICO.edit, 'Update')}</button>}
+                  {editable && r.isDelivery && r.pay_locked !== undefined && (
+                    <button className={`deliv-tool deliv-tool-pay${r.pay_locked ? ' on' : ''}`} title={r.pay_locked ? 'Mark as paid: the files open on the same link' : 'Lock until paid: the client sees the page, not the files'} aria-label={r.pay_locked ? 'Mark as paid' : 'Lock until paid'} aria-pressed={!!r.pay_locked} onClick={() => setPayLock(g.key, !r.pay_locked)}>{tool(ICO.coin, r.pay_locked ? 'Mark as paid' : 'Lock until paid')}</button>
+                  )}
                   {editable && r.opens !== undefined && (
                     <button className="deliv-tool" title={g.shut ? 'Reopen' : 'Close the link'} aria-label={g.shut ? 'Reopen' : 'Close the link'} onClick={() => setShut(g.key, !g.shut)}>{tool(g.shut ? ICO.unlock : ICO.lock, g.shut ? 'Reopen all' : one ? 'Close' : 'Close all')}</button>
                   )}
@@ -806,6 +827,16 @@ export default function Deliveries() {
             </div>
             {/* one page, one link, nothing else to fill (Alex, 22 Oct): no transfer password or expiry, no closing date
                 or access code, no Answer by, no contact and no Send it to, as an estimate */}
+            {/* Locked until paid (Alex, 10 Nov): the client's page opens with a kind word instead of the files, and the
+                database keeps every download address back (share_get, supabase/delivery_lock.sql) */}
+            <button type="button" role="switch" aria-checked={!!draft.payLock} className={`paylock-switch${draft.payLock ? ' on' : ''}`} onClick={() => setD('payLock', !draft.payLock)}>
+              <span className="paylock-ico" aria-hidden="true">{ICO.lock}</span>
+              <span className="paylock-text">
+                <b>Locked until paid</b>
+                <small>{draft.payLock ? 'The client sees the page and the file names, not the files' : 'The files can be downloaded'}</small>
+              </span>
+              <span className="paylock-track" aria-hidden="true"><i /></span>
+            </button>
             <Field label="Where it is hosted"><Input value={draft.linkLabel} onChange={(e) => setD('linkLabel', e.target.value)} placeholder="SwissTransfer" /></Field>
             {/* Your note is gone (Alex, 22 Oct); Final Deliverables has its fine print, shown small under the files */}
             {remote && (

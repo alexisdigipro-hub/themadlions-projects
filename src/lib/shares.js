@@ -27,13 +27,15 @@ export const noteUrl = (t) => `${linkBase()}n/${t}`
 export const tokenOf = (url) => String(url || '').split('/').filter(Boolean).pop() || ''
 
 /* Creates or refreshes the public snapshot for ref and returns its URL (same link every time for the same ref). */
-export async function publishShare({ workspaceId, kind, ref, data, userId }) {
+export async function publishShare({ workspaceId, kind, ref, data, userId, extra }) {
   if (!remote) throw new Error('Share links need the team workspace on Supabase. In this browser-only mode use Print / Save PDF.')
   const { data: existing, error: e1 } = await supabase.from('shares').select('token').eq('workspace_id', workspaceId).eq('ref', ref).maybeSingle()
   if (e1 && e1.code === '42P01') throw new Error('Run supabase/shares.sql in the Supabase SQL editor to enable share links.')
   if (e1) throw e1
   const t = existing?.token || token()
-  const { error } = await supabase.from('shares').upsert({ token: t, workspace_id: workspaceId, kind, ref, data, created_by: userId || null, updated_at: new Date().toISOString() }, { onConflict: 'token' })
+  // extra: columns set in the same write as the data (a delivery's pay_locked, so a locked page is never out unlocked for a moment)
+  const { error } = await supabase.from('shares').upsert({ token: t, workspace_id: workspaceId, kind, ref, data, created_by: userId || null, updated_at: new Date().toISOString(), ...(extra || {}) }, { onConflict: 'token' })
+  if (error && extra && 'pay_locked' in extra && (error.code === 'PGRST204' || error.code === '42703')) throw new Error(LOCK_SQL)
   if (error) throw error
   return shareUrl(t)
 }
@@ -125,17 +127,36 @@ export async function listShares(workspaceId) {
   return data || []
 }
 
-/* Closing a link, reopening it, or giving it a date to close itself. */
-export async function setShareState({ workspaceId, ref, closed, expiresAt, pin, one = false }) {
+/* Locked until paid (Alex, 10 Nov): the column only exists once delivery_lock.sql has been run */
+const LOCK_SQL = 'Run supabase/delivery_lock.sql in the Supabase SQL editor first, so a delivery can be locked until it is paid.'
+
+/* What the client's page of a delivery locked until paid gets: the same as share_get sends from the database
+   (supabase/delivery_lock.sql), nothing that downloads. Used for the email of a locked delivery, so it carries no
+   file addresses either. */
+export function payLockedView(d = {}) {
+  const { link, files, thumbs, pcFolder, password, ...rest } = d || {}
+  return {
+    ...rest,
+    payLocked: true,
+    link: '',
+    files: (Array.isArray(files) ? files : []).map((f) => ({ name: f?.name || '', size: f?.size })),
+    thumbs: (Array.isArray(thumbs) ? thumbs : []).map((t) => ({ name: t?.name || '', w: t?.w, h: t?.h })),
+  }
+}
+
+/* Closing a link, reopening it, giving it a date to close itself, or locking it until paid. */
+export async function setShareState({ workspaceId, ref, closed, expiresAt, pin, payLocked, one = false }) {
   if (!remote) return
   const patch = {}
   if (closed !== undefined) patch.closed = !!closed
   if (expiresAt !== undefined) patch.expires_at = expiresAt || null
   if (pin !== undefined) patch.pin = String(pin || '').trim() || null
+  if (payLocked !== undefined) patch.pay_locked = !!payLocked
   if (!Object.keys(patch).length) return
   const base = supabase.from('shares').update(patch).eq('workspace_id', workspaceId)
   const { error } = await (one ? base.eq('ref', ref) : family(base, ref))
   if (error) {
+    if (payLocked !== undefined && (error.code === '42703' || error.code === 'PGRST204')) throw new Error(LOCK_SQL)
     const file = pin !== undefined ? 'share_pin.sql' : 'share_track.sql'
     throw new Error(error.code === '42703' ? `Run supabase/${file} in the Supabase SQL editor first.` : error.message)
   }
