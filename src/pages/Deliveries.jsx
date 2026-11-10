@@ -67,6 +67,22 @@ const emptyDelivery = () => ({
   message: '', // and its opening message
   creditsText: '', // and its credits, one "Role: Name" a line
   thumbs: [], // thumbnails the client can see and download: [{ name, path, url, dl, size, w, h }]
+  payLock: false, // Final Deliverables held until paid (Alex, 10 Nov): see holdLinks
+})
+
+/* Held until paid (Alex, 10 Nov: "a tick that lets nobody download the files, with a very sweet message that the
+   payment has to be settled for the links to open"). A held page carries no link at all: the files' names and sizes
+   only, thumbnails to look at without their download, and payLock for the page's message. The real links wait in a
+   row of their own, kind 'delivery-held' at <ref>:held, which only the team reads (share_access.sql: the Share
+   permission) and whose token is never given out; Paid, open the files puts them back on the page. So nothing on the
+   client's page, or in what it loads, leads to the files until then. */
+const HELD = (ref) => `${ref}:held`
+const holdLinks = (data) => ({
+  ...data,
+  payLock: true,
+  link: '',
+  files: (data.files || []).map((f) => ({ name: f.name, size: f.size || 0 })),
+  thumbs: (data.thumbs || []).map((t) => ({ ...t, dl: '' })),
 })
 
 const emptyEstimate = () => ({
@@ -88,6 +104,9 @@ const ICO = {
   trash: ico(<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />),
   plus: ico(<path d="M12 5v14M5 12h14" />),
   eye: ico(<><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></>),
+  // held until paid (Alex, 10 Nov): a coin with a lock's bar; paid: a check in a circle
+  hold: ico(<><circle cx="12" cy="12" r="8.5" /><path d="M14.5 9.2a3 3 0 0 0-2.5-1.2c-1.5 0-2.6.8-2.6 2s1.1 1.7 2.6 2 2.6.8 2.6 2-1.1 2-2.6 2a3 3 0 0 1-2.6-1.3M12 6.5v1.5M12 16v1.5" /></>),
+  paid: ico(<><circle cx="12" cy="12" r="8.5" /><path d="m8.5 12.3 2.4 2.4 4.8-5" /></>),
 }
 const tool = (icon, text) => <>{icon}<span className="dt-t">{text}</span></>
 
@@ -176,8 +195,15 @@ export default function Deliveries() {
      estimate) means editing it rather than starting a fresh page and losing the old
      link. Only offered for a single-page delivery (see the Update button below): a delivery sent
      to several named people has one row per person and this only has room to load one back. */
-  const openDelivery = (r) => {
-    const d = r.data || {}
+  const openDelivery = async (r) => {
+    let d = r.data || {}
+    // held until paid: its real links come back from the team's own row, so publishing again keeps them
+    if (d.payLock) {
+      try {
+        const held = (await getShareRow(state.workspace.id, HELD(r.ref)))?.data
+        if (held) d = { ...d, link: held.link || '', files: held.files || [], thumbs: held.thumbs || d.thumbs }
+      } catch (e) { return toast(`Could not read the held links: ${e.message}`, 'error') }
+    }
     setDraft({
       id: (r.ref.split(':')[1]) || uid(), projectId: d.projectId || '', stage: d.stage || 'rough',
       version: d.version || '', title: d.title || '', client: d.client || '',
@@ -187,6 +213,7 @@ export default function Deliveries() {
       recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
       contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
       pin: r.pin || '', fine: d.fine || '', message: d.message || '', creditsText: d.creditsText || '', thumbs: d.thumbs || [], pcFolder: d.pcFolder || '', label: d.label || '',
+      payLock: !!d.payLock,
     })
   }
   const creditsOf = (projectId) => creditsFromProject(state.projects.find((x) => x.id === projectId), state.workspace.name, { users: state.users || [], settings: state.settings })
@@ -363,18 +390,27 @@ export default function Deliveries() {
       }
       // one page for everybody: Send it to (a page per named person) was taken out (Alex, 22 Oct)
       const ref = `delivery:${draft.id}`
+      // held until paid (Alex, 10 Nov): the links go to the team's own row first, and only then off the page
+      let pub = data
+      if (draft.stage === 'deliverables' && draft.payLock) {
+        await publishShare({ workspaceId: state.workspace.id, kind: 'delivery-held', ref: HELD(ref), data: { link: data.link, files: data.files, thumbs: data.thumbs }, userId: user?.id })
+        pub = holdLinks(data)
+      } else {
+        pub = { ...data, payLock: false }
+      }
       const targets = [{ ref, recipient: null }]
       let firstUrl = ''
       for (const t of targets) {
-        const url = await publishShare({ workspaceId: state.workspace.id, kind: 'delivery', ref: t.ref, data: { ...data, recipient: t.recipient }, userId: user?.id })
+        const url = await publishShare({ workspaceId: state.workspace.id, kind: 'delivery', ref: t.ref, data: { ...pub, recipient: t.recipient }, userId: user?.id })
         if (!firstUrl) firstUrl = url
       }
+      if (!pub.payLock) { try { await removeShare({ workspaceId: state.workspace.id, ref: HELD(ref) }) } catch { /* none held */ } }
       await reopenQuietly({ workspaceId: state.workspace.id, ref })
       // no closing date or access code any more (Alex, 22 Oct): publishing again clears any an older page still had
       try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: '', pin: '' }) } catch {}
       if (targets.length === 1) {
         await navigator.clipboard.writeText(deliveryUrl(tokenOf(firstUrl))).catch(() => {})
-        toast('Delivery page published, link copied', 'ok')
+        toast(pub.payLock ? 'Delivery page published, held until paid, link copied' : 'Delivery page published, link copied', 'ok')
       } else {
         toast(`${targets.length} pages published, one per person. Copy each link from the list.`, 'ok')
       }
@@ -385,6 +421,28 @@ export default function Deliveries() {
     } finally {
       setBusy(false)
     }
+  }
+
+  /* Held until paid, from the list (Alex, 10 Nov): Paid puts the links back on the page at once; Hold takes them off
+     again. The page keeps its link, its opens and its replies; only data.payLock and the links change. */
+  const setPayLock = async (r, on) => {
+    const ref = r.ref
+    try {
+      const row = await getShareRow(state.workspace.id, ref)
+      const d = row?.data || r.data || {}
+      if (on) {
+        await publishShare({ workspaceId: state.workspace.id, kind: 'delivery-held', ref: HELD(ref), data: { link: d.link || '', files: d.files || [], thumbs: d.thumbs || [] }, userId: user?.id })
+        await publishShare({ workspaceId: state.workspace.id, kind: 'delivery', ref, data: holdLinks(d), userId: user?.id })
+        toast('Held until paid: the client sees the files but cannot download them', 'ok')
+      } else {
+        const held = (await getShareRow(state.workspace.id, HELD(ref)))?.data
+        if (!held) throw new Error('The held links were not found. Open Update and add the files again.')
+        await publishShare({ workspaceId: state.workspace.id, kind: 'delivery', ref, data: { ...d, payLock: false, link: held.link || '', files: held.files || [], thumbs: held.thumbs || d.thumbs || [] }, userId: user?.id })
+        await removeShare({ workspaceId: state.workspace.id, ref: HELD(ref) })
+        toast('Paid: the files are open on the client’s page', 'ok')
+      }
+      reload()
+    } catch (e) { toast(e.message, 'error') }
   }
 
   const copy = async (text, what) => {
@@ -674,6 +732,7 @@ export default function Deliveries() {
                     <div className="deliv-tags">
                       <span className={`deliv-tag deliv-stage-in ${r.badgeClass}`}>{r.badge}</span>
                       {g.shut && <span className="deliv-tag t-shut">Closed</span>}
+                      {r.isDelivery && r.data?.payLock && <span className="deliv-tag t-held">{ICO.lock}<span>Awaiting payment</span></span>}
                       {r.opens === undefined ? null
                         : r.opens > 0
                           ? <span className="deliv-tag t-open" title="Opened">{ICO.eye}<span className="dt-w">Opened </span>{r.opens}&#215;{r.opened_at ? ` · ${fmtDate(r.opened_at.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''}</span>
@@ -692,6 +751,10 @@ export default function Deliveries() {
                   {one && r.isDelivery && <button className="deliv-tool" title="Email" aria-label="Email" onClick={() => setEmailing(r)}>{tool(ICO.mail, 'Email')}</button>}
                   {one && <a className="deliv-tool" href={r.url} target="_blank" rel="noreferrer" title="Open" aria-label="Open">{tool(ICO.open, 'Open')}</a>}
                   {editable && r.isDelivery && singleTarget && <button className="deliv-tool" title="Update" aria-label="Update" onClick={() => openDelivery(r)}>{tool(ICO.edit, 'Update')}</button>}
+                  {/* held until paid (Alex, 10 Nov): Paid opens the files, Hold until paid takes the links off */}
+                  {editable && r.isDelivery && singleTarget && r.data?.stage === 'deliverables' && (r.data?.payLock
+                    ? <button className="deliv-tool deliv-tool-paid" title="Paid: open the files" aria-label="Paid: open the files" onClick={() => setPayLock(r, false)}>{tool(ICO.paid, 'Paid · open files')}</button>
+                    : <button className="deliv-tool" title="Hold the files until paid" aria-label="Hold the files until paid" onClick={() => setPayLock(r, true)}>{tool(ICO.hold, 'Hold until paid')}</button>)}
                   {editable && isAdmin && r.isEstimate && singleTarget && <button className="deliv-tool" title="Update" aria-label="Update" onClick={() => openEstimate(r)}>{tool(ICO.edit, 'Update')}</button>}
                   {editable && r.opens !== undefined && (
                     <button className="deliv-tool" title={g.shut ? 'Reopen' : 'Close the link'} aria-label={g.shut ? 'Reopen' : 'Close the link'} onClick={() => setShut(g.key, !g.shut)}>{tool(g.shut ? ICO.unlock : ICO.lock, g.shut ? 'Reopen all' : one ? 'Close' : 'Close all')}</button>
@@ -856,6 +919,17 @@ export default function Deliveries() {
                   </span>
                 </div>
                 <Field label="Fine print"><Textarea rows={5} value={draft.fine} onChange={(e) => setD('fine', e.target.value)} /></Field>
+                {/* held until paid (Alex, 10 Nov): one tap, the files show on the page but nothing downloads, with a
+                    kind word about settling the payment; Paid in the list opens them */}
+                <button type="button" role="switch" aria-checked={!!draft.payLock} className={`deliv-paylock${draft.payLock ? ' on' : ''}`} onClick={() => setD('payLock', !draft.payLock)}>
+                  <span className="deliv-paylock-box" aria-hidden="true">{draft.payLock && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="m6 12.5 4 4 8-9" /></svg>}</span>
+                  <span className="deliv-paylock-text">
+                    <b>Hold the files until paid</b>
+                    <small>{draft.payLock
+                      ? 'The client sees the files and a kind note to settle the payment; nothing downloads. Press Paid · open files in the list when it is paid.'
+                      : 'Tick it and the links stay closed until you mark it paid.'}</small>
+                  </span>
+                </button>
               </>
             )}
 

@@ -7,6 +7,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 
 ## What is inside
 
+- **Final Deliverables held until paid** (Outbox, 10 Nov): tick **Hold the files until paid** when you send them, and the client's page shows the files with a kind note that the links open once the payment is settled; nothing downloads. **Paid · open files** in the list opens them on the same link.
 - **TmlChat, tidier** (3 Nov): no bar at the foot of the chat; All, Unread, Groups and Archived sit at the top; the chat's settings are in **Settings > Chat**.
 - **TmlChat** (1 Nov): the chat in the side menu is called TmlChat, and it opens with no white flash: it fades in once it wears the hub's colours.
 - **Tablet held upright** (1 Nov): the side menu becomes a thin column of icons, so every page shows at full width; turn the tablet sideways and the full menu with names comes back.
