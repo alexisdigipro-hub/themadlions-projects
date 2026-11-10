@@ -326,11 +326,11 @@ function HoldNote({ onClose }) {
         </button>
       )}
       <span className="dlv-hold-ico">{HEART}</span>
-      <h2 lang="el">Τα αρχεία σας είναι έτοιμα και σας περιμένουν!</h2>
-      <p lang="el">Ήταν πραγματική χαρά μας να δημιουργήσουμε αυτό το project μαζί σας. Τα τελικά παραδοτέα είναι ολοκληρωμένα και φυλάσσονται με ασφάλεια, έτοιμα για εσάς.</p>
-      <p lang="el">Μόλις τακτοποιηθεί η εξόφληση, τα links θα ανοίξουν σε αυτή ακριβώς τη σελίδα και θα μπορείτε να τα κατεβάσετε αμέσως. Για οτιδήποτε χρειαστείτε σχετικά με την εξόφληση, είμαστε πάντα εδώ για εσάς.</p>
+      <h2 lang="el">Τα αρχεία σας είναι έτοιμα!</h2>
+      {/* short (Alex, 10 Nov: "make it smaller, it is long") */}
+      <p lang="el">Ήταν χαρά μας να δουλέψουμε μαζί σας. Μόλις τακτοποιηθεί η εξόφληση, τα links θα ανοίξουν εδώ για να τα κατεβάσετε.</p>
       <p className="dlv-hold-thanks" lang="el">Σας ευχαριστούμε θερμά!</p>
-      <p className="dlv-hold-en">Your files are ready and safely waiting for you. As soon as the final payment is settled, the download links open right here on this page. Thank you so much!</p>
+      <p className="dlv-hold-en">Your files are ready and open right here once the payment is settled. Thank you!</p>
       {onClose && <button type="button" className="dlv-btn dlv-hold-ok" onClick={onClose}>Εντάξει</button>}
     </>
   )
