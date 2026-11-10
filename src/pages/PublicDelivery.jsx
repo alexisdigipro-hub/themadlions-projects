@@ -150,6 +150,7 @@ export default function PublicDelivery() {
   }
 
   const d = share.data
+  const held = !!d.payLock
   const look = lookProps(LOOK_DEFAULT)
 
   return (
@@ -170,14 +171,18 @@ export default function PublicDelivery() {
           {/* Final Deliverables' message to the client (Alex, 22 Oct), where the big button was */}
           {d.message && <p className="dlv-message" lang="el">{d.message}</p>}
 
+          {/* held until paid (Alex, 10 Nov): the page carries no link at all (Deliveries.jsx holdLinks), only the files'
+              names and a kind word that they open as soon as the payment is settled */}
+          {held && <PayHold files={d.files || []} />}
+
           {/* one file or a bare link: the big button here; several files (Alex, 12 Oct) get one button per file and
               Download all under them, as wide as the files' tiles (Alex, 22 Oct) */}
-          {!(d.files?.length > 1) && (d.files?.length === 1 ? (
+          {!held && !(d.files?.length > 1) && (d.files?.length === 1 ? (
             <button type="button" className="dlv-btn" onClick={() => downloadFiles(d.files, d.link)}>{stageAction(d.stage)}</button>
           ) : (
             <a className="dlv-btn" href={safe(d.link)} target="_blank" rel="noreferrer">{stageAction(d.stage)}</a>
           ))}
-          {d.files?.length > 1 && (
+          {!held && d.files?.length > 1 && (
             <ul className="plain dlv-each">
               {d.files.map((f) => (
                 <li key={f.url}>
@@ -196,11 +201,11 @@ export default function PublicDelivery() {
               ))}
             </ul>
           )}
-          {d.files?.length > 1 && (
+          {!held && d.files?.length > 1 && (
             <button type="button" className="dlv-btn dlv-all" onClick={() => downloadFiles(d.files, d.link)}>Download all {d.files.length} files</button>
           )}
           {/* one file uploaded to pCloud: Save to Photos under the big button, on a phone */}
-          {!(d.files?.length > 1) && d.files?.length === 1 && (
+          {!held && !(d.files?.length > 1) && d.files?.length === 1 && (
             <div className="dlv-one-photos"><SaveToPhotos file={d.files[0]} /></div>
           )}
           {/* one line with dots instead of three stacked greys */}
@@ -218,12 +223,14 @@ export default function PublicDelivery() {
               <ul className="dlv-thumb-grid">
                 {d.thumbs.map((t) => (
                   <li key={t.url}>
-                    <a className="dlv-thumb-img" href={safe(t.url)} target="_blank" rel="noreferrer" title={t.name}>
-                      <img src={t.url} alt={t.name} loading="lazy" style={t.w && t.h ? { aspectRatio: `${t.w} / ${t.h}` } : undefined} />
-                    </a>
+                    {held
+                      ? <span className="dlv-thumb-img"><img src={t.url} alt={t.name} loading="lazy" draggable="false" onContextMenu={(e) => e.preventDefault()} style={t.w && t.h ? { aspectRatio: `${t.w} / ${t.h}` } : undefined} /></span>
+                      : <a className="dlv-thumb-img" href={safe(t.url)} target="_blank" rel="noreferrer" title={t.name}>
+                          <img src={t.url} alt={t.name} loading="lazy" style={t.w && t.h ? { aspectRatio: `${t.w} / ${t.h}` } : undefined} />
+                        </a>}
                     <div className="dlv-thumb-foot">
                       <span className="dlv-thumb-meta">{t.w && t.h ? `${t.w} × ${t.h}` : t.name}</span>
-                      <a className="dlv-btn ghost dlv-each-btn" href={safe(t.dl || t.url)} download={t.name}>Download</a>
+                      {!held && <a className="dlv-btn ghost dlv-each-btn" href={safe(t.dl || t.url)} download={t.name}>Download</a>}
                     </div>
                   </li>
                 ))}
@@ -297,6 +304,38 @@ function Credits({ list }) {
       <button type="button" className={`dlv-btn ghost dlv-each-btn dlv-credits-copy${copied ? ' done' : ''}`} onClick={copy} title="Copy the credits for a YouTube description">
         {copied ? 'Copied' : 'Copy'}
       </button>
+    </div>
+  )
+}
+
+/* Held until paid (Alex, 10 Nov: "very sweetly, that the payment has to be settled for the links to open"): the files
+   by name, each with a small lock, and a warm note in Greek with the same in English under it. */
+const LOCK = <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2.5" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+const sizeOf = (n) => (n > 1e9 ? `${(n / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(n / 1e6))} MB`)
+function PayHold({ files }) {
+  return (
+    <div className="dlv-hold">
+      <div className="dlv-hold-card">
+        <span className="dlv-hold-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12v8H4v-8M2 7h20v5H2zM12 22V7M12 7H8a2.5 2.5 0 1 1 0-5c3 0 4 5 4 5zM12 7h4a2.5 2.5 0 1 0 0-5c-3 0-4 5-4 5z" /></svg>
+        </span>
+        <h2 lang="el">Τα αρχεία σας είναι έτοιμα και σας περιμένουν!</h2>
+        <p lang="el">Ήταν πραγματική χαρά μας να δημιουργήσουμε αυτό το project μαζί σας. Τα τελικά παραδοτέα είναι ολοκληρωμένα και φυλάσσονται με ασφάλεια, έτοιμα για εσάς.</p>
+        <p lang="el">Μόλις τακτοποιηθεί η εξόφληση, τα links θα ανοίξουν σε αυτή ακριβώς τη σελίδα και θα μπορείτε να τα κατεβάσετε αμέσως. Για οτιδήποτε χρειαστείτε σχετικά με την εξόφληση, είμαστε πάντα εδώ για εσάς.</p>
+        <p className="dlv-hold-thanks" lang="el">Σας ευχαριστούμε θερμά!</p>
+        <p className="dlv-hold-en">Your files are ready and safely waiting for you. As soon as the final payment is settled, the download links open right here on this page. Thank you so much!</p>
+      </div>
+      {files.length > 0 && (
+        <ul className="plain dlv-hold-files">
+          {files.map((f, i) => (
+            <li key={`${f.name}-${i}`}>
+              <span className="dlv-hold-lock">{LOCK}</span>
+              <span className="dlv-each-name">{f.name}</span>
+              {f.size > 0 && <span className="dlv-each-size">{sizeOf(f.size)}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

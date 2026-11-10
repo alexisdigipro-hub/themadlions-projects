@@ -9664,3 +9664,39 @@ html[data-theme][data-theme] body .settings-cols > section.set-chat > .roarme-pa
   html[data-theme] body .content > .office-hub:has(> :is(.rem-app, .office.office-frame)) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
   html[data-theme] body .office-hub > :is(.rem-app, .office.office-frame) { flex: 1 1 auto; height: auto; min-height: 0; }
 }
+
+/* ---------- Final Deliverables held until paid (Alex, 10 Nov) ----------
+   On the client's page: a warm card (a gift, the note in Greek, the same in English small under it) and the files by
+   name, each with a small lock, no buttons. In the Outbox: the tick in the editor, the Awaiting payment tag, Paid. */
+.pub.dlv .dlv-hold { max-width: 860px; margin: 30px auto 0; display: flex; flex-direction: column; gap: 14px; text-align: center; }
+.pub.dlv .dlv-hold-card { padding: 30px 28px 26px; border-radius: var(--est-r, 18px); background: color-mix(in srgb, var(--accent) 9%, var(--tile, rgba(255, 255, 255, .05))); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+.pub.dlv .dlv-hold-ico { display: inline-grid; place-items: center; width: 58px; height: 58px; margin-bottom: 14px; border-radius: 50%; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 7%, transparent); }
+.pub.dlv .dlv-hold-card h2 { margin: 0 0 12px; font-size: 22px; line-height: 1.3; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.pub.dlv .dlv-hold-card p { margin: 0 auto 10px; max-width: 600px; font-size: 15.5px; line-height: 1.6; color: color-mix(in srgb, var(--text) 86%, transparent); }
+.pub.dlv .dlv-hold-card .dlv-hold-thanks { margin-top: 14px; font-weight: 600; color: var(--text); }
+.pub.dlv .dlv-hold-card .dlv-hold-en { margin-top: 16px; padding-top: 14px; border-top: 1px solid color-mix(in srgb, var(--text) 10%, transparent); font-size: 13px; color: var(--muted, rgba(255, 255, 255, .6)); }
+.pub.dlv .dlv-hold-files { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.pub.dlv .dlv-hold-files li { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: var(--est-r, 14px); background: var(--tile, rgba(255, 255, 255, .04)); opacity: .85; }
+.pub.dlv .dlv-hold-files .dlv-each-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.pub.dlv .dlv-hold-lock { flex: none; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+@media (max-width: 600px) {
+  .pub.dlv .dlv-hold-card { padding: 24px 18px 20px; }
+  .pub.dlv .dlv-hold-card h2 { font-size: 19px; }
+  .pub.dlv .dlv-hold-card p { font-size: 14.5px; }
+  .pub.dlv .dlv-hold-files li { padding: 12px 14px; gap: 12px; }
+}
+
+.deliv-paylock { display: flex; align-items: flex-start; gap: 14px; width: 100%; margin: 4px 0 6px; padding: 14px 16px; text-align: left; font: inherit; color: var(--text); cursor: pointer; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); background: color-mix(in srgb, var(--text) 4%, transparent); transition: background .2s, border-color .2s, transform .15s; }
+.deliv-paylock:hover { background: color-mix(in srgb, var(--text) 7%, transparent); }
+.deliv-paylock:active { transform: scale(.985); }
+.deliv-paylock.on { border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.deliv-paylock-box { flex: none; display: grid; place-items: center; width: 26px; height: 26px; margin-top: 1px; border-radius: 8px; border: 1.5px solid color-mix(in srgb, var(--text) 35%, transparent); color: var(--accent-ink, #fff); }
+.deliv-paylock.on .deliv-paylock-box { border-color: var(--accent); background: var(--accent); }
+.deliv-paylock-box svg { width: 17px; height: 17px; }
+.deliv-paylock-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.deliv-paylock-text b { font-size: 15px; font-weight: 600; }
+.deliv-paylock-text small { font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.deliv-tag.t-held { display: inline-flex; align-items: center; gap: 5px; background: color-mix(in srgb, #e0a53a 18%, transparent); color: #e7b24f; font-weight: 600; }
+.deliv-tag.t-held svg { width: 12px; height: 12px; }
+html[data-theme='light'] .deliv-tag.t-held { color: #9a6a10; }
+.deliv-tool.deliv-tool-paid { color: var(--ok, #3fb37a); }

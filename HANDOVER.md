@@ -37,6 +37,15 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (10 Nov 2026, Outbox: Final Deliverables held until paid)
+- Alex: "when I send the final deliverables, a tick that lets nobody download the files, with a very sweet message that the payment has to be settled for the links to open".
+- **Editor** (src/pages/Deliveries.jsx, Final Deliverables only): **Hold the files until paid**, a tick under the Fine print (draft.payLock).
+- **How it is kept safe:** a held page carries no link at all. holdLinks() publishes the delivery with link '', files as { name, size } only and thumbnails without their download; the real link, files and thumbnails go first to a row of their own, kind 'delivery-held', ref `delivery:<id>:held`, which only the team reads (share_access.sql: the Share permission) and whose token is never given out. Update reads them back (openDelivery), Delete takes the row with the delivery (removeShare's family), publishing without the tick removes it.
+- **Outbox list:** an **Awaiting payment** tag; **Paid · open files** puts the links back on the same page (same link, opens and replies kept) and removes the held row; on a Final Deliverables that is not held, **Hold until paid** does the opposite.
+- **Client's page** (src/pages/PublicDelivery.jsx PayHold): a warm card in Greek ("Τα αρχεία σας είναι έτοιμα και σας περιμένουν!"…, with the same in English small under it), then the files by name and size, each with a small lock; no Download, no Download all, no Save to Photos; thumbnails shown without their Download.
+- No SQL: the new kind falls under share_access.sql's default (the Share permission). Nothing for Alex to run.
+- Note for Alex: holding a page that was already open does not take back files someone downloaded before.
+
 ## Where we stopped (10 Nov 2026, later: Studio in three groups, the site's icon)
 - Alex: "a very good tidy-up of Studio, wider, more in it: the downloads of every app, every page and app we have, statistics for those without, and I don't want to get lost; Roardino is the social place now, the old one is Roardino App".
 - **Studio's bar in three groups** (public/site/admin/index.html): Overview · **Sites, Apps, Downloads** (to look) · themadlions.com, alexisk.gr, Accounts (to manage). 1720px wide; four tiles to a row from 1500px.
