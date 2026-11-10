@@ -218,7 +218,9 @@ h2 b { font-weight: 800; }
 .about { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(32px, 6vw, 96px); align-items: start; border-top: 1px solid var(--line); }
 .about .lead { font-size: clamp(22px, 2.4vw, 32px); font-weight: 300; line-height: 1.38; margin: 26px 0 0; }
 .about .lead b { font-weight: 700; }
-.about .story { max-width: 62ch; margin: 22px auto 0; font-size: 16.8px; font-weight: 300; line-height: 1.7; color: var(--muted); }
+/* three lines on a computer: larger type in a wider column, the lines of even length (Alex, 10 Nov) */
+.about .story { max-width: 62ch; text-wrap: balance; margin: 22px auto 0; font-size: 18px; font-weight: 300; line-height: 1.7; color: var(--muted); }
+@media (min-width: 1100px) { .about .story { max-width: none; width: min(1360px, 94vw); position: relative; left: 50%; transform: translateX(-50%); } }
 .quote { margin: 40px 0 0; padding-left: 18px; border-left: 2px solid var(--accent); color: var(--muted); font-size: 16px; line-height: 1.6; font-style: italic; }
 .team { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
 .person { padding: 18px 20px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--line); }
