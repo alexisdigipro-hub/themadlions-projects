@@ -75,10 +75,17 @@ html:not([lang=el]) [lang=el], html[lang=el] [lang=en] { display:none !important
 <script>
 (function () {
   var q = new URLSearchParams(location.search).get('lang'), l = q
-  try { if (!l) l = localStorage.getItem('tml_site_lang') } catch (e) {}
+  // Greek by itself for a visitor from Greece (Alex, 10 Nov 2026): a browser set to Greek, or a clock on Greek or Cypriot time.
+  // EN / GR pressed once stays (tml_site_lang with tml_site_lang_set; an "en" kept before 10 Nov was only the default).
+  function firstLang() {
+    try { var s = localStorage.getItem('tml_site_lang'); if (s === 'el' || (s === 'en' && localStorage.getItem('tml_site_lang_set'))) return s } catch (e) {}
+    try { if ((navigator.languages || [navigator.language || '']).some(function (x) { return /^el/i.test(x) }) || /Athens|Nicosia/.test(Intl.DateTimeFormat().resolvedOptions().timeZone)) return 'el' } catch (e) {}
+    return 'en'
+  }
+  if (!l) l = firstLang()
   function set(x) { l = x === 'el' ? 'el' : 'en'; document.documentElement.lang = l
     document.querySelectorAll('[data-lang]').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) }) }
-  document.querySelectorAll('[data-lang]').forEach(function (b) { b.onclick = function () { set(b.dataset.lang); try { localStorage.setItem('tml_site_lang', l) } catch (e) {} } })
+  document.querySelectorAll('[data-lang]').forEach(function (b) { b.onclick = function () { set(b.dataset.lang); try { localStorage.setItem('tml_site_lang', l); localStorage.setItem('tml_site_lang_set', '1') } catch (e) {} } })
   set(l)
 })()
 </script>
