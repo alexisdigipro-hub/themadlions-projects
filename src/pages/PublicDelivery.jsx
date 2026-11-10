@@ -350,6 +350,18 @@ function PayHold({ files }) {
   const [host, setHost] = useState(null)
   useLayoutEffect(() => { setHost(spot.current?.closest('.pub.dlv') || null) }, []) // before the first paint, so the card does not flash
   const popping = pop && !!host
+  /* The pop-up hangs straight off the body, over the whole screen, in a frame that carries the page's own classes and
+     colours (display: contents, so it takes no room), so nothing in the page can clip or move it. The card in the page
+     hides only once the pop-up is really on screen, fixed and visible; if it is not, the pop-up is dropped and the
+     card simply shows (Alex, 10 Nov: "the window does not come up", the card's place empty). */
+  const [up, setUp] = useState(false)
+  useLayoutEffect(() => {
+    if (!popping) { setUp(false); return }
+    const el = box.current, layer = el?.parentElement
+    const ok = !!el && !!layer && getComputedStyle(layer).position === 'fixed' && el.getBoundingClientRect().height > 40
+    if (ok) setUp(true); else setPop(false)
+  }, [popping])
+  const frameRef = (el) => { if (el && host) el.setAttribute('style', `${host.getAttribute('style') || ''};display:contents`) }
   useEffect(() => {
     if (!pop || !host) return
     const onKey = (e) => { if (e.key === 'Escape') close() }
@@ -373,7 +385,7 @@ function PayHold({ files }) {
   }
   return (
     <div className="dlv-hold">
-      <div ref={spot} className={`dlv-hold-card${popping ? ' waiting' : !pop ? ' landed' : ''}`}><HoldNote /></div>
+      <div ref={spot} className={`dlv-hold-card${popping && up ? ' waiting' : !pop ? ' landed' : ''}`}><HoldNote /></div>
       {files.length > 0 && (
         <ul className="plain dlv-hold-files">
           {files.map((f, i) => (
@@ -386,10 +398,12 @@ function PayHold({ files }) {
         </ul>
       )}
       {popping && createPortal(
-        <div className={`dlv-hold-pop${leaving ? ' leaving' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) close() }}>
-          <div ref={box} className="dlv-hold-card dlv-hold-glass" role="dialog" aria-modal="true" aria-label="Your files are ready"><HoldNote onClose={close} /></div>
+        <div ref={frameRef} className={host.className} data-hold-frame="">
+          <div className={`dlv-hold-pop${leaving ? ' leaving' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) close() }}>
+            <div ref={box} className="dlv-hold-card dlv-hold-glass" role="dialog" aria-modal="true" aria-label="Your files are ready"><HoldNote onClose={close} /></div>
+          </div>
         </div>,
-        host,
+        document.body,
       )}
     </div>
   )
