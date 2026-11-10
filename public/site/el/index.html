@@ -218,7 +218,9 @@ h2 b { font-weight: 800; }
 .about { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(32px, 6vw, 96px); align-items: start; border-top: 1px solid var(--line); }
 .about .lead { font-size: clamp(22px, 2.4vw, 32px); font-weight: 300; line-height: 1.38; margin: 26px 0 0; }
 .about .lead b { font-weight: 700; }
-.about .story { max-width: 62ch; margin: 22px auto 0; font-size: 16.8px; font-weight: 300; line-height: 1.7; color: var(--muted); }
+/* three lines on a computer: larger type in a wider column, the lines of even length (Alex, 10 Nov) */
+.about .story { max-width: 62ch; text-wrap: balance; margin: 22px auto 0; font-size: 18px; font-weight: 300; line-height: 1.7; color: var(--muted); }
+@media (min-width: 1100px) { .about .story { max-width: none; width: min(1360px, 94vw); position: relative; left: 50%; transform: translateX(-50%); } }
 .quote { margin: 40px 0 0; padding-left: 18px; border-left: 2px solid var(--accent); color: var(--muted); font-size: 16px; line-height: 1.6; font-style: italic; }
 .team { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
 .person { padding: 18px 20px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--line); }
@@ -403,7 +405,9 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
 /* every size in this block 5% up (Alex, 10 Nov) */
 .aib2 .aib-kicker { display: block; margin-top: 22px; font-size: 13.65px; }
 .aib2-lead { margin: 16px 0 0; max-width: 494px; font-size: clamp(16.8px, 1.42vw, 19.4px); font-weight: 300; line-height: 1.6; color: color-mix(in srgb, var(--text) 78%, transparent); }
-.aib2-caps { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 20px 0 0; font-size: 13.65px; letter-spacing: .03em; color: var(--muted); }
+/* one line on a computer (Alex, 10 Nov) */
+.aib2-caps { display: flex; flex-wrap: nowrap; white-space: nowrap; gap: 8px 11px; margin: 20px 0 0; font-size: 13.65px; letter-spacing: .02em; color: var(--muted); }
+@media (max-width: 900px) { .aib2-caps { flex-wrap: wrap; } }
 .aib2-caps span { display: inline-flex; align-items: center; gap: 7px; }
 .aib2-caps i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
 .aib2 .aib-go { margin-top: 30px; }
@@ -677,7 +681,8 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 .about > .reveal:first-child { margin: 0 auto; text-align: center; }
 .about > .reveal:last-child > .label { text-align: center; }
 .about .quote { border-left: 0; padding: 0; margin-top: 48px; text-align: center; } /* under the team row (Alex, 18 Oct) */
-.about .quote::before { content: ''; display: block; width: 28px; height: 2px; margin: 0 auto 14px; background: var(--accent); }
+.about .quote { font-size: clamp(24px, 4.2vw, 32px); line-height: 1.35; text-wrap: balance; } /* twice as large (Alex, 10 Nov; a little less on a phone so it stays in a few lines) */
+.about .quote::before { content: ''; display: block; width: 40px; height: 2px; margin: 0 auto 20px; background: var(--accent); }
 
 /* ===== Studio > Look > design (Alex, 30 Oct: "more settings so I manage the look of the page myself") =====
    Every choice is an attribute on <html> or a variable, so it applies at once, also in the admin's live preview. */
