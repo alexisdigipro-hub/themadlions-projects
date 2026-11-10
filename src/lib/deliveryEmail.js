@@ -1,6 +1,6 @@
 // A delivery or an invoice as an email (Alex, 28 Oct), made of the things every mail program draws (tables, inline
-// styles, pictures from the web), sent by the hub or pasted: the wordmark, the stage, the title, the client, the
-// message, a big Download Files, the files, the fine print, all centred, in the hub's look. The button goes to the delivery page, which downloads in one tap,
+// styles, pictures from the web), sent by the hub or pasted. A delivery's is its page since 10 Nov (deliveryEmail
+// below); an invoice's keeps the hub's look (wrap). The button goes to the delivery page, which downloads in one tap,
 // counts the opening and carries the thumbnails and the reply.
 
 const HUB = 'https://hub.themadlions.com/'
@@ -46,30 +46,96 @@ ${rows}
 </body></html>`
 }
 
+/* A delivery's email is its page (Alex, 10 Nov: "the whole page of the link, with everything, at least as a look, and
+   Download takes you to the real page"): the page's own black with the red glow, the red kicker, the light title, the
+   client, the message, Download all, every file with its size and its own Download, the thumbnails, the credits and
+   the fine print, in that order. Every button and picture goes to the delivery page, which downloads, counts the
+   opening and carries the replies; nothing in the email links to the files themselves. A delivery held until paid
+   (payLock) shows the page's short note and the files with a lock, and one button to the page. */
+const P = { bg: '#0b0b0c', tile: '#161618', line: '#2a2a2d', text: '#f2f0ec', muted: '#9c9a95', accent: '#d40000' }
+const PAGE_BG = `background-color:${P.bg};background-image:radial-gradient(90% 40% at 50% 0%, rgba(212,0,0,.20), rgba(212,0,0,0) 70%);`
+const PTILE = `background-color:${P.tile};border:1px solid ${P.line};border-radius:14px;`
+const ptd = (style, inner) => `<tr><td align="center" style="font-family:${FONT};text-align:center;${style}">${inner}</td></tr>`
+const redBtn = (href, label) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td align="center" bgcolor="${P.accent}" style="border-radius:999px;background-color:${P.accent};box-shadow:0 10px 30px rgba(212,0,0,.35);"><a href="${esc(href)}" target="_blank" style="display:inline-block;padding:16px 42px;font-family:${FONT};font-size:15px;font-weight:700;letter-spacing:.6px;color:#ffffff;text-decoration:none;border-radius:999px;">${esc(label)}</a></td></tr></table>`
+const ghostBtn = (href, label) => `<a href="${esc(href)}" target="_blank" style="display:inline-block;font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:.4px;color:${P.text};text-decoration:none;background-color:#222225;border:1px solid #3a3a3e;border-radius:999px;padding:8px 18px;white-space:nowrap;">${esc(label)}</a>`
+const head2 = (t) => ptd(`color:${P.muted};font-size:11px;font-weight:600;letter-spacing:3px;padding:34px 0 12px;`, esc(caps(t)))
+
+function fileRow(f, pageUrl, held) {
+  const size = sizeOf(f.size)
+  const mark = held
+    ? `<span style="display:inline-block;width:26px;height:26px;line-height:26px;border-radius:13px;background-color:#2a1112;color:${P.accent};font-size:12px;text-align:center;">&#9679;</span>`
+    : `<span style="display:inline-block;width:7px;height:7px;border-radius:4px;background-color:${P.accent};"></span>`
+  return `<tr><td style="padding:8px 0 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${P.tile}" style="${PTILE}"><tr>
+<td width="${held ? 40 : 22}" valign="middle" style="padding:14px 0 14px 18px;">${mark}</td>
+<td valign="middle" style="padding:14px 10px;font-family:${FONT};text-align:left;"><div style="color:${P.text};font-size:14px;font-weight:500;word-break:break-word;">${esc(f.name)}</div>${size ? `<div style="color:${P.muted};font-size:11px;letter-spacing:1px;padding-top:3px;">${size}</div>` : ''}</td>
+${held ? '' : `<td align="right" valign="middle" style="padding:14px 16px 14px 0;">${ghostBtn(pageUrl, 'Download')}</td>`}
+</tr></table></td></tr>`
+}
+
 // stageLabel and stageAction come from the Share page (passed in, so Finance does not load that whole page)
 export function deliveryEmail(d, pageUrl, company = 'THEMADLIONS', { stageLabel = (k) => k, stageAction = () => 'Download Files' } = {}) {
   const title = d.title || 'Delivery'
   const stage = `${stageLabel(d.stage)}${d.version ? ` · ${d.version}` : ''}`
-  const cover = web(d.thumbs?.find((t) => web(t.url))?.url || d.project?.cover)
   const files = (d.files || []).filter((f) => f.name)
+  const thumbs = (d.thumbs || []).filter((t) => web(t.url))
+  const credits = (d.credits || []).filter((c) => c && (c.name || c.role))
+  const held = !!d.payLock
   const subject = `${title}${d.version ? ` · ${d.version}` : ''} | ${stageLabel(d.stage)}`
-  const btn = btnOf
-  const meta = [d.linkLabel, d.password ? `Password <b style="color:${C.text};">${esc(d.password)}</b>` : ''].filter(Boolean)
+  const meta = [d.linkLabel, d.password ? `Password <b style="color:${P.text};">${esc(d.password)}</b>` : ''].filter(Boolean)
+  const action = files.length > 1 ? `Download all ${files.length} files` : stageAction(d.stage)
 
-  const html = wrap(subject, `${cover ? `<tr><td align="center" style="padding:0 0 26px;"><a href="${esc(pageUrl)}" target="_blank"><img src="${esc(cover)}" width="548" alt="" style="display:block;margin:0 auto;width:100%;max-width:548px;height:auto;border:0;border-radius:18px;"></a></td></tr>` : ''}
-${td(`color:${C.accent};font-size:12px;font-weight:700;letter-spacing:2px;padding:0 0 10px;`, esc(caps(stage)))}
-${td(`color:${C.text};font-size:23px;line-height:1.2;font-weight:700;letter-spacing:-.4px;padding:0 6px 8px;`, esc(title))}
-${d.client ? td(`color:${C.muted};font-size:13px;letter-spacing:1.5px;padding:0 0 6px;`, esc(caps(d.client))) : ''}
-${d.recipient?.name ? td(`color:${C.muted};font-size:14px;padding:0 0 6px;`, `For ${esc(d.recipient.name)}`) : ''}
-${d.message ? td(`color:${C.text};font-size:15px;line-height:1.65;padding:18px 6px 0;`, lines(d.message)) : ''}
-<tr><td align="center" style="padding:30px 0 10px;">${btnOf(pageUrl, files.length > 1 ? `Download all ${files.length} files` : stageAction(d.stage))}</td></tr>
-${meta.length ? td(`color:${C.muted};font-size:13px;padding:8px 0 0;`, meta.join(' &nbsp;·&nbsp; ')) : ''}
-${files.length > 1 ? files.map((f) => `<tr><td style="padding:10px 0 0;">${tileOf(`<div style="font-family:${FONT};color:${C.text};font-size:14px;font-weight:600;word-break:break-all;">${esc(f.name)}</div>${sizeOf(f.size) ? `<div style="font-family:${FONT};color:${C.muted};font-size:12px;padding-top:3px;">${sizeOf(f.size)}</div>` : ''}<div style="padding-top:12px;">${glassBtn(web(f.url) || pageUrl, 'Download')}</div>`, '16px 18px')}</td></tr>`).join('') : ''}
-${td('padding:24px 0 0;font-size:13px;', `<a href="${esc(pageUrl)}" target="_blank" style="color:${C.muted};text-decoration:underline;">Open the delivery page</a>`)}
-${d.fine ? td(`color:${C.muted};font-size:11px;line-height:1.6;padding:28px 4px 0;`, lines(d.fine)) : ''}
-`, company)
+  const heldNote = `<tr><td style="padding:28px 0 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#1a0d0e" style="background-color:#1a0d0e;border:1px solid #4a1416;border-radius:16px;"><tr><td align="center" style="padding:26px 22px 22px;font-family:${FONT};text-align:center;">
+<div style="font-size:26px;line-height:1;color:${P.accent};padding-bottom:12px;">&#10084;</div>
+<div style="color:${P.text};font-size:19px;font-weight:600;padding-bottom:10px;" lang="el">Τα αρχεία σας είναι έτοιμα!</div>
+<div style="color:#d9d6d0;font-size:14px;line-height:1.6;" lang="el">Ήταν χαρά μας να δουλέψουμε μαζί σας. Μόλις τακτοποιηθεί η εξόφληση, τα links θα ανοίξουν εδώ για να τα κατεβάσετε.</div>
+<div style="color:${P.text};font-size:14px;font-weight:600;padding-top:12px;" lang="el">Σας ευχαριστούμε θερμά!</div>
+<div style="color:${P.muted};font-size:12px;line-height:1.5;padding-top:14px;">Your files are ready and open right here once the payment is settled. Thank you!</div>
+</td></tr></table></td></tr>`
 
-  const text = [stage, title, d.client, '', d.message, '', `${files.length > 1 ? `Download all ${files.length} files` : stageAction(d.stage)}: ${pageUrl}`, d.password ? `Password: ${d.password}` : '', '', d.fine, '', company].filter((x, i, a) => x !== undefined && !(x === '' && a[i - 1] === '')).join('\n').trim()
+  const thumbRows = []
+  for (let i = 0; i < thumbs.length; i += 2) {
+    const cell = (t) => (t ? `<td width="50%" valign="top" style="padding:4px;"><a href="${esc(pageUrl)}" target="_blank"><img src="${esc(t.url)}" width="264" alt="${esc(t.name || '')}" style="display:block;width:100%;max-width:264px;height:auto;border:0;border-radius:12px;"></a></td>` : '<td width="50%" style="padding:4px;"></td>')
+    thumbRows.push(`<tr>${cell(thumbs[i])}${thumbs.length === 1 ? '' : cell(thumbs[i + 1])}</tr>`)
+  }
+
+  const rows = `${ptd(`color:${P.accent};font-size:11px;font-weight:600;letter-spacing:4px;padding:0 0 14px;`, esc(caps(stage)))}
+${ptd(`color:${P.text};font-size:30px;line-height:1.2;font-weight:300;padding:0 6px 10px;`, esc(title))}
+${d.client ? ptd(`color:#d9d6d0;font-size:13px;letter-spacing:3px;padding:0 0 4px;`, esc(caps(d.client))) : ''}
+${d.recipient?.name ? ptd(`color:${P.muted};font-size:14px;padding:4px 0 0;`, `For ${esc(d.recipient.name)}`) : ''}
+${d.message ? ptd(`color:#c9c6c0;font-size:14.5px;line-height:1.75;padding:22px 6px 0;`, lines(d.message)) : ''}
+${held ? heldNote : `<tr><td align="center" style="padding:30px 0 6px;">${redBtn(pageUrl, action)}</td></tr>`}
+${meta.length ? ptd(`color:${P.muted};font-size:12px;letter-spacing:1px;padding:10px 0 0;`, meta.join(' &nbsp;·&nbsp; ')) : ''}
+${files.length > 1 || held ? `<tr><td style="padding:18px 0 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${files.map((f) => fileRow(f, pageUrl, held)).join('')}</table></td></tr>` : ''}
+${held ? `<tr><td align="center" style="padding:24px 0 0;">${ghostBtn(pageUrl, 'Open the delivery page')}</td></tr>` : ''}
+${thumbs.length ? `${head2(thumbs.length > 1 ? 'Thumbnails' : 'Thumbnail')}<tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${thumbRows.join('')}</table></td></tr>` : ''}
+${credits.length ? `${head2('Credits')}${credits.map((c) => ptd('padding:0 0 12px;', `${c.role ? `<div style="color:${P.muted};font-size:10.5px;letter-spacing:2.5px;padding-bottom:3px;">${esc(caps(c.role))}</div>` : ''}<div style="color:${P.text};font-size:14.5px;">${esc(c.name)}</div>`)).join('')}` : ''}
+${d.fine ? ptd(`color:${P.muted};font-size:11px;line-height:1.65;padding:30px 4px 0;`, lines(d.fine)) : ''}`
+
+  const html = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background-color:${P.bg};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${P.bg}" style="${PAGE_BG}">
+<tr><td align="center" style="padding:44px 14px 40px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
+<tr><td align="center" style="padding:0 0 22px;border-bottom:1px solid #1f1f22;"><a href="${esc(pageUrl)}" target="_blank"><img src="${HUB}site/wordmark-white.png" width="300" alt="${esc(company)}" style="display:block;margin:0 auto;width:300px;max-width:78%;height:auto;border:0;color:${P.text};font-family:${FONT};font-size:22px;font-weight:700;"></a></td></tr>
+<tr><td style="padding:34px 0 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+${rows}
+</table></td></tr>
+</table>
+<p style="margin:48px 0 0;font-family:${FONT};font-size:10.5px;letter-spacing:2px;color:${P.muted};text-align:center;">${esc(caps(company))} · <a href="https://themadlions.com/" target="_blank" style="color:${P.muted};text-decoration:none;">themadlions.com</a></p>
+</td></tr>
+</table>
+</body></html>`
+
+  const text = [
+    stage, title, d.client, '', d.message, '',
+    held ? 'Τα αρχεία σας είναι έτοιμα! Μόλις τακτοποιηθεί η εξόφληση, τα links θα ανοίξουν εδώ για να τα κατεβάσετε. Σας ευχαριστούμε θερμά!' : '',
+    `${held ? 'Open the delivery page' : action}: ${pageUrl}`,
+    files.length > 1 || held ? files.map((f) => `· ${f.name}${sizeOf(f.size) ? ` (${sizeOf(f.size)})` : ''}`).join('\n') : '',
+    d.password ? `Password: ${d.password}` : '', '',
+    credits.length ? credits.map((c) => (c.role ? `${c.role}: ${c.name}` : c.name)).join('\n') : '', '',
+    d.fine, '', company,
+  ].filter((x, i, a) => x !== undefined && !(x === '' && a[i - 1] === '')).join('\n').trim()
   return { subject, html, text }
 }
 
