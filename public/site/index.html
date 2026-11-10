@@ -1058,7 +1058,8 @@ function firstLang() {
   try { if ((navigator.languages || [navigator.language || '']).some(function (x) { return /^el/i.test(x) }) || /Athens|Nicosia/.test(Intl.DateTimeFormat().resolvedOptions().timeZone)) return 'el' } catch (e) {}
   return 'en'
 }
-let lang = firstLang()
+let lang = 'en' // (scripts/site-seo.mjs reads the texts above up to this line)
+lang = firstLang()
 if (document.documentElement.dataset.lang) lang = document.documentElement.dataset.lang
 const t = (k) => (T[lang] && T[lang][k]) || T.en[k] || k
 const byTitle = (title) => WORKS.find((w) => w.t === title) || WORKS[0]
