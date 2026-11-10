@@ -522,7 +522,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 
 /* ===== a calmer, narrower Studio (Alex, 4 Nov 2026: "less wide, so everything fits more comfortably; make it better") ===== */
 @media (min-width: 761px) {
-  .side .in, main { max-width: 1440px; }
+  .side .in, main { max-width: 1720px; }
   main { padding-top: 40px; }
   .head { margin-bottom: 26px; }
   .head p { max-width: 64ch; line-height: 1.55; }
@@ -571,6 +571,56 @@ i.fresh { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); bo
   .places { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .app { padding: 18px; }
   .app-n .n { font-size: 34px; }
+}
+
+/* ===== Studio in three groups, wider (Alex, 10 Nov 2026): Overview · Sites, Apps, Downloads · themadlions.com, alexisk.gr, Accounts ===== */
+.nav .sep { width: 1px; height: 22px; margin: 0 8px; background: var(--edge-2); align-self: center; flex: none; }
+.sec-h { display: flex; align-items: baseline; gap: 12px; }
+.sec-h.first { margin-top: 0; }
+.sec-h .hint { font-weight: 400; letter-spacing: 0; }
+@media (min-width: 1500px) { .places { grid-template-columns: repeat(4, minmax(0, 1fr)); } .apps { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.pgs-card, .dlt-card { padding: 8px 10px; }
+.pg { display: grid; grid-template-columns: minmax(0, 1fr) 90px 90px 34px; gap: 14px; align-items: center; padding: 9px 12px; border-radius: 14px; font-size: 14px; }
+.pg + .pg { border-top: 1px solid var(--edge); }
+.pg:not(.hd):hover { background: rgba(255,255,255,.035); }
+.pg.hd { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); padding-top: 12px; padding-bottom: 10px; }
+.pg.hd span:nth-child(2), .pg.hd span:nth-child(3), .pg .v, .pg .n { text-align: right; font-variant-numeric: tabular-nums; }
+.pg .nm { display: grid; grid-template-columns: auto auto 1fr; gap: 3px 10px; align-items: baseline; min-width: 0; }
+.pg .nm b { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pg .nm small { color: var(--dim); font-size: 12px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; white-space: nowrap; }
+.pg .nm em { font-style: normal; font-size: 11.5px; color: var(--dim); padding: 1px 8px; border-radius: 99px; border: 1px solid var(--edge); justify-self: start; }
+.pg .nm .bar { grid-column: 1 / -1; }
+.pg .v { color: var(--muted); }
+.pg .n { font-weight: 600; }
+.pg.zero .nm b, .pg.zero .n { color: var(--muted); font-weight: 400; }
+.dr { display: grid; grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(150px, 1fr)) 110px; gap: 12px; align-items: center; padding: 11px 12px; border-radius: 14px; font-size: 14px; }
+.dr + .dr { border-top: 1px solid var(--edge); }
+.dr:not(.hd):hover { background: rgba(255,255,255,.035); }
+.dr.hd { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); padding-top: 12px; padding-bottom: 10px; }
+.dr.hd span:last-child, .dr .tot { text-align: right; }
+.dr .ap { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.dr .ap img { width: 38px; height: 38px; border-radius: 11px; flex: none; }
+.dr .ap > span { min-width: 0; display: grid; }
+.dr .ap b { font-size: 15px; font-weight: 600; }
+.dr .ap small { color: var(--muted); font-size: 12.5px; display: flex; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dr .cell { display: flex; align-items: center; gap: 8px; }
+.dr .cell b { min-width: 30px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--muted); }
+.dr .cell.none { color: var(--dim); font-size: 13px; }
+.dr .tot b { display: block; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.dr .tot small { color: var(--dim); font-size: 11.5px; }
+@media (max-width: 900px) {
+  .dr { grid-template-columns: 1fr auto; }
+  .dr.hd { display: none; }
+  .dr .ap { grid-column: 1; } .dr .tot { grid-column: 2; grid-row: 1; }
+  .dr .cell { grid-column: 1 / -1; justify-content: flex-end; padding: 6px 6px 6px 12px; border-radius: 14px; background: rgba(255,255,255,.035); border: 1px solid var(--edge); }
+  .dr .cell::before { content: attr(data-l); margin-right: auto; font-size: 13.5px; color: var(--text); }
+  .dr .cell.none { justify-content: flex-start; } .dr .cell.none::before { margin-right: 10px; }
+}
+@media (max-width: 760px) {
+  .nav { overflow-x: auto; scrollbar-width: none; } .nav::-webkit-scrollbar { display: none; }
+  .nav button { flex: 0 0 62px; } .nav .sep { display: none; }
+  .pg { grid-template-columns: minmax(0, 1fr) 46px 46px 34px; gap: 8px; padding: 9px 6px; }
+  .pg .nm { grid-template-columns: 1fr; } .pg .nm small { display: none; }
 }
 </style>
 </head>
@@ -628,8 +678,12 @@ i.fresh { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); bo
       <div class="studio">Studio</div>
       <nav class="nav" id="nav">
         <button type="button" data-tab="overview" class="on"><svg class="i"><use href="#i-grid"/></svg><span>Overview</span></button>
+        <i class="sep" aria-hidden="true"></i>
+        <button type="button" data-tab="sites"><svg class="i"><use href="#i-globe"/></svg><span>Sites</span></button>
         <button type="button" data-tab="apps"><svg class="i"><use href="#i-box"/></svg><span>Apps</span></button>
-        <button type="button" data-tab="work"><svg class="i"><use href="#i-globe"/></svg><span>themadlions<i class="tld">.com</i></span><b class="count" id="newCount2" hidden></b></button>
+        <button type="button" data-tab="downloads"><svg class="i"><use href="#i-dl"/></svg><span>Downloads</span></button>
+        <i class="sep" aria-hidden="true"></i>
+        <button type="button" data-tab="work"><svg class="i"><use href="#i-film"/></svg><span>themadlions<i class="tld">.com</i></span><b class="count" id="newCount2" hidden></b></button>
         <button type="button" data-tab="alexisk"><svg class="i"><use href="#i-user"/></svg><span>alexisk<i class="tld">.gr</i></span></button>
         <button type="button" data-tab="accounts"><svg class="i"><use href="#i-key"/></svg><span>Accounts</span></button>
       </nav>
@@ -660,14 +714,12 @@ i.fresh { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); bo
       </div>
       <div class="bento">
         <div class="card glass kpi" id="k1"></div><div class="card glass kpi" id="k2"></div><div class="card glass kpi" id="k3"></div><div class="card glass kpi" id="k4"></div>
-        <div class="card glass full places-card"><h3>Your sites and apps <span class="grow"></span><span class="hint">every admin, one click</span></h3><div class="places" id="places"></div></div>
         <div class="card glass wide"><h3 id="areaTitle">Visitors per day</h3><div class="area-wrap" id="areaWrap"></div></div>
         <div class="card glass side4"><h3>Where they come from</h3><div id="sources"></div></div>
-        <div class="card glass half"><h3>Most visited pages</h3><div class="rows" id="topPages"></div></div>
+        <div class="card glass half"><h3>Most visited pages <span class="grow"></span><button class="btn sm ghost" type="button" data-go="sites">All</button></h3><div class="rows" id="topPages"></div></div>
         <div class="card glass half"><h3>Apps <span class="grow"></span><button class="btn sm ghost" type="button" data-go="apps">All</button></h3><div class="rows" id="ovApps"></div></div>
         <div class="card glass half"><h3>Most watched</h3><div class="rows" id="topFilms"></div></div>
         <div class="card glass half"><h3>Latest enquiries <span class="grow"></span><button class="btn sm ghost" type="button" data-go="leads">All</button></h3><div class="rows" id="latestLeads"></div></div>
-        <div class="card glass full"><h3>Behind the scenes <span class="grow"></span><span class="hint">what everything runs on</span></h3><div class="places" id="services"></div></div>
       </div>
     </section>
 
@@ -796,6 +848,30 @@ i.fresh { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); bo
           <p class="hint" style="margin:10px 0 0">The real site, with your changes. Scroll in it; links open inside it.</p>
         </aside>
       </div>
+    </section>
+
+    <section data-pane="sites" hidden>
+      <div class="head">
+        <div><h1>Sites &amp; pages</h1><p>Every site we run, with the way into its admin, and every page of themadlions.com with its visits.</p></div>
+        <span class="grow"></span>
+        <div class="seg" id="sRange"><button type="button" data-d="7">7 days</button><button type="button" data-d="30" class="on">30 days</button><button type="button" data-d="90">90 days</button></div>
+      </div>
+      <h2 class="sec-h first">Sites</h2>
+      <div class="places" id="places"></div>
+      <h2 class="sec-h">Pages of themadlions.com <span class="hint" id="pgSum"></span></h2>
+      <div class="card glass pgs-card"><div class="pgs" id="pages"></div></div>
+      <h2 class="sec-h">Behind the scenes <span class="hint">what everything runs on</span></h2>
+      <div class="places" id="services"></div>
+    </section>
+
+    <section data-pane="downloads" hidden>
+      <div class="head">
+        <div><h1>Downloads</h1><p>The newest installer of every app in one list. Each link always gives the newest version, so it is safe to send to anyone.</p></div>
+        <span class="grow"></span>
+        <button class="btn" type="button" id="dlCopyAll"><svg class="i"><use href="#i-copy"/></svg>Copy every link</button>
+        <button class="btn" type="button" id="dlRefresh"><svg class="i"><use href="#i-redo"/></svg>Refresh</button>
+      </div>
+      <div class="card glass dlt-card"><div class="dlt" id="dlTable"></div></div>
     </section>
 
     <section data-pane="apps" hidden>
@@ -1019,7 +1095,7 @@ function go(tab) {
   document.querySelectorAll('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== tab })
   scrollTo({ top: 0 })
   try { sessionStorage.setItem('tml_studio_tab', tab) } catch (e) {}
-  ;({ overview: loadOverview, work: loadWorks, leads: loadLeads, shop: loadProducts, people: loadPeople, bts: loadBts, look: loadLook, apps: loadApps, alexisk: loadAk, accounts: loadAccounts })[tab]()
+  ;({ overview: loadOverview, work: loadWorks, leads: loadLeads, shop: loadProducts, people: loadPeople, bts: loadBts, look: loadLook, apps: loadApps, alexisk: loadAk, accounts: loadAccounts, sites: loadSites, downloads: loadDownloads })[tab]()
 }
 $('nav').onclick = (e) => { const b = e.target.closest('button'); if (b) go(b.dataset.tab) }
 $('siteNav').onclick = (e) => { const b = e.target.closest('button'); if (b) go(b.dataset.tab) }
@@ -1130,9 +1206,7 @@ async function loadOverview() {
     $('sources').innerHTML = `<div class="donut"><div class="ring" style="background:conic-gradient(${stops})"></div><div class="legend">${src.map(([k, v], i) => `<span><i style="background:${PALETTE[i]}"></i>${esc(k)} · ${Math.round(v / total * 100)}%</span>`).join('')}</div></div>`
   }
   renderPages(cur)
-  renderPlaces(vis(cur))
   renderOvApps()
-  renderServices()
   const films = tally(cur.filter((e) => e.kind === 'play'), (e) => e.ref).slice(0, 6)
   if (!works.length) { try { works = await rest('site_works?select=*&order=position.asc') } catch (e) {} }
   const max = Math.max(1, ...films.map((f) => f[1]))
@@ -2472,20 +2546,22 @@ $('appsRefresh').onclick = () => loadApps(true)
 
 // the apps that live in a browser, with how many opened their page in the last 30 days (site_events, themadlions.com only)
 const WEB = [
-  { id: 'roardino', name: 'Roardino', line: 'The call sheet in one link', open: '../roardino/', path: '/roardino/' },
-  { id: 'roarlist', name: 'RoarList', line: 'Shot lists in the browser', open: '../roarlist/' },
-  { id: 'roarcast', icon: '../lab/roarcast/icon.png', name: 'RoarCast', line: 'Jingle player and show planner (was RoarJingle)', open: '../lab/roarcast/', path: '/lab/roarcast/' },
-  { id: 'roarref', icon: '../lab/roarref/icon.png', name: 'RoarRef', line: 'Character sheets for AI', open: '../lab/roarref/app/', path: '/lab/roarref/' },
+  { id: 'roardino', name: 'Roardino', line: 'The social place of film people', open: '../social/', path: '/social/' },
+  { id: 'roardino', name: 'Roardino App', line: 'The call sheet in one link', open: '../roardino/', path: '/roardino/' },
+  { id: 'roarlist', name: 'RoarList', line: 'Shot lists in the browser (its visits are not counted)', open: '../roarlist/' },
+  { id: 'roarcast', icon: '../lab/roarcast/icon.png', name: 'RoarCast', line: 'Jingle player and show planner', open: '../lab/roarcast/', path: '/lab/roarcast/' },
+  { id: 'roarref', icon: '../lab/roarref/icon.png', name: 'RoarRef', line: 'Character sheets for AI', open: '../lab/roarref/app/', path: '/lab/roarref/app/' },
   { id: 'roarwriter', name: 'RoarWriter', line: 'Write in the browser', open: 'https://alexisdigipro-hub.github.io/roarwriter/' },
   { id: 'roarme', name: 'RoarMe', line: 'The messenger, in the browser', open: 'https://alexisdigipro-hub.github.io/roarme/' },
   { id: 'roartransfer', name: 'RoarTransfer', line: 'Files up to 5 GB with one link', open: 'https://roartransfer.com/', admin: 'https://roartransfer.com/#admin' },
-  { id: 'roarstudio', icon: '../lab/roarstudio/icon.png', name: 'RoarTransfer Studio', line: 'Review and delivery for audio, video and pictures', open: 'https://studio.roartransfer.com/', admin: 'https://studio.roartransfer.com/#admin', path: '/lab/roarstudio/' },
+  { id: 'roarstudio', name: 'RoarTransfer Studio', line: 'Review and delivery for audio, video and pictures', open: 'https://studio.roartransfer.com/', admin: 'https://roartransfer.com/#admin' },
+  { id: 'roarme', name: 'Roar Account', line: 'One sign-in for every Roar app', open: '../account/', path: '/account/' },
 ]
 let webViews = null
 async function renderWebApps() {
   const draw = () => {
     $('webApps').innerHTML = WEB.map((w) => {
-      const v = w.path && webViews ? webViews.filter((p) => p.startsWith(w.path)).length : null
+      const v = w.path && webViews ? webViews.filter((p) => p === w.path).length : null
       return `<div class="place" data-href="${w.open}"><div class="pt"><span class="lg">${w.id ? `<img src="${w.icon || `../lab/icons/${w.id}.png`}" alt="">` : esc(w.name[4] || w.name[0])}</span><b>${esc(w.name)}</b></div>
         <div class="pn">${v == null ? '' : `<strong>${num(v)}</strong>`}<small>${v == null ? esc(w.line) : 'opened, last 30 days'}</small></div>
         <div class="pa"><a class="btn sm" href="${w.open}" target="_blank" rel="noopener"><svg class="i"><use href="#i-ext"/></svg>Open</a>${w.admin ? `<a class="btn sm" href="${w.admin}" target="_blank" rel="noopener">Admin</a>` : ''}</div></div>`
@@ -2495,21 +2571,28 @@ async function renderWebApps() {
   if (webViews) return
   try {
     const since = new Date(Date.now() - 30 * 864e5).toISOString()
-    const rows = await rest(`site_events?select=path&kind=eq.view&at=gte.${since}&or=(path.like.*roardino*,path.like.*roarcast*,path.like.*roarref*,path.like.*roarstudio*)`, { headers: { Range: '0-9999' } })
-    webViews = rows.map((r) => (r.path || '').replace(/^\/site/, ''))
+    const rows = await rest(`site_events?select=path&kind=eq.view&at=gte.${since}&or=(path.like.*roardino*,path.like.*roarcast*,path.like.*roarref*,path.like.*social*,path.like.*account*)`, { headers: { Range: '0-9999' } })
+    webViews = rows.map((r) => normPath(r.path))
     draw()
   } catch (e) {}
 }
 
 // Overview: the pages people read, every app at a glance, and every place with its own admin
-const PAGE_NAMES = { '/': 'Home', '/el/': 'Home, in Greek', '/lab/': 'The Lab', '/roarme/': 'RoarMe', '/roardino/': 'Roardino (the app)', '/roarlist/': 'RoarList (the app)', '/account/': 'Roar Account' }
-function pageName(p) {
+// every page themadlions.com has, by name; a page whose visits are not counted says so
+const PAGES = [
+  ['Home', '/'], ['Home, in Greek', '/el/'], ['Aibsent Studios', '/aibsent/'], ['The Lab', '/lab/'],
+  ['RoarMe', '/roarme/'], ['Lab · Roardino App', '/lab/roardino/'], ['Lab · RoarMail', '/lab/roarmail/'], ['Lab · RoarList', '/lab/roarlist/'], ['Lab · RoarWriter', '/lab/roarwriter/'],
+  ['Lab · RoarKit', '/lab/roarkit/'], ['Lab · RoarMorph', '/lab/roarmorph/'], ['Lab · RoarPlay', '/lab/roarplay/'], ['Lab · RoarRef', '/lab/roarref/'], ['Lab · RoarTransfer Studio', '/lab/roarstudio/'], ['Lab · RoarCast', '/lab/roarcast/'],
+  ['Roardino, the social place', '/social/'], ['Roardino App, the ordino maker', '/roardino/'], ['RoarRef, the app', '/lab/roarref/app/'], ['RoarList, the app', '/roarlist/', 'off'], ['Roar Account', '/account/'], ['Policies and terms', '/legal/', 'off'],
+]
+function normPath(p) {
   p = (p || '/').replace(/^\/site(?=\/)/, '').replace(/index\.html$/, '')
-  if (!p.endsWith('/')) p += '/'
-  if (PAGE_NAMES[p]) return PAGE_NAMES[p]
-  const m = p.match(/^\/(?:el\/)?lab\/([^/]+)\//)
-  if (m) { const a = [...APPS, ...WEB].find((x) => x.id === m[1] || x.name.toLowerCase() === m[1]); return `Lab · ${a ? a.name : m[1]}` }
-  return p
+  return p.endsWith('/') ? p : p + '/'
+}
+function pageName(p) {
+  p = normPath(p)
+  const hit = PAGES.find((x) => x[1] === p)
+  return hit ? hit[0] : p
 }
 function renderPages(cur) {
   const views = cur.filter((e) => e.kind === 'view'), by = new Map()
@@ -2538,20 +2621,22 @@ async function qubiNumbers() {
   return { n, views }
 }
 let qubi = null
-function renderPlaces(visitors) {
+function renderPlaces(visitors, social) {
   const P = [
-    { name: 'themadlions.com', lg: 'TML', n: num(visitors), small: `visitors, ${days ? `last ${days} days` : 'all time'}`, go: 'work', label: 'Admin', open: 'https://themadlions.com/' },
+    { name: 'themadlions.com', lg: 'TML', n: num(visitors), small: `visitors, last ${sDays} days`, go: 'work', label: 'Admin', open: 'https://themadlions.com/' },
     { name: 'alexisk.gr', lg: 'AK', small: 'The order of the films on the home page', go: 'alexisk', label: 'Admin', open: 'https://alexisk.gr/' },
     { name: 'qubi.gr', lg: 'Q', n: qubi ? num(qubi.views) : '', small: qubi ? `views on ${num(qubi.n)} videos` : 'Music videos, news, records, TV', admin: 'https://qubi.gr/admin', open: 'https://qubi.gr/' },
     { name: 'boulevart.gr', lg: 'B', small: 'Bookings, props, equipment: its own admin and sign-in', admin: 'https://boulevart.gr/admin/login', open: 'https://boulevart.gr/' },
     { name: 'roartransfer.com', lg: 'RT', img: '../lab/icons/roartransfer.png', small: 'Transfers, Pro accounts, backgrounds: Admin with your Roar Account', admin: 'https://roartransfer.com/#admin', open: 'https://roartransfer.com/' },
+    { name: 'Roardino', lg: 'RD', img: '../lab/icons/roardino.png', n: social ? num(social) : '', small: social ? `opens, last ${sDays} days · its admin is inside your profile` : 'The social place of film people; its admin is inside your profile', open: '../social/' },
+    { name: 'RoarTransfer Studio', lg: 'RS', img: '../lab/icons/roarstudio.png', small: 'Review and delivery: Studio Pro and the waiting list in RoarTransfer’s Admin', admin: 'https://roartransfer.com/#admin', open: 'https://studio.roartransfer.com/' },
+    { name: 'THEMADLIONS Hub', lg: 'HUB', small: 'Projects, calendar, finance, the team', open: 'https://hub.themadlions.com/' },
     { name: 'Roar Accounts', lg: 'R', img: '../lab/icons/roarme.png', small: 'Every account of the Roar apps, sign-ups', go: 'accounts', label: 'Admin' },
   ]
-  $('places').innerHTML = P.map((p) => `<div class="place" ${p.go ? `data-go="${p.go}"` : `data-href="${p.admin}"`}><div class="pt"><span class="lg">${p.img ? `<img src="${p.img}" alt="">` : esc(p.lg)}</span><b>${esc(p.name)}</b></div>
+  $('places').innerHTML = P.map((p) => `<div class="place" ${p.go ? `data-go="${p.go}"` : `data-href="${p.admin || p.open}"`}><div class="pt"><span class="lg">${p.img ? `<img src="${p.img}" alt="">` : esc(p.lg)}</span><b>${esc(p.name)}</b></div>
     <div class="pn">${p.n ? `<strong>${p.n}</strong>` : ''}<small>${esc(p.small)}</small></div>
     <div class="pa">${p.go ? `<button class="btn sm red" type="button" data-go="${p.go}">${p.label}</button>` : ''}${p.admin ? `<a class="btn sm red" href="${p.admin}" target="_blank" rel="noopener"><svg class="i"><use href="#i-ext"/></svg>Admin</a>` : ''}${p.open ? `<a class="btn sm" href="${p.open}" target="_blank" rel="noopener">Site</a>` : ''}</div></div>`).join('')
-  if (!qubi) qubiNumbers().then((q) => { qubi = q; renderPlaces(visitors) }).catch(() => {})
-  if (appData && appData.some((x) => x.failed)) appData = null
+  if (!qubi) qubiNumbers().then((q) => { qubi = q; renderPlaces(visitors, social) }).catch(() => {})
 }
 
 // the services every site and app runs on, three to a row (Alex, 4 Nov: "whatever else you can reach, put it in Studio")
@@ -2570,6 +2655,57 @@ function renderServices() {
   $('services').innerHTML = SERVICES.map((v) => `<div class="place svc" data-href="${v.url}"><div class="pt"><span class="lg">${esc(v.lg)}</span><b>${esc(v.name)}</b></div>
     <div class="pn"><small>${esc(v.line)}</small></div>
     <div class="pa"><a class="btn sm" href="${v.url}" target="_blank" rel="noopener"><svg class="i"><use href="#i-ext"/></svg>Open</a></div></div>`).join('')
+}
+
+/* ---------- Sites & pages (Alex, 10 Nov: "every page and app we have, statistics for those without, and I don't want to get lost") ---------- */
+let sDays = 30
+$('sRange').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; sDays = +b.dataset.d; document.querySelectorAll('#sRange button').forEach((x) => x.classList.toggle('on', x === b)); loadSites() }
+async function loadSites() {
+  renderServices()
+  if (!$('places').children.length) renderPlaces(0, 0)
+  if (!$('pages').children.length) $('pages').innerHTML = '<div class="skel" style="height:260px"></div>'
+  const since = new Date(); since.setHours(0, 0, 0, 0); since.setDate(since.getDate() - (sDays - 1))
+  let ev = []
+  try {
+    for (let from = 0; from < 200000; from += 1000) {
+      const rows = await rest(`site_events?select=path,visitor&kind=eq.view&at=gte.${since.toISOString()}&order=at.asc`, { headers: { Range: `${from}-${from + 999}` } })
+      ev.push(...rows); if (rows.length < 1000) break
+    }
+  } catch (e) { toast(e.message); return }
+  const by = new Map()
+  ev.forEach((e) => { const k = normPath(e.path); if (!by.has(k)) by.set(k, { n: 0, v: new Set() }); const b = by.get(k); b.n++; b.v.add(e.visitor) })
+  const get = (path, pre) => { let n = 0; const v = new Set(); by.forEach((b, k) => { if (pre ? k.startsWith(path) : k === path) { n += b.n; b.v.forEach((x) => v.add(x)) } }); return { n, v: v.size } }
+  renderPlaces(new Set(ev.map((e) => e.visitor)).size, get('/social/').n)
+  const known = PAGES.map(([name, path, off]) => ({ name, path, off: off === 'off', ...get(path, path === '/legal/') }))
+  const named = new Set(PAGES.map((x) => x[1]))
+  const other = [...by].filter(([k]) => !named.has(k) && !k.startsWith('/legal/')).map(([k, b]) => ({ name: k, path: k, n: b.n, v: b.v.size, extra: true }))
+  const rows = [...known, ...other].sort((a, b) => b.n - a.n || (a.extra ? 1 : 0) - (b.extra ? 1 : 0)), max = Math.max(1, ...rows.map((r) => r.n))
+  $('pgSum').textContent = `${rows.length} pages · ${num(ev.length)} views in ${sDays} days`
+  $('pages').innerHTML = `<div class="pg hd"><span>Page</span><span>Visitors</span><span>Views</span><span></span></div>` + rows.map((r) => `<div class="pg${r.n ? '' : ' zero'}">
+    <span class="nm"><b>${esc(r.name)}</b>${r.extra ? '' : `<small>${esc(r.path)}</small>`}${r.off && !r.n ? '<em>not counted</em>' : ''}<i class="bar"><i style="width:${r.n / max * 100}%"></i></i></span>
+    <span class="v">${num(r.v)}</span><span class="n">${num(r.n)}</span>
+    <a class="ib" href="..${esc(r.path)}" target="_blank" rel="noopener" title="Open the page" aria-label="Open the page"><svg class="i"><use href="#i-ext"/></svg></a></div>`).join('')
+}
+
+/* ---------- Downloads: the newest installer of every app, one list ---------- */
+async function loadDownloads(fresh) {
+  if (!appData || fresh === true) $('dlTable').innerHTML = '<div class="skel" style="height:320px"></div>'
+  const list = await getApps(fresh === true)
+  if (appErr) toast(appErr)
+  const cols = PLATS.map((p) => p[0])
+  const rows = list.slice().sort((a, b) => (b.latest ? Date.parse(b.latest.at) : 0) - (a.latest ? Date.parse(a.latest.at) : 0))
+  $('dlTable').innerHTML = `<div class="dr hd"><span>App</span>${cols.map((c) => `<span>${c}</span>`).join('')}<span>In all</span></div>` + rows.map((x) => `<div class="dr">
+    <span class="ap"><img src="${iconOf(x.app)}" alt=""><span><b>${esc(x.app.name)}</b><small>${fresh7(x) ? '<i class="fresh" title="New this week"></i>' : ''}${verLine(x)}${x.app.note ? ` · ${esc(x.app.note)}` : ''}</small></span></span>
+    ${cols.map((c) => { const p = x.plats.find((q) => q.label === c); return p ? `<span class="cell" data-l="${c}"><b title="Downloads of this version">${num(p.count)}</b><button class="ib" type="button" data-copy="${esc(p.link)}" title="Copy the link" aria-label="Copy the ${c} link"><svg class="i"><use href="#i-copy"/></svg></button><a class="ib" href="${esc(p.link)}" title="Download" aria-label="Download for ${c}"><svg class="i"><use href="#i-dl"/></svg></a></span>` : `<span class="cell none" data-l="${c}">${x.failed ? '…' : 'none'}</span>` }).join('')}
+    <span class="tot"><b>${num(x.total)}</b><small>downloads</small></span></div>`).join('')
+  if (appData && appData.some((x) => x.failed)) appData = null
+}
+const fresh7 = (x) => x.latest && Date.now() - Date.parse(x.latest.at) < 7 * 864e5
+$('dlRefresh').onclick = () => loadDownloads(true)
+$('dlCopyAll').onclick = async () => {
+  const list = await getApps()
+  const text = list.filter((x) => x.plats.length).map((x) => `${x.app.name}${x.version ? ` ${x.version}` : ''}\n${x.plats.map((p) => `${p.label}: ${p.link}`).join('\n')}`).join('\n\n')
+  try { await navigator.clipboard.writeText(text); toast('Every link copied') } catch (e) { prompt('Copy the links:', text) }
 }
 
 /* ---------- Accounts: Roar Admin (its own sign-in, the Roar Account) inside this page ---------- */

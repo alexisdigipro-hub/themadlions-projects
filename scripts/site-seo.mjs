@@ -152,6 +152,8 @@ function head(l, c, d, depth) {
     `<meta name="twitter:description" content="${esc(k.og)}">`,
     `<meta name="twitter:image" content="${BASE}og-image.png">`,
     `<link rel="icon" href="${live ? up : '../' + up}favicon.svg" type="image/svg+xml">`,
+    // the live site's own mark (themadlions-site: favicon.svg, favicon.ico, favicon-192.png, apple-touch-icon.png; Alex, 10 Nov): a PNG of 192 px for Google's results, the phone's home screen
+    ...(live ? [`<link rel="icon" href="${up}favicon-192.png" sizes="192x192" type="image/png">`, `<link rel="apple-touch-icon" href="${up}apple-touch-icon.png">`] : []),
     '<link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt">',
     jsonLd(l, c, d),
   ].filter(Boolean).join('\n')
