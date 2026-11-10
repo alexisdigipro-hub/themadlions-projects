@@ -2546,7 +2546,7 @@ $('appsRefresh').onclick = () => loadApps(true)
 
 // the apps that live in a browser, with how many opened their page in the last 30 days (site_events, themadlions.com only)
 const WEB = [
-  { id: 'roardino', name: 'Roardino', line: 'The social place of film people', open: '../social/', path: '/social/' },
+  { id: 'roardino', icon: '../lab/icons/roardino-social.png', name: 'Roardino', line: 'The social place of film people', open: '../social/', path: '/social/' },
   { id: 'roardino', name: 'Roardino App', line: 'The call sheet in one link', open: '../roardino/', path: '/roardino/' },
   { id: 'roarlist', name: 'RoarList', line: 'Shot lists in the browser (its visits are not counted)', open: '../roarlist/' },
   { id: 'roarcast', icon: '../lab/roarcast/icon.png', name: 'RoarCast', line: 'Jingle player and show planner', open: '../lab/roarcast/', path: '/lab/roarcast/' },
@@ -2628,7 +2628,7 @@ function renderPlaces(visitors, social) {
     { name: 'qubi.gr', lg: 'Q', n: qubi ? num(qubi.views) : '', small: qubi ? `views on ${num(qubi.n)} videos` : 'Music videos, news, records, TV', admin: 'https://qubi.gr/admin', open: 'https://qubi.gr/' },
     { name: 'boulevart.gr', lg: 'B', small: 'Bookings, props, equipment: its own admin and sign-in', admin: 'https://boulevart.gr/admin/login', open: 'https://boulevart.gr/' },
     { name: 'roartransfer.com', lg: 'RT', img: '../lab/icons/roartransfer.png', small: 'Transfers, Pro accounts, backgrounds: Admin with your Roar Account', admin: 'https://roartransfer.com/#admin', open: 'https://roartransfer.com/' },
-    { name: 'Roardino', lg: 'RD', img: '../lab/icons/roardino.png', n: social ? num(social) : '', small: social ? `opens, last ${sDays} days · its admin is inside your profile` : 'The social place of film people; its admin is inside your profile', open: '../social/' },
+    { name: 'Roardino', lg: 'RD', img: '../lab/icons/roardino-social.png', n: social ? num(social) : '', small: social ? `opens, last ${sDays} days · its admin is inside your profile` : 'The social place of film people; its admin is inside your profile', open: '../social/' },
     { name: 'RoarTransfer Studio', lg: 'RS', img: '../lab/icons/roarstudio.png', small: 'Review and delivery: Studio Pro and the waiting list in RoarTransfer’s Admin', admin: 'https://roartransfer.com/#admin', open: 'https://studio.roartransfer.com/' },
     { name: 'THEMADLIONS Hub', lg: 'HUB', small: 'Projects, calendar, finance, the team', open: 'https://hub.themadlions.com/' },
     { name: 'Roar Accounts', lg: 'R', img: '../lab/icons/roarme.png', small: 'Every account of the Roar apps, sign-ups', go: 'accounts', label: 'Admin' },
