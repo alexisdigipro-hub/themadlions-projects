@@ -11,9 +11,9 @@
   if (matchMedia('(prefers-reduced-motion: reduce)').matches || conn.saveData || /(^|-)2g$/.test(conn.effectiveType || '')) return
   const canHover = matchMedia('(hover: hover) and (pointer: fine)').matches
   const CROP = 1.3 // the players are drawn a little larger than the tile, so their own title and logo stay out of view
-  const HOVER_WAIT = 220, CENTRE_WAIT = 450, GIVE_UP = 9000, PHONE_PLAYS = 14000
+  const HOVER_WAIT = 70, CENTRE_WAIT = 260, GIVE_UP = 9000, PHONE_PLAYS = 14000
   const css = document.createElement('style')
-  css.textContent = '.pv{position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .45s ease;background:#000}'
+  css.textContent = '.pv{position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .28s ease;background:#000}'
     + '.pv.on{opacity:1}'
     + '.pv iframe{position:absolute;left:50%;top:50%;border:0;transform-origin:50% 50%}'
     + '.pv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}'
@@ -31,7 +31,7 @@
     live = null
     l.timers.forEach(clearTimeout); clearInterval(l.knock)
     l.tile.classList.remove('pv-on'); l.box.classList.remove('on')
-    setTimeout(() => l.box.remove(), l.shown ? 480 : 0)
+    setTimeout(() => l.box.remove(), l.shown ? 320 : 0)
   }
   function show(l) {
     if (live !== l || l.shown) return
@@ -116,8 +116,35 @@
     }
     const state = d.event === 'onStateChange' ? d.info : info.playerState
     if (state === 3 && l.jump) l.jump = false
-    else if (state === 1 && !l.jump && !l.due) { l.due = true; l.timers.push(setTimeout(() => show(l), 260)) }
+    else if (state === 1 && !l.jump && !l.due) { l.due = true; l.timers.push(setTimeout(() => show(l), 90)) }
   })
+
+  // sooner (Alex, 10 Nov: "can the tile play more at once?"): most of the wait is YouTube's player arriving the first time.
+  // As the first film tile nears the screen the browser opens its lines to YouTube and fetches the player once, unseen
+  // and without playing, so the first tile pointed at finds it already here.
+  let warmed = false
+  function warm() {
+    if (warmed) return
+    const first = document.querySelector('[data-pv^="yt:"]')
+    if (!first) return
+    warmed = true
+    ;['https://www.youtube-nocookie.com', 'https://www.youtube.com', 'https://i.ytimg.com', 'https://www.google.com', 'https://googleads.g.doubleclick.net', 'https://static.doubleclick.net'].forEach((h) => {
+      const k = document.createElement('link'); k.rel = 'preconnect'; k.href = h; k.crossOrigin = ''; document.head.appendChild(k)
+    })
+    const f = document.createElement('iframe')
+    f.title = ''; f.tabIndex = -1; f.setAttribute('aria-hidden', 'true'); f.referrerPolicy = 'strict-origin-when-cross-origin'
+    f.style.cssText = 'position:fixed;left:-9999px;top:0;width:320px;height:180px;border:0;visibility:hidden;pointer-events:none'
+    f.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(first.dataset.pv.slice(3))}?mute=1&controls=0&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`
+    document.body.appendChild(f)
+    setTimeout(() => f.remove(), 12000)
+  }
+  const watchWarm = () => {
+    const first = document.querySelector('[data-pv^="yt:"]')
+    if (!first || !('IntersectionObserver' in window)) return
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); if (!quiet()) warm() } }, { rootMargin: '600px 0px' })
+    io.observe(first)
+  }
+  setTimeout(watchWarm, 800)
 
   const tileOf = (el) => el && el.closest ? el.closest('[data-pv]') : null
   // a click opens the film itself: the piece steps aside
