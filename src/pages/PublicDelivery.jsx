@@ -303,7 +303,7 @@ function Credits({ list }) {
           : <div key={i} className="solo"><dd>{c.name}</dd></div>))}
       </dl>
       <button type="button" className={`dlv-btn ghost dlv-each-btn dlv-credits-copy${copied ? ' done' : ''}`} onClick={copy} title="Copy the credits for a YouTube description">
-        {copied ? 'Copied' : 'Copy'}
+        {copied ? 'Copied' : 'Copy Credits'}
       </button>
     </div>
   )
