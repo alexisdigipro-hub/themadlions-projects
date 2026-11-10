@@ -349,14 +349,21 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; j
   }
   var EN = {}
   ;[].slice.call(document.querySelectorAll('[data-t]')).forEach(function (e) { var k = e.dataset.t; if (!(k in EN)) EN[k] = e.hasAttribute('data-html') ? e.innerHTML : e.textContent })
-  function setLang(l) {
+  function setLang(l, pick) {
     document.documentElement.lang = l
     ;[].slice.call(document.querySelectorAll('[data-t]')).forEach(function (e) { var v = (l === 'el' ? EL : EN)[e.dataset.t]; if (v == null) return; if (e.hasAttribute('data-html')) e.innerHTML = v; else e.textContent = v })
     ;[].slice.call(document.querySelectorAll('.lang button')).forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.l === l) })
-    try { localStorage.setItem('tml_site_lang', l) } catch (e) {}
+    if (pick) { try { localStorage.setItem('tml_site_lang', l); localStorage.setItem('tml_site_lang_set', '1') } catch (e) {} }
   }
-  ;[].slice.call(document.querySelectorAll('.lang button')).forEach(function (b) { b.onclick = function () { setLang(b.dataset.l) } })
-  var saved = 'en'; try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+  ;[].slice.call(document.querySelectorAll('.lang button')).forEach(function (b) { b.onclick = function () { setLang(b.dataset.l, 1) } })
+  // Greek by itself for a visitor from Greece (Alex, 10 Nov 2026): a browser set to Greek, or a clock on Greek or Cypriot time.
+  // EN / GR pressed once stays (tml_site_lang with tml_site_lang_set; an "en" kept before 10 Nov was only the default).
+  function firstLang() {
+    try { var s = localStorage.getItem('tml_site_lang'); if (s === 'el' || (s === 'en' && localStorage.getItem('tml_site_lang_set'))) return s } catch (e) {}
+    try { if ((navigator.languages || [navigator.language || '']).some(function (x) { return /^el/i.test(x) }) || /Athens|Nicosia/.test(Intl.DateTimeFormat().resolvedOptions().timeZone)) return 'el' } catch (e) {}
+    return 'en'
+  }
+  var saved = firstLang()
   setLang(saved)
   var rv = [].slice.call(document.querySelectorAll('.reveal'))
   if (!('IntersectionObserver' in window) || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) rv.forEach(function (e) { e.classList.add('in') })

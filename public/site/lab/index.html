@@ -526,16 +526,22 @@ footer .wordmark { width: 130px; opacity: .6; }
   }
   var nodes = [].slice.call(document.querySelectorAll('[data-t]')), EN = {}
   nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })
-  function setLang(l) {
+  function setLang(l, pick) {
     var d = l === 'el' ? EL : EN
     nodes.forEach(function (n) { var v = d[n.dataset.t]; if (v == null) v = EN[n.dataset.t]; if (n.hasAttribute('data-html')) n.innerHTML = v; else n.textContent = v })
     document.documentElement.lang = l === 'el' ? 'el' : 'en'
     document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) })
-    try { localStorage.setItem('tml_site_lang', l) } catch (e) {}
+    if (pick) { try { localStorage.setItem('tml_site_lang', l); localStorage.setItem('tml_site_lang_set', '1') } catch (e) {} }
   }
-  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang) }) })
-  var saved = 'en'
-  try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang, 1) }) })
+  // Greek by itself for a visitor from Greece (Alex, 10 Nov 2026): a browser set to Greek, or a clock on Greek or Cypriot time.
+  // EN / GR pressed once stays (tml_site_lang with tml_site_lang_set; an "en" kept before 10 Nov was only the default).
+  function firstLang() {
+    try { var s = localStorage.getItem('tml_site_lang'); if (s === 'el' || (s === 'en' && localStorage.getItem('tml_site_lang_set'))) return s } catch (e) {}
+    try { if ((navigator.languages || [navigator.language || '']).some(function (x) { return /^el/i.test(x) }) || /Athens|Nicosia/.test(Intl.DateTimeFormat().resolvedOptions().timeZone)) return 'el' } catch (e) {}
+    return 'en'
+  }
+  var saved = firstLang()
   setLang(saved)
 
 

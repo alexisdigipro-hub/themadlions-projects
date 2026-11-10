@@ -258,13 +258,13 @@ footer .wordmark { width: 130px; opacity: .6; }
   var nodes = [].slice.call(document.querySelectorAll('[data-t]')), EN = {}
   nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })
   EN['work.none'] = 'The films are on their way.'
-  function setLang(l) {
+  function setLang(l, pick) {
     lang = l === 'el' ? 'el' : 'en'
     var d = lang === 'el' ? EL : EN
     nodes.forEach(function (n) { var v = d[n.dataset.t]; if (v == null) v = EN[n.dataset.t]; if (n.hasAttribute('data-html')) n.innerHTML = v; else n.textContent = v })
     document.documentElement.lang = lang
     document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === lang) })
-    try { localStorage.setItem('tml_site_lang', lang) } catch (e) {}
+    if (pick) { try { localStorage.setItem('tml_site_lang', lang); localStorage.setItem('tml_site_lang_set', '1') } catch (e) {} }
     renderCaps(); renderWorks()
   }
 
@@ -307,6 +307,8 @@ footer .wordmark { width: 130px; opacity: .6; }
       b.insertAdjacentHTML('beforeend', (ks.length ? '<span class="kchip"><i></i>' + kName(kf !== 'all' ? kf : ks[0]) + '</span>' : '') + '<span class="play">' + PLAY + '</span>')
       b.setAttribute('aria-label', w.title)
       b.onclick = function () { play(w) }
+      // the tile plays a silent piece of its film by itself (../preview.js; Alex, 10 Nov)
+      if (w.video_id) { b.dataset.pv = (w.kind || 'yt') + ':' + w.video_id; b.dataset.pvs = (w.categories || []).some(function (c) { return ['Commercials', 'Corporate', 'Events', 'Motion Graphics'].indexOf(c) >= 0 }) ? 3 : 22 }
       grid.appendChild(b)
     })
   }
@@ -335,9 +337,15 @@ footer .wordmark { width: 130px; opacity: .6; }
   player.onclick = function (e) { if (e.target === player) close() }
   addEventListener('keydown', function (e) { if (e.key === 'Escape' && player.classList.contains('open')) close() })
 
-  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang) }) })
-  var saved = 'en'
-  try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang, 1) }) })
+  // Greek by itself for a visitor from Greece (Alex, 10 Nov 2026): a browser set to Greek, or a clock on Greek or Cypriot time.
+  // EN / GR pressed once stays (tml_site_lang with tml_site_lang_set; an "en" kept before 10 Nov was only the default).
+  function firstLang() {
+    try { var s = localStorage.getItem('tml_site_lang'); if (s === 'el' || (s === 'en' && localStorage.getItem('tml_site_lang_set'))) return s } catch (e) {}
+    try { if ((navigator.languages || [navigator.language || '']).some(function (x) { return /^el/i.test(x) }) || /Athens|Nicosia/.test(Intl.DateTimeFormat().resolvedOptions().timeZone)) return 'el' } catch (e) {}
+    return 'en'
+  }
+  var saved = firstLang()
   setLang(saved)
 
   var bar = document.getElementById('bar')
@@ -352,5 +360,6 @@ footer .wordmark { width: 130px; opacity: .6; }
   }
 })()
 </script>
+<script src="../preview.js" defer></script>
 </body>
 </html>

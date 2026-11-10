@@ -44,8 +44,8 @@ const termsEnd = (app, mail) => ({
   ],
 })
 const account = {
-  en: ['Your account', ['The account is your RoarMe account: the same email and password sign you in to RoarMe, RoarList on the web, RoarWriter, Roardino and RoarTransfer. You must be 15 or older. Keep your password safe and tell us if you think someone else is using it.']],
-  el: ['Ο λογαριασμός σου', ['Ο λογαριασμός είναι ο λογαριασμός σου στο RoarMe: το ίδιο email και ο ίδιος κωδικός σε βάζουν στο RoarMe, στο RoarList στον browser, στο RoarWriter, στο Roardino και στο RoarTransfer. Πρέπει να είσαι 15 ετών και άνω. Φύλαγε τον κωδικό σου και πες μας αν πιστεύεις ότι τον χρησιμοποιεί κάποιος άλλος.']],
+  en: ['Your account', ['The account is your Roar Account, one sign-in for every Roar app: the same email and password (or Sign in with Roar Account) sign you in to RoarMe, RoarMail, RoarList on the web, RoarWriter, Roardino and RoarTransfer. You must be 15 or older. Keep your password safe and tell us if you think someone else is using it.']],
+  el: ['Ο λογαριασμός σου', ['Ο λογαριασμός είναι ο Roar Account σου, μία σύνδεση για όλες τις εφαρμογές Roar: το ίδιο email και ο ίδιος κωδικός (ή το Sign in with Roar Account) σε βάζουν στο RoarMe, στο RoarMail, στο RoarList στον browser, στο RoarWriter, στο Roardino και στο RoarTransfer. Πρέπει να είσαι 15 ετών και άνω. Φύλαγε τον κωδικό σου και πες μας αν πιστεύεις ότι τον χρησιμοποιεί κάποιος άλλος.']],
 }
 const yours = (what) => ({
   en: ['What you make is yours', [`${what.en} belong to you. We keep them only to store them, sync them and show them to you and to the people you choose. We do not use them for anything else, and never to train AI.`, 'Do not use the app for anything illegal, or with material that breaks someone else\'s rights.']],
@@ -132,17 +132,17 @@ const APPS = [
     }, termsEnd('RoarMail', LAB)),
   },
   {
-    id: 'roarlist', name: 'RoarList', page: 'lab/roarlist/', what: { en: 'shot lists and storyboards', el: 'shot lists και storyboards' },
+    id: 'roarlist', name: 'RoarList', page: 'lab/roarlist/', updated: { en: '8 November 2026', el: '8 Νοεμβρίου 2026' }, what: { en: 'shot lists and storyboards', el: 'shot lists και storyboards' },
     privacy: join2({
       en: [
-        ['In short', ['On Mac and Windows your shot lists stay on your computer and there is no account. In the browser (themadlions.com/roarlist) they are kept in your RoarMe account so they follow you to any device.']],
+        ['In short', ['On Mac and Windows your shot lists stay on your computer and there is no account. In the browser (themadlions.com/roarlist) they are kept in your Roar Account so they follow you to any device.']],
         ['The Mac and Windows app', [
           'Each shot list (title, client, director, DoP, date, notes, scenes and shots with their cast, lens and the rest) and the frames you add are saved in the app\'s folder on your computer. Deleting a list moves it to your computer\'s Trash.',
           'The look, the language and the screen you were on are kept on your computer.',
           updates('roarlist').en,
         ]],
         ['In the browser', [
-          'You sign in with your RoarMe account (name, email, password). Your shot lists and your settings are saved in it, and the frames in a private store that only you can open.',
+          'You sign in with your Roar Account (name, email, password). Your shot lists and your settings are saved in it, and the frames in a private store that only you can open.',
           'Lists made before you signed in are kept in your browser, and move to your account the first time you sign in.',
           'Deleting a list in the browser deletes it and its frames from your account for good. Frames no shot uses any more are cleaned up when you open the list.',
           'Your sign-in is kept in your browser until you sign out.',
@@ -152,17 +152,17 @@ const APPS = [
           'Exports (PDF, a web page, a .roarlist file) are made on your device and go only where you send them. There are no share links.',
         ]],
         ['Where it is, and who sees it', [where.en, 'Nobody else sees your shot lists. An administrator of the system can technically reach the database, and only does so to fix a problem.']],
-        ['How to delete it', [`Delete a list in the app. To delete everything, delete your RoarMe account (${ROARME_DEL.en}): your shot lists and settings go with it. If anything is left over, write to us and we remove it.`]],
+        ['How to delete it', [`Delete a list in the app. To delete everything, delete your Roar Account (themadlions.com/account > Delete account, or ${ROARME_DEL.en}): your shot lists and settings go with it. If anything is left over, write to us and we remove it.`]],
       ],
       el: [
-        ['Με λίγα λόγια', ['Σε Mac και Windows τα shot lists σου μένουν στον υπολογιστή σου και δεν υπάρχει λογαριασμός. Στον browser (themadlions.com/roarlist) φυλάσσονται στον λογαριασμό σου στο RoarMe, για να σε ακολουθούν σε κάθε συσκευή.']],
+        ['Με λίγα λόγια', ['Σε Mac και Windows τα shot lists σου μένουν στον υπολογιστή σου και δεν υπάρχει λογαριασμός. Στον browser (themadlions.com/roarlist) φυλάσσονται στον Roar Account σου, για να σε ακολουθούν σε κάθε συσκευή.']],
         ['Η εφαρμογή για Mac και Windows', [
           'Κάθε shot list (τίτλος, πελάτης, σκηνοθέτης, DoP, ημερομηνία, σημειώσεις, σκηνές και πλάνα με το cast, τον φακό και τα υπόλοιπα) και τα καρέ που προσθέτεις αποθηκεύονται στον φάκελο της εφαρμογής στον υπολογιστή σου. Η διαγραφή ενός list το πηγαίνει στον Κάδο του υπολογιστή.',
           'Η εμφάνιση, η γλώσσα και η οθόνη που ήσουν φυλάσσονται στον υπολογιστή σου.',
           updates('roarlist').el,
         ]],
         ['Στον browser', [
-          'Συνδέεσαι με τον λογαριασμό σου στο RoarMe (όνομα, email, κωδικός). Τα shot lists και οι ρυθμίσεις σου αποθηκεύονται σε αυτόν, και τα καρέ σε ιδιωτικό χώρο που ανοίγεις μόνο εσύ.',
+          'Συνδέεσαι με τον Roar Account σου (όνομα, email, κωδικός). Τα shot lists και οι ρυθμίσεις σου αποθηκεύονται σε αυτόν, και τα καρέ σε ιδιωτικό χώρο που ανοίγεις μόνο εσύ.',
           'Όσα lists φτιάχτηκαν πριν συνδεθείς φυλάσσονται στον browser σου, και περνούν στον λογαριασμό σου την πρώτη φορά που συνδέεσαι.',
           'Η διαγραφή ενός list στον browser το σβήνει οριστικά από τον λογαριασμό σου, μαζί με τα καρέ του. Καρέ που δεν τα χρησιμοποιεί πια κανένα πλάνο καθαρίζονται όταν ανοίγεις το list.',
           'Η σύνδεσή σου φυλάσσεται στον browser ώσπου να αποσυνδεθείς.',
@@ -172,16 +172,16 @@ const APPS = [
           'Οι εξαγωγές (PDF, ιστοσελίδα, αρχείο .roarlist) γίνονται στη συσκευή σου και πάνε μόνο όπου τις στέλνεις. Δεν υπάρχουν links κοινοποίησης.',
         ]],
         ['Πού είναι, και ποιος τα βλέπει', [where.el, 'Κανείς άλλος δεν βλέπει τα shot lists σου. Ένας διαχειριστής του συστήματος έχει τεχνικά πρόσβαση στη βάση, και τη χρησιμοποιεί μόνο για να λύσει κάποιο πρόβλημα.']],
-        ['Πώς τα σβήνεις', [`Σβήσε ένα list μέσα στην εφαρμογή. Για να σβήσεις τα πάντα, διάγραψε τον λογαριασμό σου στο RoarMe (${ROARME_DEL.el}): τα shot lists και οι ρυθμίσεις σου φεύγουν μαζί του. Αν μείνει κάτι, γράψε μας και το σβήνουμε.`]],
+        ['Πώς τα σβήνεις', [`Σβήσε ένα list μέσα στην εφαρμογή. Για να σβήσεις τα πάντα, διάγραψε τον Roar Account σου (themadlions.com/account > Delete account, ή ${ROARME_DEL.el}): τα shot lists και οι ρυθμίσεις σου φεύγουν μαζί του. Αν μείνει κάτι, γράψε μας και το σβήνουμε.`]],
       ],
     }, rights(LAB)),
     terms: join2({ en: [account.en, yours({ en: 'Your shot lists and frames', el: 'Τα shot lists και τα καρέ σου' }).en], el: [account.el, yours({ en: 'Your shot lists and frames', el: 'Τα shot lists και τα καρέ σου' }).el] }, termsEnd('RoarList', LAB)),
   },
   {
-    id: 'roarwriter', name: 'RoarWriter', page: 'lab/roarwriter/', what: { en: 'the screenwriting app', el: 'η εφαρμογή σεναρίου' },
+    id: 'roarwriter', name: 'RoarWriter', page: 'lab/roarwriter/', updated: { en: '8 November 2026', el: '8 Νοεμβρίου 2026' }, what: { en: 'the screenwriting app', el: 'η εφαρμογή σεναρίου' },
     privacy: join2({
       en: [
-        ['In short', ['RoarWriter keeps your scripts in your RoarMe account and a copy on your device, so you can write offline. The AI only runs when you press one of its buttons, and only reads what that task needs.']],
+        ['In short', ['RoarWriter keeps your scripts in your Roar Account and a copy on your device, so you can write offline. The AI only runs when you press one of its buttons, and only reads what that task needs.']],
         ['What we keep', [
           'Your account: name, email and password (as a secure hash), from RoarMe.',
           'Your scripts, with everything in them: the title page (including the contact you write there), the text, notes, cards, beats, storyboards, schedules, revisions and saved AI reports.',
@@ -205,10 +205,10 @@ const APPS = [
           'The web version is served by GitHub Pages.',
         ]],
         ['Where it is, and who sees it', [where.en, 'Nobody sees your scripts except you and the people you share them with. An administrator of the system can technically reach the database, and only does so to fix a problem.']],
-        ['How to delete it', [`Deleting a script (only its owner can) deletes it with its shares and versions. To delete everything, delete your RoarMe account (${ROARME_DEL.en}): your scripts go with it. If anything is left over, for example storyboard pictures, write to us and we remove it.`]],
+        ['How to delete it', [`Deleting a script (only its owner can) deletes it with its shares and versions. To delete everything, delete your Roar Account (themadlions.com/account > Delete account, or ${ROARME_DEL.en}): your scripts go with it. If anything is left over, for example storyboard pictures, write to us and we remove it.`]],
       ],
       el: [
-        ['Με λίγα λόγια', ['Το RoarWriter κρατά τα σενάριά σου στον λογαριασμό σου στο RoarMe και ένα αντίγραφο στη συσκευή σου, για να γράφεις και χωρίς σύνδεση. Το AI τρέχει μόνο όταν πατήσεις ένα από τα κουμπιά του, και διαβάζει μόνο ό,τι χρειάζεται η συγκεκριμένη δουλειά.']],
+        ['Με λίγα λόγια', ['Το RoarWriter κρατά τα σενάριά σου στον Roar Account σου και ένα αντίγραφο στη συσκευή σου, για να γράφεις και χωρίς σύνδεση. Το AI τρέχει μόνο όταν πατήσεις ένα από τα κουμπιά του, και διαβάζει μόνο ό,τι χρειάζεται η συγκεκριμένη δουλειά.']],
         ['Τι κρατάμε', [
           'Τον λογαριασμό σου: όνομα, email και κωδικό (ως ασφαλές hash), από το RoarMe.',
           'Τα σενάριά σου, με ό,τι έχουν μέσα: τη σελίδα τίτλου (μαζί με την επαφή που γράφεις εκεί), το κείμενο, σημειώσεις, κάρτες, beats, storyboards, προγράμματα γυρισμάτων, αναθεωρήσεις και αποθηκευμένες αναφορές του AI.',
@@ -232,7 +232,7 @@ const APPS = [
           'Η έκδοση για τον browser σερβίρεται από το GitHub Pages.',
         ]],
         ['Πού είναι, και ποιος τα βλέπει', [where.el, 'Κανείς δεν βλέπει τα σενάριά σου εκτός από σένα και όσους τα μοιράζεσαι. Ένας διαχειριστής του συστήματος έχει τεχνικά πρόσβαση στη βάση, και τη χρησιμοποιεί μόνο για να λύσει κάποιο πρόβλημα.']],
-        ['Πώς τα σβήνεις', [`Η διαγραφή ενός σεναρίου (μόνο από τον ιδιοκτήτη) το σβήνει μαζί με τις κοινοποιήσεις και τις εκδόσεις του. Για να σβήσεις τα πάντα, διάγραψε τον λογαριασμό σου στο RoarMe (${ROARME_DEL.el}): τα σενάριά σου φεύγουν μαζί του. Αν μείνει κάτι, για παράδειγμα εικόνες storyboard, γράψε μας και το σβήνουμε.`]],
+        ['Πώς τα σβήνεις', [`Η διαγραφή ενός σεναρίου (μόνο από τον ιδιοκτήτη) το σβήνει μαζί με τις κοινοποιήσεις και τις εκδόσεις του. Για να σβήσεις τα πάντα, διάγραψε τον Roar Account σου (themadlions.com/account > Delete account, ή ${ROARME_DEL.el}): τα σενάριά σου φεύγουν μαζί του. Αν μείνει κάτι, για παράδειγμα εικόνες storyboard, γράψε μας και το σβήνουμε.`]],
       ],
     }, rights(LAB)),
     terms: join2({
@@ -305,10 +305,10 @@ const APPS = [
     }, termsEnd('RoarKit', LAB)),
   },
   {
-    id: 'roardino', name: 'Roardino', page: 'lab/roardino/', what: { en: 'the call sheet in one link', el: 'το πρόγραμμα γυρίσματος σε ένα link' },
+    id: 'roardino', name: 'Roardino', page: 'lab/roardino/', updated: { en: '8 November 2026', el: '8 Νοεμβρίου 2026' }, what: { en: 'the call sheet in one link', el: 'το πρόγραμμα γυρίσματος σε ένα link' },
     privacy: join2({
       en: [
-        ['In short', ['Roardino keeps your call sheets in your RoarMe account. A call sheet becomes public only when you publish it, and then anyone with its link can open it.']],
+        ['In short', ['Roardino keeps your call sheets in your Roar Account. A call sheet becomes public only when you publish it, and then anyone with its link can open it.']],
         ['What we keep', [
           'Your account (name, email, password as a secure hash, from RoarMe) and your Roardino profile: name, company, role and phone.',
           'Your call sheets, with what you write in them: the shoot, places, times, and the names, roles and phones of the cast and crew, and the pictures you add.',
@@ -323,10 +323,10 @@ const APPS = [
           'Code and fonts load from jsDelivr and Google Fonts, so they see your IP address.',
         ]],
         ['Where it is, and who sees it', [where.en, 'The administrators of Roardino can see how many people use it and their name, company and email, to run the service. They do not read your call sheets.']],
-        ['How to delete it', [`Delete a call sheet in the app; its link stops working. To delete everything, delete your RoarMe account (${ROARME_DEL.en}): your profile and call sheets go with it.`]],
+        ['How to delete it', [`Delete a call sheet in the app; its link stops working. To delete everything, delete your Roar Account (themadlions.com/account > Delete account, or ${ROARME_DEL.en}): your profile and call sheets go with it.`]],
       ],
       el: [
-        ['Με λίγα λόγια', ['Το Roardino κρατά τα προγράμματά σου στον λογαριασμό σου στο RoarMe. Ένα πρόγραμμα γίνεται δημόσιο μόνο όταν το δημοσιεύσεις, και τότε όποιος έχει το link του μπορεί να το ανοίξει.']],
+        ['Με λίγα λόγια', ['Το Roardino κρατά τα προγράμματά σου στον Roar Account σου. Ένα πρόγραμμα γίνεται δημόσιο μόνο όταν το δημοσιεύσεις, και τότε όποιος έχει το link του μπορεί να το ανοίξει.']],
         ['Τι κρατάμε', [
           'Τον λογαριασμό σου (όνομα, email, κωδικό ως ασφαλές hash, από το RoarMe) και το προφίλ σου στο Roardino: όνομα, εταιρεία, ρόλο και τηλέφωνο.',
           'Τα προγράμματά σου, με ό,τι γράφεις μέσα: το γύρισμα, τοποθεσίες, ώρες, και τα ονόματα, τους ρόλους και τα τηλέφωνα των ηθοποιών και του συνεργείου, και τις εικόνες που βάζεις.',
@@ -341,7 +341,7 @@ const APPS = [
           'Κώδικας και γραμματοσειρές φορτώνουν από το jsDelivr και το Google Fonts, οπότε βλέπουν τη διεύθυνση IP σου.',
         ]],
         ['Πού είναι, και ποιος τα βλέπει', [where.el, 'Οι διαχειριστές του Roardino βλέπουν πόσοι το χρησιμοποιούν και το όνομα, την εταιρεία και το email τους, για να τρέχει η υπηρεσία. Δεν διαβάζουν τα προγράμματά σου.']],
-        ['Πώς τα σβήνεις', [`Σβήσε ένα πρόγραμμα μέσα στην εφαρμογή· το link του σταματά να δουλεύει. Για να σβήσεις τα πάντα, διάγραψε τον λογαριασμό σου στο RoarMe (${ROARME_DEL.el}): το προφίλ και τα προγράμματά σου φεύγουν μαζί του.`]],
+        ['Πώς τα σβήνεις', [`Σβήσε ένα πρόγραμμα μέσα στην εφαρμογή· το link του σταματά να δουλεύει. Για να σβήσεις τα πάντα, διάγραψε τον Roar Account σου (themadlions.com/account > Delete account, ή ${ROARME_DEL.el}): το προφίλ και τα προγράμματά σου φεύγουν μαζί του.`]],
       ],
     }, rights(LAB)),
     terms: join2({
@@ -469,10 +469,17 @@ ${body(up)}
 <script>
 (function () {
   var q = new URLSearchParams(location.search).get('lang'), l = q
-  try { if (!l) l = localStorage.getItem('tml_site_lang') } catch (e) {}
+  // Greek by itself for a visitor from Greece (Alex, 10 Nov 2026): a browser set to Greek, or a clock on Greek or Cypriot time.
+  // EN / GR pressed once stays (tml_site_lang with tml_site_lang_set; an "en" kept before 10 Nov was only the default).
+  function firstLang() {
+    try { var s = localStorage.getItem('tml_site_lang'); if (s === 'el' || (s === 'en' && localStorage.getItem('tml_site_lang_set'))) return s } catch (e) {}
+    try { if ((navigator.languages || [navigator.language || '']).some(function (x) { return /^el/i.test(x) }) || /Athens|Nicosia/.test(Intl.DateTimeFormat().resolvedOptions().timeZone)) return 'el' } catch (e) {}
+    return 'en'
+  }
+  if (!l) l = firstLang()
   function set(x) { l = x === 'el' ? 'el' : 'en'; document.documentElement.lang = l
     document.querySelectorAll('[data-lang]').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) }) }
-  document.querySelectorAll('[data-lang]').forEach(function (b) { b.onclick = function () { set(b.dataset.lang); try { localStorage.setItem('tml_site_lang', l) } catch (e) {} } })
+  document.querySelectorAll('[data-lang]').forEach(function (b) { b.onclick = function () { set(b.dataset.lang); try { localStorage.setItem('tml_site_lang', l); localStorage.setItem('tml_site_lang_set', '1') } catch (e) {} } })
   set(l)
 })()
 </script>
