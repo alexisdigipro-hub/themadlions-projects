@@ -135,7 +135,7 @@ function head(l, c, d, depth) {
     `<link rel="alternate" hreflang="el" href="${BASE}el/">`,
     `<link rel="alternate" hreflang="x-default" href="${BASE}">`,
     '<meta name="author" content="The Mad Lions">',
-    '<meta name="theme-color" content="#16181c">',
+    '<meta name="theme-color" content="#121417">',
     '<meta property="og:type" content="website">',
     '<meta property="og:site_name" content="The Mad Lions">',
     `<meta property="og:title" content="${esc(k.title)}">`,

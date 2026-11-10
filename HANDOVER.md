@@ -46,7 +46,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
   - Overview keeps the numbers, the chart, the pages, the apps, the films and the enquiries; nothing is in two places.
 - **Counted from now**: social/ and account/ load stats.js (their visits were not counted). Not counted: roarlist/ (build output of another repo) and the sites on other servers (qubi.gr, boulevart.gr, roartransfer.com have their own).
 - **The site's icon** (Alex sent the mark: five slanted white bars on near-black): themadlions-site has favicon.svg (redrawn by hand from his picture), favicon.ico, favicon-192.png, apple-touch-icon.png **at its root only** (not in public/site: the hub keeps its own favicon); scripts/site-seo.mjs --live links the PNG and the apple-touch icon from the home pages. Google shows a new icon after it crawls the site again (days).
-- **No pure black** (Alex, 10 Nov: "every black background, button and the rest a dark grey"): the home page, Aibsent, the Lab and Studio wear the graphite of the app pages (--bg #16181c, --bg-2 #1d2025, --bg-3 #24282f; Studio #15171b). The film player keeps black behind a film.
+- **No pure black** (Alex, 10 Nov: "every black background, button and the rest a dark grey"): the home page, Aibsent, the Lab and Studio wear the graphite of the app pages (a notch darker than the app pages, as Alex asked on seeing it: --bg #121417, --bg-2 #191b1f, --bg-3 #202328; Studio #101215). The film player keeps black behind a film.
 - **Waiting**: new icons for every Lab app in one family: black rounded square, one bold white line mark per app; show Alex a sheet of all of them before replacing anything.
 
 ## Where we stopped (10 Nov 2026: themadlions.com in Greek by itself, films that play in their tiles)
