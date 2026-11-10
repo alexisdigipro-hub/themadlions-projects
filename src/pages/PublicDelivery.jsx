@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'react-router-dom'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
@@ -344,13 +344,19 @@ function PayHold({ files }) {
   const [leaving, setLeaving] = useState(false)
   const box = useRef(null)
   const spot = useRef(null)
+  // the pop-up goes into the page's own .pub.dlv (its colours and styles), found once the page is on screen; until
+  // then, and if it cannot be found, the card in the page simply shows (Alex, 10 Nov: before, it went unstyled to
+  // the foot of the page while the card waited hidden, and nothing showed)
+  const [host, setHost] = useState(null)
+  useLayoutEffect(() => { setHost(spot.current?.closest('.pub.dlv') || null) }, []) // before the first paint, so the card does not flash
+  const popping = pop && !!host
   useEffect(() => {
-    if (!pop) return
+    if (!pop || !host) return
     const onKey = (e) => { if (e.key === 'Escape') close() }
     window.addEventListener('keydown', onKey)
     document.documentElement.classList.add('dlv-hold-open')
     return () => { window.removeEventListener('keydown', onKey); document.documentElement.classList.remove('dlv-hold-open') }
-  }, [pop]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pop, host]) // eslint-disable-line react-hooks/exhaustive-deps
   const close = () => {
     if (leaving) return
     const from = box.current, to = spot.current
@@ -367,7 +373,7 @@ function PayHold({ files }) {
   }
   return (
     <div className="dlv-hold">
-      <div ref={spot} className={`dlv-hold-card${pop ? ' waiting' : ' landed'}`}><HoldNote /></div>
+      <div ref={spot} className={`dlv-hold-card${popping ? ' waiting' : !pop ? ' landed' : ''}`}><HoldNote /></div>
       {files.length > 0 && (
         <ul className="plain dlv-hold-files">
           {files.map((f, i) => (
@@ -379,11 +385,11 @@ function PayHold({ files }) {
           ))}
         </ul>
       )}
-      {pop && createPortal(
+      {popping && createPortal(
         <div className={`dlv-hold-pop${leaving ? ' leaving' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) close() }}>
           <div ref={box} className="dlv-hold-card dlv-hold-glass" role="dialog" aria-modal="true" aria-label="Your files are ready"><HoldNote onClose={close} /></div>
         </div>,
-        document.querySelector('.pub.dlv') || document.body,
+        host,
       )}
     </div>
   )
