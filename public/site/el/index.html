@@ -681,7 +681,8 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 .about > .reveal:first-child { margin: 0 auto; text-align: center; }
 .about > .reveal:last-child > .label { text-align: center; }
 .about .quote { border-left: 0; padding: 0; margin-top: 48px; text-align: center; } /* under the team row (Alex, 18 Oct) */
-.about .quote::before { content: ''; display: block; width: 28px; height: 2px; margin: 0 auto 14px; background: var(--accent); }
+.about .quote { font-size: clamp(24px, 4.2vw, 32px); line-height: 1.35; text-wrap: balance; } /* twice as large (Alex, 10 Nov; a little less on a phone so it stays in a few lines) */
+.about .quote::before { content: ''; display: block; width: 40px; height: 2px; margin: 0 auto 20px; background: var(--accent); }
 
 /* ===== Studio > Look > design (Alex, 30 Oct: "more settings so I manage the look of the page myself") =====
    Every choice is an attribute on <html> or a variable, so it applies at once, also in the admin's live preview. */
