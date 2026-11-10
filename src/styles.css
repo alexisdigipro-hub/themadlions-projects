@@ -9671,6 +9671,29 @@ html[data-theme][data-theme] body .settings-cols > section.set-chat > .roarme-pa
 .pub.dlv .dlv-hold { max-width: 860px; margin: 30px auto 0; display: flex; flex-direction: column; gap: 14px; text-align: center; }
 .pub.dlv .dlv-hold-card { padding: 30px 28px 26px; border-radius: var(--est-r, 18px); background: color-mix(in srgb, var(--accent) 9%, var(--tile, rgba(255, 255, 255, .05))); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
 .pub.dlv .dlv-hold-ico { display: inline-grid; place-items: center; width: 58px; height: 58px; margin-bottom: 14px; border-radius: 50%; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 7%, transparent); }
+/* the heart (Alex, 10 Nov: "put a little heart"), beating softly */
+.pub.dlv .dlv-hold-ico svg { animation: dlv-heart 1.8s ease-in-out infinite; transform-origin: 50% 55%; }
+@keyframes dlv-heart { 0%, 100% { transform: scale(1); } 12% { transform: scale(1.16); } 24% { transform: scale(1); } 36% { transform: scale(1.1); } 50% { transform: scale(1); } }
+/* the pop-up (Alex, 10 Nov): glass over the blurred page; Close or OK flies it into its place (PublicDelivery PayHold) */
+html.dlv-hold-open, html.dlv-hold-open body { overflow: hidden; }
+.pub.dlv .dlv-hold-pop { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 20px; overflow-y: auto; background: color-mix(in srgb, #000 38%, transparent); -webkit-backdrop-filter: blur(16px) saturate(130%); backdrop-filter: blur(16px) saturate(130%); animation: dlv-pop-in .35s ease both; transition: background .5s ease, -webkit-backdrop-filter .5s ease, backdrop-filter .5s ease; }
+.pub.dlv .dlv-hold-pop.leaving { background: transparent; -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); }
+.pub.dlv .dlv-hold-pop.leaving .dlv-hold-glass > * { opacity: 0; transition: opacity .16s ease; } /* the glass flies empty, so no text is squeezed on the way; the page's card shows it as it lands */
+@keyframes dlv-pop-in { from { opacity: 0; } to { opacity: 1; } }
+.pub.dlv .dlv-hold-card.dlv-hold-glass { position: relative; width: min(560px, 100%); box-sizing: border-box; text-align: center; padding: 34px 30px 26px; border-radius: 26px; background: color-mix(in srgb, var(--bg, #0b0b0c) 55%, rgba(255, 255, 255, .06)); border: 1px solid rgba(255, 255, 255, .16); -webkit-backdrop-filter: blur(28px) saturate(160%); backdrop-filter: blur(28px) saturate(160%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 30px 80px rgba(0, 0, 0, .5), 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent); animation: dlv-card-in .5s cubic-bezier(.2, 1.2, .3, 1) both; will-change: transform; transform-origin: 0 0; }
+@keyframes dlv-card-in { from { opacity: 0; transform: translateY(18px) scale(.94); } to { opacity: 1; transform: none; } }
+.pub.dlv .dlv-hold-x { position: absolute; top: 14px; right: 14px; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border-radius: 50%; cursor: pointer; color: var(--text); background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .16); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14); transition: background .2s, transform .15s; }
+.pub.dlv .dlv-hold-x:hover { background: rgba(255, 255, 255, .14); }
+.pub.dlv .dlv-hold-x:active { transform: scale(.92); }
+.pub.dlv .dlv-hold-glass .dlv-hold-ok { margin: 18px auto 0; min-width: 160px; }
+/* the card in the page waits unseen while the pop-up is up, and shows the moment it lands */
+.pub.dlv .dlv-hold-card.waiting { visibility: hidden; }
+.pub.dlv .dlv-hold-card.landed { animation: dlv-land .35s ease both; }
+@keyframes dlv-land { from { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent); } to { box-shadow: 0 0 0 0 transparent; } }
+@media (max-width: 600px) {
+  .pub.dlv .dlv-hold-card.dlv-hold-glass { padding: 30px 18px 20px; border-radius: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { .pub.dlv .dlv-hold-ico svg, .pub.dlv .dlv-hold-pop, .pub.dlv .dlv-hold-card.dlv-hold-glass, .pub.dlv .dlv-hold-card.landed { animation: none; } }
 .pub.dlv .dlv-hold-card h2 { margin: 0 0 12px; font-size: 22px; line-height: 1.3; font-weight: 600; letter-spacing: 0; text-transform: none; }
 .pub.dlv .dlv-hold-card p { margin: 0 auto 10px; max-width: 600px; font-size: 15.5px; line-height: 1.6; color: color-mix(in srgb, var(--text) 86%, transparent); }
 .pub.dlv .dlv-hold-card .dlv-hold-thanks { margin-top: 14px; font-weight: 600; color: var(--text); }

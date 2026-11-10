@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams } from 'react-router-dom'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
 import { stageAction, stageLabel } from './Deliveries.jsx'
@@ -312,19 +313,61 @@ function Credits({ list }) {
    by name, each with a small lock, and a warm note in Greek with the same in English under it. */
 const LOCK = <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2.5" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
 const sizeOf = (n) => (n > 1e9 ? `${(n / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(n / 1e6))} MB`)
+const HEART = (
+  <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M12 20.6s-7.4-4.6-9.6-9C.9 8.3 2.8 4.6 6.5 4.6c2.1 0 3.6 1.2 5.5 3.4 1.9-2.2 3.4-3.4 5.5-3.4 3.7 0 5.6 3.7 4.1 7-2.2 4.4-9.6 9-9.6 9z" /></svg>
+)
+/* The note itself, the same in the pop-up and in the page */
+function HoldNote({ onClose }) {
+  return (
+    <>
+      {onClose && (
+        <button type="button" className="dlv-hold-x" aria-label="Close" onClick={onClose}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17" /></svg>
+        </button>
+      )}
+      <span className="dlv-hold-ico">{HEART}</span>
+      <h2 lang="el">Τα αρχεία σας είναι έτοιμα και σας περιμένουν!</h2>
+      <p lang="el">Ήταν πραγματική χαρά μας να δημιουργήσουμε αυτό το project μαζί σας. Τα τελικά παραδοτέα είναι ολοκληρωμένα και φυλάσσονται με ασφάλεια, έτοιμα για εσάς.</p>
+      <p lang="el">Μόλις τακτοποιηθεί η εξόφληση, τα links θα ανοίξουν σε αυτή ακριβώς τη σελίδα και θα μπορείτε να τα κατεβάσετε αμέσως. Για οτιδήποτε χρειαστείτε σχετικά με την εξόφληση, είμαστε πάντα εδώ για εσάς.</p>
+      <p className="dlv-hold-thanks" lang="el">Σας ευχαριστούμε θερμά!</p>
+      <p className="dlv-hold-en">Your files are ready and safely waiting for you. As soon as the final payment is settled, the download links open right here on this page. Thank you so much!</p>
+      {onClose && <button type="button" className="dlv-btn dlv-hold-ok" onClick={onClose}>Εντάξει</button>}
+    </>
+  )
+}
+
+/* The note opens as a glass pop-up over the blurred page (Alex, 10 Nov: "a pop-up glass, the page blurred behind,
+   and when you close it, it goes and becomes as it is now"): on close it flies into its place in the page, shrinking
+   to the card there, while the blur fades; the card in the page shows once it lands. */
 function PayHold({ files }) {
+  const [pop, setPop] = useState(true)
+  const [leaving, setLeaving] = useState(false)
+  const box = useRef(null)
+  const spot = useRef(null)
+  useEffect(() => {
+    if (!pop) return
+    const onKey = (e) => { if (e.key === 'Escape') close() }
+    window.addEventListener('keydown', onKey)
+    document.documentElement.classList.add('dlv-hold-open')
+    return () => { window.removeEventListener('keydown', onKey); document.documentElement.classList.remove('dlv-hold-open') }
+  }, [pop]) // eslint-disable-line react-hooks/exhaustive-deps
+  const close = () => {
+    if (leaving) return
+    const from = box.current, to = spot.current
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (!from || !to || !from.animate || still) { setPop(false); return }
+    to.scrollIntoView({ block: 'center', behavior: 'instant' })
+    const a = from.getBoundingClientRect(), b = to.getBoundingClientRect()
+    setLeaving(true)
+    const fly = from.animate([
+      { transform: 'none', borderRadius: getComputedStyle(from).borderRadius },
+      { transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${b.width / a.width}, ${b.height / a.height})`, borderRadius: getComputedStyle(to).borderRadius },
+    ], { duration: 560, easing: 'cubic-bezier(.65, 0, .25, 1)', fill: 'forwards' })
+    fly.onfinish = () => { setPop(false); setLeaving(false) }
+  }
   return (
     <div className="dlv-hold">
-      <div className="dlv-hold-card">
-        <span className="dlv-hold-ico" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12v8H4v-8M2 7h20v5H2zM12 22V7M12 7H8a2.5 2.5 0 1 1 0-5c3 0 4 5 4 5zM12 7h4a2.5 2.5 0 1 0 0-5c-3 0-4 5-4 5z" /></svg>
-        </span>
-        <h2 lang="el">Τα αρχεία σας είναι έτοιμα και σας περιμένουν!</h2>
-        <p lang="el">Ήταν πραγματική χαρά μας να δημιουργήσουμε αυτό το project μαζί σας. Τα τελικά παραδοτέα είναι ολοκληρωμένα και φυλάσσονται με ασφάλεια, έτοιμα για εσάς.</p>
-        <p lang="el">Μόλις τακτοποιηθεί η εξόφληση, τα links θα ανοίξουν σε αυτή ακριβώς τη σελίδα και θα μπορείτε να τα κατεβάσετε αμέσως. Για οτιδήποτε χρειαστείτε σχετικά με την εξόφληση, είμαστε πάντα εδώ για εσάς.</p>
-        <p className="dlv-hold-thanks" lang="el">Σας ευχαριστούμε θερμά!</p>
-        <p className="dlv-hold-en">Your files are ready and safely waiting for you. As soon as the final payment is settled, the download links open right here on this page. Thank you so much!</p>
-      </div>
+      <div ref={spot} className={`dlv-hold-card${pop ? ' waiting' : ' landed'}`}><HoldNote /></div>
       {files.length > 0 && (
         <ul className="plain dlv-hold-files">
           {files.map((f, i) => (
@@ -335,6 +378,12 @@ function PayHold({ files }) {
             </li>
           ))}
         </ul>
+      )}
+      {pop && createPortal(
+        <div className={`dlv-hold-pop${leaving ? ' leaving' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) close() }}>
+          <div ref={box} className="dlv-hold-card dlv-hold-glass" role="dialog" aria-modal="true" aria-label="Your files are ready"><HoldNote onClose={close} /></div>
+        </div>,
+        document.querySelector('.pub.dlv') || document.body,
       )}
     </div>
   )
