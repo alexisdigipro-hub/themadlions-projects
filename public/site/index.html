@@ -743,6 +743,13 @@ html.has-notice .bar { top: var(--notice-h, 38px); }
   .contact .social { justify-content: center; }
   .chatform .cf-topics { justify-content: center; }
   .svc .in, .svc-grid .svc, .step { text-align: center; }
+  /* the seven services on a phone (Alex, 10 Nov: "they jump up and down and the scroll to the side is odd"): no row that
+     slides sideways, two to a row standing still, the seventh across both; no lift on a touch */
+  .svc-grid { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; overflow: visible; scroll-snap-type: none; margin-left: 0; margin-right: 0; padding: 0; }
+  .svc-grid .svc { scroll-snap-align: none; padding: 18px 12px 18px; transform: none !important; transition: border-color .3s; }
+  .svc-grid .svc:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .svc-grid .svc:last-child:nth-child(odd) p { max-width: 30ch; margin-left: auto; margin-right: auto; }
+  .svc-grid .svc .bg { display: none; }
   .faq > .label, .faq > h2 { text-align: center; }
   .more, .work-more, #more { margin-left: auto; margin-right: auto; }
   /* the numbers under the opening: the figure over its words */
