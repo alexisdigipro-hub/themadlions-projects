@@ -1,4 +1,4 @@
--- RoarRef (themadlions.com/lab/roarref/app/), Alex 7 Nov 2026: sign in with a Roar Account, up to 5 sheets per person,
+-- RoarRef (themadlions.com/lab/roarref/app/), Alex 7 Nov 2026: sign in with a Roar Account, up to 10 sheets per person (5 at first),
 -- the same on every computer. Runs on RoarMe's Supabase project (bzmjhbnwhdwmncxkqkdl), where the Roar Accounts live.
 -- Only its own table roarref_sheets and bucket roarref; never touches roar_* tables. Safe to re-run.
 
@@ -20,11 +20,11 @@ drop policy if exists roarref_own on roarref_sheets;
 create policy roarref_own on roarref_sheets for all to authenticated
   using (owner = (select auth.uid())) with check (owner = (select auth.uid()));
 
--- at most 5 sheets a person
+-- at most 10 sheets a person (5 until 11 Nov 2026)
 create or replace function roarref_limit() returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if (select count(*) from roarref_sheets where owner = new.owner) >= 5 then
-    raise exception 'roarref_limit: up to 5 sheets' using errcode = 'P0001';
+  if (select count(*) from roarref_sheets where owner = new.owner) >= 10 then
+    raise exception 'roarref_limit: up to 10 sheets' using errcode = 'P0001';
   end if;
   return new;
 end $$;

@@ -127,12 +127,22 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .sec.shut{gap:0}
 .srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .side .group{background:rgba(255,255,255,.04)}
-.side #layouts{display:grid;grid-template-columns:repeat(5,1fr);width:100%;box-sizing:border-box;border-radius:16px;gap:2px}
-.side #layouts .lens{display:none}
-.side #layouts .lay{width:auto;height:34px;border-radius:10px}
-.side #layouts .lay[aria-pressed="true"]{background:var(--panel-2);box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
-.side #ratios{flex:1}
-.side #ratios .lay.rt{flex:1;padding:0 4px}
+.plab{margin:6px 0 -4px;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.plab:first-of-type{margin-top:2px}
+.side #layouts,.side #ratios{display:grid;width:100%;box-sizing:border-box;gap:8px;background:none;border:0;padding:0;box-shadow:none;border-radius:0}
+.side #layouts{grid-template-columns:repeat(3,1fr)}
+.side #ratios{grid-template-columns:repeat(4,1fr)}
+.side #layouts .lens,.side #ratios .lens{display:none}
+.side #layouts .lay,.side #ratios .lay{width:auto;border-radius:14px;background:rgba(255,255,255,.045);border:1px solid var(--line);display:grid;place-items:center;transition:background .15s,border-color .15s,transform .12s;color:var(--muted)}
+.side #layouts .lay{height:58px}
+.side #layouts .lay svg{width:58px;height:33px}
+.side #ratios .lay{height:62px;padding:0;gap:0;grid-template-rows:34px auto;align-content:center}
+.side #layouts .lay:hover,.side #ratios .lay:hover{background:rgba(255,255,255,.09);color:var(--fg)}
+.side #layouts .lay:active,.side #ratios .lay:active{transform:scale(.96)}
+.side #layouts .lay[aria-pressed="true"],.side #ratios .lay[aria-pressed="true"]{background:var(--panel-2);border-color:rgba(255,255,255,.34);color:var(--fg);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 4px 14px rgba(0,0,0,.3)}
+.shp{display:none}
+.side .shp{display:block;border:1.6px solid currentColor;border-radius:4px;box-sizing:border-box;align-self:center}
+.side .pill.wide svg + .w{display:inline}
 .side .ctl{width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);justify-content:space-between}
 .side .ctl input[type=range]{flex:1;width:auto!important;min-width:0}
 .side .pill.wide{flex:1;justify-content:center}
@@ -157,6 +167,10 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .lq-end{display:flex;gap:8px;margin-top:auto}.lq-end .pill{flex:1;justify-content:center}
 @media (max-width:820px){.lq{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;padding:10px;gap:10px}.lq-side{padding:12px;gap:8px}.lq-side h2,.lq-side .hint2{display:none}.lq-tools{grid-template-columns:repeat(4,1fr)}.lq-t{flex-direction:column;justify-content:center;height:54px;gap:2px;font-size:11px;padding:0}.lq-end{margin-top:0}}
 .adjust{display:flex;flex-direction:column;gap:8px;width:100%}
+.chs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:2px 0 8px}
+.chs .pill{height:30px;padding:0;justify-content:center;font-size:12px;gap:6px}
+.chs .pill i{width:8px;height:8px;border-radius:50%;display:block}
+.arow span{white-space:nowrap}
 #histo{width:100%;height:64px;border-radius:10px;background:rgba(0,0,0,.35);border:1px solid var(--line);display:block}
 #curve{width:100%;aspect-ratio:320/220;border-radius:10px;background:rgba(0,0,0,.35);border:1px solid var(--line);touch-action:none;cursor:ns-resize;display:block}
 .bands{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:4px 0 6px}
@@ -181,11 +195,18 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .adjust summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font:600 12px var(--body);letter-spacing:.06em;color:var(--fg);padding:6px 2px}
 .adjust summary::-webkit-details-marker{display:none}
 .adjust summary svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;transition:transform .2s}
-.adjust details:not([open]) summary svg{transform:rotate(-90deg)}
+.adjust summary .gt{flex:1}
+.apane > .pill{flex:none}
+.grst{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.06);color:inherit;display:grid;place-items:center;cursor:pointer;padding:0;margin-right:8px;opacity:.7}
+.grst:hover{opacity:1;background:rgba(255,255,255,.14)} .grst:active{transform:scale(.92)}
+.grst svg{width:13px;height:13px;transform:none!important}
+.adjust details:not([open]) .grst{display:none}
+.pill:disabled{opacity:.35;pointer-events:none}
+.adjust details:not([open]) summary svg.chev{transform:rotate(-90deg)}
 .arow{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;padding:3px 2px;font-size:12.5px;color:var(--muted)}
 .arow output{font-variant-numeric:tabular-nums;color:var(--fg);font-size:12px;min-width:38px;text-align:right}
 .arow input{grid-column:1/-1;width:100%;accent-color:var(--accent);margin:0}
-.wheels{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:4px 0}
+.wheels{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:4px 0}
 .wheel{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
 .wheel b{font-weight:600}
 .wheel canvas{width:100%;max-width:84px;aspect-ratio:1;touch-action:none;cursor:crosshair}
@@ -368,6 +389,8 @@ img{max-width:100%}
       <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="5" fill="currentColor"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span class="w">Cover</span></button>
     <button class="pill round" id="labels" aria-pressed="false" title="Show the view names on the sheet">
       <svg viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span class="w">Names</span></button>
+    <button class="pill round" id="undo" title="Undo (Ctrl/Cmd+Z)" disabled><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+    <button class="pill round" id="redo" title="Redo (Shift+Ctrl/Cmd+Z)" disabled><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
     <button class="pill round" id="add" style="margin-left:auto" title="Add photos to the empty windows">
       <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="w">Add photos</span></button>
     <button class="pill round" id="clear" title="Empty every window">
@@ -529,7 +552,7 @@ function swatches(el, colors, key){
   el.appendChild(p);
 }
 RATIOS.forEach(([name]) => {
-  const b = document.createElement('button'); b.type='button'; b.className='lay rt'; b.dataset.r = name; b.textContent = name;
+  const b = document.createElement('button'); b.type='button'; b.className='lay rt'; b.dataset.r = name; { const [w, h] = name.split(':').map(Number), k = 22/Math.max(w, h); b.innerHTML = `<i class="shp" style="width:${Math.round(w*k)}px;height:${Math.round(h*k)}px"></i><span>${name}</span>`; }
   b.title = 'Sheet ' + name; b.onclick = () => { if(S.ratio !== name) S.stack = name === '9:16'; S.ratio = name; render(); save(); };
   $('ratios').appendChild(b);
 });
@@ -540,6 +563,7 @@ function moveRatioLens(){
 }
 $('labels').onclick = () => { S.labels=!S.labels; render(); save(); };
 $('add').onclick = () => { pickTarget = -1; $('file').click(); };
+$('undo').onclick = () => histGo(-1); $('redo').onclick = () => histGo(1);
 $('clear').onclick = () => { if(!photos.some(Boolean)) return; askClear(); };
 $('export').onclick = exportPng;
 
@@ -812,11 +836,16 @@ const HAIR_COLORS = [['Black',0,0,-0.45],['Dark brown',25,0.45,-0.25],['Brown',2
 const ADJ = [
   {g:'Light', items:[['exposure','Exposure',-5,5,0.05],['contrast','Contrast'],['highlights','Highlights'],['shadows','Shadows'],['whites','Whites'],['blacks','Blacks']]},
   {g:'Color', items:[['temp','Temperature'],['tint','Tint'],['vibrance','Vibrance'],['saturation','Saturation']]},
-  {g:'Effects', items:[['texture','Texture'],['clarity','Clarity'],['dehaze','Dehaze'],['vignette','Vignette'],['grain','Grain',0,100],['glow','Glow',0,100]]},
-  {g:'Detail', items:[['sharpen','Sharpening',0,150],['noise','Noise reduction',0,100]]},
+  {g:'Effects', items:[['texture','Texture'],['clarity','Clarity'],['dehaze','Dehaze'],['vignette','Vignette'],['vigMid','· Midpoint'],['vigRound','· Roundness'],['vigFeather','· Feather'],
+    ['grain','Grain',0,100],['grainSize','· Size'],['grainRough','· Roughness'],['glow','Glow',0,100]]},
+  {g:'Detail', items:[['sharpen','Sharpening',0,150],['sharpRad','· Radius'],['sharpMask','· Masking',0,100],['noise','Noise reduction',0,100],['cnoise','Color noise reduction',0,100]]},
+  {g:'Optics', items:[['distort','Distortion'],['defringe','Defringe',0,100]]},
+  {g:'Geometry', items:[['persV','Vertical'],['persH','Horizontal']]},
+  {g:'Calibration', items:[['calShadow','Shadows tint'],['calRH','Red hue'],['calRS','Red saturation'],['calGH','Green hue'],['calGS','Green saturation'],['calBH','Blue hue'],['calBS','Blue saturation']]},
   {g:'Retouch', items:[['smooth','Smooth skin',0,100]]},
 ];
-const GRADE = [['sh','Shadows'],['mid','Midtones'],['hi','Highlights']];
+const GRADE = [['sh','Shadows'],['mid','Midtones'],['hi','Highlights'],['gl','Global']];
+const CURVES = ['curve','curveR','curveG','curveB'], bentCurve = c => !!c && c.length === 5 && c.some((y, i) => Math.abs(y - i*0.25) > 0.004);
 const HOLLYWOOD = {smooth:65, exposure:0.15, contrast:6, highlights:-12, shadows:10, temp:14, vibrance:12, clarity:-8, glow:14};
 /* Looks (Alex, 11 Nov, from Persona's Beauty): one press sets a group of settings, the Intensity slider scales them (a.look, a.lookAmt).
    lips = colour on the lips (needs the face points), lipH its hue. */
@@ -860,7 +889,7 @@ function setLook(p, name, amt){
   else { delete a.look; delete a.lookAmt; }
 }
 const adjOf = p => p.adj || (p.adj = {});
-const hasAdj = a => !!a && Object.keys(a).some(k => k === 'hsl' ? Object.values(a.hsl || {}).some(t => t && t.some(Boolean)) : k === 'curve' ? !!a.curve && a.curve.some((y, i) => Math.abs(y - i*0.25) > 0.004) : k === 'grade' ? GRADE.some(([g]) => a.grade && a.grade[g] && (a.grade[g].s || a.grade[g].l)) : ['blend','balance','hairH','hairS','hairL','lipH','look','lookAmt'].includes(k) ? false : +a[k]);
+const hasAdj = a => !!a && Object.keys(a).some(k => k === 'hsl' ? Object.values(a.hsl || {}).some(t => t && t.some(Boolean)) : CURVES.includes(k) ? bentCurve(a[k]) : k === 'grade' ? GRADE.some(([g]) => a.grade && a.grade[g] && (a.grade[g].s || a.grade[g].l)) : ['blend','balance','hairH','hairS','hairL','lipH','look','lookAmt'].includes(k) ? false : +a[k]);
 function migrateAdj(p){ // photos retouched on 9 Nov carried smooth / light / warm
   if(p.adj || !(p.smooth || p.light || p.warm)) return;
   p.adj = {smooth:p.smooth||0, exposure:(p.light||0)/50, temp:(p.warm||0)*2};
@@ -989,9 +1018,14 @@ float lum(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
   const WARP = head + `uniform sampler2D src; uniform sampler2D hairM; uniform vec2 size; uniform int nw; uniform vec4 wa[12]; uniform vec4 wb[12];
 uniform int hasHair; uniform float hairAmt, hairS, hairL; uniform vec3 hairOff;
 uniform sampler2D lipM; uniform float lipAmt; uniform vec3 lipCol;
-uniform sampler2D fm1, fm2; uniform float eyeB, teethW, contour, under;
+uniform sampler2D fm1, fm2; uniform float eyeB, teethW, contour, under; uniform float dist, pv, phz;
 void main(){
-  vec2 P = vec2(uv.x*size.x, (1.0 - uv.y)*size.y), o = vec2(0.0);
+  vec2 g = uv*2.0 - 1.0; // lens distortion and perspective (Optics, Geometry): where each point of the picture is read from
+  if(dist != 0.0){ float asp = size.x/size.y; vec2 q = vec2(g.x*asp, g.y)/length(vec2(asp, 1.0)); g *= 1.0 + dist*0.28*(dot(q, q) - 1.0); }
+  if(pv != 0.0){ float k = 1.0 + pv*0.32*g.y; g.x *= k; g.y = (g.y + pv*0.10*(1.0 - g.y*g.y)); }
+  if(phz != 0.0){ float k = 1.0 + phz*0.32*g.x; g.y *= k; g.x = (g.x + phz*0.10*(1.0 - g.x*g.x)); }
+  vec2 gu = g*0.5 + 0.5;
+  vec2 P = vec2(gu.x*size.x, (1.0 - gu.y)*size.y), o = vec2(0.0);
   for(int k = 0; k < 12; k++){ if(k >= nw) break; vec4 A = wa[k], B = wb[k];
     if(B.x > 2.5){ if(P.y > A.y) o.y -= (P.y - A.y)*B.y/(1.0 + B.y); continue; }
     vec2 u = (P - A.xy)/A.zw; float r2 = dot(u, u); if(r2 >= 1.0) continue;
@@ -1021,24 +1055,29 @@ void main(){ vec3 s = vec3(0.0); float ws = 0.0;
   o_ = vec4(s/ws, 1.0); }`;
   const FINAL = head + `uniform sampler2D A, Bs, Bm, Bl, Bk, Bf; uniform vec2 size;
 uniform float ex, con, hi, sh, wh, bl, temp, tint, vib, sat, tex, cla, dh, vig, grain, glow, shp, nr, sm, blend, bal;
-uniform vec3 g0, g1, g2;
-uniform vec3 hsl[8]; uniform int hslOn; uniform float cv[5]; uniform int cvOn;
+uniform vec3 g0, g1, g2, g3;
+uniform vec3 hsl[8]; uniform int hslOn; uniform float cv[5], cvR[5], cvG[5], cvB[5]; uniform int cvOn, bw;
+uniform float vmid, vround, vfeather, gsize, grough, smask, cnr, defr, calSh; uniform vec2 cal[3];
 vec3 toLin(vec3 c){ c = max(c, 0.0); return mix(c/12.92, pow((c + 0.055)/1.055, vec3(2.4)), step(0.04045, c)); }
 vec3 toSrgb(vec3 c){ c = max(c, 0.0); return mix(c*12.92, 1.055*pow(c, vec3(1.0/2.4)) - 0.055, step(0.0031308, c)); }
 float ss(float a, float b, float x){ return smoothstep(a, b, x); }
 vec3 rgb2hsv(vec3 c){ vec4 K = vec4(0.0, -1.0/3.0, 2.0/3.0, -1.0); vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g)); vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
   float d = q.x - min(q.w, q.y); return vec3(abs(q.z + (q.w - q.y)/(6.0*d + 1e-10)), d/(q.x + 1e-10), q.x); }
 vec3 hsv2rgb(vec3 c){ vec3 p = abs(fract(c.xxx + vec3(1.0, 2.0/3.0, 1.0/3.0))*6.0 - 3.0); return c.z*mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y); }
-float curve1(float x){ x = clamp(x, 0.0, 1.0)*4.0; int i = int(min(3.0, floor(x))); float t = x - float(i);
-  float p0 = cv[max(i - 1, 0)], p1 = cv[i], p2 = cv[i + 1], p3 = cv[min(i + 2, 4)];
+float curve1(float x, float q[5]){ x = clamp(x, 0.0, 1.0)*4.0; int i = int(min(3.0, floor(x))); float t = x - float(i);
+  float p0 = q[max(i - 1, 0)], p1 = q[i], p2 = q[i + 1], p3 = q[min(i + 2, 4)];
   return 0.5*((2.0*p1) + (-p0 + p2)*t + (2.0*p0 - 5.0*p1 + 4.0*p2 - p3)*t*t + (-p0 + 3.0*p1 - 3.0*p2 + p3)*t*t*t); }
 float hash(vec2 p){ p = fract(p*vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x*p.y); }
+float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0 - 2.0*f); return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y); }
 void main(){
   vec2 P = vec2(uv.x*size.x, (1.0 - uv.y)*size.y);
   vec3 c = texture(A, uv).rgb;
   if(nr > 0.0 || shp > 0.0){ vec3 B = texture(Bs, uv).rgb;
     if(nr > 0.0){ float d = dot(abs(c - B), vec3(1.0)); c = mix(c, B, nr*max(0.0, 1.0 - d/0.25)); }
-    if(shp > 0.0){ vec3 dd = c - B; c += dd*shp*1.6*smoothstep(0.004, 0.03, length(dd)); } }
+    if(shp > 0.0){ vec3 dd = c - B; c += dd*shp*1.6*smoothstep(0.004 + smask*0.06, 0.03 + smask*0.16, length(dd)); } }
+  if(defr > 0.0){ vec3 B = texture(Bs, uv).rgb; float e = ss(0.02, 0.12, length(c - B)); vec3 h = rgb2hsv(clamp(c, 0.0, 1.0)); float hd = h.x*360.0;
+    float pur = max(0.0, 1.0 - abs(hd - 285.0)/55.0), grn = max(0.0, 1.0 - abs(hd - 140.0)/35.0)*0.6; c = mix(c, vec3(lum(c)), min(1.0, defr*1.4*e*max(pur, grn))); }
+  if(cnr > 0.0){ vec3 B = texture(Bm, uv).rgb; float l0 = lum(c), lb = lum(B); c = vec3(l0) + mix(c - vec3(l0), B - vec3(lb), cnr*(1.0 - ss(0.06, 0.25, abs(l0 - lb)))); }
   if(tex != 0.0) c += (c - texture(Bm, uv).rgb)*tex;
   if(cla != 0.0){ vec3 B = texture(Bl, uv).rgb; float L = lum(c); c += (c - B)*cla*(1.0 - abs(L - 0.5)*1.4); }
   if(sm > 0.0){ vec3 B = texture(Bk, uv).rgb*255.0;
@@ -1059,18 +1098,28 @@ void main(){
   L = lum(c);
   if(sat != 0.0 || vib != 0.0 || dh != 0.0){ float cs = max(max(c.r, c.g), c.b) - min(min(c.r, c.g), c.b);
     float f = 1.0 + sat + vib*(1.0 - min(1.0, cs*1.6)) + dh*0.25; c = vec3(L) + (c - vec3(L))*f; }
-  if(cvOn == 1){ c = vec3(curve1(c.r), curve1(c.g), curve1(c.b)); L = lum(c); }
+  if((cvOn & 1) != 0) c = vec3(curve1(c.r, cv), curve1(c.g, cv), curve1(c.b, cv));
+  if((cvOn & 2) != 0) c.r = curve1(c.r, cvR); if((cvOn & 4) != 0) c.g = curve1(c.g, cvG); if((cvOn & 8) != 0) c.b = curve1(c.b, cvB);
+  if(calSh != 0.0){ float w = 1.0 - ss(0.0, 0.5, lum(c)); c.g -= calSh*0.07*w; c.rb += calSh*0.035*w; }
+  L = lum(c);
   if(hslOn == 1){ vec3 h = rgb2hsv(clamp(c, 0.0, 1.0)); float hd = h.x*360.0; vec3 acc = vec3(0.0);
     float cen[8] = float[8](0.0, 30.0, 60.0, 120.0, 180.0, 240.0, 280.0, 320.0), wid[8] = float[8](30.0, 30.0, 45.0, 60.0, 60.0, 50.0, 40.0, 40.0);
     for(int i = 0; i < 8; i++){ float dd = abs(hd - cen[i]); dd = min(dd, 360.0 - dd); float w = max(0.0, 1.0 - dd/wid[i]); acc += hsl[i]*w*w*(3.0 - 2.0*w); }
+    for(int i = 0; i < 3; i++){ float dd = abs(hd - float(i)*120.0); dd = min(dd, 360.0 - dd); float w = max(0.0, 1.0 - dd/75.0); acc.xy += cal[i]*w*w*(3.0 - 2.0*w); }
     float wS = smoothstep(0.04, 0.25, h.y);
     h.x = fract(h.x + acc.x*wS*30.0/360.0); h.y = clamp(h.y*(1.0 + acc.y), 0.0, 1.0); c = hsv2rgb(h) + acc.z*0.3*wS*h.y; L = lum(c); }
-  if(dot(abs(g0) + abs(g1) + abs(g2), vec3(1.0)) > 0.0){ float lw = clamp(L, 0.0, 1.0), sp = 0.15 + blend*0.35, mid = 0.5 + bal*0.25;
+  if(bw == 1){ c = vec3(L); }
+  if(dot(abs(g0) + abs(g1) + abs(g2), vec3(1.0)) > 0.0){ L = lum(c); float lw = clamp(L, 0.0, 1.0), sp = 0.15 + blend*0.35, mid = 0.5 + bal*0.25;
     float ws = 1.0 - ss(mid - sp, mid, lw), wh2 = ss(mid, mid + sp, lw), wm = max(0.0, 1.0 - ws - wh2);
     c += g0*ws + g1*wm + g2*wh2; }
+  c += g3;
   if(glow > 0.0){ vec3 B = texture(Bl, uv).rgb; float w = glow*ss(0.45, 1.0, lum(B))*0.9; c = 1.0 - (1.0 - c)*(1.0 - B*w); }
-  if(vig != 0.0){ float dd = length(P - size*0.5)/length(size*0.5); c *= 1.0 + vig*0.9*ss(0.35, 1.05, dd); }
-  if(grain > 0.0){ float n = (hash(P) - 0.5)*grain*0.16; c += n; }
+  if(vig != 0.0){ vec2 q = (P - size*0.5)/(size*0.5); q = mix(q, (P - size*0.5)/(min(size.x, size.y)*0.5), max(vround, 0.0)); q = abs(q);
+    float n = 2.0 + max(-vround, 0.0)*6.0, dd = pow(pow(q.x, n) + pow(q.y, n), 1.0/n)/pow(2.0, 1.0/n);
+    float st = 0.35 + vmid*0.3, en = st + max(0.04, 0.7 + vfeather*0.65); c *= 1.0 + vig*0.9*ss(st, en, dd); }
+  if(grain > 0.0){ float gs = max(0.6, 1.0 + gsize*1.6)*max(1.0, min(size.x, size.y)/1400.0); vec2 Pg = P/gs;
+    float n = mix(vnoise(Pg*1.7), hash(floor(Pg)), 0.5 + grough*0.5) - 0.5; n += (vnoise(Pg*0.45 + 31.0) - 0.5)*max(grough, 0.0)*0.8;
+    c += n*grain*0.17*(1.0 - 0.6*abs(lum(c) - 0.5)*2.0*0.6); }
   o_ = vec4(clamp(c, 0.0, 1.0), 1.0);
 }`;
   const prog = fs => { const p = gl.createProgram(), mk = (t, s) => { const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh);
@@ -1149,6 +1198,7 @@ async function gpuRender(p, W, H){
       p._lipT = G.upload(mc, false); p._lipF = F; }
     G.bind(2, p._lipT); gl.uniform1i(G.U(wp, 'lipM'), 2); gl.uniform3fv(G.U(wp, 'lipCol'), hueRGB(+a.lipH || 352)); lipAmt = a.lips/100; }
   gl.uniform1f(G.U(wp, 'lipAmt'), lipAmt);
+  gl.uniform1f(G.U(wp, 'dist'), v('distort')/100); gl.uniform1f(G.U(wp, 'pv'), v('persV')/100); gl.uniform1f(G.U(wp, 'phz'), v('persH')/100);
   const FK = ['eyeB','teeth','contour','under'], F2 = FK.some(k => +a[k]) && p.lm && p.lm.face && p.lm.face.length > 466 ? p.lm.face : null;
   if(F2){ if(!p._fmT || p._fmF !== F2){ if(p._fmT){ gl.deleteTexture(p._fmT[0]); gl.deleteTexture(p._fmT[1]); } const m2 = faceMasks(p, F2); p._fmT = [G.upload(m2[0], false), G.upload(m2[1], false)]; p._fmF = F2; }
     G.bind(3, p._fmT[0]); gl.uniform1i(G.U(wp, 'fm1'), 3); G.bind(4, p._fmT[1]); gl.uniform1i(G.U(wp, 'fm2'), 4); }
@@ -1158,8 +1208,9 @@ async function gpuRender(p, W, H){
   G.draw(A.f, W, H);
   // 2. the blurred copies the settings need
   const shp = v('sharpen')/100, nr = v('noise')/100, tx = v('texture')/100, cla = v('clarity')/100, glow = v('glow')/100, sm = v('smooth')/100;
-  const Bs = (shp || nr) ? G.blur('s', A.t, W, H, Math.max(0.8, S0*0.0012)) : A.t;
-  const Bm = tx ? G.blur('m', A.t, W, H, S0*0.006) : A.t;
+  const cnr = v('cnoise')/100, defr = v('defringe')/100;
+  const Bs = (shp || nr || defr) ? G.blur('s', A.t, W, H, Math.max(0.6, S0*0.0012*(1 + v('sharpRad')/100*(v('sharpRad') > 0 ? 2 : 0.6)))) : A.t;
+  const Bm = (tx || cnr) ? G.blur('m', A.t, W, H, S0*0.006) : A.t;
   const Bl = (cla || glow) ? G.blur('l', A.t, W, H, S0*0.03) : A.t;
   const Bk = sm ? G.blur('k', A.t, W, H, Math.max(2, S0*0.014*(0.5 + sm))) : A.t;
   const Bf = sm ? G.blur('f', A.t, W, H, Math.max(1, S0*0.0035)) : A.t;
@@ -1174,9 +1225,14 @@ async function gpuRender(p, W, H){
   f1('shp', shp); f1('nr', nr); f1('sm', sm); f1('blend', (a.blend == null ? 50 : a.blend)/100); f1('bal', (a.balance || 0)/100);
   const HS = a.hsl || {}, hv = new Float32Array(24); let hOn = 0;
   HSL_BANDS.forEach(([k], i) => { const t = HS[k] || [0, 0, 0]; hv.set([t[0]/100, t[1]/100, t[2]/100], i*3); if(t.some(Boolean)) hOn = 1; });
-  gl.uniform1i(G.U(fp, 'hslOn'), hOn); if(hOn) gl.uniform3fv(G.U(fp, 'hsl'), hv);
-  const CV = a.curve && a.curve.length === 5 ? a.curve : null, cOn = CV && CV.some((y, i) => Math.abs(y - i*0.25) > 0.004) ? 1 : 0;
-  gl.uniform1i(G.U(fp, 'cvOn'), cOn); if(cOn) gl.uniform1fv(G.U(fp, 'cv'), new Float32Array(CV));
+  gl.uniform3fv(G.U(fp, 'hsl'), hv);
+  let cOn = 0; CURVES.forEach((k, i) => { if(bentCurve(a[k])){ cOn |= 1 << i; gl.uniform1fv(G.U(fp, ['cv','cvR','cvG','cvB'][i]), new Float32Array(a[k])); } });
+  gl.uniform1i(G.U(fp, 'cvOn'), cOn); gl.uniform1i(G.U(fp, 'bw'), a.bw ? 1 : 0);
+  f1('vmid', v('vigMid')/100); f1('vround', v('vigRound')/100); f1('vfeather', v('vigFeather')/100); f1('gsize', v('grainSize')/100); f1('grough', v('grainRough')/100);
+  f1('smask', v('sharpMask')/100); f1('cnr', cnr); f1('defr', defr); f1('calSh', v('calShadow')/100);
+  const cal = new Float32Array([v('calRH')/100*0.5, v('calRS')/100, v('calGH')/100*0.5, v('calGS')/100, v('calBH')/100*0.5, v('calBS')/100]);
+  gl.uniform2fv(G.U(fp, 'cal'), cal); if(cal.some(Boolean)) hOn = 1;
+  gl.uniform1i(G.U(fp, 'hslOn'), hOn || a.bw ? 1 : 0);
   const gr = a.grade || {};
   GRADE.forEach(([key], i) => { const q = gr[key] || {}, o = hueRGB(q.h || 0), s = (q.s || 0)/100*0.35, l = (q.l || 0)/100*0.25;
     gl.uniform3f(G.U(fp, 'g' + i), o[0]*s + l, o[1]*s + l, o[2]*s + l); });
@@ -1367,18 +1423,13 @@ function buildAdjust(){
     parent.appendChild(r); return r;
   };
   const fold = (parent, title, open) => { const d = document.createElement('details'); d.className = 'grp'; d.open = !!open;
-    d.innerHTML = `<summary>${title}<svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></summary>`; parent.appendChild(d); return d; };
-  // Face: looks with one Intensity, Compare, Original; then smooth skin, lips and the shape of the face
-  const looks = document.createElement('div'); looks.className = 'looks';
-  looks.innerHTML = Object.keys(LOOKS).map(n => `<button type="button" class="pill" data-look="${n}"${n==='Hollywood'?' id="hollywood"':''}>${n}</button>`).join('');
-  looks.onclick = e => { const b2 = e.target.closest('[data-look]'); if(!b2) return; const p = photos[sel]; if(!p) return;
-    const a = adjOf(p), same = a.look === b2.dataset.look; setLook(p, same ? null : b2.dataset.look, 100); applyFx(p); syncAdj(); };
-  pane.face.appendChild(looks);
-  const li = document.createElement('label'); li.className = 'arow'; li.id = 'lookAmtRow';
-  li.innerHTML = '<span>Intensity</span><output></output><input type="range" min="0" max="150" step="1" aria-label="Look intensity">';
-  li.querySelector('input').oninput = e => { const p = photos[sel]; if(!p || !adjOf(p).look) return; setLook(p, adjOf(p).look, +e.target.value);
-    li.querySelector('output').textContent = e.target.value + '%'; applyFx(p); syncAdj(true); };
-  pane.face.appendChild(li);
+    d.innerHTML = `<summary><span class="gt">${title}</span><button type="button" class="grst" title="Reset ${title}" aria-label="Reset ${title}"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.6-5.9M4 4v5h5"/></svg></button><svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></summary>`;
+    d.querySelector('.grst').onclick = e => { e.preventDefault(); e.stopPropagation(); const p = photos[sel]; if(!p) return; const a = adjOf(p);
+      d.querySelectorAll('.arow[data-a]').forEach(r => delete a[r.dataset.a]);
+      ({'Tone curve':CURVES, 'Color mixer':['hsl'], 'Color grading':['grade','blend','balance']}[title] || []).forEach(k => delete a[k]);
+      delete a.look; delete a.lookAmt; applyFx(p); syncAdj(); };
+    parent.appendChild(d); return d; };
+  // Face: Compare, Original; then smooth skin, lips and the shape of the face (the looks were taken out, Alex 11 Nov; a photo that wore one keeps its settings)
   const top = document.createElement('div'); top.className = 'fxrow';
   top.innerHTML = '<button type="button" class="pill wide" id="cmp" title="Hold to see the photo before"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 3v18"/></svg>Hold: before</button><button type="button" class="pill wide" id="fxOff">Original</button>';
   const cmp = top.querySelector('#cmp'), cmpSet = on => { const p = photos[sel]; if(!p || !G) return; p._cmp = on; const i = photos.indexOf(p); if(frameEl(i) && frameEl(i).querySelector('canvas.ph')) paintSoon(i); };
@@ -1386,34 +1437,54 @@ function buildAdjust(){
   cmp.onpointerup = cmp.onpointercancel = () => cmpSet(false);
   top.querySelector('#fxOff').onclick = () => { const p = photos[sel]; if(!p) return; const lmKeep = p.lm; p.adj = {}; p.lm = lmKeep; applyFx(p); syncAdj(); };
   pane.face.appendChild(top);
-  row(pane.face, 'smooth', 'Smooth skin', 0, 100);
-  row(pane.face, 'under', 'Under-eye', 0, 100); row(pane.face, 'eyeB', 'Bright eyes', 0, 100); row(pane.face, 'teeth', 'Whiten teeth', 0, 100); row(pane.face, 'contour', 'Contour', 0, 100);
-  row(pane.face, 'lips', 'Lip colour', 0, 100); row(pane.face, 'lipH', 'Lip shade', 0, 360);
   status('face');
-  const fs = document.createElement('div'); fs.className = 'agroup'; fs.dataset.needs = 'face'; pane.face.appendChild(fs);
+  { const sk = fold(pane.face, 'Skin', true); row(sk, 'smooth', 'Smooth skin', 0, 100); row(sk, 'under', 'Under-eye', 0, 100); row(sk, 'contour', 'Contour', 0, 100);
+    const et = fold(pane.face, 'Eyes & teeth'); row(et, 'eyeB', 'Bright eyes', 0, 100); row(et, 'teeth', 'Whiten teeth', 0, 100);
+    const lp = fold(pane.face, 'Lips'); row(lp, 'lips', 'Lip colour', 0, 100); row(lp, 'lipH', 'Lip shade', 0, 360); }
+  const fsF = fold(pane.face, 'Shape');
+  const fs = document.createElement('div'); fs.className = 'agroup'; fs.dataset.needs = 'face'; fsF.appendChild(fs);
   [['facew','Face width'],['jaw','Jawline'],['chin','Chin'],['eyes','Eyes'],['nose','Nose'],['mouth','Mouth width'],['smile','Smile']].forEach(([k, l]) => row(fs, k, l));
   // Edit: the Lightroom-like groups
   const hc = document.createElement('canvas'); hc.id = 'histo'; hc.width = 320; hc.height = 80; hc.title = 'Histogram of the picked photo'; pane.edit.appendChild(hc);
+  const ab = document.createElement('div'); ab.className = 'fxrow';
+  ab.innerHTML = '<button type="button" class="pill wide" id="autoTone" title="Set the light from what is in the photo">Auto</button><button type="button" class="pill wide" id="bwBtn" aria-pressed="false" title="Black and white; the Color mixer then sets how light each colour comes out">B&amp;W</button>';
+  pane.edit.appendChild(ab);
+  ab.querySelector('#bwBtn').onclick = () => { const p = photos[sel]; if(!p) return; const a = adjOf(p); if(a.bw) delete a.bw; else a.bw = 1; applyFx(p); syncAdj(); };
+  ab.querySelector('#autoTone').onclick = async () => { const p = photos[sel]; if(!p) return;
+    try{ const bm = await createImageBitmap(p.blob), t = document.createElement('canvas'); t.width = t.height = 96; const tg = t.getContext('2d', {willReadFrequently:true}); tg.drawImage(bm, 0, 0, 96, 96);
+      const d = tg.getImageData(0, 0, 96, 96).data, Ls = []; for(let i = 0; i < d.length; i += 4) Ls.push((d[i]*0.2126 + d[i+1]*0.7152 + d[i+2]*0.0722)/255);
+      Ls.sort((x, y) => x - y); const q = f => Ls[Math.min(Ls.length - 1, Math.floor(f*Ls.length))], lin = x => x <= 0.04045 ? x/12.92 : Math.pow((x + 0.055)/1.055, 2.4), srgb = x => x <= 0.0031308 ? x*12.92 : 1.055*Math.pow(x, 1/2.4) - 0.055;
+      const cl = (x, lo, hi) => Math.max(lo, Math.min(hi, x)), r5 = x => Math.round(x/5)*5;
+      const ev = cl(Math.log2(lin(0.48)/Math.max(0.01, lin(q(0.5))))*0.5, -0.25, 1.2), k = Math.pow(2, ev), after = x => srgb(Math.min(1, lin(x)*k));
+      const p1 = after(q(0.01)), p99 = after(q(0.99)), a = adjOf(p);
+      a.exposure = Math.round(ev*20)/20; a.whites = r5(cl((0.97 - p99)/0.18*100, -30, 35)); a.blacks = r5(cl((0.03 - p1)/0.15*100, -35, 30));
+      a.highlights = r5(cl(-(after(q(0.9)) - 0.8)*220, -50, 10)); a.shadows = r5(cl((0.22 - after(q(0.1)))*220, -10, 50)); a.contrast = Math.max(a.contrast || 0, 5); a.vibrance = Math.max(a.vibrance || 0, 10);
+      applyFx(p); syncAdj(); toast('Auto set the light. Undo takes it back.'); }catch{ toast('Auto could not read this photo.'); } };
   ADJ.filter(x => x.g !== 'Retouch').forEach(({g, items}, n) => { const d = fold(pane.edit, g, n === 0); items.forEach(([key, label, min, max, step]) => row(d, key, label, min, max, step)); });
   // Tone curve: five points (blacks, shadows, midtones, highlights, whites), dragged up or down; double-click puts it straight again
-  const tc = fold(pane.edit, 'Tone curve'); pane.edit.insertBefore(tc, pane.edit.querySelectorAll('details')[1]);
+  const byName = t => [...pane.edit.querySelectorAll('details')].find(d => d.querySelector('.gt').textContent === t);
+  const tc = fold(pane.edit, 'Tone curve'); pane.edit.insertBefore(tc, byName('Color'));
+  let ck = 'curve'; const chs = document.createElement('div'); chs.className = 'chs';
+  chs.innerHTML = [['curve','RGB','#fff'],['curveR','Red','#e5484d'],['curveG','Green','#46a758'],['curveB','Blue','#3e7be0']].map(([k, l, c]) => `<button type="button" class="pill" data-ch="${k}" aria-pressed="${k===ck}"><i style="background:${c}"></i>${l}</button>`).join('');
+  tc.appendChild(chs);
   const cc = document.createElement('canvas'); cc.id = 'curve'; cc.width = 320; cc.height = 220; tc.appendChild(cc);
-  const cur = () => { const p = photos[sel]; return p && adjOf(p).curve && adjOf(p).curve.length === 5 ? adjOf(p).curve : [0, .25, .5, .75, 1]; };
+  chs.onclick = e => { const b2 = e.target.closest('[data-ch]'); if(!b2) return; ck = b2.dataset.ch; chs.querySelectorAll('[data-ch]').forEach(x => x.setAttribute('aria-pressed', x === b2)); cc.draw(); };
+  const cur = () => { const p = photos[sel]; return p && adjOf(p)[ck] && adjOf(p)[ck].length === 5 ? adjOf(p)[ck] : [0, .25, .5, .75, 1]; };
   cc.draw = () => { const g = cc.getContext('2d'), W = cc.width, H = cc.height, c5 = cur(); g.clearRect(0, 0, W, H);
     g.strokeStyle = 'rgba(255,255,255,.1)'; g.lineWidth = 1; for(let i = 1; i < 4; i++){ g.beginPath(); g.moveTo(i*W/4, 0); g.lineTo(i*W/4, H); g.moveTo(0, i*H/4); g.lineTo(W, i*H/4); g.stroke(); }
     g.strokeStyle = 'rgba(255,255,255,.25)'; g.beginPath(); g.moveTo(0, H); g.lineTo(W, 0); g.stroke();
     const f = x => { x = Math.min(1, Math.max(0, x))*4; const i = Math.min(3, Math.floor(x)), t = x - i, p0 = c5[Math.max(i-1, 0)], p1 = c5[i], p2 = c5[i+1], p3 = c5[Math.min(i+2, 4)];
       return 0.5*((2*p1) + (-p0 + p2)*t + (2*p0 - 5*p1 + 4*p2 - p3)*t*t + (-p0 + 3*p1 - 3*p2 + p3)*t*t*t); };
-    g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); for(let x = 0; x <= W; x += 2){ const y = H - Math.min(1, Math.max(0, f(x/W)))*H; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke();
+    g.strokeStyle = {curve:'#fff', curveR:'#ff6b6f', curveG:'#5fd075', curveB:'#6aa0ff'}[ck]; g.lineWidth = 2; g.beginPath(); for(let x = 0; x <= W; x += 2){ const y = H - Math.min(1, Math.max(0, f(x/W)))*H; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke();
     c5.forEach((y, i) => { g.fillStyle = '#d40000'; g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(Math.min(W-7, Math.max(7, i*W/4)), Math.min(H-7, Math.max(7, H - y*H)), 6, 0, 7); g.fill(); g.stroke(); }); };
   let drag = -1;
   const cpos = e => { const r = cc.getBoundingClientRect(); return [(e.clientX - r.left)/r.width, 1 - (e.clientY - r.top)/r.height]; };
   cc.onpointerdown = e => { const p = photos[sel]; if(!p) return; e.preventDefault(); cc.setPointerCapture(e.pointerId); const [x] = cpos(e); drag = Math.round(Math.min(1, Math.max(0, x))*4); cc.onpointermove(e); };
-  cc.onpointermove = e => { if(drag < 0) return; const p = photos[sel]; if(!p) return; const a = adjOf(p), c5 = cur().slice(); c5[drag] = Math.min(1, Math.max(0, cpos(e)[1])); a.curve = c5; cc.draw(); fxSoon(p); };
+  cc.onpointermove = e => { if(drag < 0) return; const p = photos[sel]; if(!p) return; const a = adjOf(p), c5 = cur().slice(); c5[drag] = Math.min(1, Math.max(0, cpos(e)[1])); a[ck] = c5; cc.draw(); fxSoon(p); };
   cc.onpointerup = cc.onpointercancel = () => { drag = -1; };
-  cc.ondblclick = () => { const p = photos[sel]; if(!p) return; delete adjOf(p).curve; cc.draw(); fxSoon(p); };
+  cc.ondblclick = () => { const p = photos[sel]; if(!p) return; delete adjOf(p)[ck]; cc.draw(); fxSoon(p); };
   // Color mixer: one colour at a time, its hue, saturation and luminance
-  const mx = fold(pane.edit, 'Color mixer'); pane.edit.insertBefore(mx, pane.edit.querySelectorAll('details')[3]);
+  const mx = fold(pane.edit, 'Color mixer'); pane.edit.insertBefore(mx, byName('Effects'));
   let band = 'red'; const dots = document.createElement('div'); dots.className = 'bands';
   dots.innerHTML = HSL_BANDS.map(([k, col]) => `<button type="button" data-band="${k}" title="${k}" style="background:${col}" aria-pressed="${k===band}"></button>`).join(''); mx.appendChild(dots);
   const mrows = ['Hue', 'Saturation', 'Luminance'].map((label, j) => { const r = document.createElement('label'); r.className = 'arow mixrow';
@@ -1424,7 +1495,7 @@ function buildAdjust(){
     mrows.forEach((r, j) => { r.querySelector('input').value = t[j]; r.querySelector('output').textContent = (t[j] > 0 ? '+' : '') + t[j]; });
     dots.querySelectorAll('[data-band]').forEach(b2 => b2.setAttribute('aria-pressed', b2.dataset.band === band)); };
   dots.onclick = e => { const b2 = e.target.closest('[data-band]'); if(!b2) return; band = b2.dataset.band; box.syncMix(); };
-  const cg = fold(pane.edit, 'Color grading');
+  const cg = fold(pane.edit, 'Color grading'); pane.edit.insertBefore(cg, byName('Effects'));
   const wh = document.createElement('div'); wh.className = 'wheels'; GRADE.forEach(([k, l]) => wh.appendChild(wheel(k, l))); cg.appendChild(wh);
   [['blend','Blending',0,100,50],['balance','Balance',-100,100,0]].forEach(([key, label, min, max, def]) => {
     const r = document.createElement('label'); r.className = 'arow'; r.dataset.a = key;
@@ -1437,7 +1508,7 @@ function buildAdjust(){
   const all = document.createElement('button'); all.type = 'button'; all.className = 'pill wide'; all.id = 'adjAll';
   all.innerHTML = '<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Same settings on every photo';
   all.title = 'The Edit settings (light, colour, effects, detail, grading) on every photo of this sheet';
-  all.onclick = () => { const p = photos[sel]; if(!p) return; const src = adjOf(p), keys = ADJ.filter(x => x.g !== 'Retouch').flatMap(x => x.items.map(i => i[0])).concat('grade','blend','balance','hsl','curve');
+  all.onclick = () => { const p = photos[sel]; if(!p) return; const src = adjOf(p), keys = ADJ.filter(x => x.g !== 'Retouch').flatMap(x => x.items.map(i => i[0])).concat('grade','blend','balance','hsl','bw', ...CURVES);
     photos.forEach(q => { if(q && q !== p){ const qa = adjOf(q); keys.forEach(k => { if(src[k] == null) delete qa[k]; else qa[k] = JSON.parse(JSON.stringify(src[k])); }); applyFx(q); } });
     toast('Every photo on this sheet has these Edit settings now'); };
   pane.edit.appendChild(all);
@@ -1448,9 +1519,10 @@ function buildAdjust(){
   lq.querySelector('#unLiquify').onclick = () => { if(sel >= 0) restoreOriginalPhoto(sel); };
   pane.body.appendChild(lq);
   status('pose', 'body');
-  const bs = document.createElement('div'); bs.className = 'agroup'; bs.dataset.needs = 'pose'; pane.body.appendChild(bs);
+  const bsF = fold(pane.body, 'Shape', true);
+  const bs = document.createElement('div'); bs.className = 'agroup'; bs.dataset.needs = 'pose'; bsF.appendChild(bs);
   [['waist','Waist'],['hips','Hips'],['shoulders','Shoulders'],['legs','Longer legs',0,100]].forEach(([k, l, mn, mx]) => row(bs, k, l, mn, mx));
-  row(pane.body, 'smooth', 'Body skin', 0, 100).dataset.twin = '1';
+  row(fold(pane.body, 'Skin'), 'smooth', 'Body skin', 0, 100).dataset.twin = '1';
   // Hair: colour
   status('hair');
   const hs = document.createElement('div'); hs.className = 'agroup'; hs.dataset.needs = 'hair'; pane.hair.appendChild(hs);
@@ -1506,6 +1578,7 @@ function syncAdj(keepLook){
   box.querySelectorAll('.arow[data-a]').forEach(row => { const k = row.dataset.a, def = k === 'blend' ? 50 : 0, v = a[k] == null ? def : +a[k];
     row.querySelector('input').value = v; if(k === 'blend' || k === 'balance') row.querySelector('output').textContent = v; else showVal(row, k, v); });
   box.querySelectorAll('.wheel').forEach(w => w.sync());
+  { const bb = box.querySelector('#bwBtn'); if(bb) bb.setAttribute('aria-pressed', !!a.bw); }
   if(box.syncMix) box.syncMix(); { const cc2 = box.querySelector('#curve'); if(cc2) cc2.draw(); } histoSoon();
   box.querySelectorAll('[data-look]').forEach(b2 => b2.setAttribute('aria-pressed', a.look === b2.dataset.look));
   const lr = box.querySelector('#lookAmtRow'); if(lr){ lr.classList.toggle('off', !a.look);
@@ -1901,7 +1974,7 @@ function toast(t){ const d=document.createElement('div'); d.className='toast'; d
    Table roarref_sheets {id, name, data:{S, photos:[{path, w, h, s, ox, oy, flip, rot}]}, thumb}, at most 5 a person (supabase/roarref.sql);
    photos and thumbnails in the private bucket roarref under <user id>/<sheet id>/. Pictures are kept in IndexedDB too ('blob:<path>'),
    so a sheet opens fast the second time. Sheets made before this in the browser alone are brought into the account once. */
-const SB_URL = 'https://bzmjhbnwhdwmncxkqkdl.supabase.co', SB_KEY = 'sb_publishable_7mQ3e0NH5lCmdoIKx2-FUA_EgCoXx9X', MAX_SHEETS = 5;
+const SB_URL = 'https://bzmjhbnwhdwmncxkqkdl.supabase.co', SB_KEY = 'sb_publishable_7mQ3e0NH5lCmdoIKx2-FUA_EgCoXx9X', MAX_SHEETS = 10;
 const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'roar-account' } }) : null;
 const bucket = () => sb.storage.from('roarref');
 const DEF = JSON.stringify(S);
@@ -1938,6 +2011,7 @@ async function getBlob(path){
 const packPhotos = () => photos.map(p => p && p.path ? {path:p.path,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0,pw:p.pw||1,ph:p.ph||1,adj:hasAdj(p.adj) ? p.adj : undefined, lm:p.lm, orig:p.orig && p.orig.path ? {path:p.orig.path} : undefined} : null);
 async function save(){
   if(!me || !sheets.cur) return;
+  histSoon();
   const id = sheets.cur;
   if(pending.size) await Promise.allSettled([...pending]);
   const { error } = await sb.from('roarref_sheets').update({ data:{S, photos:packPhotos()}, updated_at:new Date().toISOString() }).eq('id', id);
@@ -1947,7 +2021,30 @@ async function save(){
   if(Date.now() - lastClean > 30000){ lastClean = Date.now(); cleanFiles(id); }
 }
 let thumbT = null;
-let st; function saveSoon(){ clearTimeout(st); st = setTimeout(save, 700); }
+let st; function saveSoon(){ clearTimeout(st); st = setTimeout(save, 700); histSoon(); }
+/* Undo / Redo (Alex, 11 Nov): a step is the sheet (S) and, per window, which photo sits there with its place, size, turn and settings.
+   Taken a moment after each change settles; the pixels of a Liquify are not part of it (that has its own way back). */
+const HKEYS = ['s','ox','oy','flip','rot','pw','ph'];
+let hist = [], hi = -1, histT = null, histLock = false;
+const snap = () => ({S:JSON.stringify(S), ph:photos.map(p => p ? {p, v:JSON.stringify([HKEYS.map(k => p[k]), p.adj || {}])} : null)});
+const sameSnap = (a, b) => a.S === b.S && a.ph.length === b.ph.length && a.ph.every((x, i) => (!x && !b.ph[i]) || (x && b.ph[i] && x.p === b.ph[i].p && x.v === b.ph[i].v));
+function histBtns(){ const u = $('undo'), r = $('redo'); if(u) u.disabled = hi <= 0; if(r) r.disabled = hi >= hist.length - 1; }
+function histReset(){ clearTimeout(histT); hist = [snap()]; hi = 0; histBtns(); }
+function histTake(){ if(histLock || !sheets.cur) return; const n = snap(); if(hi >= 0 && sameSnap(hist[hi], n)) return;
+  hist = hist.slice(0, hi + 1); hist.push(n); if(hist.length > 60) hist.shift(); hi = hist.length - 1; histBtns(); }
+function histSoon(){ if(histLock) return; clearTimeout(histT); histT = setTimeout(histTake, 350); }
+function histGo(d){
+  if(document.querySelector('.lq, .spage')) return; clearTimeout(histT); histTake();
+  const n = hist[hi + d]; if(!n) return; hi += d; histLock = true;
+  const before = new Set(photos.filter(Boolean));
+  S = JSON.parse(n.S);
+  photos = n.ph.map(x => { if(!x) return null; const p = x.p, [vals, adj] = JSON.parse(x.v); HKEYS.forEach((k, i) => { if(vals[i] == null) delete p[k]; else p[k] = vals[i]; }); p.adj = adj; p._cmp = false;
+    if(!before.has(p) && !pending.size){ p.path = null; upload(p, sheets.cur); } return p; });
+  if(sel >= photos.length || !photos[sel]) sel = -1; selCover = -1;
+  try{ setShape(); }catch{} render(); syncPanel(); placeControls(); histLock = false; histBtns(); save();
+}
+document.addEventListener('keydown', e => { if(!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z' && e.key.toLowerCase() !== 'y') return;
+  if(e.target.closest && e.target.closest('input:not([type=range]), textarea')) return; e.preventDefault(); histGo(e.key.toLowerCase() === 'y' || e.shiftKey ? 1 : -1); });
 async function cleanFiles(id){ // photos taken off the sheet leave the account too
   try{ const { data } = await bucket().list(`${me.id}/${id}`, {limit:200}); if(!data) return;
     const keep = new Set(photos.filter(p => p && p.path).map(p => p.path.split('/').pop()).concat(photos.filter(p => p && p.orig && p.orig.path).map(p => p.orig.path.split('/').pop()), 'thumb.jpg'));
@@ -1972,7 +2069,7 @@ async function loadSheet(row){
   render();
   await Promise.all(list.map(async (q, i) => { if(!q || !q.path) return;
     try{ const blob = await getBlob(q.path); photos[i] = Object.assign({rot:0}, q, {blob, url:URL.createObjectURL(blob)}); migrateAdj(photos[i]); if(hasAdj(photos[i].adj)) await applyFx(photos[i]); }catch{} }));
-  render();
+  render(); histReset();
 }
 async function listSheets(){
   const { data, error } = await sb.from('roarref_sheets').select('id,name,thumb,updated_at,data').order('created_at');
@@ -2123,7 +2220,7 @@ let gateMode = 'in', mfaFactor = null;
 function drawGate(msg, err){
   const g = $('gate'); g.hidden = false;
   const keepEmail = $('gEmail') ? $('gEmail').value : '';
-  const T = {in:['Sign in to RoarRef','Use your Roar Account: the same one as RoarMe, RoarWriter and every Roar app. Your sheets, up to 5, wait for you on any computer.'],
+  const T = {in:['Sign in to RoarRef','Use your Roar Account: the same one as RoarMe, RoarWriter and every Roar app. Your sheets, up to 10, wait for you on any computer.'],
     up:['Create your Roar Account','Free. One account for RoarRef and every Roar app.'], mfa:['One more step','Type the 6-digit code from your authenticator app.']}[gateMode];
   g.innerHTML = `<form class="card gate-card" id="gateForm" novalidate>
     <div class="mark">Roar<b>Ref</b></div><h2>${T[0]}</h2><p>${T[1]}</p>
@@ -2206,7 +2303,7 @@ function placeControls(){
   [lb, cv].forEach(x => { x.classList.add('wide'); x.classList.remove('round'); });
   if(!lb.querySelector('.w')) lb.insertAdjacentHTML('beforeend','<span class="w">Names</span>');
   const sp = document.createElement('span'); sp.className = 'spacer';
-  bar.replaceChildren(mark, sp, $('add'), $('clear'), $('export'), $('sheetsBtn'));
+  bar.replaceChildren(mark, sp, $('undo'), $('redo'), $('add'), $('clear'), $('export'), $('sheetsBtn'));
   const mk = (parent, cls) => (...els) => { const r = document.createElement('div'); r.className = cls; els.filter(Boolean).forEach(e => r.appendChild(e)); parent.appendChild(r); return r; };
   if(isPhone()){
     const row = mk($('mpane'), 'mrow');
@@ -2223,9 +2320,15 @@ function placeControls(){
     const s2 = document.createElement('section'); s2.className = 'sec'; side.appendChild(s2);
     s2.innerHTML = `<h2 class="ptl">${RAIL.find(x => x[0] === railTab)[1]}</h2>` + (PHOTO.includes(railTab) && railTab !== 'frame' ? '<p class="hint2" id="needPhoto">Click a photo on the sheet to work on it.</p>' : '');
     const row = mk(s2, 'srow');
-    if(railTab === 'layout'){ row($('layouts')); row($('ratios'), $('stack'), $('even')); }
-    else if(railTab === 'look'){ row($('sheetSw')); row($('fillSw')); row($('gapCtl')); row($('radCtl')); row(lb, cv); }
-    else if(railTab === 'frame'){ const tr = row(); tr.id = 'mtools'; ['zoom','pw','ph','x','y','rot'].forEach(k => row(document.querySelector(`[data-k="${k}"]`))); }
+    const lab = t => { const h = document.createElement('p'); h.className = 'plab'; h.textContent = t; s2.appendChild(h); };
+    [$('stack'), $('even')].forEach(x => { x.classList.remove('wide'); x.classList.add('round'); });
+    if(railTab === 'layout'){ // three groups, each with its name: the windows, the shape of the sheet, how they sit
+      lab('Windows'); row($('layouts')); lab('Sheet shape'); row($('ratios')); lab('Arrange');
+      const st = $('stack'), ev = $('even'); [[st, 'Stacked'], [ev, 'Even sizes']].forEach(([x, w]) => { x.classList.add('wide'); x.classList.remove('round'); if(!x.querySelector('.w')) x.insertAdjacentHTML('beforeend', `<span class="w">${w}</span>`); });
+      row(st, ev); }
+    else if(railTab === 'look'){ lab('Colours'); row($('sheetSw')); row($('fillSw')); lab('Spacing'); row($('gapCtl')); row($('radCtl')); lab('On the sheet'); row(lb, cv); }
+    else if(railTab === 'frame'){ const K = k => document.querySelector(`[data-k="${k}"]`); lab('Window'); const tr = row(); tr.id = 'mtools';
+      lab('Size'); ['zoom','pw','ph'].forEach(k => row(K(k))); lab('Position'); ['x','y','rot'].forEach(k => row(K(k))); }
     else { const box = document.querySelector('[data-k="adjust"]'); row(box); box.show(railTab); }
   }
   fillMTools();
