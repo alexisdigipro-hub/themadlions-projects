@@ -788,7 +788,7 @@ body:has(.player.open) .totop, body:has(.btsall.open) .totop { opacity: 0; point
 /* the work's filters on a phone: two rows (Alex, 11 Nov): smaller pills, short names (SHORT_CAT), fitFilters steps down if needed */
 @media (max-width: 760px) {
   #filters { gap: 6px 5px; }
-  #filters button { height: 34px; padding: 0 11px; font-size: var(--ff, 12.5px); }
+  #filters button { height: 34px; padding: 0 var(--fp, 11px); font-size: var(--ff, 12.5px); }
 }
 </style>
 </head>
@@ -1182,15 +1182,19 @@ function renderFilters() {
   }
   fitFilters(box)
 }
-const SHORT_CAT = { 'Motion Graphics': 'Motion', 'Intro Videos': 'Intro', 'Aibsent Studios': 'Aibsent' }
-// a phone keeps the filters in two rows: if a new category makes a third, the pills step down a little (to 11.5 px at least)
+const SHORT_CAT = { 'Motion Graphics': 'Motion' }
+// a phone keeps the filters in two rows: while there are three, the pills step down a little, type and side room
+// (to 11.5 px type and 7 px sides at least; the full names Intro Videos and Aibsent Studios stay, Alex 11 Nov)
+const FIT_STEPS = [[12.5, 11], [12.5, 9], [12, 8], [12, 7], [11.5, 7]]
 function fitFilters(box) {
-  box.style.removeProperty('--ff')
+  box.style.removeProperty('--ff'); box.style.removeProperty('--fp')
   if (innerWidth > 760) return
   const rows = () => new Set([...box.children].map((x) => x.offsetTop)).size
-  for (let fs = 12.5; rows() > 2 && fs > 11.5; fs -= 0.5) box.style.setProperty('--ff', `${fs - 0.5}px`)
+  for (const [fs, pad] of FIT_STEPS) { box.style.setProperty('--ff', `${fs}px`); box.style.setProperty('--fp', `${pad}px`); if (rows() <= 2) break }
 }
 addEventListener('resize', () => { const box = document.getElementById('filters'); if (box) renderFilters() })
+// measured again once the site's typeface has arrived (its letters are wider than the stand-in's)
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { const box = document.getElementById('filters'); if (box) fitFilters(box) })
 function renderGrid() {
   const list = WORKS.filter((w) => !w.c.includes(BTS) && (filter === 'all' || (filter === 'aibsent' ? w.aib : w.c.includes(filter))))
   const shown = showAll ? list : list.slice(0, SHORT)
