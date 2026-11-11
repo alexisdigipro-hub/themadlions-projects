@@ -209,6 +209,27 @@ a.pill{text-decoration:none}
 .modal.busy{cursor:progress}.modal.busy .card{opacity:.7;pointer-events:none}
 .who{font-size:13px;color:var(--muted)}
 .card .off{opacity:.4;pointer-events:none}
+.spage{position:fixed;inset:0;z-index:60;background:var(--bg);overflow:auto;padding:max(14px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px));animation:fade .2s}
+.phead{display:flex;align-items:center;gap:10px;max-width:1240px;margin:0 auto}
+.pwrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:18px;padding-top:26px}
+.ptitle h1{margin:0;font:700 30px var(--display);letter-spacing:.01em}
+.ptitle p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.pcard{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;transition:transform .2s,border-color .2s}
+.pcard.sh{display:flex;padding:0;gap:0;grid-template-columns:none;align-items:stretch}
+.pcard:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.2)}
+.pcard.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 24px var(--accent-glow)}
+.pthumb{position:relative;aspect-ratio:16/9;border:0;padding:0;background:#2a2a2c;cursor:pointer;display:grid;place-items:center;width:100%}
+.pthumb img{width:100%;height:100%;object-fit:contain;display:block}
+.pnow{position:absolute;left:10px;top:10px;font:600 11px var(--body);font-style:normal;padding:4px 9px;border-radius:999px;background:var(--accent);color:#fff}
+.pbody{display:flex;align-items:center;gap:10px;padding:12px 12px 12px 16px}
+.pbody .sh-meta{flex:1}
+.pnew{align-items:center;justify-content:center;gap:6px;min-height:220px;border-style:dashed;cursor:pointer;color:var(--fg);font:500 13px var(--body)}
+.pnew svg{width:34px;height:34px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.pnew b{font-size:16px}.pnew small{color:var(--muted)}
+.pfoot{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
+.pfoot span{flex:1}
+.spage.busy{cursor:progress}.spage.busy .pwrap{opacity:.6;pointer-events:none}
 .shn{max-width:130px;overflow:hidden;text-overflow:ellipsis}
 .sheets-card{max-width:620px}
 .sheets{display:flex;flex-direction:column;gap:8px;max-height:min(60vh,520px);overflow:auto;padding:2px}
@@ -1320,7 +1341,7 @@ function buildPanel(){
     w.innerHTML = `${label} <input type="range" id="${id}" min="0" max="${max}" step="0.5"><output></output>`;
     const i = w.querySelector('input'); i.oninput = () => { S[key] = +i.value; render(); saveSoon(); };
     i.ondblclick = () => { S[key] = key==='gap' ? 14 : 0; render(); save(); }; return w; };
-  const shb = document.createElement('button'); shb.type='button'; shb.className='pill'; shb.id='sheetsBtn'; shb.title='Your sheets: one per character';
+  const shb = document.createElement('button'); shb.type='button'; shb.className='pill'; shb.id='sheetsBtn'; shb.title='Your projects: one per character';
   shb.innerHTML = '<span class="av" aria-hidden="true"></span><svg class="shi" viewBox="0 0 24 24"><rect x="4" y="6" width="14" height="12" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v10"/></svg><span class="shn"></span><svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>';
   shb.onclick = () => openSheets();
   panelEl.append(shb, fine('gap','Gap',80,'gap','Space between windows · double-click for 14'), fine('rad','Round',80,'rad','Round corners · double-click for none'), even, photo);
@@ -1436,7 +1457,7 @@ function syncPanel(light){
   const p = sel>=0 ? photos[sel] : null, on = !!p;
   { const c = curSheet(); const n = document.querySelector('#sheetsBtn .shn'); if(n) n.textContent = c ? c.name : 'Sheets';
     const av = document.querySelector('#sheetsBtn .av'); if(av) av.textContent = me && me.email ? me.email[0].toUpperCase() : '';
-    const cn = document.querySelector('#sheetsBtn'); if(cn) cn.title = (me ? me.email + ' · ' : '') + 'Your sheets (' + sheets.list.length + ' of ' + MAX_SHEETS + ')'; }
+    const cn = document.querySelector('#sheetsBtn'); if(cn) cn.title = (me ? me.email + ' · ' : '') + 'Your projects (' + sheets.list.length + ' of ' + MAX_SHEETS + ')'; }
   const g = $('gap'), rd = $('rad');
   if(g){ g.value = S.gap; g.nextElementSibling.textContent = S.gap; rd.value = S.rad; rd.nextElementSibling.textContent = S.rad; }
   $('even').classList.toggle('off', !(S.layout==='custom' || (S.sizes && S.sizes[lay().id])));
@@ -1822,7 +1843,8 @@ async function deleteSheet(id){
 async function openSheets(){
   clearTimeout(st); await save(); await saveThumb();
   try{ sheets.list = await listSheets(); }catch{}
-  const m = document.createElement('div'); m.className='modal';
+  // a page of its own, not a window (Alex, 11 Nov: "an extra page with all the projects, not a pop-up")
+  const m = document.createElement('div'); m.className='spage';
   const urls = [];
   const draw = async () => {
     urls.forEach(u => URL.revokeObjectURL(u)); urls.length = 0;
@@ -1831,25 +1853,27 @@ async function openSheets(){
       if(x.thumb){ try{ const { data } = await bucket().download(x.thumb + '?t=' + (x.thumbAt || x.updated_at)); if(data){ u = URL.createObjectURL(data); urls.push(u); } }catch{} }
       rows.push({x, u}); }
     const full = sheets.list.length >= MAX_SHEETS;
-    m.innerHTML = `<div class="card sheets-card"><div class="row"><h2 style="flex:1">Your sheets <span class="cnt">${sheets.list.length} of ${MAX_SHEETS}</span></h2>
-        <button type="button" class="pill main${full?' off':''}" id="shNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New sheet</button></div>
-      <p>${full ? `You have ${MAX_SHEETS} sheets, the most an account keeps. Delete one to make room.` : `One sheet per character, up to ${MAX_SHEETS}. Kept in your Roar Account, on every computer.`}</p>
-      <div class="sheets">${rows.map(({x,u}) => `<div class="sh${x.id===sheets.cur?' on':''}" data-id="${x.id}">
-        <button type="button" class="sh-open" data-open="${x.id}" title="Open ${esc(x.name)}">${u ? `<img src="${u}" alt="">` : '<span class="sh-empty"></span>'}</button>
-        <div class="sh-meta"><b>${esc(x.name)}</b><small>${x.n} photo${x.n===1?'':'s'}${x.id===sheets.cur?' · open now':''}</small></div>
+    const when = t => { try{ return new Date(t).toLocaleDateString('en-GB', {day:'numeric', month:'short'}); }catch{ return ''; } };
+    m.innerHTML = `<header class="phead"><div class="mark">Roar<b>Ref</b></div><span class="spacer" style="flex:1;margin:0"></span>
+        <button type="button" class="pill" id="shClose"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>Back to the sheet</button></header>
+      <div class="pwrap"><div class="ptitle"><h1>Your projects <span class="cnt">${sheets.list.length} of ${MAX_SHEETS}</span></h1>
+        <p>${full ? `You have ${MAX_SHEETS} projects, the most an account keeps. Delete one to make room.` : `One project per character, up to ${MAX_SHEETS}. Kept in your Roar Account, on every computer.`}</p></div>
+      <div class="pgrid">${rows.map(({x,u}) => `<div class="sh pcard${x.id===sheets.cur?' on':''}" data-id="${x.id}">
+        <button type="button" class="pthumb" data-open="${x.id}" title="Open ${esc(x.name)}">${u ? `<img src="${u}" alt="">` : '<span class="sh-empty"></span>'}${x.id===sheets.cur?'<i class="pnow">Open now</i>':''}</button>
+        <div class="pbody"><div class="sh-meta"><b>${esc(x.name)}</b><small>${x.n} photo${x.n===1?'':'s'} · edited ${when(x.updated_at)}</small></div>
         <div class="sh-acts">
           <button type="button" class="ico" data-ren="${x.id}" title="Rename" aria-label="Rename"><svg viewBox="0 0 24 24">${IC.pen}</svg></button>
           <button type="button" class="ico${full?' off':''}" data-dup="${x.id}" title="Duplicate" aria-label="Duplicate"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>
           <button type="button" class="ico del" data-del="${x.id}" title="Delete" aria-label="Delete"><svg viewBox="0 0 24 24">${IC.trash}</svg></button>
-        </div></div>`).join('')}</div>
-      <div class="row who"><span>Signed in as <b>${esc(me.email || '')}</b></span><span style="flex:1"></span>
-        <button type="button" class="pill" id="shOut">Sign out</button><button type="button" class="pill" id="shClose">Done</button></div></div>`;
+        </div></div></div>`).join('')}
+        ${full ? '' : `<button type="button" class="pcard pnew" id="shNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><b>New project</b><small>Same layout and look, empty windows</small></button>`}</div>
+      <div class="pfoot"><span>Signed in as <b>${esc(me.email || '')}</b></span><button type="button" class="pill" id="shOut">Sign out</button></div></div>`;
   };
   const close = () => { urls.forEach(u => URL.revokeObjectURL(u)); m.remove(); syncPanel(); };
   const busy = on => m.classList.toggle('busy', on);
   m.onclick = async e => {
     const t = e.target.closest('button');
-    if(e.target === m || t?.id === 'shClose') return close();
+    if(t?.id === 'shClose') return close();
     if(!t || m.classList.contains('busy')) return;
     if(t.id === 'shOut'){ close(); await save(); await sb.auth.signOut(); return; }
     if(t.id === 'shNew'){ busy(true); await newSheet(false); busy(false); return close(); }
@@ -1866,7 +1890,9 @@ async function openSheets(){
     if(t.dataset.keep) return draw();
     if(t.dataset.sure){ busy(true); await deleteSheet(t.dataset.sure); await draw(); busy(false); syncPanel(); }
   };
-  await draw(); document.body.appendChild(m);
+  const esc2 = e => { if(e.key === 'Escape' && document.body.contains(m) && !m.querySelector('input')){ document.removeEventListener('keydown', esc2); close(); } };
+  document.addEventListener('keydown', esc2);
+  await draw(); document.body.appendChild(m); m.scrollTop = 0;
 }
 
 /* the door: RoarRef opens only with a Roar Account (sign in, create one, or the 6-digit code of two-step verification) */
