@@ -794,6 +794,11 @@ body:has(.player.open) .totop, body:has(.btsall.open) .totop { opacity: 0; point
   #filters button { height: 34px; padding: 0 var(--fp, 11px); font-size: var(--ff, 12.5px); }
 }
 
+/* the Aibsent badge on a film tile, on a phone (Alex, 11 Nov): smaller, at the foot in the middle */
+@media (max-width: 760px) {
+  .badge-aib { top: auto; bottom: 7px; left: 50%; transform: translateX(-50%); height: 17px; padding: 0 7px; border-radius: 6px; font-size: 7.5px; letter-spacing: .14em; white-space: nowrap; }
+}
+
 /* the Lab on a phone as one window (Alex, 11 Nov: "one window, just a placement, the best you can think of"): a glass
    window with its three lights, the chosen app on a stage (its colour, what it is, Discover), and every app as a small
    icon in a dock under it. A tap on an icon puts that app on the stage; a tap on the stage opens its page. The window
