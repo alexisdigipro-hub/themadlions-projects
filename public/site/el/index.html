@@ -767,6 +767,20 @@ html.has-notice .bar { top: var(--notice-h, 38px); }
   .lab-x .open .tag, .lab-x .open em { justify-self: center; }
   .lab-x .top { justify-content: center; }
 }
+
+/* back to the top (Alex, 11 Nov): a round matte glass button bottom right, shown once the page has gone a screen down */
+.totop { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 30; width: 48px; height: 48px; border-radius: 50%;
+  display: grid; place-items: center; padding: 0; cursor: pointer; color: var(--text);
+  background: color-mix(in srgb, var(--bg-2) 72%, transparent); border: 1px solid var(--glass-edge, var(--line));
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  opacity: 0; transform: translateY(10px) scale(.94); pointer-events: none; transition: opacity .28s, transform .28s, background .2s; }
+.totop.on { opacity: 1; transform: none; pointer-events: auto; }
+.totop:hover { background: color-mix(in srgb, var(--bg-3) 85%, transparent); }
+.totop:active { transform: scale(.94); }
+.totop svg { width: 20px; height: 20px; }
+/* on a phone a little higher, clear of Safari's floating bar at the foot */
+@media (max-width: 760px) { .totop { width: 46px; height: 46px; right: 14px; bottom: calc(76px + env(safe-area-inset-bottom)); } }
+body:has(.player.open) .totop, body:has(.btsall.open) .totop { opacity: 0; pointer-events: none; }
 </style>
 </head>
 <body>
@@ -1489,6 +1503,13 @@ function countUp(el) {
   requestAnimationFrame(tick)
 }
 const bar = document.getElementById('bar')
+// back to the top: appears a screen down, takes the page up smoothly (at once for someone who asks for less motion)
+const totop = document.createElement('button')
+totop.type = 'button'; totop.className = 'totop'; totop.setAttribute('aria-label', 'Back to the top'); totop.title = 'Back to the top'
+totop.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>'
+totop.onclick = () => scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+document.body.appendChild(totop)
+addEventListener('scroll', () => totop.classList.toggle('on', scrollY > innerHeight * 0.9), { passive: true })
 const onScroll = () => bar.classList.toggle('solid', scrollY > innerHeight * 0.6)
 addEventListener('scroll', onScroll, { passive: true })
 
