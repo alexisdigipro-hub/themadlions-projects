@@ -407,7 +407,6 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
 .aib2-lead { margin: 16px 0 0; max-width: 494px; font-size: clamp(16.8px, 1.42vw, 19.4px); font-weight: 300; line-height: 1.6; color: color-mix(in srgb, var(--text) 78%, transparent); }
 /* one line on a computer (Alex, 10 Nov) */
 .aib2-caps { display: flex; flex-wrap: nowrap; white-space: nowrap; gap: 8px 11px; margin: 20px 0 0; font-size: 13.65px; letter-spacing: .02em; color: var(--muted); }
-@media (max-width: 900px) { .aib2-caps { flex-wrap: wrap; } }
 .aib2-caps span { display: inline-flex; align-items: center; gap: 7px; }
 .aib2-caps i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
 .aib2 .aib-go { margin-top: 30px; }
@@ -738,7 +737,11 @@ html.has-notice .bar { top: var(--notice-h, 38px); }
   .filters, .choices, .social, .chips, .aib2-caps, .aib-cta { justify-content: center; }
   .aib2 > div:first-child { display: flex; flex-direction: column; align-items: center; text-align: center; }
   .aib2 .aib-kicker, .aib2-lead { text-align: center; margin-left: auto; margin-right: auto; }
-  .aib2-caps { flex-wrap: wrap; white-space: normal; }
+  /* the craft's five names on one line on a phone too (Alex, 11 Nov): fitCaps makes the type smaller until they fit */
+  .aib2-caps { flex-wrap: nowrap; white-space: nowrap; gap: 7px; font-size: var(--cf, 13px); letter-spacing: 0; width: max-content; max-width: none; }
+  .aib2-caps span { gap: 4px; }
+  .aib2-caps.wrap { flex-wrap: wrap; white-space: normal; width: auto; gap: 6px 10px; }
+  .aib2-caps i { width: 4px; height: 4px; }
   .contact > .reveal:first-child { text-align: center; }
   .contact .social { justify-content: center; }
   .chatform .cf-topics { justify-content: center; }
@@ -1362,9 +1365,22 @@ function renderServices() {
   })
 }
 const AIB_CAPS = [['Editing', 'Μοντάζ'], ['Color grading', 'Color grading'], ['Visual FX', 'Visual FX'], ['Motion graphics', 'Motion graphics'], ['Compositing', 'Compositing']]
+// on a phone the craft's names stay on one line: the type steps down until the line fits its column (10 px at least)
+function fitCaps() {
+  const caps = document.getElementById('aibCaps')
+  if (!caps) return
+  caps.style.removeProperty('--cf'); caps.classList.remove('wrap')
+  if (innerWidth > 900) return
+  const room = caps.parentElement.clientWidth
+  for (let fs = 13; caps.getBoundingClientRect().width > room && fs > 10; fs -= 0.25) caps.style.setProperty('--cf', `${fs - 0.25}px`)
+  // a very narrow phone: two lines rather than out of the screen
+  if (caps.getBoundingClientRect().width > room) { caps.style.removeProperty('--cf'); caps.classList.add('wrap') }
+}
+addEventListener('resize', fitCaps)
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitCaps)
 function renderAibsent() {
   const caps = document.getElementById('aibCaps')
-  if (caps) caps.innerHTML = AIB_CAPS.map((c) => `<span><i></i>${lang === 'el' ? c[1] : c[0]}</span>`).join('')
+  if (caps) { caps.innerHTML = AIB_CAPS.map((c) => `<span><i></i>${lang === 'el' ? c[1] : c[0]}</span>`).join(''); fitCaps() }
   // the home page's stack: three Aibsent Studios films, or the craft's names on plain frames while there are fewer
   const stack = document.getElementById('aibStack')
   if (stack) {
