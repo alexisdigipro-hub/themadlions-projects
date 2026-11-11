@@ -506,7 +506,7 @@ new ResizeObserver(fit).observe(wrap);
 
 function imgBox(p, r){
   const cover = Math.max(r.w/p.w, r.h/p.h), s = cover*p.s;
-  const dw = p.w*s, dh = p.h*s;
+  const dw = p.w*s*(p.pw||1), dh = p.h*s*(p.ph||1); // pw / ph: width or height alone (Alex, 11 Nov)
   return {x:(r.w-dw)/2+p.ox, y:(r.h-dh)/2+p.oy, w:dw, h:dh};
 }
 const pct = (v, of) => (v/of*100)+'%';
@@ -657,7 +657,7 @@ const IC = {
 };
 /* the bar under the sheet: the windows' reset, and sliders and buttons for the photo that is picked */
 const panelEl = $('panel');
-const reset = p => Object.assign(p, {s:1, ox:0, oy:0, rot:0});
+const reset = p => Object.assign(p, {s:1, ox:0, oy:0, rot:0, pw:1, ph:1});
 /* ---------- Face / Body / Hair (Alex, 11 Nov, "like FaceApp"): the photo is read once by Google's free MediaPipe models, in the
    browser (face points, body points, the hair as a mask); the points are saved with the photo (p.lm), the hair mask is made again
    when needed. Each slider is a small warp around those points (scale, narrow, move, stretch), worked out in renderAdj before
@@ -1315,7 +1315,7 @@ function slider(id, label, min, max, step, onIn){
   const inp = w.querySelector('input');
   inp.oninput = () => { if(sel>=0 && photos[sel]) { onIn(+inp.value, photos[sel]); place(sel); saveSoon(); } };
   inp.ondblclick = () => { if(sel>=0 && photos[sel]){ const p=photos[sel];
-    if(id==='zoom'){p.s=1;} else if(id==='x'){p.ox=0;} else if(id==='y'){p.oy=0;} else if(id==='rot'){p.rot=0;} else { p[id]=0; fxSoon(p); }
+    if(id==='zoom'){p.s=1;} else if(id==='x'){p.ox=0;} else if(id==='y'){p.oy=0;} else if(id==='rot'){p.rot=0;} else if(id==='pw' || id==='ph'){ p[id]=1; } else { p[id]=0; fxSoon(p); }
     place(sel); save(); } };
   return w;
 }
@@ -1334,6 +1334,8 @@ function buildPanel(){
     slider('zoom','Zoom', -190, 230, 1, (v,p)=>{ p.s = Math.exp(v/100); }),
     slider('x','X', -800, 800, 1, (v,p)=>{ p.ox = v; }),
     slider('y','Y', -450, 450, 1, (v,p)=>{ p.oy = v; }),
+    slider('pw','Width', -100, 100, 1, (v,p)=>{ p.pw = Math.pow(2, v/100); }),
+    slider('ph','Height', -100, 100, 1, (v,p)=>{ p.ph = Math.pow(2, v/100); }),
     slider('rot','Rotate', -180, 180, 1, (v,p)=>{ p.rot = v; }),
     );
   photo.appendChild(buildAdjust());
@@ -1447,7 +1449,7 @@ function toolbar(i){
   t.append(
     pbtn('fill','Fill the window (reset the photo)', ()=>{ reset(photos[i]); place(i); save(); }),
     pbtn('fit','Show the whole photo', ()=>{ const p=photos[i], r=rects(lay(),S.gap,pad())[i];
-      p.s = Math.min(r.w/p.w, r.h/p.h)/Math.max(r.w/p.w, r.h/p.h); p.ox=0; p.oy=0; place(i); save(); }),
+      p.s = Math.min(r.w/(p.w*(p.pw||1)), r.h/(p.h*(p.ph||1)))/Math.max(r.w/p.w, r.h/p.h); p.ox=0; p.oy=0; place(i); save(); }),
     pbtn('flip','Mirror', ()=>{ photos[i].flip=!photos[i].flip; place(i); save(); }),
     pbtn('swap','Replace photo', ()=>{ pickTarget=i; $('file').click(); }),
     pbtn('trash','Remove photo', ()=>{ photos[i]=null; render(); save(); }, 'del'));
@@ -1461,7 +1463,7 @@ function syncPanel(light){
   const g = $('gap'), rd = $('rad');
   if(g){ g.value = S.gap; g.nextElementSibling.textContent = S.gap; rd.value = S.rad; rd.nextElementSibling.textContent = S.rad; }
   $('even').classList.toggle('off', !(S.layout==='custom' || (S.sizes && S.sizes[lay().id])));
-  ['zoom','x','y','rot'].forEach(k => document.querySelector(`[data-k="${k}"]`).classList.toggle('off', !on));
+  ['zoom','pw','ph','x','y','rot'].forEach(k => document.querySelector(`[data-k="${k}"]`).classList.toggle('off', !on));
   const r = on ? rects(lay(), S.gap, pad())[sel] : {w:800,h:450};
   const set = (k, v, min, max, txt) => { const w = document.querySelector(`[data-k="${k}"]`), i = w.querySelector('input');
     if(min!=null){ i.min = min; i.max = max; } i.value = v; w.querySelector('output').textContent = txt; };
@@ -1469,6 +1471,8 @@ function syncPanel(light){
   set('x', on ? Math.round(p.ox) : 0, -Math.round(r.w), Math.round(r.w), on ? Math.round(p.ox/r.w*100)+'%' : '');
   set('y', on ? Math.round(p.oy) : 0, -Math.round(r.h), Math.round(r.h), on ? Math.round(p.oy/r.h*100)+'%' : '');
   set('rot', on ? Math.round(p.rot||0) : 0, null, null, on ? Math.round(p.rot||0)+'°' : '');
+  set('pw', on ? Math.round(Math.log2(p.pw||1)*100) : 0, null, null, on ? Math.round((p.pw||1)*100)+'%' : '');
+  set('ph', on ? Math.round(Math.log2(p.ph||1)*100) : 0, null, null, on ? Math.round((p.ph||1)*100)+'%' : '');
   if(!light) syncAdj();
 }
 function zoomBy(i, f, cx=0, cy=0){
@@ -1725,7 +1729,7 @@ async function getBlob(path){
   const { data, error } = await bucket().download(path); if(error) throw error;
   dbPut('blob:'+path, data).catch(()=>{}); return data;
 }
-const packPhotos = () => photos.map(p => p && p.path ? {path:p.path,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0,adj:hasAdj(p.adj) ? p.adj : undefined, lm:p.lm, orig:p.orig && p.orig.path ? {path:p.orig.path} : undefined} : null);
+const packPhotos = () => photos.map(p => p && p.path ? {path:p.path,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0,pw:p.pw||1,ph:p.ph||1,adj:hasAdj(p.adj) ? p.adj : undefined, lm:p.lm, orig:p.orig && p.orig.path ? {path:p.orig.path} : undefined} : null);
 async function save(){
   if(!me || !sheets.cur) return;
   const id = sheets.cur;
@@ -1822,7 +1826,7 @@ async function newSheet(copy){
     const ph = [];
     for(const p of photos){ if(!p || !p.path){ ph.push(null); continue; }
       const to = `${me.id}/${row.id}/${newId()}.jpg`; const { error } = await bucket().copy(p.path, to);
-      ph.push(error ? null : {path:to, w:p.w, h:p.h, s:p.s, ox:p.ox, oy:p.oy, flip:p.flip, rot:p.rot||0, adj:hasAdj(p.adj) ? JSON.parse(JSON.stringify(p.adj)) : undefined, lm:p.lm}); }
+      ph.push(error ? null : {path:to, w:p.w, h:p.h, s:p.s, ox:p.ox, oy:p.oy, flip:p.flip, rot:p.rot||0, pw:p.pw||1, ph:p.ph||1, adj:hasAdj(p.adj) ? JSON.parse(JSON.stringify(p.adj)) : undefined, lm:p.lm}); }
     await sb.from('roarref_sheets').update({data:{S, photos:ph}}).eq('id', row.id);
     sheets.list = await listSheets(); await openSheet(row.id);
   } else {
@@ -1969,7 +1973,7 @@ function placeControls(){
   const bar = document.querySelector('.bar'), mark = bar.querySelector('.mark'), stash = $('stash');
   // everything back to the stash first, then out to where this screen wants it
   ['layouts','ratios','stack','sheetSw','fillSw','cover','labels','sheetsBtn','add','clear','export','gapCtl','radCtl','even'].forEach(id => stash.appendChild($(id)));
-  ['zoom','x','y','rot','adjust'].forEach(k => stash.appendChild(document.querySelector(`[data-k="${k}"]`)));
+  ['zoom','pw','ph','x','y','rot','adjust'].forEach(k => stash.appendChild(document.querySelector(`[data-k="${k}"]`)));
   $('mpane').innerHTML = ''; $('side').innerHTML = '';
   const lb = $('labels'), cv = $('cover');
   [lb, cv].forEach(x => { x.classList.add('wide'); x.classList.remove('round'); });
@@ -1981,7 +1985,7 @@ function placeControls(){
     const row = mk($('mpane'), 'mrow');
     if(mTab==='layout'){ row($('layouts')); row($('ratios'), $('stack'), $('even')); }
     else if(mTab==='look'){ row($('sheetSw'), $('fillSw')); row($('gapCtl')); row($('radCtl')); row(lb, cv); }
-    else { const tr = row(); tr.id = 'mtools'; ['zoom','x','y','rot'].forEach(k => row(document.querySelector(`[data-k="${k}"]`)));
+    else { const tr = row(); tr.id = 'mtools'; ['zoom','pw','ph','x','y','rot'].forEach(k => row(document.querySelector(`[data-k="${k}"]`)));
       const h = document.createElement('p'); h.className = 'sub'; h.textContent = 'Adjust'; $('mpane').appendChild(h);
       row(document.querySelector('[data-k="adjust"]')); }
     requestAnimationFrame(moveLens2);
@@ -2000,7 +2004,7 @@ function placeControls(){
     row($('sheetSw')); row($('fillSw')); row($('gapCtl')); row($('radCtl')); row(lb, cv);
     row = sec('Window');
     const tr = row(); tr.id = 'mtools';
-    ['zoom','x','y','rot'].forEach(k => row(document.querySelector(`[data-k="${k}"]`)));
+    ['zoom','pw','ph','x','y','rot'].forEach(k => row(document.querySelector(`[data-k="${k}"]`)));
     row = sec('Adjust');
     row(document.querySelector('[data-k="adjust"]'));
   }
