@@ -794,32 +794,19 @@ body:has(.player.open) .totop, body:has(.btsall.open) .totop { opacity: 0; point
   #filters button { height: 34px; padding: 0 var(--fp, 11px); font-size: var(--ff, 12.5px); }
 }
 
-/* the Lab's posters on a phone as on a computer, turned for an upright screen (Alex, 11 Nov: "gathered as on the desktop, in
-   thinner strips"): every app a thin strip (its icon and name), one under the other, the chosen one open with its window;
-   a tap on a strip opens it, a tap on the open one goes to its page. No sideways sliding. */
+/* the Lab on a phone as a phone's home screen (Alex, 11 Nov: "the strips take too much room, I don't need to see the apps
+   inside, just a placement; something completely different"): the apps' icons four to a row with their names under them;
+   a tap opens the app's page. The posters with their windows stay for the computer. */
 @media (max-width: 760px) {
-  .lab-list { flex-direction: column; height: auto; margin: 30px 0 0; padding: 0; gap: 8px; overflow: visible; scroll-snap-type: none; }
-  .lab-x { flex: none !important; min-height: 0; height: 54px; padding: 0 16px; border-radius: 18px; justify-content: center; scroll-snap-align: none; transition: border-color .3s; }
-  .lab-x::before { opacity: .3 !important; }
-  .lab-x .top { position: absolute; top: 10px; left: 12px; right: auto; margin: 0; justify-content: flex-start; }
-  .lab-x .ico { width: 34px; height: 34px; }
-  .lab-x .no { display: none; }
-  .lab-x > .wm { display: block; position: absolute; left: 60px; top: 50%; writing-mode: horizontal-tb; transform: translateY(-50%); font-size: 19px; opacity: 1 !important; }
-  .lab-x > .wm::after { content: ''; position: absolute; right: -9999px; }
-  .lab-x::after { background: none; }
-  .lab-x:not(.on) .ui, .lab-x:not(.on) .open, .lab-x .tick { display: none; }
-  .lab-x:not(.on)::marker { content: none; }
-  /* the open one */
-  .lab-x.on { height: auto; padding: 18px; justify-content: flex-start; border-color: color-mix(in srgb, #ff5a4b 30%, transparent); animation: labOpen .35s ease both; }
-  .lab-x.on::before { opacity: .44 !important; }
-  .lab-x.on::after { background: linear-gradient(180deg, transparent 40%, color-mix(in srgb, var(--bg) 62%, transparent)); }
-  .lab-x.on .top { position: static; justify-content: center; margin-bottom: 14px; }
-  .lab-x.on .ico { width: 46px; height: 46px; }
-  .lab-x.on .no { display: inline; opacity: 1 !important; }
-  .lab-x.on > .wm { display: none; }
-  .lab-x.on .ui { position: static; display: flex; opacity: 1 !important; transform: none !important; width: auto; min-width: 0; height: 300px; -webkit-mask-image: none !important; mask-image: none !important; }
-  .lab-x.on .open { position: static; display: grid; opacity: 1 !important; transform: none; margin-top: 18px; }
-  @keyframes labOpen { from { opacity: .4; } to { opacity: 1; } }
+  .lab-list { display: flex; flex-wrap: wrap; justify-content: center; height: auto; margin: 30px auto 0; padding: 0; gap: 22px 0; overflow: visible; scroll-snap-type: none; max-width: 420px; }
+  .lab-x { flex: 0 0 25% !important; min-height: 0; height: auto; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 8px; scroll-snap-align: none; overflow: visible; }
+  .lab-x::before, .lab-x::after { display: none; }
+  .lab-x .top { position: static; margin: 0; justify-content: center; }
+  .lab-x .ico { width: 62px; height: 62px; border-radius: 22.5%; transform: none !important; outline: 1px solid rgba(255, 255, 255, .1); outline-offset: -1px; box-shadow: 0 10px 22px rgba(0, 0, 0, .45); }
+  .lab-x:active .ico { transform: scale(.94) !important; }
+  .lab-x .no, .lab-x .ui, .lab-x .open, .lab-x .tick { display: none !important; }
+  .lab-x > .wm { display: block; position: static; align-self: stretch; writing-mode: horizontal-tb; transform: none; opacity: 1 !important; font-size: 10.5px; letter-spacing: 0; text-align: center; white-space: nowrap; }
 }
 </style>
 </head>
@@ -2019,18 +2006,6 @@ loadTheme(); loadWorks(); loadShop(); loadPeople(); track('view')
   const list = document.querySelector('.lab-list')
   if (!list) return
   const cards = [...list.querySelectorAll('.lab-x')]
-  // a phone: the strips are closed apps; a tap on one opens it (and keeps it in view), a tap on the open one goes to its page
-  list.addEventListener('click', (e) => {
-    if (innerWidth > 760) return
-    const c = e.target.closest('.lab-x')
-    if (!c || c.classList.contains('on')) return
-    e.preventDefault()
-    const top = c.getBoundingClientRect().top
-    cards.forEach((x) => x.classList.toggle('on', x === c))
-    const now = c.getBoundingClientRect().top
-    if (Math.abs(now - top) > 2) scrollBy(0, now - top)
-    if (c.getBoundingClientRect().top < 80) scrollBy({ top: c.getBoundingClientRect().top - 90, behavior: 'smooth' })
-  })
   list.addEventListener('pointermove', (e) => {
     const c = e.target.closest('.lab-x'); if (!c) return
     const r = c.getBoundingClientRect()
