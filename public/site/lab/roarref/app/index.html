@@ -65,7 +65,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .frame{position:absolute;overflow:hidden;cursor:pointer;outline:0}
 .frame.has{cursor:grab}
 .frame.drag{cursor:grabbing}
-.frame img{position:absolute;max-width:none;pointer-events:none;-webkit-user-drag:none}
+.frame img,.frame canvas.ph{position:absolute;max-width:none;pointer-events:none;-webkit-user-drag:none}
 .frame .empty{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:6px;text-align:center;
   color:rgba(0,0,0,.42);font-size:max(10px,calc(var(--k)*13px));letter-spacing:.02em;font-weight:600;
   border:calc(var(--k)*2px) dashed rgba(0,0,0,.16);border-radius:inherit;box-sizing:border-box}
