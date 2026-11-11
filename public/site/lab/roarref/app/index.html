@@ -684,25 +684,26 @@ function shapeWarps(p, W, H){
   if(F && FACE_KEYS.some(k => a[k])){
     const P = i => F[i] || F[0], dist = (i, j) => Math.hypot(P(i)[0]-P(j)[0], P(i)[1]-P(j)[1]);
     const fw = dist(234, 454), fh = dist(10, 152), cx = (P(234)[0] + P(454)[0])/2, cyF = (P(10)[1] + P(152)[1])/2;
-    if(v('facew')) out.push({t:'h', cx, cy:cyF + fh*0.12, rx:fw*0.7, ry:fh*0.62, a:v('facew')*0.14});
-    if(v('jaw')) out.push({t:'h', cx:(P(172)[0]+P(397)[0])/2, cy:(P(172)[1]+P(397)[1])/2, rx:dist(172,397)*0.62, ry:fh*0.28, a:v('jaw')*0.18});
-    if(v('chin')) out.push({t:'m', cx:P(152)[0], cy:P(152)[1] - fh*0.04, rx:fw*0.38, ry:fh*0.26, mx:0, my:-v('chin')*fh*0.09});
+    if(v('facew')) out.push({t:'h', cx, cy:cyF + fh*0.12, rx:fw*0.8, ry:fh*0.66, a:v('facew')*0.24});
+    if(v('jaw')) out.push({t:'h', cx:(P(172)[0]+P(397)[0])/2, cy:(P(172)[1]+P(397)[1])/2, rx:dist(172,397)*0.75, ry:fh*0.32, a:v('jaw')*0.3});
+    if(v('chin')) out.push({t:'m', cx:P(152)[0], cy:P(152)[1] - fh*0.04, rx:fw*0.38, ry:fh*0.26, mx:0, my:-v('chin')*fh*0.13});
     if(v('eyes')){ const ew = (dist(33,133) + dist(362,263))/2;
       [F.length > 473 ? P(468) : [(P(33)[0]+P(133)[0])/2, (P(33)[1]+P(133)[1])/2], F.length > 473 ? P(473) : [(P(362)[0]+P(263)[0])/2, (P(362)[1]+P(263)[1])/2]]
-        .forEach(([x, y]) => out.push({t:'s', cx:x, cy:y, rx:ew*0.95, ry:ew*0.8, a:v('eyes')*0.28})); }
-    if(v('nose')){ const nw = dist(129, 358); out.push({t:'h', cx:P(4)[0], cy:(P(4)[1] + P(6)[1]*0)/1, rx:nw*1.15, ry:nw*1.5, a:v('nose')*0.3}); }
+        .forEach(([x, y]) => out.push({t:'s', cx:x, cy:y, rx:ew*1.05, ry:ew*0.9, a:v('eyes')*0.36})); }
+    if(v('nose')){ const nw = dist(129, 358); out.push({t:'h', cx:P(4)[0], cy:(P(4)[1] + P(6)[1]*0)/1, rx:nw*1.25, ry:nw*1.6, a:v('nose')*0.42}); }
     const mw = dist(61, 291), mc = [(P(61)[0]+P(291)[0])/2, (P(13)[1]+P(14)[1])/2];
-    if(v('mouth')) out.push({t:'h', cx:mc[0], cy:mc[1], rx:mw*0.85, ry:mw*0.5, a:v('mouth')*0.22});
-    if(v('smile')) [61, 291].forEach(i => out.push({t:'m', cx:P(i)[0], cy:P(i)[1], rx:mw*0.32, ry:mw*0.3, mx:0, my:v('smile')*mw*0.13}));
+    if(v('mouth')) out.push({t:'h', cx:mc[0], cy:mc[1], rx:mw*0.95, ry:mw*0.55, a:v('mouth')*0.32});
+    if(v('smile')) [61, 291].forEach(i => out.push({t:'m', cx:P(i)[0], cy:P(i)[1], rx:mw*0.38, ry:mw*0.34, mx:0, my:v('smile')*mw*0.2}));
   }
   const B = p.lm && p.lm.pose && p.lm.pose.length ? p.lm.pose.map(([x, y]) => [x*W, y*H]) : null;
   if(B && BODY_KEYS.some(k => a[k])){
     const mid = (i, j) => [(B[i][0]+B[j][0])/2, (B[i][1]+B[j][1])/2];
     const sh = mid(11, 12), hp = mid(23, 24), shW = Math.abs(B[11][0]-B[12][0]), hpW = Math.abs(B[23][0]-B[24][0]), torso = Math.max(1, hp[1] - sh[1]);
-    if(v('shoulders')) out.push({t:'h', cx:sh[0], cy:sh[1], rx:shW*0.9, ry:torso*0.3, a:v('shoulders')*0.12});
-    if(v('waist')) out.push({t:'h', cx:sh[0] + (hp[0]-sh[0])*0.7, cy:sh[1] + torso*0.72, rx:Math.max(hpW, shW*0.7)*1.15, ry:torso*0.36, a:v('waist')*0.16});
-    if(v('hips')) out.push({t:'h', cx:hp[0], cy:hp[1] + torso*0.05, rx:hpW*1.35, ry:torso*0.32, a:v('hips')*0.15});
-    if(v('legs') > 0) out.push({t:'y', y0:hp[1], a:v('legs')*0.12});
+    const bodyW = Math.max(hpW*1.9, shW*1.15);
+    if(v('shoulders')) out.push({t:'h', cx:sh[0], cy:sh[1] + torso*0.05, rx:shW*1.35, ry:torso*0.42, a:v('shoulders')*0.26});
+    if(v('waist')) out.push({t:'h', cx:sh[0] + (hp[0]-sh[0])*0.75, cy:sh[1] + torso*0.78, rx:bodyW, ry:torso*0.5, a:v('waist')*0.34});
+    if(v('hips')) out.push({t:'h', cx:hp[0], cy:hp[1] + torso*0.12, rx:bodyW*1.05, ry:torso*0.48, a:v('hips')*0.32});
+    if(v('legs') > 0) out.push({t:'y', y0:hp[1] + torso*0.1, a:v('legs')*0.25});
   }
   return out;
 }
@@ -714,7 +715,7 @@ function warpPixels(d, W, H, warps){
       if(w.t === 'y'){ if(y > w.y0) oy -= (y - w.y0) * w.a / (1 + w.a); continue; }
       const b = bb[k]; if(x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue;
       const ux = (x - w.cx)/w.rx, uy = (y - w.cy)/w.ry, r2 = ux*ux + uy*uy; if(r2 >= 1) continue;
-      const f = (1 - r2)*(1 - r2);
+      const f = w.t === 'h' ? (1 - r2)*(1 - 0.35*r2) : (1 - r2)*(1 - r2);
       if(w.t === 's'){ ox -= (x - w.cx)*w.a*f; oy -= (y - w.cy)*w.a*f; }
       else if(w.t === 'h'){ ox -= (x - w.cx)*w.a*f; }
       else { ox += w.mx*f; oy += w.my*f; }
