@@ -139,6 +139,17 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .lq-end{display:flex;gap:8px;margin-top:auto}.lq-end .pill{flex:1;justify-content:center}
 @media (max-width:820px){.lq{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;padding:10px;gap:10px}.lq-side{padding:12px;gap:8px}.lq-side h2,.lq-side .hint2{display:none}.lq-tools{grid-template-columns:repeat(4,1fr)}.lq-t{flex-direction:column;justify-content:center;height:54px;gap:2px;font-size:11px;padding:0}.lq-end{margin-top:0}}
 .adjust{display:flex;flex-direction:column;gap:8px;width:100%}
+.atabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.atabs button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border:0;border-radius:10px;background:transparent;color:var(--muted);font:600 11.5px var(--body);cursor:pointer}
+.atabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.atabs button[aria-pressed="true"]{background:var(--panel-2);color:var(--fg);box-shadow:inset 0 -2px 0 var(--accent)}
+.apane{display:flex;flex-direction:column;gap:8px}
+.agroup{display:flex;flex-direction:column;gap:2px}
+.agroup.off{opacity:.35;pointer-events:none}
+.astat{margin:0;font-size:12px;color:var(--muted)}
+.hairsw{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:4px 0 6px}
+.hairsw button{aspect-ratio:1;border-radius:50%;border:1px solid rgba(255,255,255,.25);cursor:pointer;font:600 10px var(--body);color:var(--fg);background:rgba(255,255,255,.06)}
+.hairsw button:hover{outline:2px solid var(--accent);outline-offset:1px}
 .adjust .grp{border-top:1px solid var(--line);padding-top:6px}
 .adjust summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font:600 12px var(--body);letter-spacing:.06em;color:var(--fg);padding:6px 2px}
 .adjust summary::-webkit-details-marker{display:none}
@@ -617,6 +628,104 @@ const IC = {
 /* the bar under the sheet: the windows' reset, and sliders and buttons for the photo that is picked */
 const panelEl = $('panel');
 const reset = p => Object.assign(p, {s:1, ox:0, oy:0, rot:0});
+/* ---------- Face / Body / Hair (Alex, 11 Nov, "like FaceApp"): the photo is read once by Google's free MediaPipe models, in the
+   browser (face points, body points, the hair as a mask); the points are saved with the photo (p.lm), the hair mask is made again
+   when needed. Each slider is a small warp around those points (scale, narrow, move, stretch), worked out in renderAdj before
+   the colours. Nothing is sent anywhere: the models come from Google's servers to the browser, the photo stays. ---------- */
+const MP = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const MODELS = {
+  face: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task',
+  pose: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task',
+  hair: 'https://storage.googleapis.com/mediapipe-models/image_segmenter/hair_segmenter/float32/latest/hair_segmenter.tflite',
+};
+const FACE_KEYS = ['facew','jaw','chin','eyes','nose','mouth','smile'], BODY_KEYS = ['waist','hips','shoulders','legs'], HAIR_KEYS = ['hairAmt'];
+let mpLib = null; const mpTask = {};
+async function mpTaskGet(kind){
+  if(!mpLib) mpLib = (async () => { const v = await import(MP + '/vision_bundle.mjs'); return {v, files: await v.FilesetResolver.forVisionTasks(MP + '/wasm')}; })();
+  const {v, files} = await mpLib;
+  if(!mpTask[kind]) mpTask[kind] = (async () => {
+    const make = delegate => {
+      const base = {baseOptions:{modelAssetPath:MODELS[kind], delegate}, runningMode:'IMAGE'};
+      if(kind === 'face') return v.FaceLandmarker.createFromOptions(files, Object.assign(base, {numFaces:1}));
+      if(kind === 'pose') return v.PoseLandmarker.createFromOptions(files, Object.assign(base, {numPoses:1}));
+      return v.ImageSegmenter.createFromOptions(files, Object.assign(base, {outputCategoryMask:true, outputConfidenceMasks:false}));
+    };
+    try{ return await make('GPU'); }catch{ return await make('CPU'); }
+  })();
+  return mpTask[kind];
+}
+async function photoCanvas(p, max){
+  const bm = await createImageBitmap(p.blob), k = Math.min(1, max / Math.max(bm.width, bm.height));
+  const c = document.createElement('canvas'); c.width = Math.round(bm.width*k); c.height = Math.round(bm.height*k); c.getContext('2d').drawImage(bm, 0, 0, c.width, c.height); return c;
+}
+const r4 = n => Math.round(n*10000)/10000;
+async function ensureLM(p, kind){ // kind 'face' or 'pose'; p.lm[kind] = [[x, y], ...] in 0..1, or [] when none was found
+  p.lm = p.lm || {};
+  if(p.lm[kind]) return p.lm[kind].length > 0;
+  const t = await mpTaskGet(kind), c = await photoCanvas(p, 1280), r = t.detect(c);
+  const pts = kind === 'face' ? (r.faceLandmarks && r.faceLandmarks[0]) : (r.landmarks && r.landmarks[0]);
+  p.lm[kind] = pts ? pts.map(q => [r4(q.x), r4(q.y)]) : [];
+  saveSoon(); return p.lm[kind].length > 0;
+}
+async function ensureHair(p){ // p.hairMask: a canvas whose alpha is the hair
+  if(p.hairMask) return true;
+  const t = await mpTaskGet('hair'), c = await photoCanvas(p, 1024), res = t.segment(c), mk = res.categoryMask;
+  if(!mk){ res.close && res.close(); return false; }
+  const a = mk.getAsUint8Array(), w = mk.width, h = mk.height, m = document.createElement('canvas'); m.width = w; m.height = h;
+  const g = m.getContext('2d'), id = g.createImageData(w, h); let n = 0;
+  for(let i = 0; i < a.length; i++){ const on = a[i] === 1; id.data[i*4+3] = on ? 255 : 0; if(on) n++; }
+  g.putImageData(id, 0, 0); res.close && res.close();
+  p.hairMask = n > a.length*0.002 ? m : null; return !!p.hairMask;
+}
+// the warps of the sliders, in output pixels; backward mapping: out(x, y) = source(x + dx, y + dy)
+function shapeWarps(p, W, H){
+  const a = adjOf(p), v = k => (+a[k] || 0)/100, out = [];
+  const F = p.lm && p.lm.face && p.lm.face.length ? p.lm.face.map(([x, y]) => [x*W, y*H]) : null;
+  if(F && FACE_KEYS.some(k => a[k])){
+    const P = i => F[i] || F[0], dist = (i, j) => Math.hypot(P(i)[0]-P(j)[0], P(i)[1]-P(j)[1]);
+    const fw = dist(234, 454), fh = dist(10, 152), cx = (P(234)[0] + P(454)[0])/2, cyF = (P(10)[1] + P(152)[1])/2;
+    if(v('facew')) out.push({t:'h', cx, cy:cyF + fh*0.12, rx:fw*0.7, ry:fh*0.62, a:v('facew')*0.14});
+    if(v('jaw')) out.push({t:'h', cx:(P(172)[0]+P(397)[0])/2, cy:(P(172)[1]+P(397)[1])/2, rx:dist(172,397)*0.62, ry:fh*0.28, a:v('jaw')*0.18});
+    if(v('chin')) out.push({t:'m', cx:P(152)[0], cy:P(152)[1] - fh*0.04, rx:fw*0.38, ry:fh*0.26, mx:0, my:-v('chin')*fh*0.09});
+    if(v('eyes')){ const ew = (dist(33,133) + dist(362,263))/2;
+      [F.length > 473 ? P(468) : [(P(33)[0]+P(133)[0])/2, (P(33)[1]+P(133)[1])/2], F.length > 473 ? P(473) : [(P(362)[0]+P(263)[0])/2, (P(362)[1]+P(263)[1])/2]]
+        .forEach(([x, y]) => out.push({t:'s', cx:x, cy:y, rx:ew*0.95, ry:ew*0.8, a:v('eyes')*0.28})); }
+    if(v('nose')){ const nw = dist(129, 358); out.push({t:'h', cx:P(4)[0], cy:(P(4)[1] + P(6)[1]*0)/1, rx:nw*1.15, ry:nw*1.5, a:v('nose')*0.3}); }
+    const mw = dist(61, 291), mc = [(P(61)[0]+P(291)[0])/2, (P(13)[1]+P(14)[1])/2];
+    if(v('mouth')) out.push({t:'h', cx:mc[0], cy:mc[1], rx:mw*0.85, ry:mw*0.5, a:v('mouth')*0.22});
+    if(v('smile')) [61, 291].forEach(i => out.push({t:'m', cx:P(i)[0], cy:P(i)[1], rx:mw*0.32, ry:mw*0.3, mx:0, my:v('smile')*mw*0.13}));
+  }
+  const B = p.lm && p.lm.pose && p.lm.pose.length ? p.lm.pose.map(([x, y]) => [x*W, y*H]) : null;
+  if(B && BODY_KEYS.some(k => a[k])){
+    const mid = (i, j) => [(B[i][0]+B[j][0])/2, (B[i][1]+B[j][1])/2];
+    const sh = mid(11, 12), hp = mid(23, 24), shW = Math.abs(B[11][0]-B[12][0]), hpW = Math.abs(B[23][0]-B[24][0]), torso = Math.max(1, hp[1] - sh[1]);
+    if(v('shoulders')) out.push({t:'h', cx:sh[0], cy:sh[1], rx:shW*0.9, ry:torso*0.3, a:v('shoulders')*0.12});
+    if(v('waist')) out.push({t:'h', cx:sh[0] + (hp[0]-sh[0])*0.7, cy:sh[1] + torso*0.72, rx:Math.max(hpW, shW*0.7)*1.15, ry:torso*0.36, a:v('waist')*0.16});
+    if(v('hips')) out.push({t:'h', cx:hp[0], cy:hp[1] + torso*0.05, rx:hpW*1.35, ry:torso*0.32, a:v('hips')*0.15});
+    if(v('legs') > 0) out.push({t:'y', y0:hp[1], a:v('legs')*0.12});
+  }
+  return out;
+}
+function warpPixels(d, W, H, warps){
+  const src = new Uint8ClampedArray(d), bb = warps.map(w => w.t === 'y' ? null : [w.cx - w.rx, w.cy - w.ry, w.cx + w.rx, w.cy + w.ry]);
+  for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
+    let ox = 0, oy = 0;
+    for(let k = 0; k < warps.length; k++){ const w = warps[k];
+      if(w.t === 'y'){ if(y > w.y0) oy -= (y - w.y0) * w.a / (1 + w.a); continue; }
+      const b = bb[k]; if(x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue;
+      const ux = (x - w.cx)/w.rx, uy = (y - w.cy)/w.ry, r2 = ux*ux + uy*uy; if(r2 >= 1) continue;
+      const f = (1 - r2)*(1 - r2);
+      if(w.t === 's'){ ox -= (x - w.cx)*w.a*f; oy -= (y - w.cy)*w.a*f; }
+      else if(w.t === 'h'){ ox -= (x - w.cx)*w.a*f; }
+      else { ox += w.mx*f; oy += w.my*f; }
+    }
+    if(!ox && !oy) continue;
+    const sx = Math.max(0, Math.min(W - 1.001, x + ox)), sy = Math.max(0, Math.min(H - 1.001, y + oy));
+    const ix = sx|0, iy = sy|0, fx = sx - ix, fy = sy - iy, i0 = (iy*W + ix)*4, i1 = i0 + 4, i2 = i0 + W*4, i3 = i2 + 4, q = (y*W + x)*4;
+    for(let ch = 0; ch < 3; ch++) d[q+ch] = (src[i0+ch]*(1-fx) + src[i1+ch]*fx)*(1-fy) + (src[i2+ch]*(1-fx) + src[i3+ch]*fx)*fy;
+  }
+}
+const HAIR_COLORS = [['Black',0,0,-0.45],['Dark brown',25,0.45,-0.25],['Brown',28,0.5,-0.05],['Blonde',42,0.6,0.3],['Platinum',45,0.15,0.5],['Copper',20,0.8,0.05],['Red',5,0.75,-0.05],['Ash grey',0,0,0.2],['Pink',330,0.6,0.15],['Blue',220,0.6,-0.05]];
 /* ---------- Adjust: full photo settings, per photo (Alex, 11 Nov, "like Lightroom": Light, Color, Effects, Detail, Color Grading,
    and the Retouch of 9 Nov with Hollywood). All worked out in the browser on the photo itself. p.adj holds the numbers (saved with
    the photo); the sheet shows a quick copy (long side 1600) made while you drag, the export makes it again at full size
@@ -631,7 +740,7 @@ const ADJ = [
 const GRADE = [['sh','Shadows'],['mid','Midtones'],['hi','Highlights']];
 const HOLLYWOOD = {smooth:65, exposure:0.15, contrast:6, highlights:-12, shadows:10, temp:14, vibrance:12, clarity:-8, glow:14};
 const adjOf = p => p.adj || (p.adj = {});
-const hasAdj = a => !!a && Object.keys(a).some(k => k === 'grade' ? GRADE.some(([g]) => a.grade && a.grade[g] && (a.grade[g].s || a.grade[g].l)) : (k === 'blend' || k === 'balance') ? false : +a[k]);
+const hasAdj = a => !!a && Object.keys(a).some(k => k === 'grade' ? GRADE.some(([g]) => a.grade && a.grade[g] && (a.grade[g].s || a.grade[g].l)) : ['blend','balance','hairH','hairS','hairL'].includes(k) ? false : +a[k]);
 function migrateAdj(p){ // photos retouched on 9 Nov carried smooth / light / warm
   if(p.adj || !(p.smooth || p.light || p.warm)) return;
   p.adj = {smooth:p.smooth||0, exposure:(p.light||0)/50, temp:(p.warm||0)*2};
@@ -652,11 +761,20 @@ function hueRGB(h){ // the colour of a hue (0..360) at full strength, as an offs
 }
 // makes the adjusted picture: full = the original size (for the export), otherwise a quick copy for the screen
 async function renderAdj(p, full){
-  const a = adjOf(p), bm = await createImageBitmap(p.blob);
+  const a = adjOf(p);
+  if(FACE_KEYS.some(k => a[k])) await ensureLM(p, 'face').catch(() => {});
+  if(BODY_KEYS.some(k => a[k])) await ensureLM(p, 'pose').catch(() => {});
+  if(a.hairAmt) await ensureHair(p).catch(() => {});
+  const bm = await createImageBitmap(p.blob);
   const k0 = full ? 1 : Math.min(1, 1600 / Math.max(bm.width, bm.height));
   const W = Math.max(1, Math.round(bm.width*k0)), H = Math.max(1, Math.round(bm.height*k0)), S0 = Math.min(W, H);
   const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d', {willReadFrequently:true});
   g.drawImage(bm, 0, 0, W, H); const img = g.getImageData(0, 0, W, H), d = img.data;
+  const warps = shapeWarps(p, W, H); if(warps.length){ warpPixels(d, W, H, warps); g.putImageData(img, 0, 0); }
+  let hm = null; const hAmt = (+a.hairAmt || 0)/100;
+  if(hAmt && p.hairMask){ const mc = document.createElement('canvas'); mc.width = W; mc.height = H; const mg = mc.getContext('2d', {willReadFrequently:true});
+    mg.filter = `blur(${Math.max(1, S0*0.003)}px)`; mg.drawImage(p.hairMask, 0, 0, W, H); hm = mg.getImageData(0, 0, W, H).data; }
+  const hH = +a.hairH || 0, hS = (+a.hairS || 0)/100, hL = (+a.hairL || 0)/100, hO = hueRGB(hH);
   const v = k => (+a[k] || 0);
   const ex = Math.pow(2, v('exposure')), con = v('contrast')/100, hi = v('highlights')/100, sh = v('shadows')/100, wh = v('whites')/100, bl = v('blacks')/100;
   const temp = v('temp')/100, tint = v('tint')/100, vib = v('vibrance')/100, sat = v('saturation')/100;
@@ -698,6 +816,8 @@ async function renderAdj(p, full){
     L = 0.299*r + 0.587*gg + 0.114*b;
     if(sat || vib || dh){ const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), cs = mx - mn;
       const f = 1 + sat + vib*(1 - Math.min(1, cs*1.6)) + dh*0.25; r = L + (r-L)*f; gg = L + (gg-L)*f; b = L + (b-L)*f; }
+    if(hm){ const m = hm[i+3]/255 * hAmt; if(m > 0.01){ const L0 = 0.299*r + 0.587*gg + 0.114*b, nl = Math.min(1, Math.max(0, L0 + hL*0.35*(hL > 0 ? 1 - L0 : L0) + hL*0.08)),
+      k2 = hS * 1.4 * Math.min(nl, 1 - nl + 0.15); r += (nl + hO[0]*k2 - r)*m; gg += (nl + hO[1]*k2 - gg)*m; b += (nl + hO[2]*k2 - b)*m; } }
     if(gradeOn){ const lw = Math.min(1, Math.max(0, L)), sp = 0.15 + blend*0.35, mid = 0.5 + bal*0.25;
       const ws = 1 - smoothstep(mid - sp, mid, lw), wh2 = smoothstep(mid, mid + sp, lw), wm = Math.max(0, 1 - ws - wh2);
       r += tints[0][0]*ws + tints[1][0]*wm + tints[2][0]*wh2; gg += tints[0][1]*ws + tints[1][1]*wm + tints[2][1]*wh2; b += tints[0][2]*ws + tints[1][2]*wm + tints[2][2]*wh2; }
@@ -820,7 +940,7 @@ async function openLiquify(i){
       const blob = await new Promise(r => fc.toBlob(r, 'image/jpeg', 0.94));
       if(!p.orig) p.orig = {path:p.path, blob:p.blob};
       if(p.base && p.base !== p.url) URL.revokeObjectURL(p.base);
-      p.blob = blob; p.base = URL.createObjectURL(blob); p.url = p.base; p.path = null;
+      p.blob = blob; p.base = URL.createObjectURL(blob); p.url = p.base; p.path = null; p.lm = null; p.hairMask = null;
       upload(p, sheets.cur);
       await applyFx(p); render(); close(); toast('Liquify applied');
     }catch{ ok.disabled = false; ok.textContent = 'Done'; toast('Liquify could not be applied. Try a smaller photo.'); }
@@ -829,7 +949,7 @@ async function openLiquify(i){
 async function restoreOriginalPhoto(i){
   const p = photos[i]; if(!p || !p.orig) return;
   if(p.base) URL.revokeObjectURL(p.base);
-  p.blob = p.orig.blob || await getBlob(p.orig.path); p.path = p.orig.path; p.orig = null;
+  p.blob = p.orig.blob || await getBlob(p.orig.path); p.path = p.orig.path; p.orig = null; p.lm = null; p.hairMask = null;
   p.base = URL.createObjectURL(p.blob); p.url = p.base; await applyFx(p); render(); save(); toast('Back to the photo before Liquify');
 }
 /* the Adjust panel: one block (data-k="adjust") with folding groups, a slider per setting (double-click: back to 0),
@@ -853,49 +973,101 @@ function wheel(key, label){
   w.querySelector('input').ondblclick = () => set({l:0});
   return w;
 }
+let adjTab = 'face';
 function buildAdjust(){
   const box = document.createElement('div'); box.className = 'adjust'; box.dataset.k = 'adjust';
+  const tabs = document.createElement('div'); tabs.className = 'atabs';
+  const TABS = [['face','Face','<circle cx="12" cy="11" r="7"/><path d="M9 10h.01M15 10h.01M9.5 14c1.5 1.2 3.5 1.2 5 0"/>'],
+    ['edit','Edit','<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'],
+    ['body','Body','<path d="M9 3c-1 4 1 6 0 9s-1 6 0 9M15 3c1 4-1 6 0 9s1 6 0 9M7 12h3M14 12h3"/>'],
+    ['hair','Hair','<path d="M5 20c-1-6 0-14 7-14s8 8 7 14M8 12c2-1 5-3 6-6"/>']];
+  tabs.innerHTML = TABS.map(([k, l, ic]) => `<button type="button" data-tab="${k}" aria-pressed="${k===adjTab}"><svg viewBox="0 0 24 24">${ic}</svg>${l}</button>`).join('');
+  box.appendChild(tabs);
+  const pane = {}; TABS.forEach(([k]) => { const d = document.createElement('div'); d.className = 'apane'; d.dataset.pane = k; d.hidden = k !== adjTab; box.appendChild(d); pane[k] = d; });
+  tabs.onclick = e => { const b = e.target.closest('[data-tab]'); if(!b) return; adjTab = b.dataset.tab;
+    tabs.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-pressed', x === b)); Object.keys(pane).forEach(k => pane[k].hidden = k !== adjTab); readPhoto(); };
+  const status = (k, where) => { const s = document.createElement('p'); s.className = 'astat'; s.dataset.stat = k; pane[where || k].appendChild(s); };
+  const row = (parent, key, label, min = -100, max = 100, step = 1) => {
+    const r = document.createElement('label'); r.className = 'arow'; r.dataset.a = key;
+    r.innerHTML = `<span>${label}</span><output></output><input type="range" min="${min}" max="${max}" step="${step}" aria-label="${label}">`;
+    const inp = r.querySelector('input');
+    inp.oninput = () => { const p = photos[sel]; if(!p) return; adjOf(p)[key] = +inp.value; showVal(r, key, +inp.value); fxSoon(p); };
+    inp.ondblclick = () => { const p = photos[sel]; if(!p) return; adjOf(p)[key] = 0; inp.value = 0; showVal(r, key, 0); fxSoon(p); };
+    parent.appendChild(r); return r;
+  };
+  const fold = (parent, title, open) => { const d = document.createElement('details'); d.className = 'grp'; d.open = !!open;
+    d.innerHTML = `<summary>${title}<svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></summary>`; parent.appendChild(d); return d; };
+  // Face: Hollywood / Original, smooth skin, the shape of the face
   const top = document.createElement('div'); top.className = 'fxrow';
   top.innerHTML = '<button type="button" class="pill wide" id="hollywood"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.6L20 9.3l-4.3 3.9 1.3 5.8L12 16l-5 3 1.3-5.8L4 9.3l5.6-.7z"/></svg><span>Hollywood</span></button><button type="button" class="pill wide" id="fxOff">Original</button>';
   top.querySelector('#hollywood').onclick = () => { const p = photos[sel]; if(!p) return; const a = adjOf(p); Object.assign(a, HOLLYWOOD); applyFx(p); syncAdj(); };
-  top.querySelector('#fxOff').onclick = () => { const p = photos[sel]; if(!p) return; p.adj = {}; applyFx(p); syncAdj(); };
-  box.appendChild(top);
-  const lq = document.createElement('div'); lq.className = 'fxrow';
-  lq.innerHTML = '<button type="button" class="pill wide" id="liquify"><svg viewBox="0 0 24 24"><path d="M3 12c3-6 6 6 9 0s6 6 9 0"/><path d="M3 18c3-6 6 6 9 0s6 6 9 0" opacity=".5"/></svg><span>Liquify</span></button><button type="button" class="pill wide" id="unLiquify" hidden>Before Liquify</button>';
-  lq.querySelector('#liquify').onclick = () => { if(sel >= 0 && photos[sel]) openLiquify(sel); };
-  lq.querySelector('#unLiquify').onclick = () => { if(sel >= 0) restoreOriginalPhoto(sel); };
-  box.appendChild(lq);
-  const fold = (title, open) => { const d = document.createElement('details'); d.className = 'grp'; d.open = !!open;
-    d.innerHTML = `<summary>${title}<svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></summary>`; box.appendChild(d); return d; };
-  ADJ.forEach(({g, items}, n) => {
-    const d = fold(g, n === 0 || g === 'Retouch');
-    items.forEach(([key, label, min = -100, max = 100, step = 1]) => {
-      const row = document.createElement('label'); row.className = 'arow'; row.dataset.a = key;
-      row.innerHTML = `<span>${label}</span><output></output><input type="range" min="${min}" max="${max}" step="${step}" aria-label="${label}">`;
-      const inp = row.querySelector('input');
-      inp.oninput = () => { const p = photos[sel]; if(!p) return; adjOf(p)[key] = +inp.value; showVal(row, key, +inp.value); fxSoon(p); };
-      inp.ondblclick = () => { const p = photos[sel]; if(!p) return; adjOf(p)[key] = 0; inp.value = 0; showVal(row, key, 0); fxSoon(p); };
-      d.appendChild(row);
-    });
-  });
-  const cg = fold('Color grading');
+  top.querySelector('#fxOff').onclick = () => { const p = photos[sel]; if(!p) return; const lmKeep = p.lm; p.adj = {}; p.lm = lmKeep; applyFx(p); syncAdj(); };
+  pane.face.appendChild(top);
+  row(pane.face, 'smooth', 'Smooth skin', 0, 100);
+  status('face');
+  const fs = document.createElement('div'); fs.className = 'agroup'; fs.dataset.needs = 'face'; pane.face.appendChild(fs);
+  [['facew','Face width'],['jaw','Jawline'],['chin','Chin'],['eyes','Eyes'],['nose','Nose'],['mouth','Mouth width'],['smile','Smile']].forEach(([k, l]) => row(fs, k, l));
+  // Edit: the Lightroom-like groups
+  ADJ.filter(x => x.g !== 'Retouch').forEach(({g, items}, n) => { const d = fold(pane.edit, g, n === 0); items.forEach(([key, label, min, max, step]) => row(d, key, label, min, max, step)); });
+  const cg = fold(pane.edit, 'Color grading');
   const wh = document.createElement('div'); wh.className = 'wheels'; GRADE.forEach(([k, l]) => wh.appendChild(wheel(k, l))); cg.appendChild(wh);
   [['blend','Blending',0,100,50],['balance','Balance',-100,100,0]].forEach(([key, label, min, max, def]) => {
-    const row = document.createElement('label'); row.className = 'arow'; row.dataset.a = key;
-    row.innerHTML = `<span>${label}</span><output></output><input type="range" min="${min}" max="${max}" step="1" aria-label="${label}">`;
-    const inp = row.querySelector('input');
-    inp.oninput = () => { const p = photos[sel]; if(!p) return; adjOf(p)[key] = +inp.value; row.querySelector('output').textContent = inp.value; fxSoon(p); };
-    inp.ondblclick = () => { const p = photos[sel]; if(!p) return; adjOf(p)[key] = def; inp.value = def; row.querySelector('output').textContent = def; fxSoon(p); };
-    cg.appendChild(row);
+    const r = document.createElement('label'); r.className = 'arow'; r.dataset.a = key;
+    r.innerHTML = `<span>${label}</span><output></output><input type="range" min="${min}" max="${max}" step="1" aria-label="${label}">`;
+    const inp = r.querySelector('input');
+    inp.oninput = () => { const p = photos[sel]; if(!p) return; adjOf(p)[key] = +inp.value; r.querySelector('output').textContent = inp.value; fxSoon(p); };
+    inp.ondblclick = () => { const p = photos[sel]; if(!p) return; adjOf(p)[key] = def; inp.value = def; r.querySelector('output').textContent = def; fxSoon(p); };
+    cg.appendChild(r);
   });
   const all = document.createElement('button'); all.type = 'button'; all.className = 'pill wide'; all.id = 'adjAll';
   all.innerHTML = '<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Same settings on every photo';
-  all.onclick = () => { const p = photos[sel]; if(!p) return; const a = JSON.stringify(adjOf(p));
-    photos.forEach(q => { if(q && q !== p){ q.adj = JSON.parse(a); applyFx(q); } }); toast('Every photo on this sheet has these settings now'); };
-  box.appendChild(all);
+  all.title = 'The Edit settings (light, colour, effects, detail, grading) on every photo of this sheet';
+  all.onclick = () => { const p = photos[sel]; if(!p) return; const src = adjOf(p), keys = ADJ.filter(x => x.g !== 'Retouch').flatMap(x => x.items.map(i => i[0])).concat('grade','blend','balance');
+    photos.forEach(q => { if(q && q !== p){ const qa = adjOf(q); keys.forEach(k => { if(src[k] == null) delete qa[k]; else qa[k] = JSON.parse(JSON.stringify(src[k])); }); applyFx(q); } });
+    toast('Every photo on this sheet has these Edit settings now'); };
+  pane.edit.appendChild(all);
+  // Body: Reshape (Liquify) and the shape of the body
+  const lq = document.createElement('div'); lq.className = 'fxrow';
+  lq.innerHTML = '<button type="button" class="pill wide" id="liquify"><svg viewBox="0 0 24 24"><path d="M3 12c3-6 6 6 9 0s6 6 9 0"/><path d="M3 18c3-6 6 6 9 0s6 6 9 0" opacity=".5"/></svg><span>Reshape</span></button><button type="button" class="pill wide" id="unLiquify" hidden>Before Reshape</button>';
+  lq.querySelector('#liquify').onclick = () => { if(sel >= 0 && photos[sel]) openLiquify(sel); };
+  lq.querySelector('#unLiquify').onclick = () => { if(sel >= 0) restoreOriginalPhoto(sel); };
+  pane.body.appendChild(lq);
+  status('pose', 'body');
+  const bs = document.createElement('div'); bs.className = 'agroup'; bs.dataset.needs = 'pose'; pane.body.appendChild(bs);
+  [['waist','Waist'],['hips','Hips'],['shoulders','Shoulders'],['legs','Longer legs',0,100]].forEach(([k, l, mn, mx]) => row(bs, k, l, mn, mx));
+  row(pane.body, 'smooth', 'Body skin', 0, 100).dataset.twin = '1';
+  // Hair: colour
+  status('hair');
+  const hs = document.createElement('div'); hs.className = 'agroup'; hs.dataset.needs = 'hair'; pane.hair.appendChild(hs);
+  const sw = document.createElement('div'); sw.className = 'hairsw';
+  sw.innerHTML = '<button type="button" data-hc="-1" title="Original colour">Off</button>' + HAIR_COLORS.map(([n, h, s, l], i) => {
+    const c = `hsl(${h},${Math.round(s*70)}%,${Math.round(38 + l*45)}%)`; return `<button type="button" data-hc="${i}" title="${n}" style="background:${c}"></button>`; }).join('');
+  sw.onclick = e => { const b = e.target.closest('[data-hc]'); if(!b) return; const p = photos[sel]; if(!p) return; const a = adjOf(p), i = +b.dataset.hc;
+    if(i < 0){ a.hairAmt = 0; } else { const [, h, s, l] = HAIR_COLORS[i]; Object.assign(a, {hairH:h, hairS:Math.round(s*100), hairL:Math.round(l*100)}); if(!a.hairAmt) a.hairAmt = 80; }
+    applyFx(p); syncAdj(); };
+  hs.appendChild(sw);
+  row(hs, 'hairAmt', 'Amount', 0, 100); row(hs, 'hairL', 'Lightness'); row(hs, 'hairH', 'Hue', 0, 360);
+  const ai = document.createElement('p'); ai.className = 'astat'; ai.textContent = 'New clothes and new hairstyles with AI come next.'; pane.body.appendChild(ai.cloneNode(true)); pane.hair.appendChild(ai);
   return box;
 }
-function showVal(row, key, v){ row.querySelector('output').textContent = key === 'exposure' ? (v > 0 ? '+' : '') + v.toFixed(2) : (v > 0 && !['grain','glow','sharpen','noise','smooth'].includes(key) ? '+' : '') + v; }
+function showVal(row, key, v){ row.querySelector('output').textContent = key === 'exposure' ? (v > 0 ? '+' : '') + v.toFixed(2) : (v > 0 && !['grain','glow','sharpen','noise','smooth','legs','hairAmt','hairH'].includes(key) ? '+' : '') + v; }
+// reads the face, body or hair of the picked photo the first time its tab is opened
+let reading = null;
+async function readPhoto(){
+  const box = document.querySelector('[data-k="adjust"]'); if(!box) return;
+  const p = sel >= 0 ? photos[sel] : null, kind = adjTab === 'face' ? 'face' : adjTab === 'body' ? 'pose' : adjTab === 'hair' ? 'hair' : null;
+  const st = kind && box.querySelector(`[data-stat="${kind}"]`), grp = kind && box.querySelector(`.agroup[data-needs="${kind}"]`);
+  if(!kind || !p || !st) return;
+  const known = kind === 'hair' ? (p.hairMask ? true : null) : (p.lm && p.lm[kind] ? p.lm[kind].length > 0 : null);
+  const show = ok => { const what = {face:'face', pose:'person', hair:'hair'}[kind];
+    st.textContent = ok == null ? `Finding the ${what}…` : ok ? '' : `No ${what} found in this photo.`; st.hidden = ok === true; grp.classList.toggle('off', ok !== true); };
+  show(known); if(known !== null) return;
+  const key = kind + ':' + photos.indexOf(p); if(reading === key) return; reading = key;
+  let ok = false;
+  try{ ok = kind === 'hair' ? await ensureHair(p) : await ensureLM(p, kind); }
+  catch{ st.textContent = 'The reader could not load. Check the connection and open the tab again.'; grp.classList.add('off'); reading = null; return; }
+  reading = null; if(photos[sel] === p) show(ok);
+}
 function syncAdj(){
   const box = document.querySelector('[data-k="adjust"]'); if(!box) return;
   const p = sel >= 0 ? photos[sel] : null; box.classList.toggle('off', !p);
@@ -904,6 +1076,7 @@ function syncAdj(){
     row.querySelector('input').value = v; if(k === 'blend' || k === 'balance') row.querySelector('output').textContent = v; else showVal(row, k, v); });
   box.querySelectorAll('.wheel').forEach(w => w.sync());
   const un = box.querySelector('#unLiquify'); if(un) un.hidden = !(p && p.orig);
+  if(p) readPhoto();
 }
 function slider(id, label, min, max, step, onIn){
   const w = document.createElement('label'); w.className='ctl'; w.dataset.k = id;
@@ -1321,7 +1494,7 @@ async function getBlob(path){
   const { data, error } = await bucket().download(path); if(error) throw error;
   dbPut('blob:'+path, data).catch(()=>{}); return data;
 }
-const packPhotos = () => photos.map(p => p && p.path ? {path:p.path,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0,adj:hasAdj(p.adj) ? p.adj : undefined, orig:p.orig && p.orig.path ? {path:p.orig.path} : undefined} : null);
+const packPhotos = () => photos.map(p => p && p.path ? {path:p.path,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0,adj:hasAdj(p.adj) ? p.adj : undefined, lm:p.lm, orig:p.orig && p.orig.path ? {path:p.orig.path} : undefined} : null);
 async function save(){
   if(!me || !sheets.cur) return;
   const id = sheets.cur;
@@ -1418,7 +1591,7 @@ async function newSheet(copy){
     const ph = [];
     for(const p of photos){ if(!p || !p.path){ ph.push(null); continue; }
       const to = `${me.id}/${row.id}/${newId()}.jpg`; const { error } = await bucket().copy(p.path, to);
-      ph.push(error ? null : {path:to, w:p.w, h:p.h, s:p.s, ox:p.ox, oy:p.oy, flip:p.flip, rot:p.rot||0, adj:hasAdj(p.adj) ? JSON.parse(JSON.stringify(p.adj)) : undefined}); }
+      ph.push(error ? null : {path:to, w:p.w, h:p.h, s:p.s, ox:p.ox, oy:p.oy, flip:p.flip, rot:p.rot||0, adj:hasAdj(p.adj) ? JSON.parse(JSON.stringify(p.adj)) : undefined, lm:p.lm}); }
     await sb.from('roarref_sheets').update({data:{S, photos:ph}}).eq('id', row.id);
     sheets.list = await listSheets(); await openSheet(row.id);
   } else {
