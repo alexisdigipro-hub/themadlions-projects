@@ -102,11 +102,18 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .panel{display:none}
 /* computer (Alex, 7 Nov: "group it like the phone, the account top right"): the sheet, and a column on the right with
    Layout / Look / Window; the account and the sheet you are on, top right */
-.work{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}
+.work{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px}
 .stagewrap{min-width:0}
 .side{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin}
 .sec{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .sec h3{margin:0;font:600 11px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.sec-h{display:flex;align-items:center;justify-content:space-between;width:100%;margin:0;padding:0;border:0;background:none;cursor:pointer;
+  font:600 11px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.sec-h:hover{color:var(--fg)}
+.sec-h svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;transition:transform .2s}
+.sec.shut .sec-h svg{transform:rotate(-90deg)}
+.sec.shut > :not(.sec-h){display:none}
+.sec.shut{gap:0}
 .srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .side .group{background:rgba(255,255,255,.04)}
 .side #layouts{display:grid;grid-template-columns:repeat(5,1fr);width:100%;box-sizing:border-box;border-radius:16px;gap:2px}
@@ -1752,8 +1759,13 @@ function placeControls(){
     requestAnimationFrame(moveLens2);
   } else {
     const side = $('side');
-    const sec = (title, hint) => { const s2 = document.createElement('section'); s2.className = 'sec';
-      s2.innerHTML = `<h3>${title}</h3>` + (hint ? `<p class="sec-hint">${hint}</p>` : ''); side.appendChild(s2); return mk(s2, 'srow'); };
+    // every section folds from its title (Alex, 11 Nov: "everything should fold"); which ones are shut is kept in this browser
+    let shut = []; try{ shut = JSON.parse(localStorage.getItem('roarref-shut') || '[]'); }catch{}
+    const sec = (title, hint) => { const s2 = document.createElement('section'); s2.className = 'sec' + (shut.includes(title) ? ' shut' : '');
+      s2.innerHTML = `<button type="button" class="sec-h" aria-expanded="${!shut.includes(title)}">${title}<svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></button>` + (hint ? `<p class="sec-hint">${hint}</p>` : '');
+      s2.querySelector('.sec-h').onclick = () => { const now = s2.classList.toggle('shut'); s2.querySelector('.sec-h').setAttribute('aria-expanded', !now);
+        shut = shut.filter(t => t !== title); if(now) shut.push(title); try{ localStorage.setItem('roarref-shut', JSON.stringify(shut)); }catch{} };
+      side.appendChild(s2); return mk(s2, 'srow'); };
     let row = sec('Layout');
     row($('layouts')); row($('ratios'), $('stack'), $('even'));
     row = sec('Look');
