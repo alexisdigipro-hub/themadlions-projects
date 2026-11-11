@@ -511,11 +511,12 @@ function render(){
     const p = photos[i];
     if(p){
       f.classList.add('has');
-      const b = imgBox(p, r), im = document.createElement('img');
-      im.src = p.url; im.alt = r.label; im.draggable = false;
+      const gpu = G && hasAdj(p.adj), b = imgBox(p, r), im = document.createElement(gpu ? 'canvas' : 'img');
+      if(gpu){ im.className = 'ph'; im.setAttribute('aria-label', r.label); } else { im.src = p.url; im.alt = r.label; im.draggable = false; }
       Object.assign(im.style, {left:pct(b.x,r.w), top:pct(b.y,r.h), width:pct(b.w,r.w), height:pct(b.h,r.h),
         transform: tf(p)});
       f.appendChild(im);
+      if(gpu) paintSoon(i);
     } else {
       f.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8"/></svg>${esc(r.label)}<small>Drop a photo, or click twice</small></div>`;
     }
@@ -538,8 +539,9 @@ function frameEl(i){ return stage.querySelector(`.frame[data-i="${i}"]`); }
 const tf = p => `rotate(${p.rot||0}deg)` + (p.flip ? ' scaleX(-1)' : '');
 function place(i){ // move only the picture, no full redraw while dragging
   const p = photos[i], f = frameEl(i); if(!p||!f) return;
-  const r = rects(lay(), S.gap, pad())[i], b = imgBox(p, r), im = f.querySelector('img');
+  const r = rects(lay(), S.gap, pad())[i], b = imgBox(p, r), im = f.querySelector('img, canvas.ph'); if(!im) return;
   Object.assign(im.style, {left:pct(b.x,r.w), top:pct(b.y,r.h), width:pct(b.w,r.w), height:pct(b.h,r.h), transform:tf(p)});
+  if(im.tagName === 'CANVAS'){ const [w, h] = showSize(i); if(Math.max(w, h) > (im._sz || 0)*1.15) paintSoon(i); }
   if(i === sel) syncPanel(true);
 }
 
@@ -754,7 +756,7 @@ function migrateAdj(p){ // photos retouched on 9 Nov carried smooth / light / wa
   p.adj = {smooth:p.smooth||0, exposure:(p.light||0)/50, temp:(p.warm||0)*2};
 }
 let fxTimer = null;
-function fxSoon(p){ clearTimeout(fxTimer); fxTimer = setTimeout(() => applyFx(p), 60); }
+function fxSoon(p){ if(G) return applyFx(p); clearTimeout(fxTimer); fxTimer = setTimeout(() => applyFx(p), 60); }
 const smoothstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t*t*(3 - 2*t); };
 function blurCanvas(src, W, H, r){
   const b = document.createElement('canvas'); b.width = W; b.height = H; const bg = b.getContext('2d', {willReadFrequently:true});
@@ -839,6 +841,9 @@ async function renderAdj(p, full){
   return c;
 }
 async function applyFx(p){
+  if(G){ const i = photos.indexOf(p), f = i >= 0 ? frameEl(i) : null, el = f && f.querySelector('img, canvas.ph');
+    if(el && (el.tagName === 'CANVAS') !== hasAdj(p.adj)) render(); else if(el && el.tagName === 'CANVAS') paintSoon(i);
+    saveSoon(); return; }
   if(p._fxBusy){ p._fxAgain = true; return; }
   p._fxBusy = true;
   try{ await applyFxNow(p); } finally { p._fxBusy = false; }
@@ -855,6 +860,191 @@ async function applyFxNow(p){
   p.fxUrl = url === p.base ? null : url; p.url = url;
   const i = photos.indexOf(p), im = i >= 0 && frameEl(i) ? frameEl(i).querySelector('img') : null; if(im) im.src = url;
   saveSoon();
+}
+/* ---------- the photo on the graphics card (Alex, 11 Nov: "do it with the GPU, it loses quality at once"): every setting of
+   Face / Edit / Body / Hair is worked out by WebGL2 shaders, live while a slider moves, at the size the window shows (times the
+   screen's pixel ratio, never more than the photo), straight into a canvas: no JPEG in between. The export runs the same
+   shaders at the photo's full size. Light and colour are worked in linear light (as Lightroom). Without WebGL2 the older
+   in-browser path (renderAdj / applyFxNow) is used. ---------- */
+const G = (() => {
+  const c = document.createElement('canvas'), gl = c.getContext('webgl2', {premultipliedAlpha:false, preserveDrawingBuffer:true, antialias:false});
+  if(!gl) return null;
+  const half = !!gl.getExtension('EXT_color_buffer_float'); gl.getExtension('OES_texture_float_linear');
+  const VS = `#version 300 es
+in vec2 p; out vec2 uv; void main(){ uv = p*0.5 + 0.5; gl_Position = vec4(p, 0.0, 1.0); }`;
+  const head = `#version 300 es
+precision highp float; in vec2 uv; out vec4 o_;
+float lum(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
+`;
+  const WARP = head + `uniform sampler2D src; uniform sampler2D hairM; uniform vec2 size; uniform int nw; uniform vec4 wa[12]; uniform vec4 wb[12];
+uniform int hasHair; uniform float hairAmt, hairS, hairL; uniform vec3 hairOff;
+void main(){
+  vec2 P = vec2(uv.x*size.x, (1.0 - uv.y)*size.y), o = vec2(0.0);
+  for(int k = 0; k < 12; k++){ if(k >= nw) break; vec4 A = wa[k], B = wb[k];
+    if(B.x > 2.5){ if(P.y > A.y) o.y -= (P.y - A.y)*B.y/(1.0 + B.y); continue; }
+    vec2 u = (P - A.xy)/A.zw; float r2 = dot(u, u); if(r2 >= 1.0) continue;
+    float f = (B.x > 0.5 && B.x < 1.5) ? (1.0 - r2)*(1.0 - 0.35*r2) : (1.0 - r2)*(1.0 - r2);
+    if(B.x < 0.5) o -= (P - A.xy)*B.y*f; else if(B.x < 1.5) o.x -= (P.x - A.x)*B.y*f; else o += B.zw*f; }
+  vec2 S = clamp(P + o, vec2(0.0), size - 1.0), suv = vec2(S.x/size.x, 1.0 - S.y/size.y);
+  vec3 c = texture(src, suv).rgb;
+  if(hasHair == 1){ float m = texture(hairM, suv).a*hairAmt;
+    if(m > 0.01){ float L0 = lum(c), nl = clamp(L0 + hairL*0.35*(hairL > 0.0 ? 1.0 - L0 : L0) + hairL*0.08, 0.0, 1.0), k2 = hairS*1.4*min(nl, 1.0 - nl + 0.15);
+      c = mix(c, vec3(nl) + hairOff*k2, m); } }
+  o_ = vec4(c, 1.0);
+}`;
+  const BLUR = head + `uniform sampler2D t; uniform vec2 dir;
+void main(){ vec3 s = vec3(0.0); float ws = 0.0;
+  for(int i = -6; i <= 6; i++){ float w = exp(-float(i*i)/12.5); s += texture(t, uv + dir*float(i)).rgb*w; ws += w; }
+  o_ = vec4(s/ws, 1.0); }`;
+  const FINAL = head + `uniform sampler2D A, Bs, Bm, Bl, Bk; uniform vec2 size;
+uniform float ex, con, hi, sh, wh, bl, temp, tint, vib, sat, tex, cla, dh, vig, grain, glow, shp, nr, sm, blend, bal;
+uniform vec3 g0, g1, g2;
+vec3 toLin(vec3 c){ c = max(c, 0.0); return mix(c/12.92, pow((c + 0.055)/1.055, vec3(2.4)), step(0.04045, c)); }
+vec3 toSrgb(vec3 c){ c = max(c, 0.0); return mix(c*12.92, 1.055*pow(c, vec3(1.0/2.4)) - 0.055, step(0.0031308, c)); }
+float ss(float a, float b, float x){ return smoothstep(a, b, x); }
+float hash(vec2 p){ p = fract(p*vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x*p.y); }
+void main(){
+  vec2 P = vec2(uv.x*size.x, (1.0 - uv.y)*size.y);
+  vec3 c = texture(A, uv).rgb;
+  if(nr > 0.0 || shp > 0.0){ vec3 B = texture(Bs, uv).rgb;
+    if(nr > 0.0){ float d = dot(abs(c - B), vec3(1.0)); c = mix(c, B, nr*max(0.0, 1.0 - d/0.25)); }
+    if(shp > 0.0){ vec3 dd = c - B; c += dd*shp*1.6*smoothstep(0.004, 0.03, length(dd)); } }
+  if(tex != 0.0) c += (c - texture(Bm, uv).rgb)*tex;
+  if(cla != 0.0){ vec3 B = texture(Bl, uv).rgb; float L = lum(c); c += (c - B)*cla*(1.0 - abs(L - 0.5)*1.4); }
+  if(sm > 0.0){ vec3 B = texture(Bk, uv).rgb*255.0;
+    float cb = 128.0 - 0.1687*B.r - 0.3313*B.g + 0.5*B.b, cr = 128.0 + 0.5*B.r - 0.4187*B.g - 0.0813*B.b;
+    float m = max(0.0, 1.0 - max(0.0, max(max(77.0 - cb, cb - 127.0), max(133.0 - cr, cr - 173.0)))/8.0);
+    float d = dot(abs(c*255.0 - B), vec3(1.0)); c = mix(c, B/255.0, sm*m*max(0.0, 1.0 - d/90.0)); }
+  // light and white balance in linear light
+  vec3 l = toLin(c)*ex;
+  l.r *= 1.0 + temp*0.22; l.b *= 1.0 - temp*0.22; l.g *= 1.0 - tint*0.14; l.rb *= 1.0 + tint*0.05;
+  c = toSrgb(l);
+  float L = lum(c);
+  float tone = hi*0.3*ss(0.45, 1.0, L) + sh*0.3*(1.0 - ss(0.0, 0.55, L)) + wh*0.18*ss(0.7, 1.05, L) + bl*0.15*(1.0 - ss(0.0, 0.3, L));
+  c += tone;
+  if(con != 0.0){ c = (c - 0.5)*(1.0 + con*0.8) + 0.5; }
+  if(dh != 0.0){ float h0 = dh*0.12; c = (c - h0)/(1.0 - h0); }
+  L = lum(c);
+  if(sat != 0.0 || vib != 0.0 || dh != 0.0){ float cs = max(max(c.r, c.g), c.b) - min(min(c.r, c.g), c.b);
+    float f = 1.0 + sat + vib*(1.0 - min(1.0, cs*1.6)) + dh*0.25; c = vec3(L) + (c - vec3(L))*f; }
+  if(dot(abs(g0) + abs(g1) + abs(g2), vec3(1.0)) > 0.0){ float lw = clamp(L, 0.0, 1.0), sp = 0.15 + blend*0.35, mid = 0.5 + bal*0.25;
+    float ws = 1.0 - ss(mid - sp, mid, lw), wh2 = ss(mid, mid + sp, lw), wm = max(0.0, 1.0 - ws - wh2);
+    c += g0*ws + g1*wm + g2*wh2; }
+  if(glow > 0.0){ vec3 B = texture(Bl, uv).rgb; float w = glow*ss(0.45, 1.0, lum(B))*0.9; c = 1.0 - (1.0 - c)*(1.0 - B*w); }
+  if(vig != 0.0){ float dd = length(P - size*0.5)/length(size*0.5); c *= 1.0 + vig*0.9*ss(0.35, 1.05, dd); }
+  if(grain > 0.0){ float n = (hash(P) - 0.5)*grain*0.16; c += n; }
+  o_ = vec4(clamp(c, 0.0, 1.0), 1.0);
+}`;
+  const prog = fs => { const p = gl.createProgram(), mk = (t, s) => { const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh);
+      if(!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh)); return sh; };
+    gl.attachShader(p, mk(gl.VERTEX_SHADER, VS)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs)); gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p);
+    if(!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); p.u = {}; return p; };
+  let P;
+  try{ P = {warp:prog(WARP), blur:prog(BLUR), fin:prog(FINAL)}; }catch(e){ console.warn('RoarRef GPU off:', e); return null; }
+  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const U = (p, n) => (n in p.u) ? p.u[n] : (p.u[n] = gl.getUniformLocation(p, n));
+  const tex = (w, h) => { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, half ? gl.RGBA16F : gl.RGBA8, w, h, 0, gl.RGBA, half ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE, null);
+    [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(k => gl.texParameteri(gl.TEXTURE_2D, k, gl.LINEAR));
+    [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(k => gl.texParameteri(gl.TEXTURE_2D, k, gl.CLAMP_TO_EDGE));
+    const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+    return {t, f, w, h}; };
+  const pool = {}; const target = (name, w, h) => { const o = pool[name]; if(o && o.w === w && o.h === h) return o;
+    if(o){ gl.deleteTexture(o.t); gl.deleteFramebuffer(o.f); } return pool[name] = tex(w, h); };
+  const upload = (src, mip) => { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    if(mip) gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, mip ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(k => gl.texParameteri(gl.TEXTURE_2D, k, gl.CLAMP_TO_EDGE)); return t; };
+  const bind = (unit, t) => { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t); };
+  const draw = (fbo, w, h) => { gl.bindFramebuffer(gl.FRAMEBUFFER, fbo); gl.viewport(0, 0, w, h); gl.drawArrays(gl.TRIANGLES, 0, 3); };
+  const blur = (name, srcT, W, H, sigma) => { // separable blur, at a lower size when wide
+    const d = Math.max(1, Math.floor(sigma/4)), w = Math.max(1, Math.ceil(W/d)), h = Math.max(1, Math.ceil(H/d));
+    const a = target(name + 'a', w, h), b = target(name + 'b', w, h), st = sigma/2.5;
+    gl.useProgram(P.blur); gl.uniform1i(U(P.blur, 't'), 0);
+    bind(0, srcT); gl.uniform2f(U(P.blur, 'dir'), st/W, 0); draw(a.f, w, h);
+    bind(0, a.t); gl.uniform2f(U(P.blur, 'dir'), 0, st/H); draw(b.f, w, h);
+    return b.t; };
+  const MAX = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  return {gl, c, P, U, upload, bind, draw, target, blur, MAX};
+})();
+// the photo's texture (and its hair mask), kept on the card while the photo is the same
+async function gpuSource(p){
+  if(p._gt && p._gtBlob === p.blob) return p._gt;
+  if(p._gt) G.gl.deleteTexture(p._gt);
+  let bm = await createImageBitmap(p.blob);
+  if(Math.max(bm.width, bm.height) > G.MAX){ const k = G.MAX/Math.max(bm.width, bm.height); bm = await createImageBitmap(bm, {resizeWidth:Math.floor(bm.width*k), resizeHeight:Math.floor(bm.height*k), resizeQuality:'high'}); }
+  // through a 2D canvas: the browsers ignore the upside-down flag for an ImageBitmap, not for a canvas
+  const cc = document.createElement('canvas'); cc.width = bm.width; cc.height = bm.height; cc.getContext('2d').drawImage(bm, 0, 0);
+  p._gt = G.upload(cc, true); p._gtBlob = p.blob; p._gw = bm.width; p._gh = bm.height; return p._gt;
+}
+// draws photo p with all its settings at W x H on the shared WebGL canvas, and gives that canvas back
+async function gpuRender(p, W, H){
+  const a = adjOf(p), gl = G.gl;
+  if(FACE_KEYS.some(k => a[k])) await ensureLM(p, 'face').catch(() => {});
+  if(BODY_KEYS.some(k => a[k])) await ensureLM(p, 'pose').catch(() => {});
+  if(a.hairAmt) await ensureHair(p).catch(() => {});
+  const src = await gpuSource(p);
+  if(G.c.width !== W || G.c.height !== H){ G.c.width = W; G.c.height = H; }
+  const v = k => (+a[k] || 0), S0 = Math.min(W, H);
+  // 1. shape (face / body) and hair colour
+  const A = G.target('A', W, H), wp = G.P.warp; gl.useProgram(wp);
+  const warps = shapeWarps(p, W, H).slice(0, 12), wa = new Float32Array(48), wb = new Float32Array(48);
+  warps.forEach((w, k) => { const T = {s:0, h:1, m:2, y:3}[w.t];
+    wa.set(w.t === 'y' ? [0, w.y0, 1, 1] : [w.cx, w.cy, w.rx, w.ry], k*4); wb.set([T, w.a || 0, w.mx || 0, w.my || 0], k*4); });
+  gl.uniform1i(G.U(wp, 'nw'), warps.length); if(warps.length){ gl.uniform4fv(G.U(wp, 'wa'), wa); gl.uniform4fv(G.U(wp, 'wb'), wb); }
+  gl.uniform2f(G.U(wp, 'size'), W, H);
+  G.bind(0, src); gl.uniform1i(G.U(wp, 'src'), 0);
+  const hair = (+a.hairAmt || 0) > 0 && p.hairMask;
+  if(hair){ if(!p._gh2 || p._gh2m !== p.hairMask){ if(p._gh2) gl.deleteTexture(p._gh2); p._gh2 = G.upload(p.hairMask, false); p._gh2m = p.hairMask; }
+    G.bind(1, p._gh2); gl.uniform1i(G.U(wp, 'hairM'), 1); }
+  gl.uniform1i(G.U(wp, 'hasHair'), hair ? 1 : 0);
+  if(hair){ gl.uniform1f(G.U(wp, 'hairAmt'), v('hairAmt')/100); gl.uniform1f(G.U(wp, 'hairS'), v('hairS')/100); gl.uniform1f(G.U(wp, 'hairL'), v('hairL')/100);
+    gl.uniform3fv(G.U(wp, 'hairOff'), hueRGB(v('hairH'))); }
+  G.draw(A.f, W, H);
+  // 2. the blurred copies the settings need
+  const shp = v('sharpen')/100, nr = v('noise')/100, tx = v('texture')/100, cla = v('clarity')/100, glow = v('glow')/100, sm = v('smooth')/100;
+  const Bs = (shp || nr) ? G.blur('s', A.t, W, H, Math.max(0.8, S0*0.0012)) : A.t;
+  const Bm = tx ? G.blur('m', A.t, W, H, S0*0.006) : A.t;
+  const Bl = (cla || glow) ? G.blur('l', A.t, W, H, S0*0.03) : A.t;
+  const Bk = sm ? G.blur('k', A.t, W, H, Math.max(2, S0*0.012*(0.4 + sm))) : A.t;
+  // 3. light, colour, effects, grading
+  const fp = G.P.fin; gl.useProgram(fp);
+  [['A', A.t], ['Bs', Bs], ['Bm', Bm], ['Bl', Bl], ['Bk', Bk]].forEach(([n, t], i) => { G.bind(i, t); gl.uniform1i(G.U(fp, n), i); });
+  gl.uniform2f(G.U(fp, 'size'), W, H);
+  const f1 = (n, x) => gl.uniform1f(G.U(fp, n), x);
+  f1('ex', Math.pow(2, v('exposure'))); f1('con', v('contrast')/100); f1('hi', v('highlights')/100); f1('sh', v('shadows')/100); f1('wh', v('whites')/100); f1('bl', v('blacks')/100);
+  f1('temp', v('temp')/100); f1('tint', v('tint')/100); f1('vib', v('vibrance')/100); f1('sat', v('saturation')/100);
+  f1('tex', tx); f1('cla', cla); f1('dh', v('dehaze')/100); f1('vig', v('vignette')/100); f1('grain', v('grain')/100); f1('glow', glow);
+  f1('shp', shp); f1('nr', nr); f1('sm', sm); f1('blend', (a.blend == null ? 50 : a.blend)/100); f1('bal', (a.balance || 0)/100);
+  const gr = a.grade || {};
+  GRADE.forEach(([key], i) => { const q = gr[key] || {}, o = hueRGB(q.h || 0), s = (q.s || 0)/100*0.35, l = (q.l || 0)/100*0.25;
+    gl.uniform3f(G.U(fp, 'g' + i), o[0]*s + l, o[1]*s + l, o[2]*s + l); });
+  G.draw(null, W, H);
+  return G.c;
+}
+// the size a photo is shown at, in screen pixels (never more than the photo)
+function showSize(i){
+  const p = photos[i], r = rects(lay(), S.gap, pad())[i]; if(!p || !r) return [1, 1];
+  const b = imgBox(p, r), k = (window.devicePixelRatio || 1) / unit(), full = Math.max(p.w, p.h);
+  let w = Math.ceil(b.w*k), h = Math.ceil(b.h*k); const m = Math.max(w, h);
+  if(m > full){ w = Math.round(w*full/m); h = Math.round(h*full/m); }
+  const cap = Math.min(G ? G.MAX : 4096, 4096); if(Math.max(w, h) > cap){ const q = cap/Math.max(w, h); w = Math.round(w*q); h = Math.round(h*q); }
+  return [Math.max(1, w), Math.max(1, h)];
+}
+// paints photo i into its window's canvas; called on every change, so it only ever does the newest one
+const painting = new Map();
+function paintSoon(i){ const p = photos[i]; if(!p) return; if(painting.get(p) === 'busy'){ painting.set(p, 'again'); return; }
+  painting.set(p, 'busy');
+  requestAnimationFrame(async () => { try{ await paintNow(i); }catch(e){ console.warn(e); }
+    const again = painting.get(p) === 'again'; painting.delete(p); if(again) paintSoon(photos.indexOf(p)); }); }
+async function paintNow(i){
+  const p = photos[i], f = frameEl(i); if(!p || !f) return;
+  const cv = f.querySelector('canvas.ph'); if(!cv) return;
+  const [w, h] = showSize(i), gc = await gpuRender(p, w, h);
+  if(cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
+  cv.getContext('2d').drawImage(gc, 0, 0); cv._sz = Math.max(w, h);
 }
 /* ---------- Liquify (Alex, 11 Nov, "like Photoshop's Liquify"): a brush that pushes, swells or pinches the picture, and puts it
    back. Works on a copy of at most 1600 px with a displacement field (dx, dy per pixel); Done makes the result at full size,
@@ -1382,7 +1572,7 @@ async function drawSheet(W, type='image/png'){
     g.roundRect ? g.roundRect(r.x*k, r.y*k, r.w*k, r.h*k, S.rad*k) : g.rect(r.x*k, r.y*k, r.w*k, r.h*k);
     g.clip(); g.fillStyle=S.fill; g.fillRect(r.x*k, r.y*k, r.w*k, r.h*k);
     if(p){
-      let im; if(hasAdj(p.adj)){ try{ im = await renderAdj(p, true); }catch{ im = null; } }
+      let im; if(hasAdj(p.adj)){ try{ im = G ? await gpuRender(p, Math.min(p.w, G.MAX), Math.round(Math.min(p.w, G.MAX)*p.h/p.w)) : await renderAdj(p, true); }catch{ im = null; } }
       if(!im){ im = new Image(); im.src = p.base || p.url; await im.decode(); }
       const b = imgBox(p, r);
       g.translate((r.x+b.x+b.w/2)*k, (r.y+b.y+b.h/2)*k);
