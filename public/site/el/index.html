@@ -759,7 +759,7 @@ html.has-notice .bar { top: var(--notice-h, 38px); }
   .svc-how .step { padding: 22px 0 26px; text-align: center; background: var(--bg); position: relative; }
   .svc-how .step::before { top: 0; left: 50%; margin: 0 0 0 -6px; }
   .svc-how .step h3 { margin-top: 6px; }
-  .svc-how .step p { max-width: 30ch; margin-left: auto; margin-right: auto; }
+  .svc-how .step p { max-width: none; text-wrap: balance; } /* two lines each (Alex, 11 Nov) */
   /* the team's cards and the Lab's open poster read from the middle too */
   .person { text-align: center; }
   .person .face { margin-left: auto; margin-right: auto; }
