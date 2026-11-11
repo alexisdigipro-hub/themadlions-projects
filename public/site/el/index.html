@@ -766,6 +766,9 @@ html.has-notice .bar { top: var(--notice-h, 38px); }
   .lab-x .open { justify-items: center; text-align: center; left: 18px; right: 18px; max-width: none; }
   .lab-x .open .tag, .lab-x .open em { justify-self: center; }
   .lab-x .top { justify-content: center; }
+  /* the foot of the page: the wordmark, Privacy & Terms and the line under each other in the middle, with room under
+     them for Safari's floating bar and the back to the top button (Alex, 11 Nov) */
+  footer { flex-direction: column; justify-content: center; text-align: center; gap: 12px; padding-top: 34px; padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
 }
 
 /* back to the top (Alex, 11 Nov): a round matte glass button bottom right, shown once the page has gone a screen down */
