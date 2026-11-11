@@ -784,6 +784,12 @@ html.has-notice .bar { top: var(--notice-h, 38px); }
 /* on a phone a little higher, clear of Safari's floating bar at the foot */
 @media (max-width: 760px) { .totop { width: 46px; height: 46px; right: 14px; bottom: calc(76px + env(safe-area-inset-bottom)); } }
 body:has(.player.open) .totop, body:has(.btsall.open) .totop { opacity: 0; pointer-events: none; }
+
+/* the work's filters on a phone: two rows (Alex, 11 Nov): smaller pills, short names (SHORT_CAT), fitFilters steps down if needed */
+@media (max-width: 760px) {
+  #filters { gap: 6px 5px; }
+  #filters button { height: 34px; padding: 0 11px; font-size: var(--ff, 12.5px); }
+}
 </style>
 </head>
 <body>
@@ -1168,11 +1174,23 @@ function renderFilters() {
     const b = document.createElement('button')
     b.type = 'button'
     b.textContent = c === 'all' ? t('all') : c === 'aibsent' ? 'Aibsent Studios' : lang === 'el' ? (CATS[c] || c) : c
+    // on a phone the long names shortened so the filters stay in two rows (Alex, 11 Nov)
+    if (innerWidth <= 760 && SHORT_CAT[b.textContent]) b.textContent = SHORT_CAT[b.textContent]
     b.className = c === filter ? 'on' : ''
     b.onclick = () => { filter = c; showAll = false; renderFilters(); renderGrid() }
     box.appendChild(b)
   }
+  fitFilters(box)
 }
+const SHORT_CAT = { 'Motion Graphics': 'Motion', 'Intro Videos': 'Intro', 'Aibsent Studios': 'Aibsent' }
+// a phone keeps the filters in two rows: if a new category makes a third, the pills step down a little (to 11.5 px at least)
+function fitFilters(box) {
+  box.style.removeProperty('--ff')
+  if (innerWidth > 760) return
+  const rows = () => new Set([...box.children].map((x) => x.offsetTop)).size
+  for (let fs = 12.5; rows() > 2 && fs > 11.5; fs -= 0.5) box.style.setProperty('--ff', `${fs - 0.5}px`)
+}
+addEventListener('resize', () => { const box = document.getElementById('filters'); if (box) renderFilters() })
 function renderGrid() {
   const list = WORKS.filter((w) => !w.c.includes(BTS) && (filter === 'all' || (filter === 'aibsent' ? w.aib : w.c.includes(filter))))
   const shown = showAll ? list : list.slice(0, SHORT)
