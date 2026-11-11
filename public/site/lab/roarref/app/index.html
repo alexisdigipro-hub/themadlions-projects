@@ -816,14 +816,36 @@ const HOLLYWOOD = {smooth:65, exposure:0.15, contrast:6, highlights:-12, shadows
 /* Looks (Alex, 11 Nov, from Persona's Beauty): one press sets a group of settings, the Intensity slider scales them (a.look, a.lookAmt).
    lips = colour on the lips (needs the face points), lipH its hue. */
 const LOOKS = {
-  Retouch:   {smooth:70, highlights:-8, shadows:6, clarity:-6},
-  Natural:   {smooth:45, exposure:0.1, shadows:8, temp:6, vibrance:8},
-  Kiss:      {smooth:60, contrast:8, vibrance:10, glow:8, lips:75, lipH:352},
-  Grace:     {smooth:65, exposure:0.12, contrast:10, temp:10, saturation:6, lips:55, lipH:8, glow:10},
-  Lovely:    {smooth:55, exposure:0.2, highlights:-10, temp:-4, vibrance:14, lips:40, lipH:335, glow:16},
-  Hollywood: HOLLYWOOD,
+  Retouch:   {smooth:60, under:55, eyeB:30, teeth:35, highlights:-6},
+  Natural:   {smooth:40, under:35, eyeB:20, contour:25, exposure:0.08, vibrance:8},
+  Kiss:      {smooth:55, under:45, eyeB:40, contour:40, contrast:8, vibrance:10, lips:75, lipH:352},
+  Grace:     {smooth:60, under:50, eyeB:35, contour:55, exposure:0.1, contrast:8, temp:8, lips:55, lipH:8},
+  Lovely:    {smooth:50, under:50, eyeB:45, teeth:40, contour:30, exposure:0.15, highlights:-10, vibrance:12, lips:40, lipH:335, glow:10},
+  Hollywood: Object.assign({}, HOLLYWOOD, {under:50, eyeB:40, teeth:40, contour:60}),
 };
 const LIP_OUT = [61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146], LIP_IN = [78,191,80,81,82,13,312,311,310,415,308,324,318,402,317,14,87,178,88,95];
+const EYE_L = [33,246,161,160,159,158,157,173,133,155,154,153,145,144,163,7], EYE_R = [263,466,388,387,386,385,384,398,362,382,381,380,374,373,390,249];
+/* Pro retouch masks (Alex, 11 Nov: "do the 2nd": better retouch without AI), drawn from the face points at 512 px wide.
+   [0] red = where light goes (forehead, nose bridge, cheekbones, chin), blue = where shade goes (under the cheekbones, jaw, temples),
+       green = under the eyes; [1] red = the eyes, green = the open mouth (teeth). */
+function faceMasks(p, F){
+  const mw = 512, mh = Math.max(1, Math.round(512*p.h/p.w)), X = i => F[i][0]*mw, Y = i => F[i][1]*mh;
+  const mk = () => { const c = document.createElement('canvas'); c.width = mw; c.height = mh; const g = c.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, mw, mh); g.globalCompositeOperation = 'lighter'; return [c, g]; };
+  const fw = Math.hypot(X(454)-X(234), Y(454)-Y(234)), fh = Math.hypot(X(152)-X(10), Y(152)-Y(10));
+  const dnx = (X(152)-X(10))/Math.max(1, fh), dny = (Y(152)-Y(10))/Math.max(1, fh), ang = Math.atan2(dny, dnx) - Math.PI/2;
+  const [c1, g1] = mk(); g1.filter = `blur(${Math.max(2, fw*0.045)}px)`;
+  const blob = (g, col, x, y, rx, ry) => { g.fillStyle = col; g.beginPath(); g.ellipse(x, y, Math.max(1, rx), Math.max(1, ry), ang, 0, Math.PI*2); g.fill(); };
+  const line = (g, col, ids, w) => { g.strokeStyle = col; g.lineWidth = Math.max(1, w); g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); ids.forEach((i, n) => n ? g.lineTo(X(i), Y(i)) : g.moveTo(X(i), Y(i))); g.stroke(); };
+  blob(g1, '#f00', X(151), Y(151), fw*0.17, fh*0.06); line(g1, '#f00', [168, 6, 4], fw*0.045); blob(g1, '#f00', X(199), Y(199), fw*0.07, fh*0.03);
+  blob(g1, '#f00', X(50), Y(50), fw*0.08, fh*0.035); blob(g1, '#f00', X(280), Y(280), fw*0.08, fh*0.035);
+  blob(g1, '#00f', X(123) + dnx*fh*0.07, Y(123) + dny*fh*0.07, fw*0.07, fh*0.07); blob(g1, '#00f', X(352) + dnx*fh*0.07, Y(352) + dny*fh*0.07, fw*0.07, fh*0.07);
+  line(g1, '#00f', [172, 136, 150], fw*0.05); line(g1, '#00f', [397, 365, 379], fw*0.05); blob(g1, '#00f', X(54), Y(54), fw*0.06, fh*0.05); blob(g1, '#00f', X(284), Y(284), fw*0.06, fh*0.05);
+  [[33, 133], [362, 263]].forEach(([a2, b2]) => { const ew = Math.hypot(X(b2)-X(a2), Y(b2)-Y(a2)), cx = (X(a2)+X(b2))/2 + dnx*ew*0.5, cy = (Y(a2)+Y(b2))/2 + dny*ew*0.5; blob(g1, '#0f0', cx, cy, ew*0.6, ew*0.24); });
+  const [c2, g2] = mk(); g2.filter = 'blur(1px)';
+  const poly = (col, ids) => { g2.fillStyle = col; g2.beginPath(); ids.forEach((i, n) => n ? g2.lineTo(X(i), Y(i)) : g2.moveTo(X(i), Y(i))); g2.closePath(); g2.fill(); };
+  poly('#f00', EYE_L); poly('#f00', EYE_R); poly('#0f0', LIP_IN);
+  return [c1, c2];
+}
 const LOOK_KEYS = [...new Set(Object.values(LOOKS).flatMap(o => Object.keys(o)))];
 function setLook(p, name, amt){
   const a = adjOf(p); LOOK_KEYS.forEach(k => { if(k !== 'lipH') delete a[k]; });
@@ -854,7 +876,7 @@ function hueRGB(h){ // the colour of a hue (0..360) at full strength, as an offs
 // makes the adjusted picture: full = the original size (for the export), otherwise a quick copy for the screen
 async function renderAdj(p, full){
   const a = adjOf(p);
-  if(FACE_KEYS.some(k => a[k]) || a.lips) await ensureLM(p, 'face').catch(() => {});
+  if(FACE_KEYS.some(k => a[k]) || a.lips || a.eyeB || a.teeth || a.contour || a.under) await ensureLM(p, 'face').catch(() => {});
   if(BODY_KEYS.some(k => a[k])) await ensureLM(p, 'pose').catch(() => {});
   if(a.hairAmt) await ensureHair(p).catch(() => {});
   const bm = await createImageBitmap(p.blob);
@@ -961,6 +983,7 @@ float lum(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
   const WARP = head + `uniform sampler2D src; uniform sampler2D hairM; uniform vec2 size; uniform int nw; uniform vec4 wa[12]; uniform vec4 wb[12];
 uniform int hasHair; uniform float hairAmt, hairS, hairL; uniform vec3 hairOff;
 uniform sampler2D lipM; uniform float lipAmt; uniform vec3 lipCol;
+uniform sampler2D fm1, fm2; uniform float eyeB, teethW, contour, under;
 void main(){
   vec2 P = vec2(uv.x*size.x, (1.0 - uv.y)*size.y), o = vec2(0.0);
   for(int k = 0; k < 12; k++){ if(k >= nw) break; vec4 A = wa[k], B = wb[k];
@@ -975,13 +998,22 @@ void main(){
       c = mix(c, vec3(nl) + hairOff*k2, m); } }
   if(lipAmt > 0.0){ float m = texture(lipM, suv).a*lipAmt;
     if(m > 0.01){ float L0 = lum(c); c = mix(c, vec3(L0) + lipCol*1.5*min(L0, 1.0 - L0 + 0.2), m*0.8); } }
+  if(eyeB > 0.0 || teethW > 0.0){ vec4 k = texture(fm2, suv);
+    if(eyeB > 0.0 && k.r > 0.01){ vec3 e = ((c - 0.5)*1.14 + 0.5)*1.13; c = mix(c, e, k.r*eyeB); }
+    if(teethW > 0.0 && k.g > 0.01){ float L0 = lum(c), mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), st = (mx - mn)/max(mx, 0.001);
+      float tn = smoothstep(0.38, 0.58, L0)*(1.0 - smoothstep(0.22, 0.42, st)); c = mix(c, mix(c, vec3(L0), 0.75)*1.12 + 0.03, k.g*teethW*tn); } }
+  if(contour > 0.0 || under > 0.0){ vec4 k = texture(fm1, suv); float L0 = lum(c); vec3 q = c*255.0;
+    // only on skin, so the shade never lands on the background, hair or glasses
+    float cb = 128.0 - 0.1687*q.r - 0.3313*q.g + 0.5*q.b, cr = 128.0 + 0.5*q.r - 0.4187*q.g - 0.0813*q.b;
+    float skin = max(0.0, 1.0 - max(0.0, max(max(77.0 - cb, cb - 127.0), max(133.0 - cr, cr - 173.0)))/10.0);
+    c += k.g*under*0.14*(1.0 - L0)*skin; c += k.r*contour*0.09*(1.0 - L0*0.5)*skin; c *= 1.0 - k.b*contour*0.16*skin; }
   o_ = vec4(c, 1.0);
 }`;
   const BLUR = head + `uniform sampler2D t; uniform vec2 dir;
 void main(){ vec3 s = vec3(0.0); float ws = 0.0;
   for(int i = -6; i <= 6; i++){ float w = exp(-float(i*i)/12.5); s += texture(t, uv + dir*float(i)).rgb*w; ws += w; }
   o_ = vec4(s/ws, 1.0); }`;
-  const FINAL = head + `uniform sampler2D A, Bs, Bm, Bl, Bk; uniform vec2 size;
+  const FINAL = head + `uniform sampler2D A, Bs, Bm, Bl, Bk, Bf; uniform vec2 size;
 uniform float ex, con, hi, sh, wh, bl, temp, tint, vib, sat, tex, cla, dh, vig, grain, glow, shp, nr, sm, blend, bal;
 uniform vec3 g0, g1, g2;
 vec3 toLin(vec3 c){ c = max(c, 0.0); return mix(c/12.92, pow((c + 0.055)/1.055, vec3(2.4)), step(0.04045, c)); }
@@ -999,7 +1031,9 @@ void main(){
   if(sm > 0.0){ vec3 B = texture(Bk, uv).rgb*255.0;
     float cb = 128.0 - 0.1687*B.r - 0.3313*B.g + 0.5*B.b, cr = 128.0 + 0.5*B.r - 0.4187*B.g - 0.0813*B.b;
     float m = max(0.0, 1.0 - max(0.0, max(max(77.0 - cb, cb - 127.0), max(133.0 - cr, cr - 173.0)))/8.0);
-    float d = dot(abs(c*255.0 - B), vec3(1.0)); c = mix(c, B/255.0, sm*m*max(0.0, 1.0 - d/90.0)); }
+    // the broad tone comes from the wide blur, the pores from the photo's own fine detail; strong edges (eyes, lips, hair) stay
+    vec3 Bq = texture(Bf, uv).rgb, lo = B/255.0; float d = dot(abs(Bq - lo), vec3(1.0));
+    c = mix(c, lo + (c - Bq)*0.92, sm*m*(1.0 - smoothstep(0.10, 0.32, d))); }
   // light and white balance in linear light
   vec3 l = toLin(c)*ex;
   l.r *= 1.0 + temp*0.22; l.b *= 1.0 - temp*0.22; l.g *= 1.0 - tint*0.14; l.rb *= 1.0 + tint*0.05;
@@ -1067,7 +1101,7 @@ async function gpuSource(p){
 // draws photo p with all its settings at W x H on the shared WebGL canvas, and gives that canvas back
 async function gpuRender(p, W, H){
   const a = p._cmp ? {} : adjOf(p), gl = G.gl;
-  if(FACE_KEYS.some(k => a[k]) || a.lips) await ensureLM(p, 'face').catch(() => {});
+  if(FACE_KEYS.some(k => a[k]) || a.lips || a.eyeB || a.teeth || a.contour || a.under) await ensureLM(p, 'face').catch(() => {});
   if(BODY_KEYS.some(k => a[k])) await ensureLM(p, 'pose').catch(() => {});
   if(a.hairAmt) await ensureHair(p).catch(() => {});
   const src = await gpuSource(p);
@@ -1096,6 +1130,11 @@ async function gpuRender(p, W, H){
       p._lipT = G.upload(mc, false); p._lipF = F; }
     G.bind(2, p._lipT); gl.uniform1i(G.U(wp, 'lipM'), 2); gl.uniform3fv(G.U(wp, 'lipCol'), hueRGB(+a.lipH || 352)); lipAmt = a.lips/100; }
   gl.uniform1f(G.U(wp, 'lipAmt'), lipAmt);
+  const FK = ['eyeB','teeth','contour','under'], F2 = FK.some(k => +a[k]) && p.lm && p.lm.face && p.lm.face.length > 466 ? p.lm.face : null;
+  if(F2){ if(!p._fmT || p._fmF !== F2){ if(p._fmT){ gl.deleteTexture(p._fmT[0]); gl.deleteTexture(p._fmT[1]); } const m2 = faceMasks(p, F2); p._fmT = [G.upload(m2[0], false), G.upload(m2[1], false)]; p._fmF = F2; }
+    G.bind(3, p._fmT[0]); gl.uniform1i(G.U(wp, 'fm1'), 3); G.bind(4, p._fmT[1]); gl.uniform1i(G.U(wp, 'fm2'), 4); }
+  gl.uniform1f(G.U(wp, 'eyeB'), F2 ? v('eyeB')/100 : 0); gl.uniform1f(G.U(wp, 'teethW'), F2 ? v('teeth')/100 : 0);
+  gl.uniform1f(G.U(wp, 'contour'), F2 ? v('contour')/100 : 0); gl.uniform1f(G.U(wp, 'under'), F2 ? v('under')/100 : 0);
   G.bind(0, src); // last: making a mask texture above binds it to the unit in use
   G.draw(A.f, W, H);
   // 2. the blurred copies the settings need
@@ -1103,10 +1142,11 @@ async function gpuRender(p, W, H){
   const Bs = (shp || nr) ? G.blur('s', A.t, W, H, Math.max(0.8, S0*0.0012)) : A.t;
   const Bm = tx ? G.blur('m', A.t, W, H, S0*0.006) : A.t;
   const Bl = (cla || glow) ? G.blur('l', A.t, W, H, S0*0.03) : A.t;
-  const Bk = sm ? G.blur('k', A.t, W, H, Math.max(2, S0*0.012*(0.4 + sm))) : A.t;
+  const Bk = sm ? G.blur('k', A.t, W, H, Math.max(2, S0*0.014*(0.5 + sm))) : A.t;
+  const Bf = sm ? G.blur('f', A.t, W, H, Math.max(1, S0*0.0035)) : A.t;
   // 3. light, colour, effects, grading
   const fp = G.P.fin; gl.useProgram(fp);
-  [['A', A.t], ['Bs', Bs], ['Bm', Bm], ['Bl', Bl], ['Bk', Bk]].forEach(([n, t], i) => { G.bind(i, t); gl.uniform1i(G.U(fp, n), i); });
+  [['A', A.t], ['Bs', Bs], ['Bm', Bm], ['Bl', Bl], ['Bk', Bk], ['Bf', Bf]].forEach(([n, t], i) => { G.bind(i, t); gl.uniform1i(G.U(fp, n), i); });
   gl.uniform2f(G.U(fp, 'size'), W, H);
   const f1 = (n, x) => gl.uniform1f(G.U(fp, n), x);
   f1('ex', Math.pow(2, v('exposure'))); f1('con', v('contrast')/100); f1('hi', v('highlights')/100); f1('sh', v('shadows')/100); f1('wh', v('whites')/100); f1('bl', v('blacks')/100);
@@ -1322,6 +1362,7 @@ function buildAdjust(){
   top.querySelector('#fxOff').onclick = () => { const p = photos[sel]; if(!p) return; const lmKeep = p.lm; p.adj = {}; p.lm = lmKeep; applyFx(p); syncAdj(); };
   pane.face.appendChild(top);
   row(pane.face, 'smooth', 'Smooth skin', 0, 100);
+  row(pane.face, 'under', 'Under-eye', 0, 100); row(pane.face, 'eyeB', 'Bright eyes', 0, 100); row(pane.face, 'teeth', 'Whiten teeth', 0, 100); row(pane.face, 'contour', 'Contour', 0, 100);
   row(pane.face, 'lips', 'Lip colour', 0, 100); row(pane.face, 'lipH', 'Lip shade', 0, 360);
   status('face');
   const fs = document.createElement('div'); fs.className = 'agroup'; fs.dataset.needs = 'face'; pane.face.appendChild(fs);
@@ -1369,7 +1410,7 @@ function buildAdjust(){
   const ai = document.createElement('p'); ai.className = 'astat'; ai.textContent = 'New clothes and new hairstyles with AI come next.'; pane.body.appendChild(ai.cloneNode(true)); pane.hair.appendChild(ai);
   return box;
 }
-function showVal(row, key, v){ row.querySelector('output').textContent = key === 'exposure' ? (v > 0 ? '+' : '') + v.toFixed(2) : (v > 0 && !['grain','glow','sharpen','noise','smooth','legs','hairAmt','hairH','lips','lipH'].includes(key) ? '+' : '') + v; }
+function showVal(row, key, v){ row.querySelector('output').textContent = key === 'exposure' ? (v > 0 ? '+' : '') + v.toFixed(2) : (v > 0 && !['grain','glow','sharpen','noise','smooth','legs','hairAmt','hairH','lips','lipH','under','eyeB','teeth','contour'].includes(key) ? '+' : '') + v; }
 // reads the face, body or hair of the picked photo the first time its tab is opened
 let reading = null;
 async function readPhoto(){
