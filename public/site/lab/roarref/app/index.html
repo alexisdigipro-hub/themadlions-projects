@@ -181,7 +181,13 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .adjust summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font:600 12px var(--body);letter-spacing:.06em;color:var(--fg);padding:6px 2px}
 .adjust summary::-webkit-details-marker{display:none}
 .adjust summary svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;transition:transform .2s}
-.adjust details:not([open]) summary svg{transform:rotate(-90deg)}
+.adjust summary .gt{flex:1}
+.grst{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.06);color:inherit;display:grid;place-items:center;cursor:pointer;padding:0;margin-right:8px;opacity:.7}
+.grst:hover{opacity:1;background:rgba(255,255,255,.14)} .grst:active{transform:scale(.92)}
+.grst svg{width:13px;height:13px;transform:none!important}
+.adjust details:not([open]) .grst{display:none}
+.pill:disabled{opacity:.35;pointer-events:none}
+.adjust details:not([open]) summary svg.chev{transform:rotate(-90deg)}
 .arow{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;padding:3px 2px;font-size:12.5px;color:var(--muted)}
 .arow output{font-variant-numeric:tabular-nums;color:var(--fg);font-size:12px;min-width:38px;text-align:right}
 .arow input{grid-column:1/-1;width:100%;accent-color:var(--accent);margin:0}
@@ -368,6 +374,8 @@ img{max-width:100%}
       <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="5" fill="currentColor"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span class="w">Cover</span></button>
     <button class="pill round" id="labels" aria-pressed="false" title="Show the view names on the sheet">
       <svg viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span class="w">Names</span></button>
+    <button class="pill round" id="undo" title="Undo (Ctrl/Cmd+Z)" disabled><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+    <button class="pill round" id="redo" title="Redo (Shift+Ctrl/Cmd+Z)" disabled><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
     <button class="pill round" id="add" style="margin-left:auto" title="Add photos to the empty windows">
       <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="w">Add photos</span></button>
     <button class="pill round" id="clear" title="Empty every window">
@@ -540,6 +548,7 @@ function moveRatioLens(){
 }
 $('labels').onclick = () => { S.labels=!S.labels; render(); save(); };
 $('add').onclick = () => { pickTarget = -1; $('file').click(); };
+$('undo').onclick = () => histGo(-1); $('redo').onclick = () => histGo(1);
 $('clear').onclick = () => { if(!photos.some(Boolean)) return; askClear(); };
 $('export').onclick = exportPng;
 
@@ -1367,18 +1376,13 @@ function buildAdjust(){
     parent.appendChild(r); return r;
   };
   const fold = (parent, title, open) => { const d = document.createElement('details'); d.className = 'grp'; d.open = !!open;
-    d.innerHTML = `<summary>${title}<svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></summary>`; parent.appendChild(d); return d; };
-  // Face: looks with one Intensity, Compare, Original; then smooth skin, lips and the shape of the face
-  const looks = document.createElement('div'); looks.className = 'looks';
-  looks.innerHTML = Object.keys(LOOKS).map(n => `<button type="button" class="pill" data-look="${n}"${n==='Hollywood'?' id="hollywood"':''}>${n}</button>`).join('');
-  looks.onclick = e => { const b2 = e.target.closest('[data-look]'); if(!b2) return; const p = photos[sel]; if(!p) return;
-    const a = adjOf(p), same = a.look === b2.dataset.look; setLook(p, same ? null : b2.dataset.look, 100); applyFx(p); syncAdj(); };
-  pane.face.appendChild(looks);
-  const li = document.createElement('label'); li.className = 'arow'; li.id = 'lookAmtRow';
-  li.innerHTML = '<span>Intensity</span><output></output><input type="range" min="0" max="150" step="1" aria-label="Look intensity">';
-  li.querySelector('input').oninput = e => { const p = photos[sel]; if(!p || !adjOf(p).look) return; setLook(p, adjOf(p).look, +e.target.value);
-    li.querySelector('output').textContent = e.target.value + '%'; applyFx(p); syncAdj(true); };
-  pane.face.appendChild(li);
+    d.innerHTML = `<summary><span class="gt">${title}</span><button type="button" class="grst" title="Reset ${title}" aria-label="Reset ${title}"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.6-5.9M4 4v5h5"/></svg></button><svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></summary>`;
+    d.querySelector('.grst').onclick = e => { e.preventDefault(); e.stopPropagation(); const p = photos[sel]; if(!p) return; const a = adjOf(p);
+      d.querySelectorAll('.arow[data-a]').forEach(r => delete a[r.dataset.a]);
+      ({'Tone curve':['curve'], 'Color mixer':['hsl'], 'Color grading':['grade','blend','balance']}[title] || []).forEach(k => delete a[k]);
+      delete a.look; delete a.lookAmt; applyFx(p); syncAdj(); };
+    parent.appendChild(d); return d; };
+  // Face: Compare, Original; then smooth skin, lips and the shape of the face (the looks were taken out, Alex 11 Nov; a photo that wore one keeps its settings)
   const top = document.createElement('div'); top.className = 'fxrow';
   top.innerHTML = '<button type="button" class="pill wide" id="cmp" title="Hold to see the photo before"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 3v18"/></svg>Hold: before</button><button type="button" class="pill wide" id="fxOff">Original</button>';
   const cmp = top.querySelector('#cmp'), cmpSet = on => { const p = photos[sel]; if(!p || !G) return; p._cmp = on; const i = photos.indexOf(p); if(frameEl(i) && frameEl(i).querySelector('canvas.ph')) paintSoon(i); };
@@ -1938,6 +1942,7 @@ async function getBlob(path){
 const packPhotos = () => photos.map(p => p && p.path ? {path:p.path,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0,pw:p.pw||1,ph:p.ph||1,adj:hasAdj(p.adj) ? p.adj : undefined, lm:p.lm, orig:p.orig && p.orig.path ? {path:p.orig.path} : undefined} : null);
 async function save(){
   if(!me || !sheets.cur) return;
+  histSoon();
   const id = sheets.cur;
   if(pending.size) await Promise.allSettled([...pending]);
   const { error } = await sb.from('roarref_sheets').update({ data:{S, photos:packPhotos()}, updated_at:new Date().toISOString() }).eq('id', id);
@@ -1947,7 +1952,30 @@ async function save(){
   if(Date.now() - lastClean > 30000){ lastClean = Date.now(); cleanFiles(id); }
 }
 let thumbT = null;
-let st; function saveSoon(){ clearTimeout(st); st = setTimeout(save, 700); }
+let st; function saveSoon(){ clearTimeout(st); st = setTimeout(save, 700); histSoon(); }
+/* Undo / Redo (Alex, 11 Nov): a step is the sheet (S) and, per window, which photo sits there with its place, size, turn and settings.
+   Taken a moment after each change settles; the pixels of a Liquify are not part of it (that has its own way back). */
+const HKEYS = ['s','ox','oy','flip','rot','pw','ph'];
+let hist = [], hi = -1, histT = null, histLock = false;
+const snap = () => ({S:JSON.stringify(S), ph:photos.map(p => p ? {p, v:JSON.stringify([HKEYS.map(k => p[k]), p.adj || {}])} : null)});
+const sameSnap = (a, b) => a.S === b.S && a.ph.length === b.ph.length && a.ph.every((x, i) => (!x && !b.ph[i]) || (x && b.ph[i] && x.p === b.ph[i].p && x.v === b.ph[i].v));
+function histBtns(){ const u = $('undo'), r = $('redo'); if(u) u.disabled = hi <= 0; if(r) r.disabled = hi >= hist.length - 1; }
+function histReset(){ clearTimeout(histT); hist = [snap()]; hi = 0; histBtns(); }
+function histTake(){ if(histLock || !sheets.cur) return; const n = snap(); if(hi >= 0 && sameSnap(hist[hi], n)) return;
+  hist = hist.slice(0, hi + 1); hist.push(n); if(hist.length > 60) hist.shift(); hi = hist.length - 1; histBtns(); }
+function histSoon(){ if(histLock) return; clearTimeout(histT); histT = setTimeout(histTake, 350); }
+function histGo(d){
+  if(document.querySelector('.lq, .spage')) return; clearTimeout(histT); histTake();
+  const n = hist[hi + d]; if(!n) return; hi += d; histLock = true;
+  const before = new Set(photos.filter(Boolean));
+  S = JSON.parse(n.S);
+  photos = n.ph.map(x => { if(!x) return null; const p = x.p, [vals, adj] = JSON.parse(x.v); HKEYS.forEach((k, i) => { if(vals[i] == null) delete p[k]; else p[k] = vals[i]; }); p.adj = adj; p._cmp = false;
+    if(!before.has(p) && !pending.size){ p.path = null; upload(p, sheets.cur); } return p; });
+  if(sel >= photos.length || !photos[sel]) sel = -1; selCover = -1;
+  try{ setShape(); }catch{} render(); syncPanel(); placeControls(); histLock = false; histBtns(); save();
+}
+document.addEventListener('keydown', e => { if(!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z' && e.key.toLowerCase() !== 'y') return;
+  if(e.target.closest && e.target.closest('input:not([type=range]), textarea')) return; e.preventDefault(); histGo(e.key.toLowerCase() === 'y' || e.shiftKey ? 1 : -1); });
 async function cleanFiles(id){ // photos taken off the sheet leave the account too
   try{ const { data } = await bucket().list(`${me.id}/${id}`, {limit:200}); if(!data) return;
     const keep = new Set(photos.filter(p => p && p.path).map(p => p.path.split('/').pop()).concat(photos.filter(p => p && p.orig && p.orig.path).map(p => p.orig.path.split('/').pop()), 'thumb.jpg'));
@@ -1972,7 +2000,7 @@ async function loadSheet(row){
   render();
   await Promise.all(list.map(async (q, i) => { if(!q || !q.path) return;
     try{ const blob = await getBlob(q.path); photos[i] = Object.assign({rot:0}, q, {blob, url:URL.createObjectURL(blob)}); migrateAdj(photos[i]); if(hasAdj(photos[i].adj)) await applyFx(photos[i]); }catch{} }));
-  render();
+  render(); histReset();
 }
 async function listSheets(){
   const { data, error } = await sb.from('roarref_sheets').select('id,name,thumb,updated_at,data').order('created_at');
@@ -2206,7 +2234,7 @@ function placeControls(){
   [lb, cv].forEach(x => { x.classList.add('wide'); x.classList.remove('round'); });
   if(!lb.querySelector('.w')) lb.insertAdjacentHTML('beforeend','<span class="w">Names</span>');
   const sp = document.createElement('span'); sp.className = 'spacer';
-  bar.replaceChildren(mark, sp, $('add'), $('clear'), $('export'), $('sheetsBtn'));
+  bar.replaceChildren(mark, sp, $('undo'), $('redo'), $('add'), $('clear'), $('export'), $('sheetsBtn'));
   const mk = (parent, cls) => (...els) => { const r = document.createElement('div'); r.className = cls; els.filter(Boolean).forEach(e => r.appendChild(e)); parent.appendChild(r); return r; };
   if(isPhone()){
     const row = mk($('mpane'), 'mrow');
