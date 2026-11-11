@@ -540,7 +540,7 @@ function place(i){ // move only the picture, no full redraw while dragging
   const p = photos[i], f = frameEl(i); if(!p||!f) return;
   const r = rects(lay(), S.gap, pad())[i], b = imgBox(p, r), im = f.querySelector('img');
   Object.assign(im.style, {left:pct(b.x,r.w), top:pct(b.y,r.h), width:pct(b.w,r.w), height:pct(b.h,r.h), transform:tf(p)});
-  if(i === sel) syncPanel();
+  if(i === sel) syncPanel(true);
 }
 
 /* the lines between the windows: drag one and the window on one side grows as the other shrinks */
@@ -754,7 +754,7 @@ function migrateAdj(p){ // photos retouched on 9 Nov carried smooth / light / wa
   p.adj = {smooth:p.smooth||0, exposure:(p.light||0)/50, temp:(p.warm||0)*2};
 }
 let fxTimer = null;
-function fxSoon(p){ clearTimeout(fxTimer); fxTimer = setTimeout(() => applyFx(p), 120); }
+function fxSoon(p){ clearTimeout(fxTimer); fxTimer = setTimeout(() => applyFx(p), 60); }
 const smoothstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t*t*(3 - 2*t); };
 function blurCanvas(src, W, H, r){
   const b = document.createElement('canvas'); b.width = W; b.height = H; const bg = b.getContext('2d', {willReadFrequently:true});
@@ -774,7 +774,7 @@ async function renderAdj(p, full){
   if(BODY_KEYS.some(k => a[k])) await ensureLM(p, 'pose').catch(() => {});
   if(a.hairAmt) await ensureHair(p).catch(() => {});
   const bm = await createImageBitmap(p.blob);
-  const k0 = full ? 1 : Math.min(1, 1600 / Math.max(bm.width, bm.height));
+  const k0 = full ? 1 : Math.min(1, 1200 / Math.max(bm.width, bm.height));
   const W = Math.max(1, Math.round(bm.width*k0)), H = Math.max(1, Math.round(bm.height*k0)), S0 = Math.min(W, H);
   const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d', {willReadFrequently:true});
   g.drawImage(bm, 0, 0, W, H); const img = g.getImageData(0, 0, W, H), d = img.data;
@@ -839,6 +839,12 @@ async function renderAdj(p, full){
   return c;
 }
 async function applyFx(p){
+  if(p._fxBusy){ p._fxAgain = true; return; }
+  p._fxBusy = true;
+  try{ await applyFxNow(p); } finally { p._fxBusy = false; }
+  if(p._fxAgain){ p._fxAgain = false; applyFx(p); }
+}
+async function applyFxNow(p){
   if(!p.base) p.base = p.url;
   let url = p.base;
   if(hasAdj(p.adj)){
@@ -962,13 +968,19 @@ async function restoreOriginalPhoto(i){
 }
 /* the Adjust panel: one block (data-k="adjust") with folding groups, a slider per setting (double-click: back to 0),
    the colour-grading wheels, Hollywood / Original, Copy to every photo */
+let discC = null;
+function wheelDisc(){ // the colour disc of the grading wheels, drawn once for all three
+  if(discC) return discC;
+  discC = document.createElement('canvas'); discC.width = discC.height = 120; const cx = discC.getContext('2d'), R = 58;
+  for(let a = 0; a < 360; a += 2){ const t = a*Math.PI/180, grd = cx.createRadialGradient(60,60,0,60,60,R);
+    grd.addColorStop(0, '#808080'); grd.addColorStop(1, `hsl(${a},90%,55%)`); cx.fillStyle = grd; cx.beginPath(); cx.moveTo(60,60); cx.arc(60,60,R,t-0.03,t+0.05); cx.fill(); }
+  return discC;
+}
 function wheel(key, label){
   const w = document.createElement('div'); w.className = 'wheel'; w.dataset.g = key;
   w.innerHTML = `<b>${label}</b><canvas width="120" height="120"></canvas><input type="range" min="-100" max="100" step="1" aria-label="${label} brightness">`;
   const cv = w.querySelector('canvas'), cx = cv.getContext('2d');
-  const draw = q => { const R = 58; cx.clearRect(0,0,120,120);
-    for(let a = 0; a < 360; a += 2){ const t = a*Math.PI/180, grd = cx.createRadialGradient(60,60,0,60,60,R);
-      grd.addColorStop(0, '#808080'); grd.addColorStop(1, `hsl(${a},90%,55%)`); cx.fillStyle = grd; cx.beginPath(); cx.moveTo(60,60); cx.arc(60,60,R,t-0.03,t+0.05); cx.fill(); }
+  const draw = q => { const R = 58; cx.clearRect(0,0,120,120); cx.drawImage(wheelDisc(), 0, 0);
     const s = (q.s||0)/100*R, t = (q.h||0)*Math.PI/180; cx.strokeStyle = '#fff'; cx.lineWidth = 2; cx.beginPath(); cx.arc(60 + Math.cos(t)*s, 60 - Math.sin(t)*s, 6, 0, 7); cx.stroke(); };
   w.sync = () => { const p = photos[sel]; const q = p ? ((adjOf(p).grade || {})[key] || {}) : {}; draw(q); w.querySelector('input').value = q.l || 0; };
   const set = (patch) => { const p = photos[sel]; if(!p) return; const a = adjOf(p); a.grade = a.grade || {}; a.grade[key] = Object.assign({h:0, s:0, l:0}, a.grade[key], patch); w.sync(); fxSoon(p); };
@@ -1230,7 +1242,7 @@ function toolbar(i){
     pbtn('trash','Remove photo', ()=>{ photos[i]=null; render(); save(); }, 'del'));
   return t;
 }
-function syncPanel(){
+function syncPanel(light){
   const p = sel>=0 ? photos[sel] : null, on = !!p;
   { const c = curSheet(); const n = document.querySelector('#sheetsBtn .shn'); if(n) n.textContent = c ? c.name : 'Sheets';
     const av = document.querySelector('#sheetsBtn .av'); if(av) av.textContent = me && me.email ? me.email[0].toUpperCase() : '';
@@ -1246,7 +1258,7 @@ function syncPanel(){
   set('x', on ? Math.round(p.ox) : 0, -Math.round(r.w), Math.round(r.w), on ? Math.round(p.ox/r.w*100)+'%' : '');
   set('y', on ? Math.round(p.oy) : 0, -Math.round(r.h), Math.round(r.h), on ? Math.round(p.oy/r.h*100)+'%' : '');
   set('rot', on ? Math.round(p.rot||0) : 0, null, null, on ? Math.round(p.rot||0)+'°' : '');
-  syncAdj();
+  if(!light) syncAdj();
 }
 function zoomBy(i, f, cx=0, cy=0){
   const p = photos[i]; if(!p) return;
