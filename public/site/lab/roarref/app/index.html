@@ -102,7 +102,18 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .panel{display:none}
 /* computer (Alex, 7 Nov: "group it like the phone, the account top right"): the sheet, and a column on the right with
    Layout / Look / Window; the account and the sheet you are on, top right */
-.work{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px}
+.work{flex:1;min-height:0;display:grid;grid-template-columns:76px 320px minmax(0,1fr);gap:14px}
+/* tool rail (Alex, 11 Nov, picked from three drawings: "the 2nd"): icons on the left, one panel open at a time, the sheet big */
+.rail{order:0;display:flex;flex-direction:column;gap:4px;padding:6px;border-radius:20px;background:var(--panel);border:1px solid var(--line);align-self:start}
+.rail button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;border:0;border-radius:14px;background:transparent;color:var(--muted);font:600 10.5px var(--body);cursor:pointer;transition:background .2s,color .2s}
+.rail button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.rail button:hover{color:var(--fg)}
+.rail button[aria-pressed="true"]{background:var(--panel-2);color:var(--fg);box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.rail hr{border:0;border-top:1px solid var(--line);margin:4px 8px}
+.side{order:1}.stagewrap{order:2}
+.side .ptl{margin:0 0 2px;font:700 20px var(--display);letter-spacing:.01em}
+.side .atabs{display:none}
+.side .sec{gap:12px;padding:16px}
 .stagewrap{min-width:0}
 .side{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin}
 .sec{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px}
@@ -273,7 +284,7 @@ a.pill{text-decoration:none}
   #sheetsBtn .av{width:30px;height:30px}
   #sheetsBtn .av:empty + .shi{display:block}
   .work{display:block;flex:none}
-  .side{display:none}
+  .side,.rail{display:none}
   .stagewrap{flex:none;display:block}
   .stage{margin:0 auto}
   .panel{display:none}
@@ -332,6 +343,7 @@ img{max-width:100%}
     <div class="stagewrap" id="wrap">
       <div class="stage" id="stage"></div>
     </div>
+    <nav class="rail" id="rail" aria-label="Tools"></nav>
     <aside class="side" id="side" aria-label="Settings"></aside>
   </div>
   <div class="panel" id="panel"></div>
@@ -1215,8 +1227,9 @@ function buildAdjust(){
   tabs.innerHTML = TABS.map(([k, l, ic]) => `<button type="button" data-tab="${k}" aria-pressed="${k===adjTab}"><svg viewBox="0 0 24 24">${ic}</svg>${l}</button>`).join('');
   box.appendChild(tabs);
   const pane = {}; TABS.forEach(([k]) => { const d = document.createElement('div'); d.className = 'apane'; d.dataset.pane = k; d.hidden = k !== adjTab; box.appendChild(d); pane[k] = d; });
-  tabs.onclick = e => { const b = e.target.closest('[data-tab]'); if(!b) return; adjTab = b.dataset.tab;
-    tabs.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-pressed', x === b)); Object.keys(pane).forEach(k => pane[k].hidden = k !== adjTab); readPhoto(); };
+  box.show = k => { adjTab = k; tabs.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-pressed', x.dataset.tab === k));
+    Object.keys(pane).forEach(q => pane[q].hidden = q !== k); readPhoto(); };
+  tabs.onclick = e => { const b = e.target.closest('[data-tab]'); if(b) box.show(b.dataset.tab); };
   const status = (k, where) => { const s = document.createElement('p'); s.className = 'astat'; s.dataset.stat = k; pane[where || k].appendChild(s); };
   const row = (parent, key, label, min = -100, max = 100, step = 1) => {
     const r = document.createElement('label'); r.className = 'arow'; r.dataset.a = key;
@@ -1473,6 +1486,7 @@ function syncPanel(light){
   set('rot', on ? Math.round(p.rot||0) : 0, null, null, on ? Math.round(p.rot||0)+'°' : '');
   set('pw', on ? Math.round(Math.log2(p.pw||1)*100) : 0, null, null, on ? Math.round((p.pw||1)*100)+'%' : '');
   set('ph', on ? Math.round(Math.log2(p.ph||1)*100) : 0, null, null, on ? Math.round((p.ph||1)*100)+'%' : '');
+  { const np = $('needPhoto'); if(np) np.hidden = !!p; }
   if(!light) syncAdj();
 }
 function zoomBy(i, f, cx=0, cy=0){
@@ -1492,8 +1506,9 @@ function localPt(i, e){ // pointer relative to the window centre, in sheet units
 stage.addEventListener('pointerdown', e => {
   const f = e.target.closest('.frame'); if(!f) return;
   const i = +f.dataset.i; selCover = -1;
-  if(!photos[i]){ if(sel===i){ pickTarget=i; $('file').click(); } else { sel=i; if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; placeControls(); } render(); } return; }
+  if(!photos[i]){ if(sel===i){ pickTarget=i; $('file').click(); } else { sel=i; if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; placeControls(); } else if(!isPhone() && (railTab === 'layout' || railTab === 'look')){ railTab = 'frame'; placeControls(); } render(); } return; }
   if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; sel = i; placeControls(); render(); }
+  else if(!isPhone() && (railTab === 'layout' || railTab === 'look')){ railTab = 'frame'; sel = i; placeControls(); render(); }
   else if(sel !== i){ sel = i; render(); }
   ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
   stage.setPointerCapture(e.pointerId);
@@ -1534,7 +1549,7 @@ stage.addEventListener('dblclick', e => {
   const f = e.target.closest('.frame'); if(!f) return; const i=+f.dataset.i;
   if(photos[i]){ reset(photos[i]); place(i); save(); }
 });
-document.addEventListener('pointerdown', e => { if(!e.target.isConnected) return; if(sel>=0 && !e.target.closest('.stage, .modal, .lq, .bar, .panel, .side, .mpane, .mtabs, .tools, .ghost')){ sel=-1; render(); } });
+document.addEventListener('pointerdown', e => { if(!e.target.isConnected) return; if(sel>=0 && !e.target.closest('.stage, .modal, .lq, .bar, .panel, .side, .rail, .mpane, .mtabs, .tools, .ghost')){ sel=-1; render(); } });
 document.addEventListener('keydown', e => {
   if(e.target.closest && e.target.closest('input')) return;
   if(e.key==='Escape' && (sel>=0 || selCover>=0)){ sel=-1; selCover=-1; render(); return; }
@@ -1969,12 +1984,20 @@ function fillMTools(){ // the picked window's buttons, in the Window tab on a ph
   if(sel >= 0 && sel < rects(lay(), S.gap, pad()).length){ const t = toolbar(sel); tr.append(...t.childNodes); }
   else { const h = document.createElement('p'); h.className='hint2'; h.style.flex='1'; h.textContent = isPhone() ? 'Tap a window on the sheet to work on it.' : 'Click a window on the sheet to work on it.'; tr.appendChild(h); }
 }
+const RAIL = [['layout','Layout','<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 5v14M15 5v14"/>'],
+  ['look','Look','<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/>'],
+  ['frame','Frame','<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'],
+  ['edit','Edit','<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'],
+  ['face','Face','<circle cx="12" cy="11" r="7"/><path d="M9 10h.01M15 10h.01M9.5 14c1.5 1.2 3.5 1.2 5 0"/>'],
+  ['body','Body','<path d="M9 3c-1 4 1 6 0 9s-1 6 0 9M15 3c1 4-1 6 0 9s1 6 0 9M7 12h3M14 12h3"/>'],
+  ['hair','Hair','<path d="M5 20c-1-6 0-14 7-14s8 8 7 14M8 12c2-1 5-3 6-6"/>']];
+let railTab = 'layout'; try{ const r0 = localStorage.getItem('roarref-rail'); if(RAIL.some(x => x[0] === r0)) railTab = r0; }catch{}
 function placeControls(){
   const bar = document.querySelector('.bar'), mark = bar.querySelector('.mark'), stash = $('stash');
   // everything back to the stash first, then out to where this screen wants it
   ['layouts','ratios','stack','sheetSw','fillSw','cover','labels','sheetsBtn','add','clear','export','gapCtl','radCtl','even'].forEach(id => stash.appendChild($(id)));
   ['zoom','pw','ph','x','y','rot','adjust'].forEach(k => stash.appendChild(document.querySelector(`[data-k="${k}"]`)));
-  $('mpane').innerHTML = ''; $('side').innerHTML = '';
+  $('mpane').innerHTML = ''; $('side').innerHTML = ''; $('rail').innerHTML = '';
   const lb = $('labels'), cv = $('cover');
   [lb, cv].forEach(x => { x.classList.add('wide'); x.classList.remove('round'); });
   if(!lb.querySelector('.w')) lb.insertAdjacentHTML('beforeend','<span class="w">Names</span>');
@@ -1990,23 +2013,16 @@ function placeControls(){
       row(document.querySelector('[data-k="adjust"]')); }
     requestAnimationFrame(moveLens2);
   } else {
-    const side = $('side');
-    // every section folds from its title (Alex, 11 Nov: "everything should fold"); which ones are shut is kept in this browser
-    let shut = []; try{ shut = JSON.parse(localStorage.getItem('roarref-shut') || '[]'); }catch{}
-    const sec = (title, hint) => { const s2 = document.createElement('section'); s2.className = 'sec' + (shut.includes(title) ? ' shut' : '');
-      s2.innerHTML = `<button type="button" class="sec-h" aria-expanded="${!shut.includes(title)}">${title}<svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></button>` + (hint ? `<p class="sec-hint">${hint}</p>` : '');
-      s2.querySelector('.sec-h').onclick = () => { const now = s2.classList.toggle('shut'); s2.querySelector('.sec-h').setAttribute('aria-expanded', !now);
-        shut = shut.filter(t => t !== title); if(now) shut.push(title); try{ localStorage.setItem('roarref-shut', JSON.stringify(shut)); }catch{} };
-      side.appendChild(s2); return mk(s2, 'srow'); };
-    let row = sec('Layout');
-    row($('layouts')); row($('ratios'), $('stack'), $('even'));
-    row = sec('Look');
-    row($('sheetSw')); row($('fillSw')); row($('gapCtl')); row($('radCtl')); row(lb, cv);
-    row = sec('Window');
-    const tr = row(); tr.id = 'mtools';
-    ['zoom','pw','ph','x','y','rot'].forEach(k => row(document.querySelector(`[data-k="${k}"]`)));
-    row = sec('Adjust');
-    row(document.querySelector('[data-k="adjust"]'));
+    const side = $('side'), rail = $('rail'), PHOTO = ['frame','edit','face','body','hair'];
+    rail.innerHTML = RAIL.map(([k, l, ic], i) => (i === 2 ? '<hr>' : '') + `<button type="button" data-rail="${k}" aria-pressed="${k===railTab}" title="${l}"><svg viewBox="0 0 24 24">${ic}</svg>${l}</button>`).join('');
+    rail.onclick = e => { const b2 = e.target.closest('[data-rail]'); if(!b2) return; railTab = b2.dataset.rail; try{ localStorage.setItem('roarref-rail', railTab); }catch{} placeControls(); };
+    const s2 = document.createElement('section'); s2.className = 'sec'; side.appendChild(s2);
+    s2.innerHTML = `<h2 class="ptl">${RAIL.find(x => x[0] === railTab)[1]}</h2>` + (PHOTO.includes(railTab) && railTab !== 'frame' ? '<p class="hint2" id="needPhoto">Click a photo on the sheet to work on it.</p>' : '');
+    const row = mk(s2, 'srow');
+    if(railTab === 'layout'){ row($('layouts')); row($('ratios'), $('stack'), $('even')); }
+    else if(railTab === 'look'){ row($('sheetSw')); row($('fillSw')); row($('gapCtl')); row($('radCtl')); row(lb, cv); }
+    else if(railTab === 'frame'){ const tr = row(); tr.id = 'mtools'; ['zoom','pw','ph','x','y','rot'].forEach(k => row(document.querySelector(`[data-k="${k}"]`))); }
+    else { const box = document.querySelector('[data-k="adjust"]'); row(box); box.show(railTab); }
   }
   fillMTools();
   moveLens(); moveRatioLens(); fit();
