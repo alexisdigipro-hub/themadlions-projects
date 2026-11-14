@@ -1,0 +1,99 @@
+/* The Lab's product pages (Alex, 30 Oct 2026: "like Apple, Google Store, Samsung, Airmail, in our own terms"; 31 Oct: the same on
+   every Lab page, photos in Soul 2, one warm palette). Shared by every app page on top of its own styles and ../fresh.css:
+   a short claim, a photo of people at work with the app's window over it, the numbers, people on set, before and after
+   (RoarMorph), why a Roar app. The photos are stand-ins until Alex's own shoot: photo-hero.jpg (16:9) and photo-set,
+   photo-van/-2, photo-studio/-3 (4:5), same names, they drop in. */
+.hero-head { max-width: 1100px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.hero .hero-head h1.brand { margin: 22px 0 0; font-size: clamp(30px, 3.6vw, 52px); align-items: center; gap: 14px; justify-content: center; }
+.hero .hero-head h1.brand .f-icon { width: clamp(52px, 5vw, 76px); }
+.hero .hero-head h1.brand .beta { margin-bottom: 0; align-self: center; }
+.claim { margin: clamp(18px, 2.4vw, 30px) 0 0; font-family: Jost, var(--sans); font-weight: 200; font-size: clamp(54px, 9.6vw, 156px); line-height: .9; letter-spacing: -.02em; text-wrap: balance; }
+.claim b { font-weight: 800; background: linear-gradient(180deg, #fff 30%, #ff8a7f); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-head .lead { margin-top: clamp(20px, 2.4vw, 30px); max-width: 760px; }
+.hero-head .cta { justify-content: center; margin-top: clamp(24px, 3vw, 34px); }
+.hero-head .cta-note { text-align: center; margin: 14px 0 0; }
+.hero-head .hero-meta { justify-content: center; }
+.scene { position: relative; max-width: 1480px; margin: clamp(44px, 6vw, 80px) auto 0; padding-bottom: clamp(120px, 16vw, 260px); }
+.scene-photo { margin: 0; position: relative; border-radius: 30px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 16 / 8; }
+.scene-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; }
+.scene-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(18,20,23,.75)); pointer-events: none; }
+.scene-photo figcaption { position: absolute; left: clamp(18px, 2.4vw, 32px); bottom: clamp(16px, 2.2vw, 28px); z-index: 1; max-width: 42%; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; color: rgba(238,240,243,.82); line-height: 1.5; }
+.scene .frame { position: absolute; right: clamp(-10px, 1vw, 24px); bottom: 0; width: 54%; margin: 0; max-width: none; }
+.ticker { margin-top: clamp(56px, 7vw, 96px); }
+/* the numbers */
+.nums-sec { padding-top: clamp(64px, 8vw, 120px); }
+.nums { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.num { display: flex; flex-direction: column; gap: 12px; padding: clamp(22px, 2.4vw, 32px); min-height: 200px; }
+.num b { font-family: Jost, var(--sans); font-weight: 300; font-size: clamp(48px, 5.6vw, 84px); line-height: .9; letter-spacing: -.02em; }
+.num b small { font-size: .42em; font-weight: 400; margin-left: 4px; color: var(--muted); letter-spacing: 0; }
+.num:first-child b { color: var(--red-hi); text-shadow: 0 0 40px rgba(255,59,47,.35); }
+.num span { margin-top: auto; font-size: 15px; line-height: 1.5; color: var(--muted); }
+/* people at work */
+.people { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.person { position: relative; margin: 0; border-radius: 26px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 4 / 5; isolation: isolate; }
+.person img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
+.person:hover img { transform: scale(1.04); }
+.person::after { content: ''; position: absolute; inset: 0; z-index: 0; background: linear-gradient(180deg, transparent 42%, rgba(12,13,16,.88)); pointer-events: none; }
+.person figcaption { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: clamp(18px, 2vw, 26px); display: grid; gap: 6px; }
+.person .who { justify-self: start; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: rgba(22,24,28,.6); border: 1px solid var(--line-2); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: #ffb3ab; }
+.person b { font-family: Jost, var(--sans); font-size: clamp(22px, 2vw, 30px); font-weight: 700; line-height: 1.05; }
+.person figcaption > span:last-child { font-size: 14.5px; line-height: 1.5; color: rgba(238,240,243,.78); }
+/* before and after */
+.ba { position: relative; border-radius: 28px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 1600 / 717; user-select: none; -webkit-user-select: none; touch-action: pan-y; box-shadow: 0 40px 120px rgba(0,0,0,.5); }
+.ba img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ba img.after { clip-path: inset(0 0 0 var(--x)); }
+.ba-line { position: absolute; top: 0; bottom: 0; left: var(--x); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 18px rgba(0,0,0,.5); pointer-events: none; }
+.ba-line i { position: absolute; top: 50%; left: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; display: grid; place-items: center; background: rgba(22,24,28,.55); border: 1px solid rgba(255,255,255,.5); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); color: #fff; }
+.ba-line i svg { width: 22px; height: 22px; }
+.ba-tag { position: absolute; top: clamp(12px, 2vw, 22px); z-index: 1; display: grid; gap: 2px; padding: 8px 14px; border-radius: 16px; background: rgba(22,24,28,.62); border: 1px solid var(--line-2); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); pointer-events: none; }
+.ba-tag b { font-size: 13.5px; } .ba-tag small { font-family: var(--mono); font-size: 10.5px; color: var(--muted); letter-spacing: .04em; }
+.ba-tag.l { left: clamp(12px, 2vw, 22px); } .ba-tag.r { right: clamp(12px, 2vw, 22px); text-align: right; border-color: rgba(255,90,80,.5); }
+.ba-tag.r b { color: #ff8f86; }
+.ba input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
+.ba input:focus-visible + * , .ba:focus-within .ba-line i { outline: 2px solid var(--red-hi); outline-offset: 3px; }
+.ba-bars { margin-top: 18px; display: grid; gap: 10px; max-width: 760px; }
+.ba-bars div { display: grid; grid-template-columns: 110px minmax(0, 1fr) 80px; gap: 14px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.ba-bars i { display: block; height: 10px; border-radius: 99px; background: rgba(255,255,255,.18); width: 0; transition: width 1.6s var(--ease); }
+.ba-bars.in i { width: var(--w); }
+.ba-bars .me i { background: linear-gradient(90deg, #ff6b5e, #d40000); box-shadow: 0 0 16px rgba(255,59,47,.5); min-width: 10px; }
+.ba-bars b { color: var(--text); font-weight: 500; text-align: right; }
+.ba-bars .me b { color: #ff8f86; }
+/* why a Roar app */
+.why-end { justify-self: end; display: grid; gap: 18px; justify-items: end; }
+.why-end .sub { justify-self: end; }
+.why-end .legal { display: flex; gap: 8px; flex-wrap: wrap; margin: 0; }
+.why { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.wy { display: flex; flex-direction: column; gap: 12px; padding: clamp(22px, 2.4vw, 30px); min-height: 250px; }
+.wy h3 { margin: 6px 0 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+.wy p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .person img, .ba-bars i { transition: none; } }
+@media (max-width: 1100px) {
+  .nums, .why { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scene .frame { width: 70%; }
+}
+@media (max-width: 760px) {
+  .hero .hero-head h1.brand { font-size: 30px; flex-wrap: nowrap; } .hero .hero-head h1.brand .f-icon { width: 48px; }
+  .claim { font-size: clamp(50px, 15vw, 80px); }
+  .scene { padding-bottom: 0; }
+  .scene-photo { aspect-ratio: 4 / 5; border-radius: 24px; }
+  .scene-photo img { object-position: 46% 50%; }
+  .scene-photo figcaption { max-width: none; left: 18px; right: 18px; text-align: left; top: 16px; bottom: auto; }
+  .scene-photo::after { background: linear-gradient(180deg, rgba(18,20,23,.7), transparent 30%, transparent 70%, rgba(18,20,23,.6)); }
+  .scene .frame { position: relative; right: auto; width: auto; margin: -64px 12px 0; }
+  .people { grid-template-columns: minmax(0, 1fr); }
+  .person { aspect-ratio: 4 / 4.6; }
+  .ba { aspect-ratio: 4 / 3.4; border-radius: 22px; }
+  .ba-tag small { display: none; }
+  .ba-bars div { grid-template-columns: 82px minmax(0, 1fr) 66px; gap: 10px; }
+  .why-end, .why-end .sub { justify-self: start; justify-items: start; }
+  .nums, .why { grid-template-columns: minmax(0, 1fr); }
+  .num { min-height: 0; } .wy { min-height: 0; }
+}
+
+/* the other pages: the app's window sits under the photo, overlapping it, in the middle */
+.scene.stack { padding-bottom: 0; }
+.scene.stack .frame { position: relative; left: auto; right: auto; bottom: auto; width: min(1180px, 90%); max-width: none; margin: clamp(-220px, -14vw, -60px) auto 0; }
+.scene.stack .frame.ph { width: auto; }
+.scene.stack .scene-photo figcaption { top: clamp(16px, 2.2vw, 28px); bottom: auto; }
+.scene.stack .scene-photo::after { background: linear-gradient(180deg, rgba(18,20,23,.6), transparent 26%, transparent 60%, rgba(18,20,23,.7)); }
+@media (max-width: 760px) { .scene.stack .frame { width: auto; margin: -64px 12px 0; } }
