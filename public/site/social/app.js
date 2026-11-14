@@ -54,9 +54,13 @@ function setLook(k, v) {
 }
 
 /* ---------- words: English is the key, Greek comes later in EL ---------- */
-let LANG = 'en';
-try { LANG = localStorage.getItem('roardino-lang') || 'en'; } catch { /* private window */ }
-const EL = {};
+// Greek (Alex, 14 Nov): el.js holds the table; with nothing chosen yet, a phone or computer set to Greek gets Greek
+let LANG = /^el\b/i.test(navigator.language || '') ? 'el' : 'en';
+try { LANG = localStorage.getItem('roardino-lang') || LANG; } catch { /* private window */ }
+const EL = window.RD_EL || {};
+if (LANG === 'el' && !window.RD_EL) LANG = 'en';
+document.documentElement.lang = LANG;
+function setLang(l) { try { localStorage.setItem('roardino-lang', l); } catch { /* private window */ } location.reload(); }
 const t = (s, vars) => { let x = (LANG === 'el' && EL[s]) || s; if (vars) for (const [k, v] of Object.entries(vars)) x = x.replaceAll(`{${k}}`, v); return x; };
 const LOCALE = () => (LANG === 'el' ? 'el-GR' : 'en-GB');
 
@@ -750,7 +754,10 @@ function seg(items, on, pick) {
 }
 
 /* ---------- the frame: top bar, bottom bar on a phone ---------- */
-const NAV = [['feed', 'Feed', 'home'], ['people', 'Industry', 'people'], ['search', 'Search', 'search'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal'], ['chat', 'Chat', 'talk']];
+// Calls and Seminars are put away (Alex, 14 Nov: "take Calls, Seminars off roardino.com"): nothing of them shows anywhere;
+// their pages and data stay, and true here brings all of it back
+const JOBS = false;
+const NAV = [['feed', 'Feed', 'home'], ['people', 'Industry', 'people'], ['search', 'Search', 'search'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal'], ['chat', 'Chat', 'talk']].filter(([k]) => JOBS || (k !== 'calls' && k !== 'seminars'));
 // the chat is RoarMe (Alex, 4 Nov): the same Roar Accounts, so it lives here in a frame
 const ROARME = 'https://alexisdigipro-hub.github.io/roarme/';
 let openTabNext = null;
@@ -763,7 +770,7 @@ function topBar(on) {
   const fill = () => put(menu,
     h('a', { href: '#/settings' }, icon('gear'), t('Settings')),
     m ? h('a', { href: `#/p/${m.id}`, onclick: () => { openTabNext = 'saved'; if (location.hash === `#/p/${m.id}`) route(); } }, icon('bookmark'), t('Saved')) : null,
-    h('a', { href: '#/me' }, icon('star'), t('Applications and seats')),
+    h('a', { href: '#/me' }, icon(JOBS ? 'star' : 'people'), JOBS ? t('Applications and seats') : t('My profiles')),
     // the company site's contact form, for the administrators (Alex, 9 Nov)
     isAdmin ? h('a', { href: '#/inbox' }, icon('mail'), t('Site messages'), siteUnread ? h('span', { class: 'menu-n' }, String(siteUnread)) : null) : null,
     h('button', { type: 'button', onclick: (e) => { e.stopPropagation(); setPref('theme', dark() ? 'light' : 'dark'); fill(); } }, icon(dark() ? 'sun' : 'moon'), dark() ? t('Switch to light') : t('Switch to dark')),
@@ -872,10 +879,10 @@ async function route() {
     if (a === 'p' && b) return await viewPerson(b);
     if (a === 'post' && b) { const { data: one } = await sb.from('roardino_posts').select('*, person:roardino_people(id,name,avatar,kinds,headline)').eq('id', b).maybeSingle(); if (!one) return await viewFeed(); await viewPerson(one.person_id); await sign([one.person?.avatar, ...(one.media || []).map((m) => m.path)]); return openPost(one, one.person); }
     if (a === 'u' && b) { const { data: u } = await sb.from('roardino_people').select('id').eq('handle', decodeURIComponent(b).toLowerCase()).maybeSingle(); return await viewPerson(u?.id || '00000000-0000-0000-0000-000000000000'); }
-    if (a === 'calls') return await viewCalls();
-    if (a === 'c' && b) return await viewCall(b);
-    if (a === 'seminars') return await viewSeminars();
-    if (a === 's' && b) return await viewSeminar(b);
+    if (JOBS && a === 'calls') return await viewCalls();
+    if (JOBS && a === 'c' && b) return await viewCall(b);
+    if (JOBS && a === 'seminars') return await viewSeminars();
+    if (JOBS && a === 's' && b) return await viewSeminar(b);
     if (a === 'me') return await viewMe();
     if (a === 'inbox' && isAdmin) return await viewInbox();
     if (a === 'chat') return viewChat();
@@ -985,7 +992,7 @@ async function viewFront() {
   const counts = h('div', { class: 'counts' });
   sb.rpc('roardino_counts').then(({ data }) => {
     if (!data) return;
-    put(counts, ...[[data.people, t('profiles')], [data.calls, t('open calls')], [data.seminars, t('seminars')]].filter(([n]) => n > 0).map(([n, s]) => h('div', {}, h('b', {}, String(n)), h('small', {}, s))));
+    put(counts, ...[[data.people, t('profiles')], [data.calls, t('open calls')], [data.seminars, t('seminars')]].filter(([n], i) => n > 0 && (JOBS || !i)).map(([n, s]) => h('div', {}, h('b', {}, String(n)), h('small', {}, s))));
   });
   put(app, 
     h('header', { class: 'bar' }, h('div', { class: 'bar-in' }, h('span', { class: 'brand' }, mark()))),
@@ -1120,8 +1127,8 @@ async function viewFeed() {
   const stream = [];
   // a computer (Alex, 8 Nov): the calls and the seminars sit in a glass column on the right, not among the posts
   const sideCol = !isPhone();
-  cards.forEach((c, i) => { stream.push(c); if (!sideCol && prefs.feedCalls && i % 3 === 2 && openCalls.length) stream.push(callTile(openCalls.shift())); });
-  if (!sideCol && prefs.feedCalls && stream.length < 4) openCalls.slice(0, 2).forEach((c) => stream.push(callTile(c)));
+  cards.forEach((c, i) => { stream.push(c); if (JOBS && !sideCol && prefs.feedCalls && i % 3 === 2 && openCalls.length) stream.push(callTile(openCalls.shift())); });
+  if (JOBS && !sideCol && prefs.feedCalls && stream.length < 4) openCalls.slice(0, 2).forEach((c) => stream.push(callTile(c)));
   if (sideCol) drawFeedSide(mid.parentElement, calls.data || [], seminars.data || []);
   crumb('home: cards built');
   // on a phone the posts come a few at a time, the next ones as the end comes near (Alex, 5 Nov: the iPhone reloaded
@@ -1193,7 +1200,7 @@ function drawFeedSide(two, calls, seminars) {
     ...seminars.filter((x) => !x.starts_at || new Date(x.starts_at).getTime() > now).map((x) => ({ at: x.created_at, el:
       card(`#/s/${x.id}`, x.kind === 'online' ? t('Online seminar') : t('Seminar'), '#a77bff', x.title,
         [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : '', picOf('seminar', x.id)) }))]
-    .sort((p, q) => String(q.at || '').localeCompare(String(p.at || ''))).slice(0, 5).map((x) => x.el);
+    .sort((p, q) => String(q.at || '').localeCompare(String(p.at || ''))).slice(0, JOBS ? 5 : 0).map((x) => x.el);
   // under the line, the Lab's apps for film people (Alex, 8 Nov), the same glass, lower; each opens its web app
   // straight away, ready to sign in and work
   const APPS = [
@@ -1208,7 +1215,7 @@ function drawFeedSide(two, calls, seminars) {
   const appsHead = h('div', { class: 'fs-apps-head' }, h('b', {}, t('Our apps')), h('small', {}, t('Made by The Mad Lions Lab')));
   // a small title over the newest too, the same as over the apps (Alex, 9 Nov: Home fresher)
   const newHead = h('div', { class: 'fs-apps-head' }, h('b', {}, t('Latest')), h('small', {}, t('Calls & seminars')));
-  const side = h('aside', { class: 'feed-side' }, newHead, ...items, sep, appsHead, ...apps);
+  const side = h('aside', { class: 'feed-side' }, ...(JOBS ? [newHead, ...items, sep] : []), appsHead, ...apps);
   two.append(side);
   // the column never scrolls: the apps always show, and as many of the five as the screen holds above them
   const fit = () => {
@@ -1229,7 +1236,7 @@ function meCard() {
     return h('section', { class: 'card me-card' }, h('div', { class: 'me-cover' }),
       h('div', { class: 'me-in', style: { marginTop: '16px' } },
         h('h3', {}, t('Make your profile')),
-        h('p', { class: 'hint', style: { marginBottom: '14px' } }, t('To post your work, apply to calls and be found, you need a profile. It takes two minutes.')),
+        h('p', { class: 'hint', style: { marginBottom: '14px' } }, JOBS ? t('To post your work, apply to calls and be found, you need a profile. It takes two minutes.') : t('To post your work and be found, you need a profile. It takes two minutes.')),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
           h('a', { class: 'btn main', href: '#/edit/new' }, icon('plus'), t('Create your profile')),
           h('a', { class: 'btn', href: '#/edit/kid' }, icon('child'), t('My child\'s profile')))));
@@ -1323,9 +1330,8 @@ function meTiles() {
     m ? noPhone(tile(`#/edit/${m.id}`, 'edit', t('Edit'))) : tile('#/edit/new', 'plus', t('Profile')),
     themeTile,
     tile('#/settings', 'gear', t('Settings')),
-    phoneTile('#/calls', 'calls', t('Calls')),
-    phoneTile('#/seminars', 'cal', t('Seminars')),
-    tile('#/me', 'star', t('Applied')),
+    ...(JOBS ? [phoneTile('#/calls', 'calls', t('Calls')), phoneTile('#/seminars', 'cal', t('Seminars'))] : []),
+    tile('#/me', JOBS ? 'star' : 'people', JOBS ? t('Applied') : t('Profiles')),
     tile('#/edit/kid', 'child', t('Child')),
     h('button', { type: 'button', class: 'btn main mt out', 'aria-label': t('Sign out'), onclick: () => sb.auth.signOut() }, ...inner('out', t('Sign out'))));
 }
@@ -1433,7 +1439,7 @@ function createMenu() {
     tile('grid', t('Portfolio'), t('A post of your work'), () => composeWin('work', m.id, () => route())),
     tile('pic', t('Personal'), t('A photo of you'), () => composeWin('photo', m.id, () => route())),
     tile('rings', t('Story'), t('For 24 hours'), () => storySource(pick)),
-    tile('calls', t('Call'), t('Casting or crew'), () => { location.hash = '#/calls'; setTimeout(() => editCall(), 400); })), pick), null);
+    JOBS ? tile('calls', t('Call'), t('Casting or crew'), () => { location.hash = '#/calls'; setTimeout(() => editCall(), 400); }) : null), pick), null);
 }
 function composeWin(kind = 'work', asId = null, after = () => viewFeed()) {
   let close = null;
@@ -2197,7 +2203,7 @@ function searchHead(onType) {
   setTimeout(() => { if (!peopleQ) inp.focus({ preventScroll: true }); }, 350);
   return h('div', { class: 's-top' },
     h('label', { class: 's-field' }, h('span', { class: 's-ic', html: ICON.search }), inp, clear),
-    seg([['people', t('People')], ['posts', t('Posts')], ['calls', t('Calls')]], searchScope, (k) => { searchScope = k; viewSearch(); }));
+    seg([['people', t('People')], ['posts', t('Posts')], ['calls', t('Calls')]].filter(([k]) => JOBS || k !== 'calls'), searchScope, (k) => { searchScope = k; viewSearch(); }));
 }
 async function viewSearch() {
   if (searchScope === 'people') return viewPeople({ search: true });
@@ -2323,7 +2329,7 @@ async function viewPeople(opts = {}) {
     put(sideBox, h('div', { class: 'ind-groups', role: 'tablist' }, GROUPS.map(([k, sd, name, short, line, hue, ic]) =>
       h('button', { type: 'button', role: 'tab', 'aria-selected': String(peopleSide === k), class: 'ind-g' + (peopleSide === k ? ' on' : ''), style: { '--c': hue }, onclick: () => { peopleSide = k; peopleKinds = new Set(); draw(); } },
         h('span', { class: 'ind-g-ic', html: ICON[ic] }),
-        h('span', { class: 'ind-g-t' }, h('b', {}, h('span', { class: 'long' }, t(name)), h('span', { class: 'short' }, t(short))), h('small', {}, t(line))),
+        h('span', { class: 'ind-g-t' }, h('b', {}, h('span', { class: 'long' }, t(name)), h('span', { class: 'short' }, (LANG === 'el' && EL['short:' + short]) || short)), h('small', {}, t(line))),
         h('span', { class: 'ind-g-n' }, String(inGroup(sd)))))));
     // the specialties as small tinted chips, one tidy line per side (Alex, 5 Nov: "more tidy, no need for glass")
     const sd = SIDES[peopleSide];
@@ -2408,7 +2414,7 @@ async function viewPerson(id) {
   // shown, so the phone's Contact window gets working buttons too
   const contactList = () => (own ? [] : p.minor
     ? [h('button', { type: 'button', class: 'btn sm', onclick: () => messageOnRoarMe(p) }, icon('talk'), t('Message the parent')), p.guardian?.email && h('a', { class: 'btn sm', href: `mailto:${p.guardian.email}` }, icon('mail'), t('Email the parent')), p.guardian?.phone && h('a', { class: 'btn sm', href: `tel:${p.guardian.phone}` }, icon('phone'), t('Call the parent'))]
-    : [h('button', { type: 'button', class: 'btn sm main', onclick: () => messageOnRoarMe(p) }, icon('talk'), t('Message')), K.email && h('a', { class: 'btn sm', href: `mailto:${K.email}` }, icon('mail'), t('Email')), K.phone && h('a', { class: 'btn sm', href: `tel:${K.phone}` }, icon('phone'), t('Call')), C.site && h('a', { class: 'btn sm', href: /^https?:/.test(C.site) ? C.site : `https://${C.site}`, target: '_blank', rel: 'noopener' }, icon('globe'), t('Website'))]).filter(Boolean);
+    : [h('button', { type: 'button', class: 'btn sm main', onclick: () => messageOnRoarMe(p) }, icon('talk'), t('Message')), K.email && h('a', { class: 'btn sm', href: `mailto:${K.email}` }, icon('mail'), t('Email')), K.phone && h('a', { class: 'btn sm', href: `tel:${K.phone}` }, icon('phone'), LANG === 'el' ? 'Κλήση' : t('Call')), C.site && h('a', { class: 'btn sm', href: /^https?:/.test(C.site) ? C.site : `https://${C.site}`, target: '_blank', rel: 'noopener' }, icon('globe'), t('Website'))]).filter(Boolean);
   const contact = contactList();
   const reel = p.reel ? h('video', { class: 'reel', src: urlOf(p.reel), controls: true, playsInline: true, preload: 'metadata' }) : ytEmbed(p.reel_url) ? h('iframe', { class: 'reel', src: ytEmbed(p.reel_url), allow: 'autoplay; fullscreen; picture-in-picture', allowFullscreen: true, title: 'Showreel' }) : null;
   // Instagram's profile (Alex, 4 Nov): the round picture, the name with the buttons, the numbers, the bio; then Work,
@@ -3381,7 +3387,9 @@ function viewSettings() {
       row(t('Theme'), t('Auto follows your phone or computer.'), choice('theme', [['light', t('Light')], ['dark', t('Dark')], ['auto', t('Auto')]])),
       row(t('Accent colour'), t('The colour of buttons, the chosen tab and the glow, in light and dark.'), (() => { const box = h('div', { class: 'swatches', role: 'radiogroup' }); const draw = () => put(box, ACCENTS.map(([k, name, g]) => h('button', { type: 'button', class: 'swatch' + (prefs.accent === k ? ' on' : ''), role: 'radio', 'aria-checked': String(prefs.accent === k), 'aria-label': t(name), title: t(name), style: { '--sw': `linear-gradient(135deg,${g})` }, onclick: () => { setPref('accent', k); draw(); } }))); draw(); return box; })()),
       row(t('Text size'), null, choice('text', [['normal', t('Normal')], ['large', t('Large')]])),
-      row(t('Language'), t('Greek is on the way.'), h('div', { class: 'seg' }, h('button', { type: 'button', class: 'on' }, 'English'), h('button', { type: 'button', disabled: true, title: t('Soon') }, 'Ελληνικά')))),
+      row(t('Language'), t('Roardino in Greek or in English.'), h('div', { class: 'seg' },
+        h('button', { type: 'button', class: LANG === 'en' ? 'on' : '', onclick: () => LANG !== 'en' && setLang('en') }, 'English'),
+        h('button', { type: 'button', class: LANG === 'el' ? 'on' : '', onclick: () => LANG !== 'el' && setLang('el') }, 'Ελληνικά')))),
     isAdmin ? designSection(row) : null,
     // the company site's messages, reachable on a phone too
     isAdmin ? h('section', { class: 'sec' }, h('h2', {}, t('Admin')),
@@ -3391,7 +3399,7 @@ function viewSettings() {
       row(t('Contacts'), t('Everyone you talk to.'), h('button', { type: 'button', class: 'btn sm', onclick: () => openChat('contacts') }, icon('user'), t('Open'))),
       row(t('Calls'), t('Voice and video calls you made and missed.'), h('button', { type: 'button', class: 'btn sm', onclick: () => openChat('calls') }, icon('phone'), t('Open')))),
     h('section', { class: 'sec' }, h('h2', {}, t('Feed')),
-      row(t('Calls in the feed'), t('Open calls show between the posts.'), toggle('feedCalls')),
+      JOBS ? row(t('Calls in the feed'), t('Open calls show between the posts.'), toggle('feedCalls')) : null,
       row(t('Videos start muted'), null, toggle('mutedVideos')),
       // a setting for everyone (Alex, 5 Nov): the feed with every post, also the ones already seen, kept on the account; and a clean start
       row(t('Show posts I\'ve seen'), t('On: the feed always shows every post. Off: a refresh shows only what is new.'), h('input', { type: 'checkbox', class: 'switch', checked: !!prefs.showSeen, onchange: (e) => { setPref('showSeen', e.target.checked); feedFresh = true; sb.auth.updateUser?.({ data: { roardino_show_seen: e.target.checked } }).then(({ data }) => { if (data?.user) session.user = data.user; }).catch(() => {}); } })),
