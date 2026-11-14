@@ -2474,7 +2474,7 @@ async function viewPerson(id) {
     p.cv ? h('div', { class: 'acts' }, h('a', { class: 'btn', href: urlOf(p.cv), target: '_blank', rel: 'noopener' }, t('Open the CV'))) : null,
     !p.bio && !facts.length && !reel && !skillRows.length && !(d.credits || []).length && !d.studies ? h('div', { class: 'empty' }, t('No details yet.')) : null);
   const photoPosts = (grid || []).filter((g) => g.kind === 'photo');
-  const pics = h('div', { class: 'grid' }, photos.length || photoPosts.length ? [...photoPosts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Photo'), onclick: () => openPost(g, p) }, m0?.type === 'video' ? cellVideo(m0) : null); }), ...photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }))] : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
+  const pics = h('div', { class: 'grid' }, photos.length || photoPosts.length ? [...photoPosts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Photo'), onclick: () => openPost(g, p) }, m0?.type === 'video' ? cellVideo(m0) : null); }), ...photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }))] : own ? firstPost('pic', t('Add your first photo'), t('Photos of you: headshots, portraits, behind the scenes.')) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
   const work = gridBlock(p, (grid || []).filter((g) => g.kind !== 'photo'), own);
   const body = h('div');
   const tabRow = h('div', { class: 'ig-tabs' });
@@ -2567,6 +2567,12 @@ function phoneHead(p, { own, stats, theirStories, photos, followBtn, contactList
 // the work grid; on my own profile a long press lifts a post and it can be dragged to a new place (Alex, 5 Nov: "reorder
 // when you hold a post; drag it properly, professionally; no arrows, no Reorder button"): the others make room with a
 // soft glide, the grid scrolls near the edges, the new order is kept when the finger lets go
+// an empty tab of my own profile (Alex, 14 Nov, from a reference): a big line, a small one, a wide Create
+function firstPost(ic, title, line) {
+  return h('div', { class: 'empty first-post', style: { gridColumn: '1/-1' } },
+    h('span', { class: 'fp-ic', html: ICON[ic] }), h('b', {}, title), h('p', {}, line),
+    h('button', { type: 'button', class: 'btn main fp-btn', onclick: createMenu }, t('Create')));
+}
 function gridBlock(p, rows, own) {
   const box = h('div', { class: 'grid' + (own ? ' can-sort' : '') });
   async function save() {
@@ -2583,7 +2589,7 @@ function gridBlock(p, rows, own) {
     c._row = r;
     return c;
   };
-  if (!rows.length) put(box, h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, own ? [t('Add your first work.'), h('div', { style: { marginTop: '12px' } }, h('button', { type: 'button', class: 'btn sm main', onclick: createMenu }, icon('plus'), t('Create')))] : t('No work posted yet.')));
+  if (!rows.length) put(box, own ? firstPost('grid', t('Create your first post'), t('Show your work: a still, a reel, a day on set.')) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No work posted yet.')));
   else put(box, ...rows.map(cellOf));
   if (own && rows.length > 1) sortable(box, () => { rows.splice(0, rows.length, ...[...box.children].map((c) => c._row).filter(Boolean)); save(); });
   return h('div', {}, box);

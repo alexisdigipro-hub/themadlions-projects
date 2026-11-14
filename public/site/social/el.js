@@ -840,5 +840,9 @@ window.RD_EL = {
 "Make it first": "Βάλ' το πρώτο",
 "First": "Πρώτο",
 "The star puts a picture first. The X takes it out of the post.": "Το αστέρι βάζει μια φωτογραφία πρώτη. Το Χ τη βγάζει από το post.",
-"Caption": "Λεζάντα"
+"Caption": "Λεζάντα",
+"Create your first post": "Ανέβασε το πρώτο σου post",
+"Show your work: a still, a reel, a day on set.": "Δείξε τη δουλειά σου: ένα καρέ, ένα reel, μια μέρα στο γύρισμα.",
+"Add your first photo": "Ανέβασε την πρώτη σου φωτογραφία",
+"Photos of you: headshots, portraits, behind the scenes.": "Φωτογραφίες σου: headshots, πορτρέτα, παρασκήνια."
 };
