@@ -1201,8 +1201,8 @@ function drawFeedSide(two, calls, seminars) {
     ['roarwriter', 'RoarWriter', t('Write your script'), 'https://alexisdigipro-hub.github.io/roarwriter/'],
     ['roarlist', 'RoarList', t('Your shot list'), 'https://themadlions.com/roarlist/'],
     ['roartransfer', 'RoarTransfer', t('Send big files'), 'https://studio.roartransfer.com/']];
-  const apps = APPS.map(([id, name, line, href]) => h('a', { class: 'fs-card fs-app tint', href, target: '_blank', rel: 'noopener', style: { '--pbg': `url("/lab/icons/${id}.png")` } },
-    h('img', { class: 'fs-app-ic', src: `/lab/icons/${id}.png`, alt: '' }), h('span', { class: 'fs-app-t' }, h('b', {}, name), h('small', {}, line)), h('span', { class: 'fs-app-go', html: ICON.right })));
+  const apps = APPS.map(([id, name, line, href]) => h('a', { class: 'fs-card fs-app tint', href, target: '_blank', rel: 'noopener', style: { '--pbg': `url("https://themadlions.com/lab/icons/${id}.png")` } },
+    h('img', { class: 'fs-app-ic', src: `https://themadlions.com/lab/icons/${id}.png`, alt: '' }), h('span', { class: 'fs-app-t' }, h('b', {}, name), h('small', {}, line)), h('span', { class: 'fs-app-go', html: ICON.right })));
   const sep = h('hr', { class: 'fs-sep' });
   // a small title over them (Alex, 9 Nov: "our projects, apps, you decide")
   const appsHead = h('div', { class: 'fs-apps-head' }, h('b', {}, t('Our apps')), h('small', {}, t('Made by The Mad Lions Lab')));
