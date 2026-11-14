@@ -2495,3 +2495,20 @@ html[data-theme=dark] .ind-kcard .fchip.ind-k{background:rgba(255,255,255,.035)!
 .ig-media.has-cover>video.fv{opacity:0;background:transparent!important;transition:opacity .35s ease}
 .ig-media.has-cover>video.fv.live{opacity:1;background:#0d0f12!important}
 @media (min-width:821px){.ind-kcard{margin:0!important}.ind-kcard+div .cf2,.ind-kcard~div .cf2{margin-top:0!important}}
+/* theme fixes (Alex, 14 Nov, after a look at every page in both themes).
+   Dark: the words on glass buttons, on the top menu and in the switches were a dim red on dark grey: they take the
+   bright letters now; the bar under the profile form is glass, not black.
+   Light: the Latest cards on Home were muddy, a call or seminar without a picture was a dark block on a light page,
+   and a specialty nobody has yet was too faint to read. */
+html[data-theme=dark]{--letters-lit:linear-gradient(100deg,#ffffff 0%,#ffe4df 55%,#ffc9c1 100%)}
+html[data-theme=dark] .btn:not(.red){background-image:var(--letters-lit),linear-gradient(rgba(255,255,255,0),rgba(255,255,255,0))!important}
+html[data-theme=dark] .seg button:not(.on),html[data-theme=dark] .seg a:not(.on){background-image:var(--letters-lit);opacity:.72}
+html[data-theme=dark] .seg .on{background-image:var(--letters-lit),var(--sheen)}
+html[data-theme=dark] .seg button:not(.on):hover,html[data-theme=dark] .seg a:not(.on):hover{opacity:1}
+html[data-theme=dark] .form-foot{background:rgba(58,64,74,.78)!important;border-color:rgba(255,255,255,.12)!important;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+html:not([data-theme=dark]) .fs-card.tint::before{opacity:.42}
+html:not([data-theme=dark]) .fs-card.tint::after{background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.66))}
+html:not([data-theme=dark]) .ct-pic.none{background:radial-gradient(120% 120% at 0% 0%,color-mix(in srgb,var(--c) 34%,#fff),transparent 62%),linear-gradient(135deg,color-mix(in srgb,var(--c) 20%,#fff),color-mix(in srgb,var(--c) 8%,#e9ebef))}
+html:not([data-theme=dark]) .ct-pic.none::after{display:none}
+html:not([data-theme=dark]) .ct-pic.none .ct-big{color:var(--c);opacity:.5}
+html:not([data-theme=dark]) .fchip.ind-k.none{opacity:.74}
