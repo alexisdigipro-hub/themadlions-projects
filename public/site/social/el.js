@@ -825,5 +825,20 @@ window.RD_EL = {
 "The chat": "Το chat",
 "Your account": "Ο λογαριασμός σου",
 "Your profile, a portfolio": "Το προφίλ σου, ένα portfolio",
-"Your email and phone for contact, kept apart from the profile.": "Το email και το τηλέφωνό σου για επικοινωνία, ξεχωριστά από το προφίλ."
+"Your email and phone for contact, kept apart from the profile.": "Το email και το τηλέφωνό σου για επικοινωνία, ξεχωριστά από το προφίλ.",
+"Edit post": "Επεξεργασία post",
+"Show the number of likes": "Εμφάνιση αριθμού like",
+"Hide the number of likes": "Απόκρυψη αριθμού like",
+"Likes show again": "Τα like φαίνονται ξανά",
+"Only you see the number of likes": "Τον αριθμό των like τον βλέπεις μόνο εσύ",
+"Turn comments on": "Ενεργοποίηση σχολίων",
+"Turn comments off": "Απενεργοποίηση σχολίων",
+"Comments are on": "Τα σχόλια άνοιξαν",
+"Comments are off": "Τα σχόλια έκλεισαν",
+"Copy link": "Αντιγραφή link",
+"Write a caption… Tag people with @": "Γράψε λεζάντα… Κάνε tag με @",
+"Make it first": "Βάλ' το πρώτο",
+"First": "Πρώτο",
+"The star puts a picture first. The X takes it out of the post.": "Το αστέρι βάζει μια φωτογραφία πρώτη. Το Χ τη βγάζει από το post.",
+"Caption": "Λεζάντα"
 };

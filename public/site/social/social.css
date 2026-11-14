@@ -2512,3 +2512,17 @@ html:not([data-theme=dark]) .ct-pic.none{background:radial-gradient(120% 120% at
 html:not([data-theme=dark]) .ct-pic.none::after{display:none}
 html:not([data-theme=dark]) .ct-pic.none .ct-big{color:var(--c);opacity:.5}
 html:not([data-theme=dark]) .fchip.ind-k.none{opacity:.74}
+
+/* Edit post, and the ⋯ on an opened picture (Alex, 14 Nov) */
+.pm-tiles:has(> :nth-child(3)){grid-template-columns:repeat(3,1fr)}
+.lb.bare .lb-x-in.lb-more{right:54px}
+.ep-pics{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-bottom:10px}
+.ep-pic{position:relative;aspect-ratio:4/5;border-radius:14px;background:#dfe2e8 center/cover no-repeat;box-shadow:0 0 0 1px var(--rim-out);overflow:hidden}
+html[data-theme=dark] .ep-pic{background-color:#2a2e36}
+.ep-pic.first{box-shadow:0 0 0 2px var(--red,#d40000)}
+.ep-btn{position:absolute;top:6px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.42);color:#fff;display:grid;place-items:center;padding:0;cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.ep-btn svg{width:14px;height:14px}
+.ep-btn:hover{background:rgba(0,0,0,.6)}
+.ep-out{right:6px}.ep-first{left:6px}
+.ep-tag{position:absolute;left:6px;top:6px;padding:4px 9px;border-radius:999px;background:rgba(0,0,0,.5);color:#fff;font-size:11px;font-weight:600;letter-spacing:.02em}
+.ep-vid{position:absolute;right:6px;bottom:6px;color:#fff;opacity:.9}.ep-vid svg{width:16px;height:16px}
