@@ -10,6 +10,9 @@ Alex Konstantinidis, film director, owner of The Mad Lions (Athens). He is not a
 ## Chat
 - **Hub Chat** (since 1 Nov 2026): the hub's own chat, an exact copy of RoarMe's chat. hubchat.html + hubchat/ shown at /chat by src/pages/HubChatPage.jsx (same-origin frame, hub session, hub look). Database: supabase/hub_chat.sql (roar_* tables in the hub's own database, buckets roar-files / roar-avatars / roar-walls); triggers on members/projects make the profiles, the THEMADLIONS group and one locked group per project. Calls: livekit-client + supabase/functions/roar-livekit. chat.html (TML Chat) opens it full screen; /roarme and /roarme-app redirect to /chat.
 
+## Roardino (the social network)
+Its own address since 14 Nov 2026: https://roardino.com (domain bought by Alex at Cloudflare; Cloudflare Pages project `roardino` serves the folder `social/` of the repository alexisdigipro-hub/themadlions-site, branch main, no build). The source stays `public/site/social/` here, copied to themadlions-site/social as before; a push to that main is live on roardino.com in about a minute. themadlions.com/social/ redirects there (a script on top of social/index.html, only on that hostname). Data: RoarMe's Supabase project. The Lab's ordino is a different thing, "Roardino App", at themadlions.com/roardino/.
+
 ## RoarMe
 RoarMe (repository alexisdigipro-hub/roarme, Supabase project bzmjhbnwhdwmncxkqkdl) is a separate public chat app with no tie to the hub since 1 Nov 2026 (roarme_drop.sql here, hub-unlink.sql there). Never link them again unless Alex asks.
 
