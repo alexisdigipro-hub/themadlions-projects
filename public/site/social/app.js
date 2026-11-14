@@ -1581,7 +1581,8 @@ function lightbox(media, start = 0, opts = {}) {
     if (m.w && m.h) fit(m.w, m.h);
     else if (el.tagName === 'VIDEO') el.addEventListener('loadedmetadata', () => fit(el.videoWidth, el.videoHeight), { once: true });
     else el.addEventListener('load', () => fit(el.naturalWidth, el.naturalHeight), { once: true });
-    put(stage, bare ? h('div', { class: 'lb-frame' }, el, h('button', { type: 'button', class: 'lb-x lb-x-in', 'aria-label': t('Close'), html: ICON.x, onclick: (e) => { e.stopPropagation(); close(); } })) : el);
+    put(stage, bare ? h('div', { class: 'lb-frame' }, el, h('button', { type: 'button', class: 'lb-x lb-x-in', 'aria-label': t('Close'), html: ICON.x, onclick: (e) => { e.stopPropagation(); close(); } }),
+      opts.onMenu ? h('button', { type: 'button', class: 'lb-x lb-x-in lb-more', title: t('More'), 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); close(); opts.onMenu(); } }) : null) : el);
     if (bare) {
       // one click plays or pauses a video, two like the post with the big heart; a picture likes on two
       let tT = null, last = 0;
@@ -1632,10 +1633,18 @@ function postMenu(r, p, { own, media, refresh, saveBtn }) {
   let close;
   const row = (ic, label, fn, cls = '') => h('button', { type: 'button', class: 'pm-row ' + cls, onclick: () => { close(); fn(); } }, h('span', { class: 'pm-ic', html: ICON[ic] }), label);
   const isSaved = saved.has(r.id);
+  // a switch of the post kept by the database (hide_likes, comments_off)
+  const flip = async (key, done) => {
+    const { error } = await sb.from('roardino_posts').update({ [key]: !r[key] }).eq('id', r.id);
+    if (error) return fail(error);
+    r[key] = !r[key]; toast(done); refresh?.();
+  };
+  const copyLink = async () => { const url = `${location.origin}${location.pathname}#/post/${r.id}`; try { await navigator.clipboard.writeText(url); toast(t('Link copied')); } catch { prompt(t('Copy link'), url); } };
   const body = h('div', { class: 'pm' },
     h('div', { class: 'pm-tiles' },
       h('button', { type: 'button', class: 'pm-tile', onclick: () => { close(); toggleSave(r.id, saveBtn); } }, h('span', { class: 'pm-ic', html: ICON.bookmark }), isSaved ? t('Saved') : t('Save')),
-      h('button', { type: 'button', class: 'pm-tile', onclick: async () => { close(); const url = `${location.origin}${location.pathname}#/p/${p.id}`; try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ } } }, h('span', { class: 'pm-ic', html: ICON.send }), t('Share'))),
+      h('button', { type: 'button', class: 'pm-tile', onclick: async () => { close(); const url = `${location.origin}${location.pathname}#/p/${p.id}`; try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ } } }, h('span', { class: 'pm-ic', html: ICON.send }), t('Share')),
+      h('button', { type: 'button', class: 'pm-tile', onclick: () => { close(); copyLink(); } }, h('span', { class: 'pm-ic', html: ICON.link }), t('Copy link'))),
     own ? h('div', { class: 'pm-group' },
       media[0]?.type === 'video' ? row('pic', t('Change cover'), async () => {
         const f = await coverPicker(urlOf(media[0].path));
@@ -1657,7 +1666,9 @@ function postMenu(r, p, { own, media, refresh, saveBtn }) {
         if (error) return fail(error);
         r.kind = kind; toast(kind === 'photo' ? t('Moved to Personal') : t('Moved to Portfolio')); refresh?.();
       }),
-      row('edit', t('Edit profile'), () => { location.hash = `#/edit/${p.id}`; }),
+      row('edit', t('Edit post'), () => editPost(r, p, refresh)),
+      row('heart', r.hide_likes ? t('Show the number of likes') : t('Hide the number of likes'), () => flip('hide_likes', r.hide_likes ? t('Likes show again') : t('Only you see the number of likes'))),
+      row('talk', r.comments_off ? t('Turn comments on') : t('Turn comments off'), () => flip('comments_off', r.comments_off ? t('Comments are on') : t('Comments are off'))),
       row('trash', t('Delete post'), async () => {
         if (!(await ask(t('Delete this post?')))) return;
         const { error } = await sb.from('roardino_posts').delete().eq('id', r.id);
@@ -1671,6 +1682,34 @@ function postMenu(r, p, { own, media, refresh, saveBtn }) {
         row('flag', t('Report account'), () => reportAccount(p, r), 'red'))]);
   close = openWin(p.name || t('Post'), body, null);
   document.querySelector('.veil:last-of-type')?.classList.add('pm-veil');
+}
+// Edit post (Alex, 14 Nov): the words, which picture comes first, a picture taken out
+function editPost(r, p, refresh) {
+  let media = (r.media || []).slice();
+  const gone = [];
+  const text = area(r.body || '', { placeholder: t('Write a caption… Tag people with @'), rows: 4 });
+  const box = h('div', { class: 'ep-pics' });
+  const draw = () => put(box, ...media.map((m, i) => h('div', { class: 'ep-pic' + (i ? '' : ' first'), style: bg(m.type === 'video' ? m.poster : m.path) },
+    m.type === 'video' ? h('span', { class: 'ep-vid', html: ICON.play || ICON.cam }) : null,
+    i ? h('button', { type: 'button', class: 'ep-btn ep-first', title: t('Make it first'), 'aria-label': t('Make it first'), html: ICON.star, onclick: () => { media.unshift(media.splice(i, 1)[0]); draw(); } }) : h('span', { class: 'ep-tag' }, t('First')),
+    media.length > 1 ? h('button', { type: 'button', class: 'ep-btn ep-out', title: t('Remove'), 'aria-label': t('Remove'), html: ICON.x, onclick: () => { gone.push(...media.splice(i, 1)); draw(); } }) : null)));
+  draw();
+  openWin(t('Edit post'), h('div', { class: 'form ep' },
+    media.length ? box : null,
+    media.length > 1 ? h('p', { class: 'hint' }, t('The star puts a picture first. The X takes it out of the post.')) : null,
+    h('label', {}, h('span', {}, t('Caption')), withMentions(text))),
+  (close) => [
+    h('button', { type: 'button', class: 'btn', onclick: close }, t('Cancel')),
+    h('button', { type: 'button', class: 'btn main', onclick: async (e) => {
+      const body = text.value.trim() || null;
+      if (!body && !media.length) return toast(t('Write something or add a photo.'));
+      e.currentTarget.disabled = true;
+      const { error } = await sb.from('roardino_posts').update({ body, media }).eq('id', r.id);
+      if (error) { e.currentTarget.disabled = false; return fail(error); }
+      if (gone.length) removeFiles(gone.flatMap((m) => [m.path, m.poster]).filter(Boolean));
+      r.body = body; r.media = media;
+      close(); toast(t('Saved')); refresh?.();
+    } }, t('Save'))]);
 }
 async function aboutAccount(id) {
   const [{ data: q }, { data: stats }] = await Promise.all([sb.from('roardino_people').select('id,name,handle,avatar,kinds,city,created_at,minor').eq('id', id).maybeSingle(), sb.rpc('roardino_person_stats', { p: id })]);
@@ -1718,7 +1757,7 @@ function postCard(r, st, refresh) {
   // the numbers sit next to their icons, no lines of likes and comments under the post (Alex, 5 Nov)
   const likeN = h('span', { class: 'ig-n' }), talkN = h('span', { class: 'ig-n' });
   const short = (n) => (n >= 10000 ? Math.round(n / 1000) + 'K' : n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : String(n));
-  const drawCount = () => { likeN.textContent = st.bravos ? short(st.bravos) : ''; };
+  const drawCount = () => { likeN.textContent = st.bravos && (!r.hide_likes || own) ? short(st.bravos) : ''; };
   drawCount();
   const bravoBtn = h('button', { type: 'button', class: 'ig-ico like' + (st.mine ? ' on' : ''), title: t('Like'), 'aria-label': t('Like'), html: ICON.heart, onclick: async () => {
     st.mine = !st.mine; st.bravos += st.mine ? 1 : -1; bravoBtn.classList.toggle('on', st.mine); bravoBtn.classList.remove('pop'); void bravoBtn.offsetWidth; if (st.mine) bravoBtn.classList.add('pop'); drawCount();
@@ -1728,7 +1767,7 @@ function postCard(r, st, refresh) {
   const openTalk = () => { talk.classList.remove('hidden'); if (!talk.dataset.on) { talk.dataset.on = '1'; drawTalk(talk, r, st, drawMore); } talk.querySelector('input')?.focus(); };
   // the caption under a picture shows with the comments, when the comment icon is tapped (Alex, 5 Nov)
   const cap = media.length && r.body ? h('p', { class: 'ig-cap hidden' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name)), ' ', ...tagText(r.body)) : null;
-  const drawMore = () => { talkN.textContent = st.comments ? short(st.comments) : ''; };
+  const drawMore = () => { talkN.textContent = st.comments && !r.comments_off ? short(st.comments) : ''; };
   drawMore();
   const saveBtn = h('button', { type: 'button', class: 'ig-ico save' + (saved.has(r.id) ? ' on' : ''), title: t('Save'), 'aria-label': t('Save'), html: ICON.bookmark, onclick: () => toggleSave(r.id, saveBtn) });
   const share = async () => {
@@ -1788,7 +1827,7 @@ function postCard(r, st, refresh) {
   }
   const bar =
     h('div', { class: 'ig-bar' }, h('span', { class: 'ig-pair' }, bravoBtn, likeN),
-      h('span', { class: 'ig-pair' }, h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: () => { if (talk.classList.contains('hidden')) { openTalk(); cap?.classList.remove('hidden'); } else { talk.classList.add('hidden'); cap?.classList.add('hidden'); } } }), talkN),
+      r.comments_off ? null : h('span', { class: 'ig-pair' }, h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: () => { if (talk.classList.contains('hidden')) { openTalk(); cap?.classList.remove('hidden'); } else { talk.classList.add('hidden'); cap?.classList.add('hidden'); } } }), talkN),
       h('button', { type: 'button', class: 'ig-ico', title: t('Send on RoarMe'), 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: () => sendToRoarMe(r, p) }),
       viewsEl,
       h('span', { class: 'grow' }),
@@ -2624,7 +2663,8 @@ async function openPost(r, p) {
   if ((r.media || []).length) {
     await sign(r.media.flatMap((m) => [m.path, m.poster]));
     let liked = null;
-    lightbox(r.media, 0, { bare: true, onLike: async () => {
+    // the ⋯ in the picture's corner (Alex, 14 Nov: "there must be a way to edit the posts"): its owner edits it, others save or share it
+    lightbox(r.media, 0, { bare: true, onMenu: () => postMenu(r, p, { own: r.owner === session.user.id, media: r.media, refresh: () => route(), saveBtn: null }), onLike: async () => {
       if (liked == null) { const { data } = await sb.from('roardino_bravos').select('post_id').eq('post_id', r.id).eq('user_id', session.user.id).maybeSingle(); liked = !!data; }
       if (liked || r.owner === session.user.id) return;
       const { error } = await sb.from('roardino_bravos').insert({ post_id: r.id });
@@ -3422,13 +3462,51 @@ function viewSettings() {
    ===================================================================================================================== */
 let chatFrame = null;
 const ROARME_ORIGIN = new URL(ROARME).origin;
-function viewChat() {
+// the chat opens already signed in (Alex, 14 Nov: "since I am in my Roardino account it must connect by itself"). RoarMe
+// knows nothing of Roardino since 8 Nov, so Roardino does it alone: the Roar Account handover (roar-connect) gives a
+// one-time token, a throwaway client here turns it into a session of its own (never Roardino's own refresh token), and
+// the frame is loaded with that session in its address, which RoarMe's own Supabase client picks up as any sign-in link
+let chatBusy = false;
+async function viewChat() {
   document.title = 'Roardino · ' + t('Chat');
-  // one frame kept for the whole visit, so going back to the chat is instant and keeps the conversation open;
-  // ?embed=roardino: RoarMe wears Roardino's look, hides its own brand, and asks Roardino to sign it in (Alex, 5 Nov)
-  chatFrame ||= h('iframe', { class: 'chat-frame', src: ROARME + '?embed=roardino', title: 'RoarMe', allow: 'camera; microphone; clipboard-write; autoplay; fullscreen; display-capture' });
-  // put on the page the frame loads afresh and says roarme:ready; the page asked for (chatPending) is sent then
-  frame('chat', h('div', { class: 'chat-wrap' }, chatFrame));
+  // one frame kept for the whole visit, so going back to the chat is instant and keeps the conversation open
+  if (chatFrame) return frame('chat', h('div', { class: 'chat-wrap' }, chatFrame));
+  frame('chat', h('div', { class: 'chat-wrap' }, h('p', { class: 'wait' }, t('Loading…'))));
+  if (chatBusy) return;
+  chatBusy = true;
+  const hash = await chatSession();
+  chatBusy = false;
+  chatFrame = h('iframe', { class: 'chat-frame', src: ROARME + hash, title: 'RoarMe', allow: 'camera; microphone; clipboard-write; autoplay; fullscreen; display-capture' });
+  if ((location.hash || '').startsWith('#/chat')) frame('chat', h('div', { class: 'chat-wrap' }, chatFrame));
+}
+async function chatSession() {
+  try {
+    const FN = SB_URL + '/functions/v1/roar-connect';
+    const call = async (body, token) => {
+      const r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SB_KEY, ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: JSON.stringify(body) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || j.error) throw new Error(j.error || 'HTTP ' + r.status);
+      return j;
+    };
+    const { data: cur } = await sb.auth.getSession();
+    const token = cur.session?.access_token;
+    if (!token) return '';
+    const start = await call({ do: 'start', app: 'roardino' });
+    await call({ do: 'allow', code: start.code }, token);
+    let th = null;
+    for (let i = 0; i < 10 && !th; i++) {
+      const a = await call({ do: 'poll', code: start.code, secret: start.secret });
+      if (a.token_hash) th = a.token_hash; else if (a.expired) return ''; else await new Promise((r) => setTimeout(r, 800));
+    }
+    if (!th) return '';
+    const mem = {};
+    const side = window.supabase.createClient(SB_URL, SB_KEY, { auth: { storageKey: 'roardino-chat-handover', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false,
+      storage: { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; }, removeItem: (k) => { delete mem[k]; } } } });
+    const { data, error } = await side.auth.verifyOtp({ token_hash: th, type: 'magiclink' });
+    const s2 = data?.session;
+    if (error || !s2) return '';
+    return '#' + new URLSearchParams({ access_token: s2.access_token, refresh_token: s2.refresh_token, expires_in: String(s2.expires_in || 3600), expires_at: String(s2.expires_at || ''), token_type: 'bearer', type: 'magiclink' }).toString();
+  } catch (e) { console.warn('chat sign-in', e); return ''; }
 }
 // what Roardino says to the framed RoarMe: its look, and a one-time sign-in token for the same Roar Account
 const toChat = (msg) => { try { chatFrame?.contentWindow?.postMessage(msg, ROARME_ORIGIN); } catch { /* not there */ } };
@@ -3447,37 +3525,10 @@ function openChat(page) {
   if (location.hash !== '#/chat') location.hash = '#/chat'; else viewChat();
 }
 const chatLook = () => toChat({ type: 'roardino:look', theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light' });
-let handingOver = false;
-// the same handover the Roar Account gives every Roar app (roar-connect): a code started here, allowed with this
-// session, then traded for a one-time token_hash that RoarMe turns into its own session; no password, no refresh token
-async function handOverToChat() {
-  if (handingOver || !session) return;
-  handingOver = true;
-  try {
-    const FN = SB_URL + '/functions/v1/roar-connect';
-    const call = async (body, token) => {
-      const r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SB_KEY, ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: JSON.stringify(body) });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok || j.error) throw new Error(j.error || 'HTTP ' + r.status);
-      return j;
-    };
-    const { data: cur } = await sb.auth.getSession();
-    const token = cur.session?.access_token;
-    if (!token) return;
-    const start = await call({ do: 'start', app: 'roardino' });
-    await call({ do: 'allow', code: start.code }, token);
-    for (let i = 0; i < 10; i++) {
-      const a = await call({ do: 'poll', code: start.code, secret: start.secret });
-      if (a.token_hash) { toChat({ type: 'roardino:signin', token_hash: a.token_hash }); return; }
-      if (a.expired) return;
-      await new Promise((r) => setTimeout(r, 800));
-    }
-  } catch (e) { console.warn('chat handover', e); } finally { handingOver = false; }
-}
 window.addEventListener('message', (e) => {
   if (e.origin !== ROARME_ORIGIN || !chatFrame || e.source !== chatFrame.contentWindow) return;
   const d = e.data || {};
-  if (d.type === 'roarme:ready') { chatReady = !!d.signedIn; chatLook(); if (d.signedIn === false) handOverToChat(); else if (chatPending) { toChat(typeof chatPending === 'object' ? { type: 'roardino:open', ...chatPending } : { type: 'roardino:open', page: chatPending }); chatPending = null; } }
+  if (d.type === 'roarme:ready') { chatReady = !!d.signedIn; chatLook(); if (chatPending) { toChat(typeof chatPending === 'object' ? { type: 'roardino:open', ...chatPending } : { type: 'roardino:open', page: chatPending }); chatPending = null; } }
 });
 
 /* =====================================================================================================================

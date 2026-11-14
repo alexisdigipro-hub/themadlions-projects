@@ -731,3 +731,13 @@ create policy rd_call_covers_read on storage.objects for select to authenticated
 -- everyone signed in through rd_call_covers_read) and extra details {level, language, learn, bring, certificate, recording}
 alter table public.roardino_seminars add column if not exists cover text;
 alter table public.roardino_seminars add column if not exists extra jsonb not null default '{}'::jsonb;
+
+-- 14 Nov 2026: a post's own switches (Hide the number of likes, Turn comments off); a comment on a post with
+-- comments off is refused, except its owner's (applied on 14 Nov)
+alter table public.roardino_posts add column if not exists hide_likes boolean not null default false;
+alter table public.roardino_posts add column if not exists comments_off boolean not null default false;
+drop policy if exists rd_comments_add on public.roardino_comments;
+create policy rd_comments_add on public.roardino_comments for insert with check (
+  owner = auth.uid()
+  and exists (select 1 from public.roardino_posts p where p.id = roardino_comments.post_id and (not p.comments_off or p.owner = auth.uid()))
+  and (person_id is null or exists (select 1 from public.roardino_people x where x.id = roardino_comments.person_id and x.owner = auth.uid())));
