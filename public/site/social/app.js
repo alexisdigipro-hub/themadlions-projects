@@ -788,7 +788,8 @@ function topBar(on) {
     h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.filter(([k]) => k !== 'search').map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { if (k === 'feed') goHome(); else location.hash = `#/${k}`; })),
     // the search field became an icon that opens Industry, where the search lives (Alex, 6 Nov); a spacer keeps the icons right
     h('span', { class: 'bar-grow' }),
-    h('button', { type: 'button', class: 'ico create-btn', title: t('Create'), 'aria-label': t('Create'), html: ICON.plus, onclick: createMenu }),
+    // on a phone the top left is Search; the + went to the middle of the bottom bar (Alex, 14 Nov: "put the + that posts somewhere")
+    h('a', { class: 'ico create-btn', href: '#/search', title: t('Search'), 'aria-label': t('Search'), html: ICON.search }),
     // on a computer, right of the search (Alex, 6 Nov: the column on the left goes): Settings, Sign out (light / dark lives in Settings),
     // my picture (to my profile), then the bell
     h('div', { class: 'bar-acts' },
@@ -805,7 +806,12 @@ function topBar(on) {
 function tabBar(on) {
   const m = me();
   // on a phone (Alex, 5 Nov): Feed, Industry, Chat and me with my own picture; Calls and Seminars live on my profile's tiles
-  return h('nav', { class: 'tabbar' }, NAV.filter(([k]) => k !== 'calls' && k !== 'seminars').map(([k, s, ic]) => h('a', { href: `#/${k}`, class: on === k ? 'on' : '', onclick: k === 'feed' ? goHome : null }, icon(ic), t(s))),
+  const tab = ([k, s, ic]) => h('a', { href: `#/${k}`, class: on === k ? 'on' : '', onclick: k === 'feed' ? goHome : null }, icon(ic), t(s));
+  const tabs = NAV.filter(([k]) => !['calls', 'seminars', 'search'].includes(k));
+  // Home, Industry, the + that posts in the middle (Alex, 14 Nov), Chat, me; Search sits on the top left
+  return h('nav', { class: 'tabbar' }, ...tabs.slice(0, 2).map(tab),
+    h('button', { type: 'button', class: 'tab-plus', title: t('Create'), 'aria-label': t('Create'), onclick: createMenu }, h('span', { html: ICON.plus })),
+    ...tabs.slice(2).map(tab),
     h('a', { href: m ? `#/p/${m.id}` : '#/edit/new', class: 'tab-me' + (on === 'me' ? ' on' : '') }, m ? avatar(m, 'tab-av') : icon('user'), t('Me')));
 }
 // the footer (Alex, 5 Nov): Roardino by THE MAD LIONS, themadlions.com and its places
@@ -2577,7 +2583,7 @@ function gridBlock(p, rows, own) {
     c._row = r;
     return c;
   };
-  if (!rows.length) put(box, h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, own ? t('Add your first work.') : t('No work posted yet.')));
+  if (!rows.length) put(box, h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, own ? [t('Add your first work.'), h('div', { style: { marginTop: '12px' } }, h('button', { type: 'button', class: 'btn sm main', onclick: createMenu }, icon('plus'), t('Create')))] : t('No work posted yet.')));
   else put(box, ...rows.map(cellOf));
   if (own && rows.length > 1) sortable(box, () => { rows.splice(0, rows.length, ...[...box.children].map((c) => c._row).filter(Boolean)); save(); });
   return h('div', {}, box);
