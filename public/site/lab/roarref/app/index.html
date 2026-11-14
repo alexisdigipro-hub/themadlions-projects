@@ -395,7 +395,7 @@ img{max-width:100%}
       <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="w">Add photos</span></button>
     <button class="pill round" id="clear" title="Empty every window">
       <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg><span class="w">Clear</span></button>
-    <button class="pill main" id="export" title="Save the sheet as PNG or JPEG, 4K to 8K">
+    <button class="pill main" id="export" title="Save the sheet as PNG or JPEG, up to the full size of your photos">
       <svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="w">Export</span></button>
   </div>
   <div class="work" id="work">
@@ -992,7 +992,7 @@ async function applyFxNow(p){
   if(!p.base) p.base = p.url;
   let url = p.base;
   if(hasAdj(p.adj)){
-    try{ const c = await renderAdj(p, false); const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.92)); url = URL.createObjectURL(blob); }
+    try{ const c = await renderAdj(p, false); const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.98)); url = URL.createObjectURL(blob); }
     catch{ url = p.base; }
   }
   if(p.fxUrl && p.fxUrl !== url) URL.revokeObjectURL(p.fxUrl);
@@ -1163,7 +1163,7 @@ async function gpuSource(p){
   let bm = await createImageBitmap(p.blob);
   if(Math.max(bm.width, bm.height) > G.MAX){ const k = G.MAX/Math.max(bm.width, bm.height); bm = await createImageBitmap(bm, {resizeWidth:Math.floor(bm.width*k), resizeHeight:Math.floor(bm.height*k), resizeQuality:'high'}); }
   // through a 2D canvas: the browsers ignore the upside-down flag for an ImageBitmap, not for a canvas
-  const cc = document.createElement('canvas'); cc.width = bm.width; cc.height = bm.height; cc.getContext('2d').drawImage(bm, 0, 0);
+  const cc = document.createElement('canvas'); cc.width = bm.width; cc.height = bm.height; cc.getContext('2d').drawImage(bm, 0, 0); // every pixel of the photo, as it came
   p._gt = G.upload(cc, true); p._gtBlob = p.blob; p._gw = bm.width; p._gh = bm.height; return p._gt;
 }
 // draws photo p with all its settings at W x H on the shared WebGL canvas, and gives that canvas back
@@ -1245,7 +1245,7 @@ function showSize(i){
   const b = imgBox(p, r), k = (window.devicePixelRatio || 1) / unit(), full = Math.max(p.w, p.h);
   let w = Math.ceil(b.w*k), h = Math.ceil(b.h*k); const m = Math.max(w, h);
   if(m > full){ w = Math.round(w*full/m); h = Math.round(h*full/m); }
-  const cap = Math.min(G ? G.MAX : 4096, 4096); if(Math.max(w, h) > cap){ const q = cap/Math.max(w, h); w = Math.round(w*q); h = Math.round(h*q); }
+  const cap = Math.min(G ? G.MAX : 4096, 8192); if(Math.max(w, h) > cap){ const q = cap/Math.max(w, h); w = Math.round(w*q); h = Math.round(h*q); }
   return [Math.max(1, w), Math.max(1, h)];
 }
 // paints photo i into its window's canvas; called on every change, so it only ever does the newest one
@@ -1357,7 +1357,7 @@ async function openLiquify(i){
           for(let ch = 0; ch < 3; ch++) od[q+ch] = (sd[a+ch]*(1-gx) + sd[b2+ch]*gx)*(1-gy) + (sd[c2+ch]*(1-gx) + sd[d2+ch]*gx)*gy;
           od[q+3] = 255; } }
       fg.putImageData(fo, 0, 0);
-      const blob = await new Promise(r => fc.toBlob(r, 'image/jpeg', 0.94));
+      const blob = await bestBlob(fc);
       if(!p.orig) p.orig = {path:p.path, blob:p.blob};
       if(p.base && p.base !== p.url) URL.revokeObjectURL(p.base);
       p.blob = blob; p.base = URL.createObjectURL(blob); p.url = p.base; p.path = null; p.lm = null; p.hairMask = null;
@@ -1918,20 +1918,25 @@ async function drawSheet(W, type='image/png'){
   if(type==='image/jpeg'){ // JPEG has no transparency: put the sheet colour under everything once more
     const o = document.createElement('canvas'); o.width=c.width; o.height=c.height; const og=o.getContext('2d');
     og.fillStyle=S.sheet; og.fillRect(0,0,o.width,o.height); og.drawImage(c,0,0);
-    return new Promise((res,rej) => o.toBlob(b => b ? res(b) : rej(), type, 0.95));
+    return new Promise((res,rej) => o.toBlob(b => b ? res(b) : rej(), type, 1));
   }
   return new Promise((res,rej) => c.toBlob(b => b ? res(b) : rej(), type));
 }
 /* Export: a small window to pick PNG or JPEG and HD, 2K, 4K, 6K or 8K (the long side) */
 const SIZES = [['HD',1920],['2K',2048],['4K',3840],['6K',5760],['8K',7680]]; // long side; 2K is the cinema 2K (2048)
+// Full: the size at which the sharpest photo on the sheet keeps every one of its pixels (no more than 12000 on the long side)
+function fullLong(){ const R = rects(lay(), S.gap, pad()); let k = 0;
+  photos.forEach((p, i) => { if(p && R[i]){ const b = imgBox(p, R[i]); k = Math.max(k, p.w/b.w, p.h/b.h); } });
+  return Math.min(12000, Math.round(Math.max(BW, BH)*k)); }
+const sizesNow = () => { const f = fullLong(); return f > 0 ? SIZES.concat([['Full', f]]) : SIZES; };
 function exportPng(){
   const ex = Object.assign({fmt:'png', size:'4K'}, S.export||{});
   const dims = long => BW >= BH ? [long, Math.round(long*BH/BW)] : [Math.round(long*BW/BH), long];
   const m = document.createElement('div'); m.className='modal';
   const draw = () => {
     m.innerHTML = `<div class="card" style="max-width:720px"><h2>Export the sheet</h2>
-      <p>Format</p><div class="row">${['png','jpg'].map(f=>`<button type="button" class="pill" data-f="${f}" aria-pressed="${ex.fmt===f}">${f==='png'?'PNG · lossless':'JPEG · smaller file'}</button>`).join('')}</div>
-      <p>Size</p><div class="row">${SIZES.map(([n,l])=>{const [w,h]=dims(l);return `<button type="button" class="pill" data-s="${n}" aria-pressed="${ex.size===n}">${n} <span style="opacity:.6">${w} × ${h}</span></button>`}).join('')}</div>
+      <p>Format</p><div class="row">${['png','jpg'].map(f=>`<button type="button" class="pill" data-f="${f}" aria-pressed="${ex.fmt===f}">${f==='png'?'PNG · lossless':'JPEG · best quality'}</button>`).join('')}</div>
+      <p>Size</p><div class="row">${sizesNow().map(([n,l])=>{const [w,h]=dims(l);return `<button type="button" class="pill" data-s="${n}" aria-pressed="${ex.size===n}">${n} <span style="opacity:.6">${w} × ${h}</span></button>`}).join('')}</div>
       <div class="row"><span class="spacer" style="flex:1"></span><button type="button" class="pill" id="xNo">Cancel</button><button type="button" class="pill main" id="xGo"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export</button></div></div>`;
   };
   draw();
@@ -1940,7 +1945,7 @@ function exportPng(){
     if(e.target===m || t?.id==='xNo'){ m.remove(); return; }
     if(t?.dataset.f){ ex.fmt=t.dataset.f; draw(); }
     else if(t?.dataset.s){ ex.size=t.dataset.s; draw(); }
-    else if(t?.id==='xGo'){ S.export = ex; save(); m.remove(); runExport(dims(SIZES.find(x=>x[0]===ex.size)[1])[0], ex.fmt); }
+    else if(t?.id==='xGo'){ S.export = ex; save(); m.remove(); runExport(dims((sizesNow().find(x=>x[0]===ex.size) || SIZES[2])[1])[0], ex.fmt); }
   };
   document.body.appendChild(m);
 }
@@ -1985,19 +1990,28 @@ async function dbPut(k, v){ const d = await idb(); return new Promise((res,rej)=
 const newId = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36);
 const curSheet = () => sheets.list.find(x => x.id === sheets.cur);
 
-// a photo is made a JPEG of at most 3200 px on its long side before it goes up (enough for an 8K sheet, small enough for the space)
+/* A photo goes up as it is (Alex, 14 Nov: "it must lose resolution nowhere, what I upload keeps the best resolution and quality"):
+   a JPEG, PNG or WebP that fits the account's 15 MB a file is not touched, not a pixel and not its compression. Only a
+   file that is larger, or of another kind, is written again at its full size: PNG if that fits, else the finest JPEG that does. */
+const UP_MAX = 14.5e6;
+async function bestBlob(c){
+  const mk = (cv, t, q) => new Promise(r => cv.toBlob(r, t, q));
+  let b = await mk(c, 'image/png'); if(b && b.size <= UP_MAX) return b;
+  const o = document.createElement('canvas'); o.width = c.width; o.height = c.height; const og = o.getContext('2d'); og.fillStyle = '#fff'; og.fillRect(0, 0, o.width, o.height); og.drawImage(c, 0, 0);
+  for(const q of [1, 0.98, 0.96, 0.93, 0.9, 0.85]){ b = await mk(o, 'image/jpeg', q); if(b && b.size <= UP_MAX) return b; }
+  return b;
+}
 async function shrink(file){
+  if(/^image\/(jpeg|png|webp)$/.test(file.type) && file.size <= UP_MAX) return file;
   try{
-    const bm = await createImageBitmap(file); const k = Math.min(1, 3200 / Math.max(bm.width, bm.height));
-    if(k === 1 && file.type === 'image/jpeg' && file.size < 4e6) return file;
-    const c = document.createElement('canvas'); c.width = Math.round(bm.width*k); c.height = Math.round(bm.height*k);
-    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0,0,c.width,c.height); g.imageSmoothingQuality = 'high'; g.drawImage(bm, 0, 0, c.width, c.height);
-    return await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+    const bm = await createImageBitmap(file);
+    const c = document.createElement('canvas'); c.width = bm.width; c.height = bm.height; c.getContext('2d').drawImage(bm, 0, 0);
+    return (await bestBlob(c)) || file;
   }catch{ return file; }
 }
 function upload(p, sheetId){ // p gets its path once the photo is in the account
   const path = `${me.id}/${sheetId}/${newId()}.jpg`;
-  const job = bucket().upload(path, p.blob, {contentType:'image/jpeg', upsert:false}).then(({error}) => {
+  const job = bucket().upload(path, p.blob, {contentType:p.blob.type || 'image/jpeg', upsert:false}).then(({error}) => {
     if(error) throw error; p.path = path; dbPut('blob:'+path, p.blob).catch(()=>{});
   }).catch(() => { toast('A photo could not be saved to your account. Check the connection and add it again.'); })
     .finally(() => { pending.delete(job); saveSoon(); });
@@ -2100,7 +2114,7 @@ async function bringLocal(){ // sheets made before sign-in, kept in this browser
       const ph = [];
       for(const q of r.photos){ if(!q || !q.blob){ ph.push(null); continue; }
         const path = `${me.id}/${row.id}/${newId()}.jpg`, blob = await shrink(q.blob);
-        const { error } = await bucket().upload(path, blob, {contentType:'image/jpeg'});
+        const { error } = await bucket().upload(path, blob, {contentType:blob.type || 'image/jpeg'});
         ph.push(error ? null : {path, w:q.w, h:q.h, s:q.s, ox:q.ox, oy:q.oy, flip:q.flip, rot:q.rot||0}); }
       await sb.from('roarref_sheets').update({data:{S:r.S, photos:ph}}).eq('id', row.id); n++;
     }
