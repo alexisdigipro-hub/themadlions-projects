@@ -2018,6 +2018,71 @@ function toast(t){ const d=document.createElement('div'); d.className='toast'; d
 const SB_URL = 'https://bzmjhbnwhdwmncxkqkdl.supabase.co', SB_KEY = 'sb_publishable_7mQ3e0NH5lCmdoIKx2-FUA_EgCoXx9X', MAX_SHEETS = 10;
 const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'roar-account' } }) : null;
 const bucket = () => sb.storage.from('roarref');
+/* Where the files live (Alex, 14 Nov: "can they go up to another server, so Supabase is not loaded"): Cloudflare R2, bucket
+   roarref, through the Edge Function roarref-files (the page never holds a key: it asks for short-lived signed addresses and
+   sends each file straight to R2). A path that starts "r2:" is in R2; any other is in Supabase storage, as before. While the
+   function says R2 is not ready, or a send to R2 fails, a new file goes to Supabase, so nothing stops. A sheet opened while
+   R2 is ready has its Supabase files moved over, once (moveToR2). */
+const FILES_FN = SB_URL + '/functions/v1/roarref-files';
+let r2on = null;
+async function filesFn(body){
+  const { data } = await sb.auth.getSession(); const tok = data && data.session && data.session.access_token;
+  const r = await fetch(FILES_FN, {method:'POST', headers:{'Content-Type':'application/json', apikey:SB_KEY, Authorization:'Bearer ' + (tok || SB_KEY)}, body:JSON.stringify(body)});
+  const j = await r.json().catch(() => ({})); if(!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j;
+}
+async function r2ready(){ if(r2on === null){ try{ r2on = !!(await filesFn({action:'health'})).ok; }catch{ r2on = false; } } return r2on; }
+// signed addresses, asked for together when several are wanted in the same moment
+let signQ = [], signT = null;
+function signed(op, key){ return new Promise((res, rej) => { signQ.push({op, key, res, rej}); clearTimeout(signT); signT = setTimeout(async () => {
+  const q = signQ; signQ = [];
+  for(let i = 0; i < q.length; i += 60){ const part = q.slice(i, i + 60);
+    try{ const { urls } = await filesFn({action:'sign', items:part.map(({op, key}) => ({op, key}))}); part.forEach((x, k) => x.res(urls[k])); }
+    catch(e){ part.forEach(x => x.rej(e)); } }
+}, 25); }); }
+const isR2 = path => typeof path === 'string' && path.startsWith('r2:');
+const store = {
+  // rel is "<account>/<sheet>/<file>"; gives back {path} of where the file went, or {error}
+  async put(rel, blob, type, over){
+    if(await r2ready()){
+      try{ const url = await signed('put', rel); const r = await fetch(url, {method:'PUT', body:blob, headers:{'Content-Type':type || blob.type || 'image/jpeg'}});
+        if(r.ok) return {path:'r2:' + rel}; }catch{}
+    }
+    const { error } = await bucket().upload(rel, blob, {contentType:type || blob.type || 'image/jpeg', upsert:!!over});
+    return error ? {error} : {path:rel};
+  },
+  async get(path, bust){
+    if(isR2(path)){ const r = await fetch(await signed('get', path.slice(3))); if(!r.ok) throw new Error('HTTP ' + r.status); return await r.blob(); }
+    const { data, error } = await bucket().download(path + (bust ? '?t=' + bust : '')); if(error) throw error; return data;
+  },
+  async remove(paths){
+    const a = paths.filter(isR2).map(x => x.slice(3)), b = paths.filter(x => !isR2(x));
+    if(a.length) await filesFn({action:'remove', keys:a}).catch(() => {});
+    if(b.length) await bucket().remove(b);
+  },
+  async list(folder){ // every file of a sheet's folder, in both places, as full paths
+    const out = [];
+    try{ const { data } = await bucket().list(folder, {limit:400}); (data || []).forEach(f => out.push(folder + '/' + f.name)); }catch{}
+    if(await r2ready()){ try{ const { files } = await filesFn({action:'list', folder}); (files || []).forEach(f => out.push('r2:' + folder + '/' + f.name)); }catch{} }
+    return out;
+  },
+};
+// a sheet's files still in Supabase go over to R2, in the background, and the sheet is saved with their new places
+let moving = false;
+async function moveToR2(){
+  if(moving || !(await r2ready()) || !me || !sheets.cur) return;
+  const id = sheets.cur, todo = [];
+  photos.forEach(p => { if(p && p.path && !isR2(p.path)) todo.push({o:p, k:'path'}); if(p && p.orig && p.orig.path && !isR2(p.orig.path)) todo.push({o:p.orig, k:'path'}); });
+  pool.forEach(x => { if(x.path && !isR2(x.path)) todo.push({o:x, k:'path'}); if(x.tpath && !isR2(x.tpath)) todo.push({o:x, k:'tpath'}); });
+  if(!todo.length) return;
+  moving = true; let moved = 0;
+  try{
+    for(const t of todo){ if(sheets.cur !== id) break; const from = t.o[t.k];
+      try{ const blob = (t.k === 'path' && t.o.blob) || await getBlob(from); const r = await store.put(from, blob, blob.type);
+        if(r.path && isR2(r.path) && t.o[t.k] === from){ t.o[t.k] = r.path; dbPut('blob:' + r.path, blob).catch(() => {}); moved++; } else break; }catch{ break; }
+    }
+    if(moved && sheets.cur === id){ await save(); lastClean = 0; }
+  } finally { moving = false; }
+}
 const DEF = JSON.stringify(S);
 let me = null, dbp = null, sheets = {cur:null, list:[]}, pending = new Set(), lastClean = 0, saveErr = false;
 function idb(){ if(!dbp) dbp = new Promise((res,rej)=>{ try{ const r=indexedDB.open('roarref',1); r.onupgradeneeded=()=>r.result.createObjectStore('s'); r.onsuccess=()=>res(r.result); r.onerror=rej; }catch(e){ rej(e); } }); return dbp; }
@@ -2066,9 +2131,8 @@ async function addToPool(files){
       const tb = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
       const id = newId(), it = {id, w:bm.width, h:bm.height, blob, turl:URL.createObjectURL(tb), busy:true};
       pool.push(it); drawPool();
-      const path = `${me.id}/${sheetId}/${id}.jpg`, tpath = `${me.id}/${sheetId}/${id}.t.jpg`;
-      const job = Promise.all([bucket().upload(path, blob, {contentType:blob.type || 'image/jpeg', upsert:false}), bucket().upload(tpath, tb, {contentType:'image/jpeg', upsert:false})])
-        .then(rs => { if(rs.some(r => r.error)) throw 0; it.path = path; it.tpath = tpath; it.busy = false; dbPut('blob:'+path, blob).catch(()=>{}); dbPut('blob:'+tpath, tb).catch(()=>{}); })
+      const job = Promise.all([store.put(`${me.id}/${sheetId}/${id}.jpg`, blob, blob.type), store.put(`${me.id}/${sheetId}/${id}.t.jpg`, tb, 'image/jpeg')])
+        .then(rs => { if(rs.some(r => r.error)) throw 0; it.path = rs[0].path; it.tpath = rs[1].path; it.busy = false; dbPut('blob:'+it.path, blob).catch(()=>{}); dbPut('blob:'+it.tpath, tb).catch(()=>{}); })
         .catch(() => { pool = pool.filter(x => x !== it); toast('A photo could not be saved to the pool. Check the connection and add it again.'); })
         .finally(() => { pending.delete(job); drawPool(); saveSoon(); });
       pending.add(job);
@@ -2100,8 +2164,7 @@ function drawPool(){
   markPool();
 }
 function upload(p, sheetId){ // p gets its path once the photo is in the account
-  const path = `${me.id}/${sheetId}/${newId()}.jpg`;
-  const job = bucket().upload(path, p.blob, {contentType:p.blob.type || 'image/jpeg', upsert:false}).then(({error}) => {
+  const job = store.put(`${me.id}/${sheetId}/${newId()}.jpg`, p.blob, p.blob.type).then(({error, path}) => {
     if(error) throw error; p.path = path; dbPut('blob:'+path, p.blob).catch(()=>{});
   }).catch(() => { toast('A photo could not be saved to your account. Check the connection and add it again.'); })
     .finally(() => { pending.delete(job); saveSoon(); });
@@ -2109,7 +2172,7 @@ function upload(p, sheetId){ // p gets its path once the photo is in the account
 }
 async function getBlob(path){
   const hit = await dbGet('blob:'+path).catch(()=>null); if(hit) return hit;
-  const { data, error } = await bucket().download(path); if(error) throw error;
+  const data = await store.get(path);
   dbPut('blob:'+path, data).catch(()=>{}); return data;
 }
 const packPhotos = () => photos.map(p => p && p.path ? {path:p.path,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0,pw:p.pw||1,ph:p.ph||1,adj:hasAdj(p.adj) ? p.adj : undefined, lm:p.lm, orig:p.orig && p.orig.path ? {path:p.orig.path} : undefined} : null);
@@ -2150,16 +2213,17 @@ function histGo(d){
 document.addEventListener('keydown', e => { if(!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z' && e.key.toLowerCase() !== 'y') return;
   if(e.target.closest && e.target.closest('input:not([type=range]), textarea')) return; e.preventDefault(); histGo(e.key.toLowerCase() === 'y' || e.shiftKey ? 1 : -1); });
 async function cleanFiles(id){ // photos taken off the sheet leave the account too
-  try{ const { data } = await bucket().list(`${me.id}/${id}`, {limit:200}); if(!data) return;
-    const keep = new Set(photos.filter(p => p && p.path).map(p => p.path.split('/').pop()).concat(photos.filter(p => p && p.orig && p.orig.path).map(p => p.orig.path.split('/').pop()), pool.flatMap(x => [x.path, x.tpath]).filter(Boolean).map(x => x.split('/').pop()), 'thumb.jpg'));
-    const gone = data.map(f => f.name).filter(n => !keep.has(n)).map(n => `${me.id}/${id}/${n}`);
-    if(gone.length && id === sheets.cur && !pending.size) await bucket().remove(gone);
+  try{ if(moving) return; const all = await store.list(`${me.id}/${id}`); if(!all.length) return;
+    const c = curSheet();
+    const keep = new Set(photos.filter(p => p && p.path).map(p => p.path).concat(photos.filter(p => p && p.orig && p.orig.path).map(p => p.orig.path), pool.flatMap(x => [x.path, x.tpath]).filter(Boolean), c && c.thumb ? [c.thumb] : []));
+    const gone = all.filter(x => !keep.has(x));
+    if(gone.length && id === sheets.cur && !pending.size && !moving) await store.remove(gone);
   }catch{}
 }
 async function saveThumb(){
   if(!me || !sheets.cur) return;
-  try{ const b = await drawSheet(360, 'image/jpeg'); const path = `${me.id}/${sheets.cur}/thumb.jpg`;
-    const { error } = await bucket().upload(path, b, {contentType:'image/jpeg', upsert:true});
+  try{ const b = await drawSheet(360, 'image/jpeg');
+    const { error, path } = await store.put(`${me.id}/${sheets.cur}/thumb.jpg`, b, 'image/jpeg', true);
     if(!error){ await sb.from('roarref_sheets').update({thumb:path}).eq('id', sheets.cur); const c = curSheet(); if(c){ c.thumb = path; c.thumbAt = Date.now(); } }
   }catch{}
 }
@@ -2174,7 +2238,7 @@ async function loadSheet(row){
   render();
   await Promise.all(list.map(async (q, i) => { if(!q || !q.path) return;
     try{ const blob = await getBlob(q.path); photos[i] = Object.assign({rot:0}, q, {blob, url:URL.createObjectURL(blob)}); migrateAdj(photos[i]); if(hasAdj(photos[i].adj)) await applyFx(photos[i]); }catch{} }));
-  render(); histReset();
+  render(); histReset(); moveToR2();
 }
 async function listSheets(){
   const { data, error } = await sb.from('roarref_sheets').select('id,name,thumb,updated_at,data').order('created_at');
@@ -2204,8 +2268,8 @@ async function bringLocal(){ // sheets made before sign-in, kept in this browser
       const row = await insertSheet(name, {S:r.S, photos:[]}); if(!row) break;
       const ph = [];
       for(const q of r.photos){ if(!q || !q.blob){ ph.push(null); continue; }
-        const path = `${me.id}/${row.id}/${newId()}.jpg`, blob = await shrink(q.blob);
-        const { error } = await bucket().upload(path, blob, {contentType:blob.type || 'image/jpeg'});
+        const blob = await shrink(q.blob);
+        const { error, path } = await store.put(`${me.id}/${row.id}/${newId()}.jpg`, blob, blob.type);
         ph.push(error ? null : {path, w:q.w, h:q.h, s:q.s, ox:q.ox, oy:q.oy, flip:q.flip, rot:q.rot||0}); }
       await sb.from('roarref_sheets').update({data:{S:r.S, photos:ph}}).eq('id', row.id); n++;
     }
@@ -2237,7 +2301,7 @@ async function newSheet(copy){
     const from = curSheet(), row = await insertSheet((from ? from.name : 'Character') + ' copy', {S, photos:[]}); if(!row) return;
     const ph = [];
     for(const p of photos){ if(!p || !p.path){ ph.push(null); continue; }
-      const to = `${me.id}/${row.id}/${newId()}.jpg`; const { error } = await bucket().copy(p.path, to);
+      let to = '', error = null; try{ const r = await store.put(`${me.id}/${row.id}/${newId()}.jpg`, p.blob || await getBlob(p.path), (p.blob || {}).type); to = r.path; error = r.error; }catch(e){ error = e; }
       ph.push(error ? null : {path:to, w:p.w, h:p.h, s:p.s, ox:p.ox, oy:p.oy, flip:p.flip, rot:p.rot||0, pw:p.pw||1, ph:p.ph||1, adj:hasAdj(p.adj) ? JSON.parse(JSON.stringify(p.adj)) : undefined, lm:p.lm}); }
     await sb.from('roarref_sheets').update({data:{S, photos:ph}}).eq('id', row.id);
     sheets.list = await listSheets(); await openSheet(row.id); await saveThumb();
@@ -2249,7 +2313,7 @@ async function newSheet(copy){
   }
 }
 async function deleteSheet(id){
-  try{ const { data } = await bucket().list(`${me.id}/${id}`, {limit:200}); if(data && data.length) await bucket().remove(data.map(f => `${me.id}/${id}/${f.name}`)); }catch{}
+  try{ const all = await store.list(`${me.id}/${id}`); if(all.length) await store.remove(all); }catch{}
   await sb.from('roarref_sheets').delete().eq('id', id);
   sheets.list = await listSheets();
   if(!sheets.list.length){ const row = await insertSheet('Character 1', {S:JSON.parse(DEF), photos:[]}); sheets.list = await listSheets(); if(row) await openSheet(row.id); return; }
@@ -2267,7 +2331,7 @@ async function openSheets(first){
     urls.forEach(u => URL.revokeObjectURL(u)); urls.length = 0;
     const rows = [];
     for(const x of sheets.list){ let u = '';
-      if(x.thumb){ try{ const { data } = await bucket().download(x.thumb + '?t=' + (x.thumbAt || x.updated_at)); if(data){ u = URL.createObjectURL(data); urls.push(u); } }catch{} }
+      if(x.thumb){ try{ const data = await store.get(x.thumb, x.thumbAt || x.updated_at); if(data){ u = URL.createObjectURL(data); urls.push(u); } }catch{} }
       rows.push({x, u}); }
     const full = sheets.list.length >= MAX_SHEETS;
     const when = t => { try{ const d = new Date(t), days = Math.floor((Date.now() - d)/864e5);
