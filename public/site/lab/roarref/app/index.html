@@ -2104,15 +2104,17 @@ async function moveToR2(){
   const id = sheets.cur, todo = [];
   photos.forEach(p => { if(p && p.path && !isR2(p.path)) todo.push({o:p, k:'path'}); if(p && p.orig && p.orig.path && !isR2(p.orig.path)) todo.push({o:p.orig, k:'path'}); });
   pool.forEach(x => { if(x.path && !isR2(x.path)) todo.push({o:x, k:'path'}); if(x.tpath && !isR2(x.tpath)) todo.push({o:x, k:'tpath'}); });
-  if(!todo.length) return;
+  if(!todo.length){ if(photos.some(p => p && isR2(p.path)) || pool.some(x => isR2(x.path))){ lastClean = Date.now(); cleanFiles(id); } return; }
   moving = true; let moved = 0;
   try{
     for(const t of todo){ if(sheets.cur !== id) break; const from = t.o[t.k];
       try{ const blob = (t.k === 'path' && t.o.blob) || await getBlob(from); const r = await store.put(from, blob, blob.type);
         if(r.path && isR2(r.path) && t.o[t.k] === from){ t.o[t.k] = r.path; dbPut('blob:' + r.path, blob).catch(() => {}); moved++; } else break; }catch{ break; }
     }
-    if(moved && sheets.cur === id){ await save(); lastClean = 0; }
+    if(moved && sheets.cur === id){ await save(); await saveThumb(); }
   } finally { moving = false; }
+  // the old copies in Supabase go at once, not at some later save (seen on Alex's first moved sheet, 14 Nov: 4 files stayed)
+  if(moved && sheets.cur === id && !saveErr){ lastClean = Date.now(); cleanFiles(id); }
 }
 const DEF = JSON.stringify(S);
 let me = null, dbp = null, sheets = {cur:null, list:[]}, pending = new Set(), lastClean = 0, saveErr = false;
