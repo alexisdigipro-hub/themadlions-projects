@@ -233,11 +233,11 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .mpane .sub{margin:6px 0 0;font:600 11px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .bar .spacer{flex:1}
 .frame .tools{display:none}
-#sheetsBtn{gap:9px;padding:0 12px 0 5px}
-#sheetsBtn .av{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font:600 13px var(--body);box-shadow:0 0 12px var(--accent-glow)}
-#sheetsBtn .av:empty{display:none}
-#sheetsBtn .shi{display:none}
-#sheetsBtn .chev{width:16px;height:16px;opacity:.7}
+#sheetsBtn{gap:8px}
+.bar .mark{margin:0 2px 0 6px}
+.bname{font:600 14px var(--body);color:var(--muted);max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:12px;border-left:1px solid var(--line);line-height:22px}
+.bname:empty{display:none}
+.bsep{width:1px;height:22px;background:var(--line);margin:0 4px;flex:none}
 .panel .ctl input[type=range]{width:80px}
 .panel .ctl.big input[type=range]{width:96px}
 .panel .ctl{gap:6px;padding:0 10px}
@@ -385,10 +385,8 @@ a.pill{text-decoration:none}
   .bar .pill.round{width:38px;height:38px}
   .bar .pill.main{width:42px;height:42px;padding:0;justify-content:center}
   .bar .pill .w,.bar .shn{display:none}
-  #sheetsBtn{width:38px;height:38px;padding:0;justify-content:center}
-  #sheetsBtn .chev{display:none}
-  #sheetsBtn .av{width:30px;height:30px}
-  #sheetsBtn .av:empty + .shi{display:block}
+  .bname,.bsep{display:none}
+  .bar .mark{margin:0 0 0 2px}
   .work{display:block;flex:none}
   .side,.rail{display:none}
   .stagewrap{flex:none;display:block}
@@ -1671,8 +1669,9 @@ function buildPanel(){
     w.innerHTML = `${label} <input type="range" id="${id}" min="0" max="${max}" step="0.5"><output></output>`;
     const i = w.querySelector('input'); i.oninput = () => { S[key] = +i.value; render(); saveSoon(); };
     i.ondblclick = () => { S[key] = key==='gap' ? 14 : 0; render(); save(); }; return w; };
-  const shb = document.createElement('button'); shb.type='button'; shb.className='pill'; shb.id='sheetsBtn'; shb.title='Your projects: one per character';
-  shb.innerHTML = '<span class="av" aria-hidden="true"></span><svg class="shi" viewBox="0 0 24 24"><rect x="4" y="6" width="14" height="12" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v10"/></svg><span class="shn"></span><svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>';
+  const shb = document.createElement('button'); shb.type='button'; shb.className='pill'; shb.id='sheetsBtn'; shb.title='Home: all your characters';
+  // Home (Alex, 14 Nov: "the button with the arrow down is odd; a program's menu, easy to get home"): a house and the word, first in the top row
+  shb.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h4v-5h4v5h4v-9"/></svg><span class="w">Home</span>';
   shb.onclick = () => openSheets();
   panelEl.append(shb, fine('gap','Gap',80,'gap','Space between windows · double-click for 14'), fine('rad','Round',80,'rad','Round corners · double-click for none'), even, photo);
 }
@@ -1785,9 +1784,7 @@ function toolbar(i){
 }
 function syncPanel(light){
   const p = sel>=0 ? photos[sel] : null, on = !!p;
-  { const c = curSheet(); const n = document.querySelector('#sheetsBtn .shn'); if(n) n.textContent = c ? c.name : 'Sheets';
-    const av = document.querySelector('#sheetsBtn .av'); if(av) av.textContent = me && me.email ? me.email[0].toUpperCase() : '';
-    const cn = document.querySelector('#sheetsBtn'); if(cn) cn.title = (me ? me.email + ' · ' : '') + 'Your projects (' + sheets.list.length + ' of ' + MAX_SHEETS + ')'; }
+  { const c = curSheet(); const n = $('projName'); if(n){ n.textContent = c ? c.name : ''; n.title = c ? c.name : ''; } }
   const g = $('gap'), rd = $('rad');
   if(g){ g.value = S.gap; g.nextElementSibling.textContent = S.gap; rd.value = S.rad; rd.nextElementSibling.textContent = S.rad; }
   $('even').classList.toggle('off', !(S.layout==='custom' || (S.sizes && S.sizes[lay().id])));
@@ -2539,7 +2536,12 @@ function placeControls(){
   [lb, cv].forEach(x => { x.classList.add('wide'); x.classList.remove('round'); });
   if(!lb.querySelector('.w')) lb.insertAdjacentHTML('beforeend','<span class="w">Names</span>');
   const sp = document.createElement('span'); sp.className = 'spacer';
-  bar.replaceChildren(mark, sp, $('undo'), $('redo'), $('add'), $('clear'), $('export'), $('sheetsBtn'));
+  // the top row as a program's: Home, the name, then what is done to the sheet in three small groups (history, photos, export)
+  let pn = $('projName'); if(!pn){ pn = document.createElement('span'); pn.id = 'projName'; pn.className = 'bname'; const c0 = curSheet(); pn.textContent = c0 ? c0.name : ''; }
+  const sepEl = () => { const i = document.createElement('i'); i.className = 'bsep'; return i; };
+  [$('add'), $('clear'), $('sheetsBtn')].forEach(x => { x.classList.toggle('round', isPhone()); });
+  $('add').style.marginLeft = '';
+  bar.replaceChildren($('sheetsBtn'), mark, pn, sp, $('undo'), $('redo'), sepEl(), $('add'), $('clear'), sepEl(), $('export'));
   const mk = (parent, cls) => (...els) => { const r = document.createElement('div'); r.className = cls; els.filter(Boolean).forEach(e => r.appendChild(e)); parent.appendChild(r); return r; };
   if(isPhone()){
     const row = mk($('mpane'), 'mrow');
