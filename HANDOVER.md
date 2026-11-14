@@ -37,6 +37,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (14 Nov 2026: a PIN on Finance)
+- Alex: "a 4-number pin code on my finance, which I can get past from here if I forget it".
+- src/components/FinancePin.jsx: **FinancePinGate** wraps the Finance page (Finance.jsx default export); **FinancePinSettings** is the first panel of Finance > Settings (Set a PIN, typed twice; Change PIN; Take the PIN off; Lock now). Each administrator has their own PIN, kept only as a PBKDF2 fingerprint with its own salt in finance.settings.pins[userId] (the Finance settings row, administrators only). Unlocked, it stays open while Finance is on screen and 10 minutes after, in that tab (sessionStorage). Five wrong tries wait 30 s.
+- **Forgotten PIN:** Forgot PIN? on the lock asks for the hub password (signInWithPassword) and takes the PIN off. Or Claude takes it off in the database with the Supabase tools: `update finance set data = data - 'pins' where kind = 'settings';` (all PINs) or `update finance set data = data #- '{pins,<user id>}' where kind = 'settings';` (one person's).
+- It is a screen lock: the money itself was already guarded by finance.sql's administrators-only rules. No SQL to run.
+
 ## Where we stopped (10 Nov 2026, later: a delivery's email is its page)
 - Alex (screenshot of Outbox > Email): "can the whole page of the link go in, with everything, at least as a look, and Download takes you to the real page".
 - src/lib/deliveryEmail.js deliveryEmail: now the delivery page's own look (black #0b0b0c with the red glow, red kicker, light title, client, message, red Download all, every file as a tile with its size and its own Download, the thumbnails two to a row, the credits, the fine print). Every button, picture and the wordmark go to the delivery page; nothing links to the files themselves (before, each file's Download went straight to its pCloud link). Held until paid: the page's short note with the heart, the files without buttons, Open the delivery page. The underlined "Open the delivery page" link is gone (Alex's rule: no underlined words as buttons). Invoices' emails keep the hub look (wrap).

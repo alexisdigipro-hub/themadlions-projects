@@ -9723,3 +9723,24 @@ html.dlv-hold-open, html.dlv-hold-open body { overflow: hidden; }
 .deliv-tag.t-held svg { width: 12px; height: 12px; }
 html[data-theme='light'] .deliv-tag.t-held { color: #9a6a10; }
 .deliv-tool.deliv-tool-paid { color: var(--ok, #3fb37a); }
+
+/* ---------- Finance PIN (Alex, 14 Nov; components/FinancePin.jsx) ----------
+   The lock: one glass card in the middle of the page, a lock, four soft boxes that fill as the digits are typed (a
+   hidden number field under them brings up the phone's number pad), Forgot PIN? as a pill. A wrong PIN shakes. */
+.fin-lock { min-height: calc(100dvh - 140px); display: grid; place-items: center; padding: 20px 0; }
+.fin-lock-card { width: min(380px, 100%); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 34px 28px 28px; text-align: center; border-radius: 26px; background: var(--gl-fill, var(--panel)); border: 1px solid var(--gl-edge, var(--line-soft)); -webkit-backdrop-filter: var(--gl-blur, none); backdrop-filter: var(--gl-blur, none); box-shadow: inset 0 1px 0 var(--gl-shine, transparent), var(--gl-shadow, 0 20px 50px rgba(0, 0, 0, .3)); }
+.fin-lock-card h1 { margin: 0; font-size: 22px; font-weight: 700; }
+.fin-lock-card p { margin: 0; font-size: 14px; line-height: 1.5; }
+.fin-lock-ico { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.fin-pin-boxes { position: relative; display: flex; gap: 12px; justify-content: center; margin: 6px 0 4px; cursor: text; }
+.fin-pin-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; font-size: 16px; caret-color: transparent; }
+.fin-pin-box { width: 52px; height: 60px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--text) 16%, transparent); background: color-mix(in srgb, var(--text) 5%, transparent); position: relative; transition: border-color .15s, background .15s; }
+.fin-pin-box.at { border-color: var(--accent); }
+.fin-pin-box.on::after { content: ''; position: absolute; top: 50%; left: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--text); }
+.fin-pin-boxes.shake { animation: fin-shake .4s ease; }
+@keyframes fin-shake { 0%, 100% { transform: none; } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
+.fin-lock-forgot { margin-top: 4px; }
+.fin-lock-forget { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.fin-lock-acts { display: flex; gap: 8px; justify-content: center; }
+.fin-pin-set .fin-pin-boxes { justify-content: flex-start; }
+@media (prefers-reduced-motion: reduce) { .fin-pin-boxes.shake { animation: none; } }

@@ -13,6 +13,7 @@ import { InvoiceProfileSettings, InvoicesTab } from '../components/Invoices.jsx'
 import { invoiceTotals } from '../lib/invoice.js'
 import { ReceiptView } from '../components/Receipt.jsx'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
+import { FinancePinGate, FinancePinSettings } from '../components/FinancePin.jsx'
 
 /* The tabs, a glass capsule like the Database's (Alex, 10 Oct): Overview, Invoices (back in Finance, out
    of the side menu), Transactions, Team, then the year and Settings on their own at the end. Recurring
@@ -21,7 +22,12 @@ const FIN_TABS = [['overview', 'Overview'], ['invoices', 'Invoices'], ['transact
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-export default function Finance({ start }) {
+/* Finance behind its PIN, when the administrator has set one (Alex, 14 Nov; components/FinancePin.jsx) */
+export default function Finance(props) {
+  return <FinancePinGate><FinancePage {...props} /></FinancePinGate>
+}
+
+function FinancePage({ start }) {
   const { state, update } = useStore()
   const me = useCurrentUser()
   const toast = useToast()
@@ -587,6 +593,7 @@ export default function Finance({ start }) {
           <p className="fineprint">Finance is stored in its own table that only administrators can read. Expenses tied to a project also appear as actuals in that project's budget.</p>
         </section>
       )}
+      {tab === 'settings' && <FinancePinSettings />}
       {tab === 'settings' && <InvoiceProfileSettings />}
       {tab === 'settings' && (
         <section className="panel fin-settings">
