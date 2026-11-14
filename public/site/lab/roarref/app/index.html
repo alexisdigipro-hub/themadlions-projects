@@ -1988,7 +1988,9 @@ async function runExport(W, fmt){
   try{
     const type = fmt==='jpg' ? 'image/jpeg' : 'image/png';
     const blob = await drawSheet(W, type);
-    const name = `character-sheet-${new Date().toISOString().slice(0,10)}.${fmt}`;
+    // the file takes the project's name (Alex, 14 Nov); without one, the old name with the date
+    const pn = ((curSheet() || {}).name || '').replace(/[\/\\:*?"<>|\x00-\x1f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100);
+    const name = `${pn || 'character-sheet-' + new Date().toISOString().slice(0,10)}.${fmt}`;
     const file = new File([blob], name, {type});
     if(matchMedia('(pointer:coarse)').matches && navigator.canShare?.({files:[file]})){
       try{ await navigator.share({files:[file]}); return; }catch(e){ if(e.name==='AbortError') return; }
