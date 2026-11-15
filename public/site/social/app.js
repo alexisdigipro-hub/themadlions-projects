@@ -467,6 +467,8 @@ const vidPlay = 'IntersectionObserver' in window ? new IntersectionObserver((lis
     const nx = all[all.indexOf(v) + 1];
     if (nx && !nx.dataset.cant) { if (!nx.src && nx.dataset.src) nx.src = nx.dataset.src; nx.preload = 'auto'; }
     all.forEach((o) => { if (o !== v && o !== nx && o.preload === 'auto') o.preload = 'metadata'; });
+    // with the sound remembered on, the next video comes with its sound; if the phone refuses, it plays quiet
+    if (prefs.mutedVideos) v.muted = !feedSound;
     v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });
   }
   else if (!v.paused) v.pause();
@@ -482,17 +484,21 @@ document.addEventListener('play', (e) => {
   if (e.target?.tagName !== 'VIDEO') return;
   document.querySelectorAll('video').forEach((o) => { if (o !== e.target && !o.paused) o.pause(); });
 }, true);
+// the feed remembers the sound (Alex, 15 Nov): once a video's sound is turned on, the next ones play with sound too,
+// until it is turned off again; kept for the visit (a fresh visit starts quiet, as a phone wants)
+let feedSound = (() => { try { return sessionStorage.getItem('roardino-sound') === '1'; } catch { return false; } })();
+const setFeedSound = (on) => { feedSound = on; try { sessionStorage.setItem('roardino-sound', on ? '1' : '0'); } catch { /* private */ } };
 function feedVideo(src, poster, codec) {
   // the cover stays until the video really moves (Alex, 9 Nov: "it plays black before"): the video shows only once a
   // third of a second has played, the cover (behind it, on the post) until then
-  const v = h('video', { class: 'fv' + (poster ? '' : ' live'), playsInline: true, preload: 'none', muted: prefs.mutedVideos, loop: true, poster: poster || null,
+  const v = h('video', { class: 'fv' + (poster ? '' : ' live'), playsInline: true, preload: 'none', muted: !feedSound && prefs.mutedVideos, loop: true, poster: poster || null,
     ontimeupdate: (e) => { if (e.target.currentTime > 0.3) e.target.classList.add('live'); },
     // a computer: the mouse over a video starts it (and so stops the others)
     onmouseenter: () => { if (isPhone()) return; delete v.dataset.held; if (!v.src && v.dataset.src) v.src = v.dataset.src; if (v.paused) v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } });
   // an H.265 video on the few browsers that cannot show one: its cover stays, nothing is fetched
   if (codec === 'hevc' && !playsHevc()) { v.dataset.cant = '1'; return v; }
   // out of sight it goes quiet again, so the next time it starts by itself it may (a phone lets only silent videos start)
-  v.addEventListener('pause', () => { if (!v.muted && prefs.mutedVideos) { v.muted = true; v.dispatchEvent(new Event('volumechange')); } });
+  v.addEventListener('pause', () => { if (!v.muted && prefs.mutedVideos && !feedSound) { v.muted = true; v.dispatchEvent(new Event('volumechange')); } });
   if (vidNear && vidPlay) { v.dataset.src = src; vidNear.observe(v); vidPlay.observe(v); } else v.src = src;
   return v;
 }
@@ -2184,6 +2190,7 @@ function postCard(r, st, refresh) {
       soundEl = h('button', { type: 'button', class: 'ig-ico ig-sound', onclick: (e) => {
         e.stopPropagation();
         v0.muted = !v0.muted;
+        setFeedSound(!v0.muted);
         if (!v0.muted) { document.querySelectorAll('video.fv').forEach((o) => { if (o !== v0 && !o.muted) o.muted = true; }); if (!v0.src && v0.dataset.src) v0.src = v0.dataset.src; delete v0.dataset.held; v0.play().catch(() => {}); }
         face();
       } });
