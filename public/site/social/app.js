@@ -1146,7 +1146,7 @@ window.addEventListener('hashchange', () => { crumb('go ' + location.hash); rout
 (() => {
   if (!('ontouchstart' in window)) return;
   let st = null;
-  window.addEventListener('touchstart', (e) => { const p = e.touches[0]; st = e.touches.length === 1 && p.clientX < 30 && !document.documentElement.classList.contains('in-room') && !e.target.closest?.('.veil,.lb,.st-veil,input,textarea') ? { x: p.clientX, y: p.clientY, at: Date.now() } : null; }, { passive: true });
+  window.addEventListener('touchstart', (e) => { const p = e.touches[0]; st = e.touches.length === 1 && p.clientX < 30 && !document.documentElement.classList.contains('in-room') && !e.target.closest?.('.veil,.lb,.rl,.st-veil,input,textarea') ? { x: p.clientX, y: p.clientY, at: Date.now() } : null; }, { passive: true });
   window.addEventListener('touchend', (e) => {
     if (!st) return;
     const p = e.changedTouches[0], dx = p.clientX - st.x, dy = Math.abs(p.clientY - st.y), quick = Date.now() - st.at < 300;
@@ -1161,7 +1161,7 @@ window.addEventListener('hashchange', () => { crumb('go ' + location.hash); rout
   document.body.append(tip);
   let y0 = null, x0 = 0, pull = 0, busy = false;
   const atTop = () => (window.scrollY || document.documentElement.scrollTop) <= 0;
-  const blocked = (el) => el.closest?.('.veil, .st-veil, .up-veil, .notes-panel, .menu, textarea, input');
+  const blocked = (el) => el.closest?.('.veil, .st-veil, .up-veil, .notes-panel, .menu, .rl, .lb, .pf, textarea, input');
   window.addEventListener('touchstart', (e) => { y0 = !busy && atTop() && e.touches.length === 1 && !blocked(e.target) ? e.touches[0].clientY : null; x0 = e.touches[0]?.clientX || 0; pull = 0; }, { passive: true });
   window.addEventListener('touchmove', (e) => {
     if (y0 == null) return;
@@ -2138,11 +2138,21 @@ function openReels(fromArt, onClose, signedHq) {
   // a slide to the right from anywhere closes Reels (Alex, 15 Nov): the whole view follows the finger, shrinking a little
   // as glass does; let go past a third of the screen, or with a quick flick, and it goes back to the feed
   let sx = 0, sy = 0, st0 = 0, drag = null;
-  veil.addEventListener('touchstart', (e) => { if (e.touches.length !== 1 || e.target.closest('.rl-sheet-back')) return; sx = e.touches[0].clientX; sy = e.touches[0].clientY; st0 = Date.now(); drag = null; }, { passive: true });
+  // a touch on a button of the bar, the top or a sheet presses it at once on touchend (Alex, 16 Nov: "no button works"
+  // on the iPhone): it no longer waits for the phone's own click, which the slide gestures here could swallow
+  let tapEl = null, tx = 0, ty = 0, tt0 = 0;
+  veil.addEventListener('touchstart', (e) => { const el = e.touches.length === 1 ? e.target.closest('.rl-side button, .rl-side a, .rl-top button, .rl-sheet button') : null; tapEl = el; if (el) { tx = e.touches[0].clientX; ty = e.touches[0].clientY; tt0 = Date.now(); } }, { passive: true, capture: true });
+  veil.addEventListener('touchend', (e) => {
+    const el = tapEl; tapEl = null;
+    if (!el || !el.isConnected) return;
+    const c = e.changedTouches[0]; if (!c || Math.hypot(c.clientX - tx, c.clientY - ty) > 14 || Date.now() - tt0 > 700) return;
+    e.preventDefault(); e.stopPropagation(); el.click();
+  }, { capture: true });
+  veil.addEventListener('touchstart', (e) => { if (e.touches.length !== 1 || e.target.closest('.rl-sheet-back, .rl-side, .rl-top')) { drag = false; return; } sx = e.touches[0].clientX; sy = e.touches[0].clientY; st0 = Date.now(); drag = null; }, { passive: true });
   veil.addEventListener('touchmove', (e) => {
     if (drag === false || e.target.closest('.rl-sheet-back')) return;
     const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
-    if (drag === null) { if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return; drag = dx > 0 && Math.abs(dx) > Math.abs(dy) * 1.3; if (!drag) return; veil.classList.add('rl-drag'); }
+    if (drag === null) { if (Math.abs(dx) < 18 && Math.abs(dy) < 18) return; drag = dx > 0 && Math.abs(dx) > Math.abs(dy) * 1.5; if (!drag) return; veil.classList.add('rl-drag'); }
     e.preventDefault();
     const k = Math.max(0, dx), f = Math.min(1, k / innerWidth);
     veil.style.transform = `translateX(${k}px) scale(${1 - f * 0.08})`; veil.style.borderRadius = `${Math.min(36, f * 90)}px`; veil.style.opacity = String(1 - f * 0.35);
