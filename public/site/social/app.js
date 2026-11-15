@@ -2037,10 +2037,11 @@ function openReels(fromArt, onClose, signedHq) {
     const likeN = h('span', {});
     const likeB = h('button', { type: 'button', class: 'rl-ico like', 'aria-label': t('Like'), html: ICON.heart });
     const drawLike = () => { likeB.classList.toggle('on', !!it.st.mine); likeN.textContent = !it.r.hide_likes || it.own ? short(it.st.bravos) : ''; };
-    const like = () => { if (it.own) return; it.likeBtn.click(); drawLike(); likeB.classList.remove('pop'); void likeB.offsetWidth; if (it.st.mine) likeB.classList.add('pop'); };
+    const like = () => { it.likeBtn.click(); drawLike(); likeB.classList.remove('pop'); void likeB.offsetWidth; if (it.st.mine) likeB.classList.add('pop'); };
     likeB.onclick = (e) => { e.stopPropagation(); like(); };
     drawLike();
     const pp = it.p;
+    const talkCount = h('span', {}, it.talkN?.textContent || '');
     const follow = !it.own && pp.id && !follows.has(pp.id) ? h('button', { type: 'button', class: 'rl-follow', 'aria-label': t('Follow'), title: t('Follow'), html: ICON.plus, onclick: async (e) => { e.stopPropagation(); const b = e.currentTarget; if (await toggleFollow(pp.id)) b.remove(); } }) : null;
     const capEl = it.r.body ? h('p', { class: 'rl-cap', onclick: (e) => { e.stopPropagation(); e.currentTarget.classList.toggle('all'); } }, it.r.body) : null;
     const paused = h('span', { class: 'rl-paused', html: ICON.play });
@@ -2049,7 +2050,7 @@ function openReels(fromArt, onClose, signedHq) {
       h('div', { class: 'rl-side' },
         h('div', { class: 'rl-grp' },
           h('div', { class: 'rl-pair' }, likeB, likeN),
-          it.r.comments_off ? null : h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Comment'), html: ICON.talk, onclick: (e) => { e.stopPropagation(); close(); it.comments(); } }), h('span', {}, it.talkN?.textContent || '')),
+          it.r.comments_off ? null : h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Comment'), html: ICON.talk, onclick: (e) => { e.stopPropagation(); talkSheet(it, talkCount); } }), talkCount),
           h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: (e) => { e.stopPropagation(); v.pause(); sendToRoarMe(it.r, pp); } }))),
         // the profile's picture in the middle of the bar (Alex, 16 Nov), with a small + while I do not follow them
         h('div', { class: 'rl-me' }, h('a', { href: `#/p/${pp.id}`, class: 'rl-av', 'aria-label': pp.name || '', onclick: () => close(true) }, avatar(pp)), follow),
@@ -2098,6 +2099,15 @@ function openReels(fromArt, onClose, signedHq) {
   };
   const io = new IntersectionObserver((en) => en.forEach((x) => { if (x.isIntersecting && x.intersectionRatio >= 0.6) show(+x.target.dataset.i); }), { root: scroller, threshold: [0.6] });
   slides.forEach((sl) => io.observe(sl));
+  // comments open inside Reels (Alex, 16 Nov: "these must happen in there, not go elsewhere"): a sheet from the foot
+  // with the post's comments and the box to write one; the count on the bar follows
+  function talkSheet(it, countEl) {
+    const box = h('div', { class: 'talk rl-talk' });
+    const back = h('div', { class: 'rl-sheet-back', onclick: (e) => { if (e.target === back) back.remove(); } },
+      h('div', { class: 'rl-sheet rl-sheet-talk' }, h('i', { class: 'rl-grab' }), h('b', { class: 'rl-sheet-title' }, t('Comments')), box));
+    veil.append(back);
+    drawTalk(box, it.r, it.st, () => { const n = it.st.comments || 0; countEl.textContent = n ? String(n) : ''; if (it.talkN) it.talkN.textContent = countEl.textContent; });
+  }
   // ⋯: Auto-scroll and what can be done with the post
   function sheet(it) {
     const tog = h('button', { type: 'button', class: 'rl-switch' + (auto ? ' on' : ''), role: 'switch', 'aria-checked': String(auto), onclick: () => {

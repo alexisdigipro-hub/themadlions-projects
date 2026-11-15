@@ -956,5 +956,6 @@ window.RD_EL = {
 "HQ off": "HQ ανενεργό",
 "Playing in high quality": "Παίζει σε υψηλή ποιότητα",
 "Made with AI": "Φτιαγμένο με AI",
-"This email already has an account (Roardino and RoarMe share it). Sign in with its password, or press Forgot password? and we will send a link to set a new one.": "Αυτό το email έχει ήδη λογαριασμό (κοινός για Roardino και RoarMe). Κάνε sign in με τον κωδικό του ή πάτα «Forgot password?» για να σου στείλουμε σύνδεσμο να βάλεις νέο."
+"This email already has an account (Roardino and RoarMe share it). Sign in with its password, or press Forgot password? and we will send a link to set a new one.": "Αυτό το email έχει ήδη λογαριασμό (κοινός για Roardino και RoarMe). Κάνε sign in με τον κωδικό του ή πάτα «Forgot password?» για να σου στείλουμε σύνδεσμο να βάλεις νέο.",
+"Comments": "Σχόλια"
 };

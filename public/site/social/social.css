@@ -3759,3 +3759,18 @@ html body .rl .rl-side .rl-me .rl-follow svg{width:8px!important;height:8px!impo
 svg[stroke]{stroke-linecap:round;stroke-linejoin:round}
 /* the Reels bar stays still while the videos slide under it */
 .rl>.rl-side{z-index:4}
+/* Reels bar (Alex, 16 Nov): 20% clearer again, 70% of the colour gone (a faint trace of the glows, a nearly white rim) */
+.rl-side{background:
+    radial-gradient(140px 70px at 28% 80%,rgba(120,170,110,.04),transparent 70%) padding-box,
+    radial-gradient(150px 80px at 55% 95%,rgba(215,105,105,.05),transparent 70%) padding-box,
+    radial-gradient(160px 80px at 85% 60%,rgba(120,100,200,.05),transparent 70%) padding-box,
+    linear-gradient(rgba(22,22,26,.16),rgba(22,22,26,.16)) padding-box,
+    linear-gradient(100deg,rgba(255,255,255,.5),rgba(235,232,222,.4) 30%,rgba(222,235,238,.42) 55%,rgba(225,218,245,.5) 100%) border-box!important;
+  -webkit-backdrop-filter:blur(11px) saturate(1.2)!important;backdrop-filter:blur(11px) saturate(1.2)!important}
+/* what the bar opens stays inside Reels: Send's window and any other window sit over it; comments are a sheet */
+html.rl-open .veil{z-index:140!important}
+html.rl-open .toast{z-index:150}
+.rl-sheet-talk{max-height:70vh;overflow:hidden}
+.rl-sheet-title{text-align:center;font-size:15px;font-weight:600}
+.rl-talk{display:flex!important;flex-direction:column;min-height:120px;max-height:calc(70vh - 90px);overflow-y:auto;padding:0 4px 4px;background:none!important;border:0!important;box-shadow:none!important}
+.rl-talk .cmt-list{flex:1}
