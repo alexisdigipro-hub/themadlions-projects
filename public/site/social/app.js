@@ -1056,19 +1056,23 @@ async function viewFront() {
   const msg = h('p', { class: 'msg' });
   const say = (s, k = '') => { msg.textContent = s; msg.className = 'msg' + (k ? ' ' + k : ''); };
   const card = h('form', { class: 'auth', novalidate: true });
+  // the sign-in card as RoarTransfer's (Alex, 15 Nov, from its screenshot): the fields, one red button, the Terms and
+  // the Privacy Policy under it, and a row of pills (Sign up / Sign in, Forgot password?, Roar Account)
+  const pill = (label, fn, ic) => h('button', { type: 'button', class: 'auth-pill', onclick: fn }, ic ? h('span', { html: ICON[ic] }) : null, label);
   const draw = () => {
     const up = mode === 'up';
     put(card, ...[
-      seg([['in', t('Sign in')], ['up', t('New account')]], mode, (k) => { mode = k; say(''); draw(); }),
-      up ? null : h('button', { type: 'button', class: 'btn main', onclick: () => roarAccount(say) }, t('Sign in with Roar Account')),
-      up ? null : h('p', { class: 'hint', style: { textAlign: 'center' } }, t('or with email and password')),
-      up ? field(t('Full name'), input(f.name, { autocomplete: 'name', oninput: (e) => { f.name = e.target.value; } })) : null,
-      field(t('Email'), input(f.email, { type: 'email', autocomplete: 'email', inputmode: 'email', oninput: (e) => { f.email = e.target.value; } })),
-      field(up ? t('Password (at least 6 characters)') : t('Password'), input(f.password, { type: 'password', autocomplete: up ? 'new-password' : 'current-password', oninput: (e) => { f.password = e.target.value; } })),
-      h('button', { type: 'submit', class: 'btn' + (up ? ' main' : '') }, up ? t('Create account') : t('Sign in')),
-      up ? null : h('button', { type: 'button', class: 'linkish', style: { alignSelf: 'center' }, onclick: forgot }, t('Forgot your password?')),
+      h('h2', { class: 'auth-title' }, up ? t('New account') : t('Sign in')),
+      up ? input(f.name, { class: 'input auth-in', placeholder: t('Full name'), autocomplete: 'name', 'aria-label': t('Full name'), oninput: (e) => { f.name = e.target.value; } }) : null,
+      input(f.email, { class: 'input auth-in', type: 'email', placeholder: t('Email'), autocomplete: 'email', inputmode: 'email', 'aria-label': t('Email'), oninput: (e) => { f.email = e.target.value; } }),
+      input(f.password, { class: 'input auth-in', type: 'password', placeholder: up ? t('Password (at least 6 characters)') : t('Password'), autocomplete: up ? 'new-password' : 'current-password', 'aria-label': t('Password'), oninput: (e) => { f.password = e.target.value; } }),
+      h('button', { type: 'submit', class: 'auth-go' }, up ? t('Create account') : t('Sign in')),
+      h('p', { class: 'auth-legal' }, t('By continuing you accept the'), ' ', h('a', { href: '#/legal/terms' }, t('Terms')), ' ', t('and the'), ' ', h('a', { href: '#/legal/privacy' }, t('Privacy Policy')), '.'),
       msg,
-      h('p', { class: 'hint' }, up ? t('Your account is a Roar Account: the same details sign you in to every Roar app. A parent? Make the account with your own details, then add your child\'s profile.') : t('If you have a Roar Account, sign in with the same details.'))].filter(Boolean));
+      h('div', { class: 'auth-pills' },
+        up ? pill(t('Sign in'), () => { mode = 'in'; say(''); draw(); }) : pill(t('Sign up'), () => { mode = 'up'; say(''); draw(); }),
+        up ? null : pill(t('Forgot password?'), forgot),
+        pill(t('Roar Account'), () => roarAccount(say), 'user'))].filter(Boolean));
   };
   async function forgot() {
     if (!f.email.trim()) return say(t('Write your email first.'), 'err');
@@ -1092,27 +1096,15 @@ async function viewFront() {
     }
   });
   draw();
-  const counts = h('div', { class: 'counts' });
-  sb.rpc('roardino_counts').then(({ data }) => {
-    if (!data) return;
-    put(counts, ...[[data.people, t('profiles')], [data.calls, t('open calls')], [data.seminars, t('seminars')]].filter(([n], i) => n > 0 && (JOBS || !i)).map(([n, s]) => h('div', {}, h('b', {}, String(n)), h('small', {}, s))));
-  });
-  put(app, 
-    h('header', { class: 'bar' }, h('div', { class: 'bar-in' }, h('span', { class: 'brand' }, mark()))),
-    h('main', { class: 'front' },
-      h('div', {},
-        h('p', { class: 'kicker' }, t('The crew, online')),
+  // the front, less business and more of a film's (Alex, 15 Nov): no kicker, no chips, no count, no three boxes
+  // no top bar, no footer, no boxes (Alex, 15 Nov: "all these go"): the name, the words and the card only
+  put(app,
+    h('main', { class: 'front art' },
+      h('div', { class: 'front-words' },
+        h('span', { class: 'front-mark' }, mark()),
         h('h1', { class: 'hero', html: t('Together we make <b>the work.</b>') }),
-        h('p', { class: 'lede' }, t('Actors, models, dancers, directors, crews, photographers. Show your work, find your next role, find the person your shoot is missing.')),
-        h('div', { class: 'chips' }, ['Actors', 'Models', 'Dancers', 'Film directors', 'DoP', 'Crew', 'Photographers', 'Casting'].map((s) => h('span', { class: 'tag' }, t(s)))),
-        counts),
-      card),
-    h('section', { class: 'why' },
-      [['Your profile, a portfolio', 'Photos, showreel, self-tape, CV. Your work as a grid, in the order you choose.'],
-        ['Calls', 'Castings and crews wanted right now. Apply with one tap and they see your profile straight away.'],
-        ['For children too, with a parent', 'Under 18 only from a parent\'s account, and their profiles are seen only by trusted productions.']]
-        .map(([a, b], i) => h('div', {}, h('span', { class: 'no' }, '0' + (i + 1)), h('b', {}, t(a)), h('p', {}, t(b))))),
-    footBar());
+        h('p', { class: 'lede' }, t('Actors, models, dancers, directors, crews, photographers. Show your work, find your next role, find the person your shoot is missing.'))),
+      card));
 }
 
 // one sign-in for every Roar app: a code, Allow on themadlions.com/account/, then this page's own session
@@ -1535,16 +1527,182 @@ function composer(done, kind0 = 'work', asId = null) {
 function createMenu() {
   const m = me();
   if (!m) { location.hash = '#/edit/new'; return; }
-  let close;
+  // the + opens a new post at once, as Instagram's; Story is at the foot of its first screen (Alex, 15 Nov)
   const pick = h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => { const f0 = e.target.files[0]; e.target.value = ''; const f = f0 && (/^video/.test(f0.type) ? f0 : await cropImage(f0, SHAPES.story)); const ed = f && await storyEditor(f); if (ed) await addStory(ed.file, ed.overlays); } });
-  const tile = (ic, label, sub, fn) => h('button', { type: 'button', class: 'pm-tile cr-tile', onclick: () => { close(); fn(); } }, h('span', { class: 'pm-ic', html: ICON[ic] }), h('b', {}, label), h('small', {}, sub));
-  close = openWin(t('Create'), h('div', { class: 'pm' }, h('div', { class: 'pm-tiles' },
-    tile('grid', t('Portfolio'), t('A post of your work'), () => composeWin('work', m.id, () => route())),
-    tile('pic', t('Personal'), t('A photo of you'), () => composeWin('photo', m.id, () => route())),
-    tile('rings', t('Story'), t('For 24 hours'), () => storySource(pick)),
-    JOBS ? tile('calls', t('Call'), t('Casting or crew'), () => { location.hash = '#/calls'; setTimeout(() => editCall(), 400); }) : null), pick), null);
+  document.body.append(pick);
+  postFlow({ story: () => storySource(pick) });
 }
-function composeWin(kind = 'work', asId = null, after = () => viewFeed()) {
+/* ---------- New post, as Instagram makes one (Alex, 15 Nov, from three screenshots of it) ----------
+   Two full screens. 1: the picture or video big, the ones picked in a strip under it (up to six, a tap picks one, its X
+   takes it out, + adds more), Crop for a picture and Cover for a video, POST · STORY at the foot, Next at the top.
+   2: the details: the picture small with Edit cover, the caption (with @ and #), Post to (Portfolio / Personal), Tag
+   people, Add location (with ready places), Posting as, Hide the number of likes, Turn comments off, AI label; Save
+   draft (kept on this device, files too, in IndexedDB) and Share, whose button fills as it goes up. */
+const DRAFT_DB = 'roardino-drafts';
+function draftStore(mode, fn) {
+  return new Promise((ok) => {
+    try {
+      const rq = indexedDB.open(DRAFT_DB, 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore('post');
+      rq.onerror = () => ok(null);
+      rq.onsuccess = () => { try { const tx = rq.result.transaction('post', mode); const r = fn(tx.objectStore('post')); tx.oncomplete = () => ok(r?.result ?? null); tx.onerror = () => ok(null); } catch { ok(null); } };
+    } catch { ok(null); }
+  });
+}
+const draftGet = () => draftStore('readonly', (s) => s.get('current'));
+const draftPut = (d) => draftStore('readwrite', (s) => s.put(d, 'current'));
+const draftDrop = () => draftStore('readwrite', (s) => s.delete('current'));
+function askDraft() {
+  return new Promise((done) => {
+    let answered = false;
+    const close = openWin(t('You have a draft'), h('p', { class: 'hint', style: { fontSize: '14.5px' } }, t('Carry on with the post you saved, or start a new one?')), (c) => [
+      h('button', { type: 'button', class: 'btn', onclick: () => { answered = true; c(); done(false); } }, t('Start new')),
+      h('button', { type: 'button', class: 'btn main', onclick: () => { answered = true; c(); done(true); } }, t('Continue draft'))]);
+    const veil = document.querySelector('.veil:last-of-type');
+    new MutationObserver((_, o) => { if (veil && !veil.isConnected) { o.disconnect(); if (!answered) done(false); } }).observe(document.body, { childList: true });
+    void close;
+  });
+}
+async function postFlow(opts = {}) {
+  const m = me();
+  if (!m) { location.hash = '#/edit/new'; return; }
+  const st = { items: [], cur: 0, caption: '', kind: opts.kind || 'work', as: opts.as || m.id, place: '', hideLikes: false, commentsOff: false, ai: false };
+  const old = await draftGet();
+  if (old && (old.items?.length || old.caption) && await askDraft()) Object.assign(st, old, { cur: 0 });
+  else if (old) draftDrop();
+  const layer = h('div', { class: 'pf' });
+  document.body.append(layer);
+  document.documentElement.classList.add('pf-open');
+  const leave = () => { layer.classList.add('out'); document.documentElement.classList.remove('pf-open'); setTimeout(() => layer.remove(), 260); st.items.forEach((x) => x.url && URL.revokeObjectURL(x.url)); };
+  const urlOf2 = (it) => (it.url ||= URL.createObjectURL(it.cover || it.file));
+  const isVid = (it) => /^video\//.test(it.file.type);
+  const pick = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: async (e) => {
+    const list = [...e.target.files].slice(0, 6 - st.items.length); e.target.value = '';
+    for (const f of list) {
+      if (!/^(image|video)\//.test(f.type)) continue;
+      const it = { file: f, cover: null };
+      if (/^video\//.test(f.type)) it.cover = await videoCover(f).then((b) => (b ? new File([b], 'cover.jpg', { type: 'image/jpeg' }) : null)).catch(() => null);
+      st.items.push(it);
+    }
+    st.cur = Math.max(0, st.items.length - 1);
+    stepOne();
+  } });
+  // 1: what goes up
+  function stepOne() {
+    const it = st.items[st.cur];
+    const stage = h('div', { class: 'pf-stage' });
+    if (it) stage.append(isVid(it) ? h('video', { src: URL.createObjectURL(it.file), poster: it.cover ? urlOf2(it) : null, muted: true, autoplay: true, loop: true, playsInline: true }) : h('img', { src: urlOf2(it), alt: '' }));
+    else stage.append(h('button', { type: 'button', class: 'pf-empty', onclick: () => pick.click() }, h('span', { html: ICON.pic }), h('b', {}, t('Choose photos or videos')), h('small', {}, t('Up to six in one post'))));
+    const tools = it ? h('div', { class: 'pf-tools' },
+      isVid(it) ? h('button', { type: 'button', class: 'pf-tool', onclick: async () => { const c = await coverPicker(it.file); if (c) { it.cover = c; if (it.url) URL.revokeObjectURL(it.url); it.url = null; stepOne(); } } }, h('span', { html: ICON.pic }), t('Cover'))
+        : h('button', { type: 'button', class: 'pf-tool', onclick: async () => { const c = await cropImage(it.file, SHAPES.post); if (c) { it.file = c; if (it.url) URL.revokeObjectURL(it.url); it.url = null; stepOne(); } } }, h('span', { html: ICON.crop || ICON.edit }), t('Crop'))) : null;
+    const strip = h('div', { class: 'pf-strip' },
+      ...st.items.map((x, i) => h('div', { class: 'pf-thumb' + (i === st.cur ? ' on' : '') + (isVid(x) ? ' vid' : ''), style: { backgroundImage: x.cover || !isVid(x) ? `url("${urlOf2(x)}")` : '' }, onclick: (e) => { if (e.target.closest('.x')) return; st.cur = i; stepOne(); } },
+        isVid(x) ? h('span', { class: 'pf-play', html: ICON.play }) : null,
+        st.items.length > 1 ? h('em', {}, String(i + 1)) : null,
+        h('button', { type: 'button', class: 'x', 'aria-label': t('Remove'), html: ICON.x, onclick: () => { const [gone] = st.items.splice(i, 1); if (gone?.url) URL.revokeObjectURL(gone.url); st.cur = Math.min(st.cur, Math.max(0, st.items.length - 1)); stepOne(); } }))),
+      st.items.length < 6 ? h('button', { type: 'button', class: 'pf-add', 'aria-label': t('Add more'), html: ICON.plus, onclick: () => pick.click() }) : null);
+    put(layer, h('div', { class: 'pf-one' },
+      h('div', { class: 'pf-head dark' },
+        h('button', { type: 'button', class: 'pf-round', 'aria-label': t('Close'), html: ICON.x, onclick: async () => { if (st.items.length || st.caption) { if (!(await ask(t('Leave this post?'), t('Leave'), true))) return; } leave(); } }),
+        h('b', {}, t('New post')),
+        h('button', { type: 'button', class: 'pf-next', disabled: !st.items.length, onclick: stepTwo }, t('Next'))),
+      h('div', { class: 'pf-stagebox' }, stage, tools),
+      h('div', { class: 'pf-pickrow' }, h('button', { type: 'button', class: 'pf-gal', onclick: () => pick.click() }, h('span', { html: ICON.pic }), t('Gallery'), h('i', { html: ICON.right })), h('small', {}, st.items.length ? t('{n} of 6', { n: st.items.length }) : '')),
+      strip,
+      h('div', { class: 'pf-modes' }, h('button', { type: 'button', class: 'on' }, t('Post')), opts.story ? h('button', { type: 'button', onclick: () => { leave(); opts.story(); } }, t('Story')) : null),
+      pick));
+  }
+  // 2: the details
+  let busy = false;
+  function stepTwo() {
+    const it0 = st.items[0];
+    const caption = area(st.caption, { class: 'textarea pf-cap', placeholder: t('Add a caption… Tag people with @'), rows: 3, maxlength: 2200, oninput: (e) => { st.caption = e.target.value; } });
+    const addToCaption = (s) => { caption.value = (caption.value.replace(/\s+$/, '') + (caption.value.trim() ? ' ' : '') + s); st.caption = caption.value; caption.focus(); caption.setSelectionRange(caption.value.length, caption.value.length); };
+    const sw = (k, label, sub) => h('label', { class: 'pf-row pf-sw' }, h('span', { class: 'pf-row-t' }, h('b', {}, label), sub ? h('small', {}, sub) : null), h('input', { type: 'checkbox', class: 'switch', checked: !!st[k], onchange: (e) => { st[k] = e.target.checked; } }));
+    const placeVal = h('small', {}, st.place || '');
+    const placeIn = input(st.place, { class: 'input pf-place', placeholder: t('City, place or set'), maxlength: 80, hidden: true, oninput: (e) => { st.place = e.target.value.trim(); placeVal.textContent = st.place; } });
+    const cities = [...new Set([...mine.map((x) => x.city).filter(Boolean), 'Athens, Greece', 'Thessaloniki, Greece', 'Studio', 'On location'])].slice(0, 6);
+    const chips = h('div', { class: 'pf-chips' }, ...cities.map((c) => h('button', { type: 'button', class: 'pf-chip', onclick: () => { st.place = st.place === c ? '' : c; placeIn.value = st.place; placeVal.textContent = st.place; chips.querySelectorAll('.pf-chip').forEach((b) => b.classList.toggle('on', b.textContent === st.place)); } }, c)));
+    chips.querySelectorAll('.pf-chip').forEach((b) => b.classList.toggle('on', b.textContent === st.place));
+    const shareBtn = h('button', { type: 'button', class: 'pf-share', onclick: share }, h('i', { class: 'pf-fill' }), h('span', {}, t('Share')));
+    const kindSeg = h('div');
+    const drawKind = () => put(kindSeg, seg([['work', t('Portfolio')], ['photo', t('Personal')]], st.kind, (k) => { st.kind = k; drawKind(); }));
+    drawKind();
+    put(layer, h('div', { class: 'pf-two' },
+      h('div', { class: 'pf-head' },
+        h('button', { type: 'button', class: 'pf-round', 'aria-label': t('Back'), html: ICON.left, onclick: () => { if (!busy) stepOne(); } }),
+        h('b', {}, t('New post')), h('span', { class: 'pf-sp' })),
+      h('div', { class: 'pf-body' },
+        it0 ? h('div', { class: 'pf-prev', style: { backgroundImage: `url("${urlOf2(it0)}")` } },
+          st.items.length > 1 ? h('em', { class: 'pf-count' }, `1/${st.items.length}`) : null,
+          isVid(it0) ? h('button', { type: 'button', class: 'pf-cover', onclick: async () => { const c = await coverPicker(it0.file); if (c) { it0.cover = c; if (it0.url) URL.revokeObjectURL(it0.url); it0.url = null; st.caption = caption.value; stepTwo(); } } }, t('Edit cover')) : null) : null,
+        withMentions(caption),
+        h('div', { class: 'pf-quick' },
+          h('button', { type: 'button', class: 'pf-pill', onclick: () => addToCaption('#') }, h('b', {}, '#'), t('Hashtags')),
+          h('button', { type: 'button', class: 'pf-pill', onclick: () => postTagPeople(addToCaption) }, h('span', { html: ICON.user }), t('Tag people'))),
+        h('div', { class: 'pf-list' },
+          h('div', { class: 'pf-row' }, h('span', { class: 'pf-ic', html: ICON.grid }), h('span', { class: 'pf-row-t' }, h('b', {}, t('Post to'))), kindSeg),
+          h('button', { type: 'button', class: 'pf-row', onclick: () => postTagPeople(addToCaption) }, h('span', { class: 'pf-ic', html: ICON.user }), h('span', { class: 'pf-row-t' }, h('b', {}, t('Tag people'))), h('i', { class: 'pf-go', html: ICON.right })),
+          h('button', { type: 'button', class: 'pf-row', onclick: () => { placeIn.hidden = !placeIn.hidden; if (!placeIn.hidden) placeIn.focus(); } }, h('span', { class: 'pf-ic', html: ICON.pin }), h('span', { class: 'pf-row-t' }, h('b', {}, t('Add location')), placeVal), h('i', { class: 'pf-go', html: ICON.right })),
+          placeIn, chips,
+          mine.length > 1 ? h('div', { class: 'pf-row' }, h('span', { class: 'pf-ic', html: ICON.user }), h('span', { class: 'pf-row-t' }, h('b', {}, t('Posting as'))), select(mine.map((x) => [x.id, x.name]), st.as, { class: 'select pf-as', onchange: (e) => { st.as = e.target.value; } })) : null),
+        h('div', { class: 'pf-list' },
+          sw('hideLikes', t('Hide the number of likes'), t('Only you see how many liked it.')),
+          sw('commentsOff', t('Turn comments off'), null),
+          sw('ai', t('AI label'), t('Say so when a realistic photo or video was made with AI. People will see it on the post.')))),
+      h('div', { class: 'pf-foot' },
+        h('button', { type: 'button', class: 'pf-draft', onclick: async () => { st.caption = caption.value; const ok = await draftPut({ items: st.items.map((x) => ({ file: x.file, cover: x.cover })), caption: st.caption, kind: st.kind, as: st.as, place: st.place, hideLikes: st.hideLikes, commentsOff: st.commentsOff, ai: st.ai }); toast(ok === null && !window.indexedDB ? t('Drafts cannot be kept on this device.') : t('Draft saved')); leave(); } }, t('Save draft')),
+        shareBtn)));
+    async function share() {
+      if (busy) return;
+      st.caption = caption.value;
+      if (!st.caption.trim() && !st.items.length) return toast(t('Write something or add a photo.'));
+      busy = true; shareBtn.disabled = true; layer.classList.add('busy');
+      const fill = shareBtn.querySelector('.pf-fill'), word = shareBtn.querySelector('span');
+      const total = st.items.length || 1;
+      const prog = (i, k) => { const v = Math.round(((i + Math.min(1, k)) / total) * 100); fill.style.transform = `scaleX(${v / 100})`; word.textContent = v >= 100 ? t('Sharing…') : `${v}%`; };
+      try {
+        const media = [];
+        for (const [i, x] of st.items.entries()) {
+          const path = await upload(st.as, x.file, 'posts/', (k) => prog(i, k * (x.cover ? 0.95 : 1)));
+          const poster = isVid(x) && x.cover ? await upload(st.as, x.cover, 'posts/') : null;
+          prog(i, 1);
+          media.push({ path, type: isVid(x) ? 'video' : 'image', ...(await dimsOf(x.file)), ...(poster ? { poster } : {}), ...(x.file._codec ? { codec: x.file._codec } : {}) });
+        }
+        const row = { person_id: st.as, body: st.caption.trim() || null, media, kind: st.kind, hide_likes: st.hideLikes, comments_off: st.commentsOff };
+        const extra = { ...(st.place ? { place: st.place } : {}), ...(st.ai ? { ai: true } : {}) };
+        let { error } = await sb.from('roardino_posts').insert({ ...row, ...extra });
+        // a database without the place / AI columns yet: the post still goes up, without them
+        if (error && Object.keys(extra).length && /place|ai|column/i.test(error.message || '')) ({ error } = await sb.from('roardino_posts').insert(row));
+        if (error) throw error;
+        await draftDrop();
+        toast(t('Posted'));
+        leave(); route();
+      } catch (e) { fail(e); busy = false; shareBtn.disabled = false; layer.classList.remove('busy'); fill.style.transform = ''; word.textContent = t('Share'); }
+    }
+  }
+  if (st.items.length) stepOne(); else { stepOne(); if (!opts.noPick) pick.click(); }
+}
+// Tag people: Roardino's people with a username; the chosen one goes into the caption as @username, which is how
+// tagging already works (the tagged person is told)
+async function postTagPeople(onPick) {
+  const meId = session.user.id;
+  const list = h('div', { class: 'stm-list' }, h('p', { class: 'wait' }, t('Loading…')));
+  let ppl = [], close = null;
+  const row = (x) => h('button', { type: 'button', class: 'stm-row', onclick: () => { close(); onPick('@' + x.handle); } }, avatar(x), h('span', { class: 'stm-who' }, h('b', {}, x.name), h('small', {}, '@' + x.handle)));
+  const draw = (q) => { const rows = (q ? ppl.filter((x) => matches(x._k, q)) : ppl.filter((x) => follows.has(x.id))).slice(0, 40); put(list, ...(rows.length ? rows.map(row) : [h('p', { class: 'hint' }, q ? t('Nobody by that name.') : t('Search for someone above.'))])); };
+  const search = h('input', { class: 'input', type: 'search', placeholder: t('Search people'), oninput: (e) => draw(e.target.value.trim()) });
+  close = openWin(t('Tag people'), h('div', { class: 'stm' }, search, list), null);
+  const { data } = await sb.from('roardino_people').select('id,name,handle,avatar,owner').eq('visible', true).not('handle', 'is', null).neq('owner', meId).order('created_at').limit(1500);
+  await sign((data || []).map((x) => x.avatar));
+  ppl = (data || []).map((x) => ({ ...x, _k: ' ' + fold(`${x.name} ${x.handle}`) + ' ' }));
+  draw(search.value.trim());
+  if (!isPhone()) search.focus();
+}
+// the old window composer now opens the new two-step post (Alex, 15 Nov)
+function composeWin(kind = 'work', asId = null, after = () => viewFeed()) { void after; return postFlow({ kind, as: asId || undefined }); }
+function composeWinOld(kind = 'work', asId = null, after = () => viewFeed()) {
   let close = null;
   const c = composer(() => { close?.(); after(); }, kind, asId);
   close = openWin(kind === 'photo' ? t('Add a photo') : t('New post'), c);
@@ -1913,7 +2071,7 @@ function postCard(r, st, refresh) {
   const head =
     h('div', { class: 'post-head' },
       h('a', { href: `#/p/${p.id}`, class: 'ring-sm' }, avatar(p)),
-      h('div', { class: 'who-line' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name || '')), h('small', {}, p.headline || (p.kinds || []).map(kindName).slice(0, 2).join(' · '))),
+      h('div', { class: 'who-line' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name || ''), r.ai ? h('em', { class: 'ai-badge' }, 'AI') : null), h('small', {}, r.place ? [h('span', { class: 'post-place', html: ICON.pin }), r.place] : p.headline || (p.kinds || []).map(kindName).slice(0, 2).join(' · '))),
       // Follow when I don't follow them yet, and the ⋯ menu (Alex, 5 Nov, as Instagram's)
       !own && p.id && !follows.has(p.id) ? h('button', { type: 'button', class: 'btn sm post-follow', onclick: async (e) => { const b = e.currentTarget; const ok = await toggleFollow(p.id); if (ok) b.remove(); } }, t('Follow')) : null,
       h('button', { type: 'button', class: 'ig-ico sm', title: t('More'), 'aria-label': t('More'), html: ICON.dots, onclick: () => postMenu(r, p, { own, media, refresh, saveBtn }) }));
