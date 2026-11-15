@@ -939,5 +939,7 @@ window.RD_EL = {
 "Sharing…": "Ανεβαίνει…",
 "Draft saved": "Το πρόχειρο κρατήθηκε",
 "Drafts cannot be kept on this device.": "Σε αυτή τη συσκευή δεν κρατιούνται πρόχειρα.",
-"Edit cover": "Αλλαγή εξωφύλλου"
+"Edit cover": "Αλλαγή εξωφύλλου",
+"Preparing video… {n}%": "Προετοιμασία βίντεο… {n}%",
+"Uploading… {n}%": "Ανέβασμα… {n}%"
 };

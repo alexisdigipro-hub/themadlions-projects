@@ -3088,3 +3088,20 @@ html:not([data-theme=dark]) .front.art .auth-pill{background:rgba(255,255,255,.7
   html[data-theme=dark] .pf-two .pf-list,html[data-theme=dark] .pf-two .pf-pill{background:rgba(255,255,255,.05)}
 }
 @media (min-width:861px){ .pf-one{grid-template-rows:auto auto auto minmax(0,1fr) auto} .pf-one .pf-strip{align-self:start} }
+/* windows opened from New post (Edit cover, Crop, Tag people) sit over it, not behind it */
+html.pf-open .veil,html.pf-open .up-veil{z-index:95}
+.pf-tv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;pointer-events:none}
+.pf-thumb,.pf-prev{overflow:hidden}
+.pf-thumb .x,.pf-thumb em,.pf-play,.pf-cover,.pf-count{z-index:2}
+.pf-choice{flex:none;display:flex;gap:4px;padding:3px;border-radius:12px;background:rgba(128,134,148,.12)}
+.pf-choice button{height:32px;padding:0 12px;border-radius:9px;border:0;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:var(--w-strong,600);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .2s,color .2s,transform .2s}
+.pf-choice button.on{background:#fff;color:rgb(var(--a));box-shadow:0 2px 8px rgba(28,35,51,.12)}
+html[data-theme=dark] .pf-choice button.on{background:rgba(255,255,255,.14);color:#fff}
+.pf-choice button:active{transform:scale(.94)}
+.pf-tags{display:flex;flex-wrap:wrap;gap:6px}
+.pf-tags[hidden]{display:none}
+.pf-tags .pf-chip{height:32px;font-size:12.5px}
+/* videos play smooth (Alex, 15 Nov): nothing is drawn on top of a playing video that the phone must redo each frame:
+   no filter or scale on the video itself, no blur behind the buttons over it; the video gets its own layer */
+.ig-media>video{filter:none!important;transform:translateZ(0)!important;animation:none!important}
+.post.ig.has-media.vid .mwrap .btn,.post.ig.has-media.vid.open .mwrap .btn{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(0,0,0,.32)!important}
