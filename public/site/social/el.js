@@ -950,5 +950,6 @@ window.RD_EL = {
 "The HQ video could not be loaded.": "Το βίντεο HQ δεν φόρτωσε.",
 "Reels": "Reels",
 "Auto-scroll": "Αυτόματη κύλιση",
-"More options": "Περισσότερες επιλογές"
+"More options": "Περισσότερες επιλογές",
+"Slate": "Slate"
 };

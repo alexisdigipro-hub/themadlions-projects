@@ -66,21 +66,26 @@ const LOCALE = () => (LANG === 'el' ? 'el-GR' : 'en-GB');
 
 /* ---------- settings kept on this device (Alex, 5 Nov) ---------- */
 const PREFS_KEY = 'roardino-prefs';
-const PREF_DEFAULTS = { theme: 'auto', text: 'normal', feedCalls: true, mutedVideos: true, showStories: true, accent: 'red', showSeen: false };
+const PREF_DEFAULTS = { theme: 'slate', text: 'normal', feedCalls: true, mutedVideos: true, showStories: true, accent: 'red', showSeen: false };
 // the accent colours (Alex, 5 Nov: "10 nice colours with the same gradient"); their light and dark shades live in social.css
 const ACCENTS = [['red', 'Red', '#e2766d,#d40000 55%,#8f0000'], ['orange', 'Orange', '#f0a070,#e05a00 55%,#9a3a00'], ['gold', 'Gold', '#d9b45a,#b88400 55%,#7a5500'],
   ['emerald', 'Emerald', '#6fcf97,#0f9d58 55%,#06623a'], ['teal', 'Teal', '#6cd4d0,#00a3a3 55%,#006466'], ['ocean', 'Ocean', '#7fb2f0,#1a6fe0 55%,#0b3f8f'],
   ['indigo', 'Indigo', '#9a9cf0,#4b4fd9 55%,#2a2c8f'], ['violet', 'Violet', '#c18cf0,#8a2be2 55%,#541a8f'], ['pink', 'Pink', '#f08cc4,#e0157a 55%,#8f0a4c'], ['steel', 'Steel', '#7d8fb0,#4a6390 55%,#2b3a5c']];
 let prefs = { ...PREF_DEFAULTS };
 try { prefs = { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; } catch { /* private window */ }
+// Slate is put on once for everyone (Alex, 15 Nov: "make it and put it on"); Settings > Appearance > Theme changes it back
+if (!prefs.slateOn) { prefs.theme = 'slate'; prefs.slateOn = true; try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* full */ } }
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 function wearPrefs() {
   const front = document.documentElement.classList.contains('was-front'); // the front page keeps its own light and red
-  const dark = !front && (prefs.theme === 'dark' || (prefs.theme === 'auto' && darkQuery.matches));
+  // Slate (Alex, 15 Nov): a theme of its own on top of the dark one: grey glass, silver buttons with a polished rim, no accent
+  const slate = !front && prefs.theme === 'slate';
+  const dark = !front && (slate || prefs.theme === 'dark' || (prefs.theme === 'auto' && darkQuery.matches));
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  if (slate) document.documentElement.dataset.skin = 'slate'; else delete document.documentElement.dataset.skin;
   document.documentElement.dataset.text = prefs.text;
-  if (!front && ACCENTS.some(([k]) => k === prefs.accent) && prefs.accent !== 'red') document.documentElement.dataset.accent = prefs.accent; else delete document.documentElement.dataset.accent;
-  document.querySelector('meta[name=theme-color]')?.setAttribute('content', dark ? '#15171b' : '#eceef1');
+  if (!front && !slate && ACCENTS.some(([k]) => k === prefs.accent) && prefs.accent !== 'red') document.documentElement.dataset.accent = prefs.accent; else delete document.documentElement.dataset.accent;
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', slate ? '#5b656d' : dark ? '#15171b' : '#eceef1');
   // inside the iPhone app the clock and the battery take the colour that reads on the theme (the shell's StatusBar plugin)
   setTimeout(() => typeof shellCall === 'function' && shellCall('StatusBar', 'setStyle', { style: dark ? 'DARK' : 'LIGHT' }));
 }
@@ -3983,8 +3988,8 @@ function viewSettings() {
     h('div', { class: 'head' }, h('h1', {}, t('Settings'))),
     h('div', { class: 'phone-tiles on-settings' }, meTiles()),
     h('section', { class: 'sec' }, h('h2', {}, t('Appearance')),
-      row(t('Theme'), t('Auto follows your phone or computer.'), choice('theme', [['light', t('Light')], ['dark', t('Dark')], ['auto', t('Auto')]])),
-      row(t('Accent colour'), t('The colour of buttons, the chosen tab and the glow, in light and dark.'), (() => { const box = h('div', { class: 'swatches', role: 'radiogroup' }); const draw = () => put(box, ACCENTS.map(([k, name, g]) => h('button', { type: 'button', class: 'swatch' + (prefs.accent === k ? ' on' : ''), role: 'radio', 'aria-checked': String(prefs.accent === k), 'aria-label': t(name), title: t(name), style: { '--sw': `linear-gradient(135deg,${g})` }, onclick: () => { setPref('accent', k); draw(); } }))); draw(); return box; })()),
+      row(t('Theme'), t('Auto follows your phone or computer.'), choice('theme', [['slate', t('Slate')], ['light', t('Light')], ['dark', t('Dark')], ['auto', t('Auto')]])),
+      prefs.theme === 'slate' ? null : row(t('Accent colour'), t('The colour of buttons, the chosen tab and the glow, in light and dark.'), (() => { const box = h('div', { class: 'swatches', role: 'radiogroup' }); const draw = () => put(box, ACCENTS.map(([k, name, g]) => h('button', { type: 'button', class: 'swatch' + (prefs.accent === k ? ' on' : ''), role: 'radio', 'aria-checked': String(prefs.accent === k), 'aria-label': t(name), title: t(name), style: { '--sw': `linear-gradient(135deg,${g})` }, onclick: () => { setPref('accent', k); draw(); } }))); draw(); return box; })()),
       row(t('Text size'), null, choice('text', [['normal', t('Normal')], ['large', t('Large')]])),
       row(t('Language'), t('Roardino in Greek or in English.'), h('div', { class: 'seg' },
         h('button', { type: 'button', class: LANG === 'en' ? 'on' : '', onclick: () => LANG !== 'en' && setLang('en') }, 'English'),
