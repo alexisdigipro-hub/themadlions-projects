@@ -459,7 +459,16 @@ const vidNear = 'IntersectionObserver' in window ? new IntersectionObserver((lis
 }), { rootMargin: '400px 0px' }) : null;
 const vidPlay = 'IntersectionObserver' in window ? new IntersectionObserver((list) => list.forEach((en) => {
   const v = en.target;
-  if (en.intersectionRatio >= 0.6 && !v.dataset.held) { document.querySelectorAll('video.fv').forEach((o) => { if (o !== v && !o.paused) o.pause(); }); v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); }
+  if (en.intersectionRatio >= 0.6 && !v.dataset.held) {
+    const all = [...document.querySelectorAll('video.fv')];
+    all.forEach((o) => { if (o !== v && !o.paused) o.pause(); });
+    // as Instagram: the one playing and the next one buffer ahead (only those two, so an iPhone is never overloaded)
+    v.preload = 'auto';
+    const nx = all[all.indexOf(v) + 1];
+    if (nx && !nx.dataset.cant) { if (!nx.src && nx.dataset.src) nx.src = nx.dataset.src; nx.preload = 'auto'; }
+    all.forEach((o) => { if (o !== v && o !== nx && o.preload === 'auto') o.preload = 'metadata'; });
+    v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });
+  }
   else if (!v.paused) v.pause();
 }), { threshold: [0, 0.6] }) : null;
 // video views (Alex, 8 Nov: "every time someone passes and sees it, it counts"): each time a feed video comes into sight
@@ -523,7 +532,8 @@ async function shrink(file, onProg) {
 // a video is made lighter before it goes up (Alex, 15 Nov: "H.265, not squeezed much, it must look good on phones"):
 // 1080 on its long side; H.265 at 3 Mbit/s where this device's recorder can make it (about what H.264 needs 5 for),
 // else H.264 at 4.5. A phone plays either at once in the feed.
-const VID_SIDE = 1080, VID_BPS = 4500000, VID_BPS_HEVC = 3000000;
+// a little lighter again (Alex, 15 Nov: "it stutters, compress a little more, not much, keep the quality"): 3.5 / 2.4 Mbit/s
+const VID_SIDE = 1080, VID_BPS = 3500000, VID_BPS_HEVC = 2400000;
 const VID_TYPES = [['video/mp4;codecs=hvc1,mp4a.40.2', 'hevc'], ['video/mp4;codecs=hvc1', 'hevc'], ['video/mp4;codecs=hev1', 'hevc'], ['video/mp4;codecs=avc1', ''], ['video/mp4', ''], ['video/webm;codecs=vp9,opus', ''], ['video/webm', '']];
 // can this device show an H.265 video? (most phones and computers can; a few browsers cannot)
 const playsHevc = (() => { let ok = null; return () => { if (ok == null) { try { ok = !!document.createElement('video').canPlayType('video/mp4; codecs="hvc1.1.6.L120.90"'); } catch { ok = false; } } return ok; }; })();
@@ -549,7 +559,11 @@ function shrinkVideo(file, onProg) {
       const c = document.createElement('canvas');
       c.width = Math.round(W * k / 2) * 2; c.height = Math.round(H * k / 2) * 2;
       const g = c.getContext('2d');
-      const stream = c.captureStream(30);
+      // every frame of the video once, exactly when the video shows it (requestVideoFrameCallback), so the copy has no
+      // doubled or dropped frames, which is what made a video judder; rAF at 30 fps where the browser has no such call
+      const exact = 'requestVideoFrameCallback' in v && window.CanvasCaptureMediaStreamTrack && 'requestFrame' in CanvasCaptureMediaStreamTrack.prototype;
+      const stream = c.captureStream(exact ? 0 : 30);
+      const track = stream.getVideoTracks()[0];
       try {
         ac = new (window.AudioContext || window.webkitAudioContext)();
         const src = ac.createMediaElementSource(v), dest = ac.createMediaStreamDestination();
@@ -576,7 +590,9 @@ function shrinkVideo(file, onProg) {
       };
       if (!onProg) document.body.append(note); // with onProg the progress shows on the thing itself (Alex, 5 Nov)
       const bar = note.querySelector('i');
-      const paint = () => { g.drawImage(v, 0, 0, c.width, c.height); if (!v.ended) raf = requestAnimationFrame(paint); };
+      const paint = exact
+        ? () => { g.drawImage(v, 0, 0, c.width, c.height); track.requestFrame(); if (!v.ended) v.requestVideoFrameCallback(paint); }
+        : () => { g.drawImage(v, 0, 0, c.width, c.height); if (!v.ended) raf = requestAnimationFrame(paint); };
       timer = setInterval(() => { const k = Math.min(1, v.currentTime / dur); bar.style.width = `${k * 100}%`; onProg?.(k); }, 250);
       v.onended = () => { g.drawImage(v, 0, 0, c.width, c.height); setTimeout(() => rec.state !== 'inactive' && rec.stop(), 120); };
       try { await ac?.resume(); await v.play(); } catch { return keep(); }
@@ -1590,14 +1606,14 @@ async function postFlow(opts = {}) {
   document.documentElement.classList.add('pf-open');
   const leave = () => { layer.classList.add('out'); document.documentElement.classList.remove('pf-open'); setTimeout(() => layer.remove(), 260); st.items.forEach((x) => x.url && URL.revokeObjectURL(x.url)); };
   const urlOf2 = (it) => (it.url ||= URL.createObjectURL(it.cover || it.file));
+  const vidUrl = (it) => (it.vurl ||= URL.createObjectURL(it.file));
+  const vidFace = (it, cls) => (it.cover ? null : h('video', { class: cls, src: vidUrl(it) + '#t=0.1', muted: true, playsInline: true, preload: 'metadata' }));
   const isVid = (it) => /^video\//.test(it.file.type);
   const pick = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: async (e) => {
     const list = [...e.target.files].slice(0, 6 - st.items.length); e.target.value = '';
     for (const f of list) {
       if (!/^(image|video)\//.test(f.type)) continue;
-      const it = { file: f, cover: null };
-      if (/^video\//.test(f.type)) it.cover = await videoCover(f).then((b) => (b ? new File([b], 'cover.jpg', { type: 'image/jpeg' }) : null)).catch(() => null);
-      st.items.push(it);
+      st.items.push({ file: f, cover: null });
     }
     st.cur = Math.max(0, st.items.length - 1);
     stepOne();
@@ -1606,13 +1622,13 @@ async function postFlow(opts = {}) {
   function stepOne() {
     const it = st.items[st.cur];
     const stage = h('div', { class: 'pf-stage' });
-    if (it) stage.append(isVid(it) ? h('video', { src: URL.createObjectURL(it.file), poster: it.cover ? urlOf2(it) : null, muted: true, autoplay: true, loop: true, playsInline: true }) : h('img', { src: urlOf2(it), alt: '' }));
+    if (it) stage.append(isVid(it) ? h('video', { src: vidUrl(it), poster: it.cover ? urlOf2(it) : null, muted: true, autoplay: true, loop: true, playsInline: true, controls: false }) : h('img', { src: urlOf2(it), alt: '' }));
     else stage.append(h('button', { type: 'button', class: 'pf-empty', onclick: () => pick.click() }, h('span', { html: ICON.pic }), h('b', {}, t('Choose photos or videos')), h('small', {}, t('Up to six in one post'))));
     const tools = it ? h('div', { class: 'pf-tools' },
-      isVid(it) ? h('button', { type: 'button', class: 'pf-tool', onclick: async () => { const c = await coverPicker(it.file); if (c) { it.cover = c; if (it.url) URL.revokeObjectURL(it.url); it.url = null; stepOne(); } } }, h('span', { html: ICON.pic }), t('Cover'))
-        : h('button', { type: 'button', class: 'pf-tool', onclick: async () => { const c = await cropImage(it.file, SHAPES.post); if (c) { it.file = c; if (it.url) URL.revokeObjectURL(it.url); it.url = null; stepOne(); } } }, h('span', { html: ICON.crop || ICON.edit }), t('Crop'))) : null;
+      isVid(it) ? null : h('button', { type: 'button', class: 'pf-tool', onclick: async () => { const c = await cropImage(it.file, SHAPES.post); if (c) { it.file = c; if (it.url) URL.revokeObjectURL(it.url); it.url = null; stepOne(); } } }, h('span', { html: ICON.crop || ICON.edit }), t('Crop'))) : null;
     const strip = h('div', { class: 'pf-strip' },
       ...st.items.map((x, i) => h('div', { class: 'pf-thumb' + (i === st.cur ? ' on' : '') + (isVid(x) ? ' vid' : ''), style: { backgroundImage: x.cover || !isVid(x) ? `url("${urlOf2(x)}")` : '' }, onclick: (e) => { if (e.target.closest('.x')) return; st.cur = i; stepOne(); } },
+        isVid(x) ? vidFace(x, 'pf-tv') : null,
         isVid(x) ? h('span', { class: 'pf-play', html: ICON.play }) : null,
         st.items.length > 1 ? h('em', {}, String(i + 1)) : null,
         h('button', { type: 'button', class: 'x', 'aria-label': t('Remove'), html: ICON.x, onclick: () => { const [gone] = st.items.splice(i, 1); if (gone?.url) URL.revokeObjectURL(gone.url); st.cur = Math.min(st.cur, Math.max(0, st.items.length - 1)); stepOne(); } }))),
@@ -1634,6 +1650,12 @@ async function postFlow(opts = {}) {
     const it0 = st.items[0];
     const caption = area(st.caption, { class: 'textarea pf-cap', placeholder: t('Add a caption… Tag people with @'), rows: 3, maxlength: 2200, oninput: (e) => { st.caption = e.target.value; } });
     const addToCaption = (s) => { caption.value = (caption.value.replace(/\s+$/, '') + (caption.value.trim() ? ' ' : '') + s); st.caption = caption.value; caption.focus(); caption.setSelectionRange(caption.value.length, caption.value.length); };
+    // Hashtags (Alex, 15 Nov: "it does nothing"): the tags of our world, a tap puts one in the caption or takes it out
+    const TAGS = ['#musicvideo', '#shortfilm', '#commercial', '#fashionfilm', '#bts', '#onset', '#dop', '#cinematography', '#casting', '#actor', '#model', '#dancer', '#director', '#editing', '#colorgrading', '#athens', '#greece'];
+    const tagsRow = h('div', { class: 'pf-tags', hidden: true });
+    const drawTags = () => put(tagsRow, ...TAGS.map((tg) => { const on = new RegExp('(^|\\s)' + tg + '(?=\\s|$)', 'i').test(caption.value); return h('button', { type: 'button', class: 'pf-chip' + (on ? ' on' : ''), onclick: () => { if (on) caption.value = caption.value.replace(new RegExp('(^|\\s)' + tg + '(?=\\s|$)', 'gi'), '').replace(/\s{2,}/g, ' ').trim(); else addToCaption(tg); st.caption = caption.value; drawTags(); } }, tg); }));
+    drawTags();
+    caption.addEventListener('input', drawTags);
     const sw = (k, label, sub) => h('label', { class: 'pf-row pf-sw' }, h('span', { class: 'pf-row-t' }, h('b', {}, label), sub ? h('small', {}, sub) : null), h('input', { type: 'checkbox', class: 'switch', checked: !!st[k], onchange: (e) => { st[k] = e.target.checked; } }));
     const placeVal = h('small', {}, st.place || '');
     const placeIn = input(st.place, { class: 'input pf-place', placeholder: t('City, place or set'), maxlength: 80, hidden: true, oninput: (e) => { st.place = e.target.value.trim(); placeVal.textContent = st.place; } });
@@ -1641,20 +1663,22 @@ async function postFlow(opts = {}) {
     const chips = h('div', { class: 'pf-chips' }, ...cities.map((c) => h('button', { type: 'button', class: 'pf-chip', onclick: () => { st.place = st.place === c ? '' : c; placeIn.value = st.place; placeVal.textContent = st.place; chips.querySelectorAll('.pf-chip').forEach((b) => b.classList.toggle('on', b.textContent === st.place)); } }, c)));
     chips.querySelectorAll('.pf-chip').forEach((b) => b.classList.toggle('on', b.textContent === st.place));
     const shareBtn = h('button', { type: 'button', class: 'pf-share', onclick: share }, h('i', { class: 'pf-fill' }), h('span', {}, t('Share')));
-    const kindSeg = h('div');
-    const drawKind = () => put(kindSeg, seg([['work', t('Portfolio')], ['photo', t('Personal')]], st.kind, (k) => { st.kind = k; drawKind(); }));
+    const kindSeg = h('div', { class: 'pf-choice' });
+    const drawKind = () => put(kindSeg, ...[['work', t('Portfolio')], ['photo', t('Personal')]].map(([k, w]) => h('button', { type: 'button', class: st.kind === k ? 'on' : '', 'aria-pressed': String(st.kind === k), onclick: () => { st.kind = k; drawKind(); } }, w)));
     drawKind();
-    put(layer, h('div', { class: 'pf-two', style: it0 ? { '--pf-pic': `url("${urlOf2(it0)}")` } : {} },
+    put(layer, h('div', { class: 'pf-two', style: it0 && (!isVid(it0) || it0.cover) ? { '--pf-pic': `url("${urlOf2(it0)}")` } : {} },
       h('div', { class: 'pf-head' },
         h('button', { type: 'button', class: 'pf-round', 'aria-label': t('Back'), html: ICON.left, onclick: () => { if (!busy) stepOne(); } }),
         h('b', {}, t('New post')), h('span', { class: 'pf-sp' })),
       h('div', { class: 'pf-body' },
-        it0 ? h('div', { class: 'pf-prev', style: { backgroundImage: `url("${urlOf2(it0)}")` } },
+        it0 ? h('div', { class: 'pf-prev', style: !isVid(it0) || it0.cover ? { backgroundImage: `url("${urlOf2(it0)}")` } : {} },
+          isVid(it0) ? vidFace(it0, 'pf-tv') : null,
           st.items.length > 1 ? h('em', { class: 'pf-count' }, `1/${st.items.length}`) : null,
           isVid(it0) ? h('button', { type: 'button', class: 'pf-cover', onclick: async () => { const c = await coverPicker(it0.file); if (c) { it0.cover = c; if (it0.url) URL.revokeObjectURL(it0.url); it0.url = null; st.caption = caption.value; stepTwo(); } } }, t('Edit cover')) : null) : null,
         withMentions(caption),
+        tagsRow,
         h('div', { class: 'pf-quick' },
-          h('button', { type: 'button', class: 'pf-pill', onclick: () => addToCaption('#') }, h('b', {}, '#'), t('Hashtags')),
+          h('button', { type: 'button', class: 'pf-pill', onclick: () => { tagsRow.hidden = !tagsRow.hidden; } }, h('b', {}, '#'), t('Hashtags')),
           h('button', { type: 'button', class: 'pf-pill', onclick: () => postTagPeople(addToCaption) }, h('span', { html: ICON.user }), t('Tag people'))),
         h('div', { class: 'pf-list' },
           h('div', { class: 'pf-row' }, h('span', { class: 'pf-ic', html: ICON.grid }), h('span', { class: 'pf-row-t' }, h('b', {}, t('Post to'))), kindSeg),
@@ -1676,7 +1700,9 @@ async function postFlow(opts = {}) {
       busy = true; shareBtn.disabled = true; layer.classList.add('busy');
       const fill = shareBtn.querySelector('.pf-fill'), word = shareBtn.querySelector('span');
       const total = st.items.length || 1;
-      const prog = (i, k) => { const v = Math.round(((i + Math.min(1, k)) / total) * 100); fill.style.transform = `scaleX(${v / 100})`; word.textContent = v >= 100 ? t('Sharing…') : `${v}%`; };
+      // a video is first made lighter on this device, as long as it plays, then sent: the button says which
+      const prog = (i, k) => { const v = Math.round(((i + Math.min(1, k)) / total) * 100); fill.style.transform = `scaleX(${v / 100})`; const x = st.items[i]; word.textContent = v >= 100 ? t('Sharing…') : x && isVid(x) && k < 0.5 ? t('Preparing video… {n}%', { n: Math.round(k * 200) }) : t('Uploading… {n}%', { n: v }); };
+      for (const x of st.items) if (isVid(x) && !x.cover) { const b = await Promise.race([videoCover(x.file).catch(() => null), new Promise((r) => setTimeout(() => r(null), 4000))]); if (b) x.cover = new File([b], 'cover.jpg', { type: 'image/jpeg' }); }
       try {
         const media = [];
         for (const [i, x] of st.items.entries()) {
