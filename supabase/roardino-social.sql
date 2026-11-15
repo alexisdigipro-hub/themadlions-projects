@@ -785,3 +785,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 revoke all on function public.roardino_chat_known() from public, anon;
 grant execute on function public.roardino_chat_known() to authenticated;
+
+-- 15 Nov 2026: a post's place and AI label, from the new two-step post (applied on 15 Nov)
+alter table public.roardino_posts add column if not exists place text;
+alter table public.roardino_posts add column if not exists ai boolean not null default false;
