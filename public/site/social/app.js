@@ -3498,9 +3498,15 @@ async function chatLoadPeople(ids) {
   // roar_people is the view RoarMe itself reads (roar_profiles, the table under it, is closed to an account: the names
   // came back empty, Alex, 15 Nov); roar_contacts holds the name and picture I saved someone under, which win
   chatMine ||= sb.from('roar_contacts').select('person,nickname,photo_url').eq('owner', session.user.id).then(({ data }) => new Map((data || []).map((c) => [c.person, c])), () => new Map());
-  const [{ data }, mineOf] = await Promise.all([sb.from('roar_people').select('id,username,display_name,avatar_url').in('id', miss), chatMine]);
-  (data || []).forEach((u) => { const c = mineOf.get(u.id); const pic = c?.photo_url || u.avatar_url || '';
-    chatPeople.set(u.id, { id: u.id, name: c?.nickname || u.display_name || (u.username ? '@' + u.username : t('Member')), username: u.username, avatar: /^https?:/.test(pic) ? pic : null }); });
+  const [{ data }, mineOf, { data: rds }] = await Promise.all([sb.from('roar_people').select('id,username,display_name,avatar_url').in('id', miss), chatMine,
+    sb.from('roardino_people').select('id,owner,avatar').in('owner', miss).eq('minor', false).order('created_at')]);
+  // the photo and the details are RoarMe's (Alex, 15 Nov); the Roardino profile of the same account, when there is one,
+  // is where a tap on the name goes and lends its picture only when RoarMe has none; with no Roardino profile the
+  // person wears a small RoarMe mark
+  const rdOf = new Map(); (rds || []).forEach((r) => { if (!rdOf.has(r.owner)) rdOf.set(r.owner, r); });
+  await sign([...rdOf.values()].map((r) => r.avatar));
+  (data || []).forEach((u) => { const c = mineOf.get(u.id); const rd = rdOf.get(u.id); const pic = c?.photo_url || u.avatar_url || '';
+    chatPeople.set(u.id, { id: u.id, name: c?.nickname || u.display_name || (u.username ? '@' + u.username : t('Member')), username: u.username, avatar: /^https?:/.test(pic) ? pic : rd?.avatar || null, rd: rd?.id || null }); });
 }
 const chatSealed = (body) => typeof body === 'string' && body.startsWith('e2e1.');
 // what a message is, in a few words: for the list, a reply's quote and the cards of what only RoarMe opens
@@ -3566,7 +3572,7 @@ async function viewChat(roomId) {
       const by = r.last_user === meId ? t('You') + ': ' : r.kind !== 'direct' && chatPeople.get(r.last_user) ? chatPeople.get(r.last_user).name.split(' ')[0] + ': ' : '';
       return h('a', { class: 'ch-row' + (r.unread > 0 ? ' new' : ''), href: `#/chat/${r.id}` },
         avatar({ name: r.name, avatar: r.avatar }, 'ch-av'),
-        h('span', { class: 'ch-who' }, h('b', {}, r.name), h('small', {}, words ? by + words : r.kind === 'direct' ? '' : t('Group'))),
+        h('span', { class: 'ch-who' }, h('b', {}, h('span', {}, r.name), r.other && !r.other.rd ? h('em', { class: 'rm-badge' }, 'RoarMe') : null), h('small', {}, words ? by + words : r.kind === 'direct' ? '' : t('Group'))),
         h('span', { class: 'ch-side' }, h('small', {}, chatTime(r.last_message_at)), r.unread > 0 ? h('em', {}, r.unread > 99 ? '99+' : String(r.unread)) : r.muted ? h('i', { class: 'ch-mute', html: ICON.bell }) : null));
     }));
   };
@@ -3601,14 +3607,44 @@ async function viewChatRoom(roomId) {
   const foot = h('div', { class: 'ch-foot' }, replyBox, h('div', { class: 'ch-write' },
     h('button', { type: 'button', class: 'ch-clip', title: t('Photo / video'), 'aria-label': t('Photo / video'), html: ICON.pic, onclick: () => pick.click() }), pick, text, sendBtn));
   const sub = group ? t('{n} members', { n: (room.members || []).length }) : room.other?.username ? '@' + room.other.username : '';
-  const person = !group && room.other ? () => sb.from('roardino_people').select('id').eq('owner', room.other.id).eq('minor', false).limit(1).then(({ data }) => { if (data?.[0]) location.hash = `#/p/${data[0].id}`; else toast(t('{name} has no Roardino profile yet.', { name: room.name })); }) : null;
+  const person = !group && room.other ? () => { if (room.other.rd) location.hash = `#/p/${room.other.rd}`; else toast(t('{name} is on RoarMe only, with no Roardino profile yet.', { name: room.name })); } : null;
   frame('chat', h('div', { class: 'ch-room' },
     h('div', { class: 'ch-head' },
       h('a', { class: 'ch-back', href: '#/chat', title: t('Back'), 'aria-label': t('Back'), html: ICON.left }),
-      h(person ? 'button' : 'div', { type: person ? 'button' : null, class: 'ch-name', onclick: person }, avatar({ name: room.name, avatar: room.avatar }, 'ch-av sm'), h('span', {}, h('b', {}, room.name), sub ? h('small', {}, sub) : null)),
+      h(person ? 'button' : 'div', { type: person ? 'button' : null, class: 'ch-name', onclick: person }, avatar({ name: room.name, avatar: room.avatar }, 'ch-av sm'), h('span', {}, h('b', {}, h('span', {}, room.name), !group && room.other && !room.other.rd ? h('em', { class: 'rm-badge' }, 'RoarMe') : null), sub ? h('small', {}, sub) : null)),
     ),
     list, foot));
   const here = () => (location.hash || '') === `#/chat/${roomId}`;
+  // a finger slid to the right takes the conversation away and goes back to the list; slid to the left on a message it
+  // pulls that message aside and replies to it (Alex, 15 Nov: "swipe left and right, to go back and the like")
+  (() => {
+    const roomEl = list.parentElement; let st = null;
+    const still = (el, x) => { el.style.transition = 'transform .3s cubic-bezier(.25,1.45,.45,1)'; el.style.transform = x; setTimeout(() => { el.style.transition = ''; if (!x) el.style.transform = ''; }, 320); };
+    roomEl.addEventListener('touchstart', (e) => { if (e.touches.length !== 1 || e.target.closest('textarea,input,.ch-reply')) { st = null; return; } const p = e.touches[0]; st = { x: p.clientX, y: p.clientY, at: Date.now(), lock: '', msg: e.target.closest('.ch-msg'), dx: 0 }; }, { passive: true });
+    roomEl.addEventListener('touchmove', (e) => {
+      if (!st) return;
+      const p = e.touches[0], dx = p.clientX - st.x, dy = p.clientY - st.y;
+      if (!st.lock) { if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return; st.lock = Math.abs(dx) > Math.abs(dy) * 1.4 ? (dx > 0 ? 'back' : st.msg && !sealedRoom ? 'reply' : 'no') : 'no'; }
+      if (st.lock === 'no') return;
+      e.preventDefault(); st.dx = dx;
+      if (st.lock === 'back') { roomEl.style.transform = `translateX(${Math.max(0, dx)}px)`; roomEl.style.opacity = String(Math.max(0.35, 1 - Math.max(0, dx) / 520)); }
+      else { const b = st.msg.querySelector('.ch-bub'); if (b) b.style.transform = `translateX(${Math.max(-76, Math.min(0, dx))}px)`; }
+    }, { passive: false });
+    const end = () => {
+      if (!st || !st.lock || st.lock === 'no') { st = null; return; }
+      const quick = Date.now() - st.at < 260;
+      if (st.lock === 'back') {
+        if (st.dx > 110 || (quick && st.dx > 44)) { roomEl.style.transition = 'transform .2s ease-in,opacity .2s'; roomEl.style.transform = 'translateX(100%)'; roomEl.style.opacity = '0'; setTimeout(() => { location.hash = '#/chat'; }, 170); }
+        else { roomEl.style.opacity = ''; still(roomEl, ''); }
+      } else {
+        const b = st.msg.querySelector('.ch-bub'); const m = msgs.find((x) => x.id === st.msg.dataset.id);
+        if (b) still(b, '');
+        if (st.dx < -52 && m && !m.deleted_at) setReply(m);
+      }
+      st = null;
+    };
+    roomEl.addEventListener('touchend', end); roomEl.addEventListener('touchcancel', end);
+  })();
   const atEnd = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 160;
   const toEnd = () => window.scrollTo(0, document.documentElement.scrollHeight);
   const nameOf = (id) => (id === meId ? t('You') : chatPeople.get(id)?.name || t('Member'));
