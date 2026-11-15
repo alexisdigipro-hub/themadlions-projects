@@ -3105,3 +3105,29 @@ html[data-theme=dark] .pf-choice button.on{background:rgba(255,255,255,.14);colo
    no filter or scale on the video itself, no blur behind the buttons over it; the video gets its own layer */
 .ig-media>video{filter:none!important;transform:translateZ(0)!important;animation:none!important}
 .post.ig.has-media.vid .mwrap .btn,.post.ig.has-media.vid.open .mwrap .btn{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(0,0,0,.32)!important}
+/* the cover's own frame (Alex, 15 Nov): the picture under a 4:5 window, the rest dimmed; rows in order, equal pills */
+.cv{display:flex;flex-direction:column;gap:12px}
+.cv-stage{position:relative;height:min(52vh,500px);max-height:none;display:block;background:#0b0c0f;border-radius:18px;overflow:hidden;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.cv-stage:active{cursor:grabbing}
+.cv-layer{position:absolute;left:50%;top:50%;will-change:transform}
+.cv-stage .cv-media{position:absolute;inset:0;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:fill;display:block;pointer-events:none;-webkit-user-drag:none}
+.cv-stage .cv-media.hidden{display:none}
+.cv-frame{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:4px;pointer-events:none;box-shadow:0 0 0 1.5px rgba(255,255,255,.95),0 0 0 9999px rgba(8,9,12,.62)}
+.cv-frame i{position:absolute;background:rgba(255,255,255,.28)}
+.cv-frame i:nth-child(1),.cv-frame i:nth-child(2){top:0;bottom:0;width:1px}
+.cv-frame i:nth-child(1){left:33.33%}.cv-frame i:nth-child(2){left:66.66%}
+.cv-frame i:nth-child(3),.cv-frame i:nth-child(4){left:0;right:0;height:1px}
+.cv-frame i:nth-child(3){top:33.33%}.cv-frame i:nth-child(4){top:66.66%}
+.cv-row{display:flex;align-items:center;gap:12px;padding:0 4px}
+.cv-row.off{opacity:.35}
+.cv-ic{flex:none;width:22px;height:22px;color:var(--muted);display:grid;place-items:center}
+.cv-ic svg{width:20px;height:20px}
+.cv-row .cv-bar{flex:1;min-width:0}
+.cv-acts{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}
+.cv-acts .btn{width:100%;justify-content:center;margin:0}
+.cv-acts .btn.hidden{display:none}
+.cv-hint{text-align:center;margin:0;font-size:12.5px}
+.cover-veil .win .foot{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cover-veil .win .foot .btn{width:100%;justify-content:center;margin:0}
+/* the profile grid on a phone is 4:5 too, so the frame chosen for a cover is exactly what shows there */
+@media (max-width:820px){.page .grid .cell{aspect-ratio:4/5}}

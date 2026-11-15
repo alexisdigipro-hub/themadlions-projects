@@ -941,5 +941,9 @@ window.RD_EL = {
 "Drafts cannot be kept on this device.": "Σε αυτή τη συσκευή δεν κρατιούνται πρόχειρα.",
 "Edit cover": "Αλλαγή εξωφύλλου",
 "Preparing video… {n}%": "Προετοιμασία βίντεο… {n}%",
-"Uploading… {n}%": "Ανέβασμα… {n}%"
+"Uploading… {n}%": "Ανέβασμα… {n}%",
+"Replace": "Αντικατάσταση",
+"Video frame": "Καρέ βίντεο",
+"Zoom": "Ζουμ",
+"Drag to move, pinch or slide to zoom. The bright frame is what shows on your profile.": "Σύρε για να μετακινήσεις, τσίμπησε ή σύρε τη μπάρα για ζουμ. Το φωτεινό κάδρο είναι αυτό που φαίνεται στο προφίλ σου."
 };

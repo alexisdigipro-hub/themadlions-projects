@@ -677,46 +677,92 @@ function cropImage(file, shapes = SHAPES.post) {
    the video in a glass window, a slider to find the frame, Use this frame; or a picture of one's own. Gives back a JPEG
    File, or null when cancelled. Works on a file being uploaded and on a video already up (its signed link) */
 function coverPicker(src, start = 0) {
+  // the cover as a frame of its own (Alex, 15 Nov: "zoom, replace, crop, move, the right frame, and show me the edges of
+  // what goes on the profile, 4:5, with the rest dimmed"): the video's frame or one's own picture under a 4:5 window;
+  // drag to move, two fingers or the slider to zoom; what is inside the window becomes the cover (1080 x 1350)
   return new Promise((done) => {
-    let answered = false, own = null;
+    const AR = 4 / 5;
+    let answered = false, own = null, ownUrl = '';
     const local = src instanceof Blob;
     const url = local ? URL.createObjectURL(src) : src;
-    const v = h('video', { class: 'cv-video', muted: true, playsInline: true, preload: 'auto', crossOrigin: local ? null : 'anonymous' });
-    const ownPic = h('img', { class: 'cv-own hidden', alt: '' });
-    const bar = h('input', { type: 'range', class: 'crop-zoom cv-bar', min: '0', max: '1', step: '0.01', value: '0', 'aria-label': t('Frame') });
-    const finish = (f) => { if (answered) return; answered = true; if (local) URL.revokeObjectURL(url); done(f); };
+    const v = h('video', { class: 'cv-media', muted: true, playsInline: true, preload: 'auto', crossOrigin: local ? null : 'anonymous' });
+    const pic = h('img', { class: 'cv-media hidden', alt: '' });
+    const layer = h('div', { class: 'cv-layer' }, v, pic);
+    const frame = h('div', { class: 'cv-frame' }, h('i'), h('i'), h('i'), h('i'));
+    const stage = h('div', { class: 'cv-stage' }, layer, frame);
+    const scrub = h('input', { type: 'range', class: 'crop-zoom cv-bar', min: '0', max: '1', step: '0.01', value: '0', 'aria-label': t('Frame') });
+    const zoom = h('input', { type: 'range', class: 'crop-zoom cv-bar', min: '1', max: '4', step: '0.01', value: '1', 'aria-label': t('Zoom') });
+    const finish = (f) => { if (answered) return; answered = true; if (local) URL.revokeObjectURL(url); if (ownUrl) URL.revokeObjectURL(ownUrl); done(f); };
+    // where the picture sits: z = zoom over "just fills the window", x/y = its centre's offset from the window's centre
+    const st = { z: 1, x: 0, y: 0 };
+    const media = () => (own ? pic : v);
+    const natural = () => { const m = media(); return own ? [m.naturalWidth || 1, m.naturalHeight || 1] : [m.videoWidth || 9, m.videoHeight || 16]; };
+    const box = () => { const r = stage.getBoundingClientRect(); const fh = Math.min(r.height - 28, (r.width - 28) / AR); return { W: r.width, H: r.height, fw: fh * AR, fh }; };
+    const size = () => { const { fw, fh } = box(); const [w, hh] = natural(); const base = Math.max(fw / w, fh / hh); return { w: w * base * st.z, h: hh * base * st.z, fw, fh }; };
+    const draw = () => {
+      const { w, h: hh, fw, fh } = size();
+      const mx = Math.max(0, (w - fw) / 2), my = Math.max(0, (hh - fh) / 2);
+      st.x = Math.max(-mx, Math.min(mx, st.x)); st.y = Math.max(-my, Math.min(my, st.y));
+      layer.style.width = w + 'px'; layer.style.height = hh + 'px';
+      layer.style.transform = `translate(-50%,-50%) translate(${st.x}px,${st.y}px)`;
+      frame.style.width = fw + 'px'; frame.style.height = fh + 'px';
+      zoom.value = String(st.z);
+    };
+    const reset = () => { st.z = 1; st.x = 0; st.y = 0; draw(); };
     v.addEventListener('loadedmetadata', () => {
-      bar.max = String(v.duration || 1); bar.step = String(Math.max(0.03, (v.duration || 1) / 300));
-      const at = Math.min(start || Math.min(1, (v.duration || 1) / 3), v.duration || 0); v.currentTime = at; bar.value = String(at);
+      scrub.max = String(v.duration || 1); scrub.step = String(Math.max(0.03, (v.duration || 1) / 300));
+      const at = Math.min(start || Math.min(1, (v.duration || 1) / 3), v.duration || 0); v.currentTime = at; scrub.value = String(at);
+      draw();
     });
     // an iPhone shows frames only after a play: a short silent play and pause wakes it
     v.addEventListener('loadeddata', () => { v.play().then(() => v.pause()).catch(() => {}); }, { once: true });
-    bar.oninput = () => { own = null; ownPic.classList.add('hidden'); v.classList.remove('hidden'); v.currentTime = +bar.value; };
-    // a picture of one's own goes through the picture editor first: zoom, move, scale, in the video's own shape
-    // (Alex, 5 Nov: "change it or upload a photo, with scale, reposition and zoom")
-    const pick = h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => {
-      const f0 = e.target.files[0]; e.target.value = ''; if (!f0) return;
-      const r0 = v.videoWidth && v.videoHeight ? v.videoWidth / v.videoHeight : 9 / 16;
-      const f = await cropImage(f0, [[t('Video'), r0], ['4:5', 4 / 5], ['1:1', 1]]);
-      if (!f) return;
-      own = f; ownPic.src = URL.createObjectURL(f); ownPic.classList.remove('hidden'); v.classList.add('hidden');
-    } });
-    const grab = () => new Promise((res) => {
-      if (own) return res(own);
-      const k = Math.min(1, 1080 / Math.max(v.videoWidth || 1, v.videoHeight || 1));
-      const c = document.createElement('canvas'); c.width = Math.round((v.videoWidth || 720) * k); c.height = Math.round((v.videoHeight || 1280) * k);
-      try { c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); c.toBlob((b) => res(b ? new File([b], 'cover.jpg', { type: 'image/jpeg' }) : null), 'image/jpeg', 0.85); } catch { res(null); }
+    scrub.oninput = () => { if (own) backToVideo(); v.currentTime = +scrub.value; };
+    zoom.oninput = () => { st.z = +zoom.value; draw(); };
+    // drag with one finger or the mouse, pinch with two, the wheel on a computer
+    const pts = new Map(); let pinch = null;
+    stage.addEventListener('pointerdown', (e) => { stage.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); if (pts.size === 2) { const [p, q] = [...pts.values()]; pinch = { d: Math.hypot(p[0] - q[0], p[1] - q[1]), z: st.z }; } });
+    stage.addEventListener('pointermove', (e) => {
+      const was = pts.get(e.pointerId); if (!was) return;
+      pts.set(e.pointerId, [e.clientX, e.clientY]);
+      if (pts.size >= 2 && pinch) { const [p, q] = [...pts.values()]; st.z = Math.max(1, Math.min(4, pinch.z * Math.hypot(p[0] - q[0], p[1] - q[1]) / (pinch.d || 1))); }
+      else if (pts.size === 1) { st.x += e.clientX - was[0]; st.y += e.clientY - was[1]; }
+      draw();
     });
+    const up = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; };
+    stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+    stage.addEventListener('wheel', (e) => { e.preventDefault(); st.z = Math.max(1, Math.min(4, st.z * (e.deltaY < 0 ? 1.08 : 1 / 1.08))); draw(); }, { passive: false });
+    const replaceBtn = h('button', { type: 'button', class: 'btn sm' }, icon('pic'), t('Replace'));
+    const videoBtn = h('button', { type: 'button', class: 'btn sm hidden' }, icon('play'), t('Video frame'));
+    const backToVideo = () => { own = null; pic.classList.add('hidden'); v.classList.remove('hidden'); videoBtn.classList.add('hidden'); scrubRow.classList.remove('off'); reset(); };
+    videoBtn.onclick = backToVideo;
+    const pick = h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: (e) => {
+      const f0 = e.target.files[0]; e.target.value = ''; if (!f0) return;
+      if (ownUrl) URL.revokeObjectURL(ownUrl);
+      ownUrl = URL.createObjectURL(f0); own = f0;
+      pic.onload = () => { v.classList.add('hidden'); pic.classList.remove('hidden'); videoBtn.classList.remove('hidden'); scrubRow.classList.add('off'); reset(); };
+      pic.src = ownUrl;
+    } });
+    replaceBtn.onclick = () => pick.click();
+    const grab = () => new Promise((res) => {
+      const { w, h: hh, fw, fh } = size(); const [nw, nh] = natural(); const k = nw / w;
+      const sx = (w / 2 - st.x - fw / 2) * k, sy = (hh / 2 - st.y - fh / 2) * k;
+      const c = document.createElement('canvas'); c.width = 1080; c.height = 1350;
+      try { c.getContext('2d').drawImage(media(), sx, sy, fw * k, fh * k, 0, 0, c.width, c.height); c.toBlob((b) => res(b ? new File([b], 'cover.jpg', { type: 'image/jpeg' }) : null), 'image/jpeg', 0.86); } catch { res(null); }
+    });
+    const row = (ic, el) => h('div', { class: 'cv-row' }, h('span', { class: 'cv-ic', html: ICON[ic] || '' }), el);
+    const scrubRow = row('play', scrub);
     const close = openWin(t('Choose the cover'), h('div', { class: 'cv' },
-      h('div', { class: 'cv-stage' }, v, ownPic),
-      bar,
-      h('p', { class: 'hint', style: { textAlign: 'center' } }, t('Slide to the frame you want, or use a picture of your own.')),
-      h('div', { class: 'cv-acts' }, h('button', { type: 'button', class: 'btn sm', onclick: () => pick.click() }, icon('pic'), t('Use a picture')), pick)),
+      stage,
+      scrubRow,
+      row('search', zoom),
+      h('div', { class: 'cv-acts' }, replaceBtn, videoBtn, h('button', { type: 'button', class: 'btn sm', onclick: reset }, t('Reset')), pick),
+      h('p', { class: 'hint cv-hint' }, t('Drag to move, pinch or slide to zoom. The bright frame is what shows on your profile.'))),
     (c) => [h('button', { type: 'button', class: 'btn', onclick: () => { c(); finish(null); } }, t('Cancel')),
       h('button', { type: 'button', class: 'btn main', onclick: async () => { const f = await grab(); if (!f) { toast(t('This frame could not be taken. Try a picture of your own.')); return; } c(); finish(f); } }, t('Use this cover'))]);
     const veil = document.querySelector('.veil:last-of-type');
     veil?.classList.add('cover-veil');
     new MutationObserver((_, o) => { if (veil && !veil.isConnected) { o.disconnect(); finish(null); } }).observe(document.body, { childList: true });
+    const ro = new ResizeObserver(() => draw()); ro.observe(stage);
     v.src = url;
     void close;
   });
