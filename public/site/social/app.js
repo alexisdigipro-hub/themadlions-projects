@@ -1923,6 +1923,133 @@ async function peopleList(p, what) {
   draw();
 }
 // the picture large, over everything (Alex, 5 Nov): arrows or keys for the others, a click outside, the X or Esc closes
+/* Reels (Alex, 15 Nov, from Instagram's and TikTok's): two taps on a feed video open it full screen; a slide up goes to the
+   next video of the feed (videos only), a slide down to the one before. Like, comment, send and ⋯ down the right, the
+   profile with Follow and the caption at the bottom left, back and Reels at the top. A tap pauses, two taps like.
+   ⋯ has Auto-scroll (the next video comes by itself when one ends). Only the video on screen plays; its neighbours
+   load ahead, the far ones let go of their file. */
+const reelOf = new WeakMap();
+function openReels(fromArt, onClose) {
+  const arts = [...document.querySelectorAll('article.post.ig')].filter((a) => reelOf.has(a));
+  const list = arts.map((a) => reelOf.get(a));
+  if (!list.length) return;
+  const start = Math.max(0, arts.indexOf(fromArt));
+  document.querySelectorAll('video').forEach((v) => { if (!v.paused) v.pause(); });
+  const soundBefore = feedSound;
+  setFeedSound(true); // two taps are a touch, so the phone lets it be heard
+  let auto = (() => { try { return localStorage.getItem('roardino-autoscroll') === '1'; } catch { return false; } })();
+  const scroller = h('div', { class: 'rl-list' });
+  const soundBtn = h('button', { type: 'button', class: 'rl-btn', 'aria-label': t('Sound') });
+  const faceSound = () => { soundBtn.innerHTML = feedSound ? ICON.vol : ICON.mute; };
+  faceSound();
+  const veil = h('div', { class: 'rl', role: 'dialog', 'aria-label': t('Reels') },
+    scroller,
+    h('div', { class: 'rl-top' },
+      h('button', { type: 'button', class: 'rl-btn', 'aria-label': t('Back'), html: ICON.left, onclick: () => close() }),
+      h('b', {}, t('Reels')),
+      soundBtn));
+  const vids = [];
+  const short = (n) => (n >= 10000 ? Math.round(n / 1000) + 'K' : n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : String(n || ''));
+  const slides = list.map((it, i) => {
+    const m = it.media[0];
+    const tall = m.w && m.h ? m.h > m.w : true;
+    const v = h('video', { class: 'rl-v' + (tall ? ' tall' : ''), playsInline: true, loop: !auto, preload: 'none', poster: urlOf(m.poster) || null, muted: !feedSound });
+    v.dataset.src = urlOf(m.path);
+    v.addEventListener('loadedmetadata', () => { v.classList.toggle('tall', v.videoHeight > v.videoWidth); }, { once: true });
+    vids.push(v);
+    const bar = h('i', { class: 'rl-prog' });
+    v.addEventListener('timeupdate', () => { if (v.duration) bar.style.transform = `scaleX(${v.currentTime / v.duration})`; });
+    v.addEventListener('ended', () => { if (auto && slides[i + 1]) slides[i + 1].scrollIntoView({ behavior: 'smooth' }); });
+    const likeN = h('span', {});
+    const likeB = h('button', { type: 'button', class: 'rl-ico like', 'aria-label': t('Like'), html: ICON.heart });
+    const drawLike = () => { likeB.classList.toggle('on', !!it.st.mine); likeN.textContent = !it.r.hide_likes || it.own ? short(it.st.bravos) : ''; };
+    const like = () => { if (it.own) return; it.likeBtn.click(); drawLike(); likeB.classList.remove('pop'); void likeB.offsetWidth; if (it.st.mine) likeB.classList.add('pop'); };
+    likeB.onclick = (e) => { e.stopPropagation(); like(); };
+    drawLike();
+    const pp = it.p;
+    const follow = !it.own && pp.id && !follows.has(pp.id) ? h('button', { type: 'button', class: 'rl-follow', onclick: async (e) => { e.stopPropagation(); const b = e.currentTarget; if (await toggleFollow(pp.id)) b.remove(); } }, t('Follow')) : null;
+    const capEl = it.r.body ? h('p', { class: 'rl-cap', onclick: (e) => { e.stopPropagation(); e.currentTarget.classList.toggle('all'); } }, it.r.body) : null;
+    const paused = h('span', { class: 'rl-paused', html: ICON.play });
+    const slide = h('section', { class: 'rl-slide', 'data-i': String(i) },
+      v, paused,
+      h('div', { class: 'rl-side' },
+        h('div', { class: 'rl-pair' }, likeB, likeN),
+        it.r.comments_off ? null : h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Comment'), html: ICON.talk, onclick: (e) => { e.stopPropagation(); close(); it.comments(); } }), h('span', {}, it.talkN?.textContent || '')),
+        h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: (e) => { e.stopPropagation(); v.pause(); sendToRoarMe(it.r, pp); } })),
+        h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); sheet(it); } })),
+      h('div', { class: 'rl-info' },
+        h('div', { class: 'rl-who' },
+          h('a', { href: `#/p/${pp.id}`, class: 'rl-av', onclick: () => close(true) }, avatar(pp)),
+          h('a', { href: `#/p/${pp.id}`, class: 'rl-name', onclick: () => close(true) }, h('b', {}, pp.name || ''), it.r.ai ? h('em', { class: 'ai-badge' }, 'AI') : null),
+          follow),
+        capEl),
+      bar);
+    // one tap pauses or plays, two taps like with the big heart
+    let last = 0, tt = 0;
+    slide.addEventListener('click', (e) => {
+      if (e.target.closest('button, a, .rl-cap')) return;
+      const now = Date.now();
+      if (now - last < 300) { clearTimeout(tt); last = 0; if (!it.st.mine) like(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); slide.append(hh); setTimeout(() => hh.remove(), 900); return; }
+      last = now;
+      tt = setTimeout(() => { if (v.paused) { v.play().catch(() => {}); } else v.pause(); }, 300);
+    });
+    v.addEventListener('pause', () => slide.classList.add('is-paused'));
+    v.addEventListener('play', () => slide.classList.remove('is-paused'));
+    return slide;
+  });
+  put(scroller, ...slides);
+  let toggled = false;
+  soundBtn.onclick = () => { toggled = true; setFeedSound(!feedSound); faceSound(); vids.forEach((x) => { x.muted = !feedSound; }); };
+  // the one on screen plays; the ones next to it load; the far ones drop their file
+  let cur = -1;
+  const show = (i) => {
+    if (i === cur) return;
+    cur = i;
+    vids.forEach((x, k) => {
+      const d = Math.abs(k - i);
+      if (d <= 1 && !x.getAttribute('src')) { x.src = x.dataset.src; x.preload = 'auto'; }
+      if (d > 2 && x.getAttribute('src')) { x.pause(); x.removeAttribute('src'); x.load(); }
+      if (k !== i && !x.paused) x.pause();
+    });
+    const v = vids[i];
+    v.muted = !feedSound; v.currentTime = 0;
+    v.play().catch(() => { v.muted = true; faceSound(); v.play().catch(() => {}); });
+  };
+  const io = new IntersectionObserver((en) => en.forEach((x) => { if (x.isIntersecting && x.intersectionRatio >= 0.6) show(+x.target.dataset.i); }), { root: scroller, threshold: [0.6] });
+  slides.forEach((sl) => io.observe(sl));
+  // ⋯: Auto-scroll and what can be done with the post
+  function sheet(it) {
+    const tog = h('button', { type: 'button', class: 'rl-switch' + (auto ? ' on' : ''), role: 'switch', 'aria-checked': String(auto), onclick: () => {
+      auto = !auto; tog.classList.toggle('on', auto); tog.setAttribute('aria-checked', String(auto));
+      vids.forEach((x) => { x.loop = !auto; });
+      try { localStorage.setItem('roardino-autoscroll', auto ? '1' : '0'); } catch { /* private */ }
+    } }, h('i'));
+    const back = h('div', { class: 'rl-sheet-back', onclick: (e) => { if (e.target === back) back.remove(); } },
+      h('div', { class: 'rl-sheet' },
+        h('i', { class: 'rl-grab' }),
+        h('div', { class: 'rl-group' }, h('div', { class: 'rl-row' }, h('span', { html: ICON.play }), h('b', {}, t('Auto-scroll')), tog)),
+        h('div', { class: 'rl-group' },
+          h('button', { type: 'button', class: 'rl-row', onclick: async () => { const url = `${location.origin}${location.pathname}#/p/${it.p.id}`; try { await navigator.clipboard.writeText(url); toast(t('Link copied')); } catch { /* no */ } back.remove(); } }, h('span', { html: ICON.send }), h('b', {}, t('Copy link'))),
+          h('button', { type: 'button', class: 'rl-row', onclick: () => { back.remove(); close(); it.menu(); } }, h('span', { html: ICON.dots }), h('b', {}, t('More options'))))));
+    veil.append(back);
+  }
+  const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'ArrowDown') slides[cur + 1]?.scrollIntoView({ behavior: 'smooth' }); if (e.key === 'ArrowUp') slides[cur - 1]?.scrollIntoView({ behavior: 'smooth' }); };
+  let closed = false;
+  function close(leaving) {
+    if (closed) return; closed = true;
+    io.disconnect(); vids.forEach((x) => { x.pause(); x.removeAttribute('src'); x.load(); });
+    document.removeEventListener('keydown', onKey);
+    document.documentElement.classList.remove('rl-open');
+    veil.classList.add('out'); setTimeout(() => veil.remove(), 260);
+    if (!toggled) setFeedSound(soundBefore);
+    if (!leaving) onClose?.();
+  }
+  document.addEventListener('keydown', onKey);
+  document.documentElement.classList.add('rl-open');
+  document.body.append(veil);
+  scroller.scrollTop = start * scroller.clientHeight;
+  requestAnimationFrame(() => { scroller.scrollTop = start * scroller.clientHeight; show(start); });
+}
 function lightbox(media, start = 0, opts = {}) {
   if (!media.length) return;
   // the picture or video big, only the X in its own corner, a double click likes (Alex, 5 Nov; 6 Nov: the feed's too)
@@ -2250,6 +2377,7 @@ function postCard(r, st, refresh) {
   // a picture or a video only, on a phone (Alex, 5 Nov): one tap slides in who it is (top) and the icons (bottom) over it,
   // with the caption and the comments under it; another tap puts them away; a double tap is still a like
   const art = h('article', { class: 'post ig has-media', 'data-post': r.id });
+  if (media[0]?.type === 'video') reelOf.set(art, { r, p, st, own, media, likeBtn: bravoBtn, talkN, comments: () => { art.scrollIntoView({ block: 'center' }); setTimeout(() => setOpen(true), 350); }, menu: () => postMenu(r, p, { own, media, refresh, saveBtn }) });
   const wrap = h('div', { class: 'mwrap' }, head, slides, dots, bar);
   let tapT = null;
   const setOpen = (on) => {
@@ -2281,7 +2409,7 @@ function postCard(r, st, refresh) {
       // a phone: the first touch only brings the icons; a touch while they show plays or pauses
       if (isPhone() && !art.classList.contains('open') && now - lastTap >= 320) { lastTap = now; peek(); return; }
       if (isPhone()) peek();
-      if (now - lastTap < 320) { lastTap = 0; v.pause(); v.dataset.held = '1'; lightbox(media, slideAt(), { onLike: () => { if (!own && !bravoBtn.classList.contains('on')) bravoBtn.click(); }, onClose: () => { delete v.dataset.held; const r0 = v.getBoundingClientRect(); if (r0.bottom > 0 && r0.top < innerHeight) v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } }); return; }
+      if (now - lastTap < 320) { lastTap = 0; v.pause(); v.dataset.held = '1'; (media.length === 1 ? (o) => openReels(art, o.onClose) : (o) => lightbox(media, slideAt(), o))({ onLike: () => { if (!own && !bravoBtn.classList.contains('on')) bravoBtn.click(); }, onClose: () => { delete v.dataset.held; const r0 = v.getBoundingClientRect(); if (r0.bottom > 0 && r0.top < innerHeight) v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } }); return; }
       lastTap = now;
       tapT = setTimeout(() => { if (v.paused) { delete v.dataset.held; if (!v.src && v.dataset.src) v.src = v.dataset.src; v.play().catch(() => {}); } else { v.pause(); v.dataset.held = '1'; } }, 300);
       return;
