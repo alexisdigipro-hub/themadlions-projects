@@ -2543,3 +2543,40 @@ html[data-theme=dark] .ep-pic{background-color:#2a2e36}
 .first-post b{font-size:24px;line-height:1.15;letter-spacing:-.01em;margin-bottom:8px}
 .first-post p{margin:0 0 22px;font-size:15px;color:var(--muted);max-width:340px}
 html body .first-post button.btn.main.fp-btn{width:100%;max-width:340px;justify-content:center;min-height:50px;font-size:14px;background:var(--a-solid)!important;background-image:none!important;border-color:var(--a-solid)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;box-shadow:0 8px 22px rgba(var(--a),.35)!important}
+
+/* inside the iPhone app the page reaches under the clock and the battery (Alex, 15 Nov: "the menu at the top has gone
+   up"): the top bar starts under them, and a band of the page's own colour stands behind them so nothing scrolls
+   through the clock. In a browser the inset is 0 and nothing changes. */
+@media (max-width:860px){
+  .bar{padding-top:calc(8px + env(safe-area-inset-top))}
+  .bar::before{content:"";position:absolute;left:0;right:0;top:0;height:calc(env(safe-area-inset-top) + 8px);background:var(--bg1,#eceef1);pointer-events:none}
+  html[data-theme=dark] .bar::before{background:var(--bg1,#15171b)}
+  /* the small row of signs that belongs to the computer's left column showed under the phone's feed, with no words */
+  .two.feed-two>.left .me-tiles,.two>.left>.me-tiles{display:none!important}
+}
+
+/* the profile form's foot on a phone: one row, Delete a round red bin on its own (Alex's rule: Delete stands apart) */
+.wz-del .wz-del-ic{display:none}
+@media (max-width:860px){
+  .form-foot.wz-foot{flex-wrap:nowrap;gap:6px;padding:8px}
+  .form-foot.wz-foot{max-width:100%;box-sizing:border-box}
+  .wz-main,.wz-lay{min-width:0;max-width:100%}
+  .form-foot.wz-foot .grow{display:none}
+  .form-foot.wz-foot .btn{flex:1 1 auto;padding-left:8px;padding-right:8px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;letter-spacing:.04em;justify-content:center}
+  .form-foot.wz-foot .btn svg{display:none}
+  .form-foot.wz-foot .btn.wz-del svg{display:block}
+  .wz-del .wz-del-w{display:none}
+  .wz-del .wz-del-ic{display:grid;place-items:center;width:18px;height:18px}
+  .wz-del .wz-del-ic svg{width:18px;height:18px}
+  html body .form-foot.wz-foot .btn.wz-del{width:42px;height:42px;min-height:0;padding:0;border-radius:50%;flex:none;display:grid;place-items:center}
+}
+
+/* the rest of the iPhone app's fit (15 Nov): what fills the screen keeps clear of the clock and the home line */
+@media (max-width:860px){
+  .st-bars{top:calc(10px + env(safe-area-inset-top))}
+  .st-head{top:calc(20px + env(safe-area-inset-top))}
+  .st-x{top:calc(14px + env(safe-area-inset-top))}
+  .st-cap{padding-bottom:calc(22px + env(safe-area-inset-bottom))}
+  .veil{padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .chat-frame{height:calc(100dvh - 170px - env(safe-area-inset-top) - max(0px,env(safe-area-inset-bottom) - 14px))}
+}
