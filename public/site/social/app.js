@@ -81,6 +81,8 @@ function wearPrefs() {
   document.documentElement.dataset.text = prefs.text;
   if (ACCENTS.some(([k]) => k === prefs.accent) && prefs.accent !== 'red') document.documentElement.dataset.accent = prefs.accent; else delete document.documentElement.dataset.accent;
   document.querySelector('meta[name=theme-color]')?.setAttribute('content', dark ? '#15171b' : '#eceef1');
+  // inside the iPhone app the clock and the battery take the colour that reads on the theme (the shell's StatusBar plugin)
+  try { window.Capacitor?.Plugins?.StatusBar?.setStyle?.({ style: dark ? 'DARK' : 'LIGHT' })?.catch?.(() => {}); } catch { /* not in the app */ }
 }
 function setPref(k, v) { prefs[k] = v; try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* full */ } wearPrefs(); }
 darkQuery.addEventListener?.('change', wearPrefs);
@@ -397,7 +399,7 @@ const urlOf = (p) => (!p ? '' : /^https?:/.test(p) ? p : signed.get(p)?.url || '
 // nothing before it comes near), and a video in a grid gets its source only when its cell comes into sight
 const vidNear = 'IntersectionObserver' in window ? new IntersectionObserver((list) => list.forEach((en) => {
   const v = en.target;
-  if (en.isIntersecting && !v.src && v.dataset.src) { v.src = v.dataset.src; v.preload = 'metadata'; }
+  if (en.isIntersecting && !v.src && v.dataset.src) { v.src = v.dataset.src + (v.poster || v.dataset.src.includes('#') ? '' : '#t=0.1'); v.preload = 'metadata'; }
 }), { rootMargin: '400px 0px' }) : null;
 const vidPlay = 'IntersectionObserver' in window ? new IntersectionObserver((list) => list.forEach((en) => {
   const v = en.target;
@@ -3013,7 +3015,7 @@ async function viewEdit(which) {
     h('div', { class: 'head wz-head' }, h('h1', { class: 'wz-title' }, old ? t('Your profile') : kid ? t('My child\'s profile') : t('New profile')), stepsBar),
     h('div', { class: 'wz-lay' },
       h('div', { class: 'card wz-main' }, ...panes,
-        h('div', { class: 'form-foot wz-foot' }, backBtn, old ? h('button', { type: 'button', class: 'btn red', onclick: remove }, t('Delete profile')) : null, msg, h('span', { class: 'grow' }),
+        h('div', { class: 'form-foot wz-foot' }, backBtn, old ? h('button', { type: 'button', class: 'btn red wz-del', title: t('Delete profile'), 'aria-label': t('Delete profile'), onclick: remove }, h('span', { class: 'wz-del-ic', html: ICON.trash }), h('span', { class: 'wz-del-w' }, t('Delete profile'))) : null, msg, h('span', { class: 'grow' }),
           h('a', { class: 'btn', href: old ? `#/p/${id}` : '#/feed' }, t('Cancel')), nextBtn, saveBtn)),
       side)));
   drawSide(); go(0);
