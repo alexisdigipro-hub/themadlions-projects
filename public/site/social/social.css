@@ -2750,3 +2750,11 @@ html.kb .form-foot{bottom:8px}
     box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 0 0 1px rgba(var(--a),.2),0 6px 20px rgba(var(--a),.34)}
 }
 @media (max-width:820px){ html body .tabbar .tab-plus{overflow:visible;contain:none} html body .tabbar .tab-plus span{box-shadow:inset 0 1px 0 #fff,inset 0 -6px 10px rgba(var(--a),.07),0 0 0 1px rgba(var(--a),.14),0 3px 10px rgba(var(--a),.2)} html[data-theme=dark] body .tabbar .tab-plus span{box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 0 0 1px rgba(var(--a),.2),0 3px 10px rgba(var(--a),.32)} }
+
+/* on a phone a video too keeps its name and icons away until it is touched (Alex, 15 Nov): they show for two seconds */
+@media (max-width:820px){
+  .post.ig.has-media.vid:not(.open) .mwrap .post-head{transform:translateY(-100%);opacity:0;pointer-events:none}
+  .post.ig.has-media.vid:not(.open) .mwrap .ig-bar{transform:translateY(100%);opacity:0;pointer-events:none}
+  .post.ig.has-media.vid:not(.open) .mwrap .post-head>*,.post.ig.has-media.vid:not(.open) .mwrap .ig-bar>*{opacity:0}
+  .post.ig.has-media.open .ig-media>*{transform:none;filter:brightness(.92)}
+}

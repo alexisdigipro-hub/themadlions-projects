@@ -1898,6 +1898,15 @@ function postCard(r, st, refresh) {
     art.classList.toggle('open', on);
     if (on) { openTalk(); cap?.classList.remove('hidden'); } else { talk.classList.add('hidden'); cap?.classList.add('hidden'); }
   };
+  // on a phone the name and the icons are not on the picture (Alex, 15 Nov: "not lit; touch it once and they show for
+  // two seconds, then go again"): a touch brings them, two seconds later they leave, unless the comments are open or
+  // something of theirs has just been pressed
+  let peekT = null;
+  const peek = () => {
+    art.classList.add('open');
+    clearTimeout(peekT);
+    peekT = setTimeout(() => { if (!talk.classList.contains('hidden') || art.contains(document.activeElement) && document.activeElement.matches('input,textarea')) return peek(); art.classList.remove('open'); }, 2000);
+  };
   // a video (Alex, 5 Nov): one tap plays or pauses it, two taps open it large; a picture keeps its own taps
   let lastTap = 0;
   const slideAt = () => Math.round((slides.scrollLeft || 0) / (slides.clientWidth || 1));
@@ -1906,11 +1915,14 @@ function postCard(r, st, refresh) {
     v.addEventListener('play', mark); v.addEventListener('pause', mark); mark();
   });
   wrap.addEventListener('click', (e) => {
-    if (e.target.closest('.post-head, .ig-bar, a, button')) return;
+    if (e.target.closest('.post-head, .ig-bar, a, button')) { if (isPhone()) peek(); return; }
     const v = slides?.children[slideAt()];
     if (v?.tagName === 'VIDEO') {
       clearTimeout(tapT);
       const now = Date.now();
+      // a phone: the first touch only brings the icons; a touch while they show plays or pauses
+      if (isPhone() && !art.classList.contains('open') && now - lastTap >= 320) { lastTap = now; peek(); return; }
+      if (isPhone()) peek();
       if (now - lastTap < 320) { lastTap = 0; v.pause(); v.dataset.held = '1'; lightbox(media, slideAt(), { onLike: () => { if (!own && !bravoBtn.classList.contains('on')) bravoBtn.click(); } }); return; }
       lastTap = now;
       tapT = setTimeout(() => { if (v.paused) { delete v.dataset.held; if (!v.src && v.dataset.src) v.src = v.dataset.src; v.play().catch(() => {}); } else { v.pause(); v.dataset.held = '1'; } }, 300);
@@ -1918,7 +1930,7 @@ function postCard(r, st, refresh) {
     }
     // on a computer a click on the picture opens it large (Alex, 5 Nov)
     if (!isPhone()) { clearTimeout(tapT); tapT = setTimeout(() => lightbox(media, Math.round((slides.scrollLeft || 0) / (slides.clientWidth || 1)), { onLike: () => { if (!own && !bravoBtn.classList.contains('on')) bravoBtn.click(); } }), 260); return; }
-    clearTimeout(tapT); tapT = setTimeout(() => setOpen(!art.classList.contains('open')), 260);
+    clearTimeout(tapT); tapT = setTimeout(() => { if (art.classList.contains('open') && talk.classList.contains('hidden')) { clearTimeout(peekT); art.classList.remove('open'); } else if (!art.classList.contains('open')) peek(); else setOpen(false); }, 260);
   });
   wrap.addEventListener('dblclick', () => clearTimeout(tapT));
   // scrolled away, an open post folds itself back to the picture (Alex, 5 Nov)
