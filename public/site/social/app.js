@@ -81,22 +81,40 @@ function wearPrefs() {
   if (ACCENTS.some(([k]) => k === prefs.accent) && prefs.accent !== 'red') document.documentElement.dataset.accent = prefs.accent; else delete document.documentElement.dataset.accent;
   document.querySelector('meta[name=theme-color]')?.setAttribute('content', dark ? '#15171b' : '#eceef1');
   // inside the iPhone app the clock and the battery take the colour that reads on the theme (the shell's StatusBar plugin)
-  try { window.Capacitor?.Plugins?.StatusBar?.setStyle?.({ style: dark ? 'DARK' : 'LIGHT' })?.catch?.(() => {}); } catch { /* not in the app */ }
+  setTimeout(() => typeof shellCall === 'function' && shellCall('StatusBar', 'setStyle', { style: dark ? 'DARK' : 'LIGHT' }));
 }
 function setPref(k, v) { prefs[k] = v; try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* full */ } wearPrefs(); }
 darkQuery.addEventListener?.('change', wearPrefs);
 wearPrefs();
-// inside the iPhone app (Alex, 15 Nov): no bar of arrows and a tick over the keyboard, as in RoarMe, and the page knows
-// while the keyboard is up (html.kb), so what stands at the foot sits right on it
-try {
-  const K = window.Capacitor?.Plugins?.Keyboard;
-  if (window.Capacitor?.isNativePlatform?.() && K) {
-    document.documentElement.classList.add('in-app');
-    K.setAccessoryBarVisible?.({ isVisible: false })?.catch?.(() => {});
-    K.addListener?.('keyboardWillShow', () => { document.documentElement.classList.add('kb'); window.dispatchEvent(new Event('roardino-kb')); });
-    K.addListener?.('keyboardWillHide', () => { document.documentElement.classList.remove('kb'); window.dispatchEvent(new Event('roardino-kb')); });
-  }
-} catch { /* a browser */ }
+// inside the iPhone app (Alex, 15 Nov): no bar of arrows and a tick over the keyboard, anywhere, as in RoarMe, and the
+// page knows while the keyboard is up (html.kb), so what stands at the foot sits right on it. The site does not carry
+// Capacitor's own script, so a plugin is reached as the shell offers it: its object when there is one, else the native
+// bridge itself (nativePromise / addListener / nativeCallback), which is what the first try missed
+const shell = window.Capacitor?.isNativePlatform?.() ? window.Capacitor : null;
+function shellCall(plugin, method, args = {}) {
+  if (!shell) return;
+  try {
+    const P = shell.Plugins?.[plugin];
+    const r = P?.[method] ? P[method](args) : shell.nativePromise?.(plugin, method, args);
+    r?.catch?.(() => {});
+  } catch { /* an older shell */ }
+}
+function shellListen(plugin, eventName, fn) {
+  if (!shell) return;
+  try {
+    const P = shell.Plugins?.[plugin];
+    if (P?.addListener) P.addListener(eventName, fn);
+    else if (shell.addListener) shell.addListener(plugin, eventName, fn);
+    else shell.nativeCallback?.(plugin, 'addListener', { eventName }, fn);
+  } catch { /* an older shell */ }
+}
+if (shell) {
+  document.documentElement.classList.add('in-app');
+  const noBar = () => shellCall('Keyboard', 'setAccessoryBarVisible', { isVisible: false });
+  noBar(); document.addEventListener('focusin', noBar); // said again whenever a field is entered, in case the first word was too early
+  shellListen('Keyboard', 'keyboardWillShow', () => { document.documentElement.classList.add('kb'); window.dispatchEvent(new Event('roardino-kb')); });
+  shellListen('Keyboard', 'keyboardWillHide', () => { document.documentElement.classList.remove('kb'); window.dispatchEvent(new Event('roardino-kb')); });
+}
 
 // what people do: in front (on camera, on stage) or behind
 const KINDS = [
