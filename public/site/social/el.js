@@ -951,5 +951,7 @@ window.RD_EL = {
 "Reels": "Reels",
 "Auto-scroll": "Αυτόματη κύλιση",
 "More options": "Περισσότερες επιλογές",
-"Slate": "Slate"
+"Slate": "Slate",
+"HQ on": "HQ ενεργό",
+"HQ off": "HQ ανενεργό"
 };

@@ -2344,29 +2344,35 @@ function postCard(r, st, refresh) {
       // HQ (Alex, 15 Nov): the whole HQ copy comes down first, the button filling as it does, then the video goes on
       // from the same moment in HQ; a second press goes back to the light copy
       let hqUrl = '', loading = false;
-      const hqBtn = h('button', { type: 'button', class: 'ig-hq', title: t('Play in high quality'), 'aria-label': t('Play in high quality') }, h('i', { class: 'ig-hq-fill' }), h('b', {}, 'HQ'));
-      const swap = (src) => { const at = v0.currentTime || 0, wasOn = !v0.paused; v0.dataset.src = src; v0.src = src; v0.addEventListener('loadedmetadata', () => { try { v0.currentTime = at; } catch { /* start */ } if (wasOn || !v0.dataset.held) v0.play().catch(() => { v0.muted = true; v0.play().catch(() => {}); }); }, { once: true }); };
+      // the pill says what it is doing (Alex, 15 Nov: "I don't feel it does anything"): HQ · then the percent while the
+      // HQ copy comes down, the pill filling · then HQ lit white with a tick, and a short "HQ" over the video as it switches
+      const word = h('b', {}, 'HQ'), pct = h('small', {}), fillEl = h('i', { class: 'ig-hq-fill' });
+      const hqBtn = h('button', { type: 'button', class: 'ig-hq', title: t('Play in high quality'), 'aria-label': t('Play in high quality') }, fillEl, word, pct);
+      const flash = (txt) => { const f = h('span', { class: 'ig-hq-flash' }, txt); (slides.parentElement || slides).append(f); setTimeout(() => f.remove(), 1300); };
+      const swap = (src) => { const at = v0.currentTime || 0; delete v0.dataset.held; v0.dataset.src = src; v0.src = src; v0.addEventListener('loadedmetadata', () => { try { v0.currentTime = at; } catch { /* start */ } v0.play().catch(() => { v0.muted = true; v0.play().catch(() => {}); }); }, { once: true }); v0.load(); };
       const lowSrc = urlOf(media[0].path);
+      const setOn = (on) => { hqBtn.classList.toggle('on', on); pct.textContent = ''; flash(on ? t('HQ on') : t('HQ off')); };
       hqBtn.onclick = async (e) => {
-        e.stopPropagation();
+        e.stopPropagation(); e.preventDefault();
         if (loading) return;
-        if (hqBtn.classList.contains('on')) { hqBtn.classList.remove('on'); swap(lowSrc); return; }
-        if (hqUrl) { hqBtn.classList.add('on'); swap(hqUrl); return; }
-        loading = true; hqBtn.classList.add('loading');
-        const fillEl = hqBtn.querySelector('.ig-hq-fill');
+        if (hqBtn.classList.contains('on')) { setOn(false); swap(lowSrc); return; }
+        if (hqUrl) { setOn(true); swap(hqUrl); return; }
+        loading = true; hqBtn.classList.add('loading'); pct.textContent = '0%';
         try {
           await sign([media[0].hq]);
           const res = await fetch(urlOf(media[0].hq));
           if (!res.ok) throw new Error('hq');
           const total = +res.headers.get('content-length') || 0, rd = res.body?.getReader?.();
           let blob;
-          if (rd && total) { const parts = []; let got = 0; for (;;) { const { done: end, value } = await rd.read(); if (end) break; parts.push(value); got += value.length; fillEl.style.transform = `scaleX(${Math.min(1, got / total)})`; } blob = new Blob(parts, { type: res.headers.get('content-type') || 'video/mp4' }); }
+          if (rd) { const parts = []; let got = 0; for (;;) { const { done: end, value } = await rd.read(); if (end) break; parts.push(value); got += value.length; if (total) { const k = Math.min(1, got / total); fillEl.style.transform = `scaleX(${k})`; pct.textContent = Math.round(k * 100) + '%'; } else pct.textContent = (got / 1048576).toFixed(0) + ' MB'; } blob = new Blob(parts, { type: res.headers.get('content-type') || 'video/mp4' }); }
           else blob = await res.blob();
           hqUrl = URL.createObjectURL(blob);
-          hqBtn.classList.add('on'); swap(hqUrl);
-        } catch { toast(t('The HQ video could not be loaded.')); }
+          setOn(true); swap(hqUrl);
+        } catch { pct.textContent = ''; toast(t('The HQ video could not be loaded.')); }
         loading = false; hqBtn.classList.remove('loading'); fillEl.style.transform = '';
       };
+      // a touch on the pill never reaches the post's own taps
+      ['pointerdown', 'touchstart', 'touchend', 'mousedown', 'dblclick'].forEach((ev) => hqBtn.addEventListener(ev, (e) => e.stopPropagation(), { passive: true }));
       queueMicrotask(() => (slides.parentElement || slides).append(hqBtn)); // beside the slides, not one of them
     }
   }
