@@ -3671,3 +3671,5 @@ html[data-skin=slate] .ch-side small{font-size:12px!important;font-weight:var(--
 html[data-skin=slate] .ch-who b .rm-badge,html[data-skin=slate] .rm-badge{height:17px!important;padding:0 6px!important;margin-left:7px!important;font-size:10px!important;font-weight:500!important;letter-spacing:.02em!important;border-radius:6px!important;display:inline-grid!important;place-items:center;background:rgba(0,0,0,.05)!important;border:0!important;color:#8b8e92!important;-webkit-text-fill-color:#8b8e92!important}
 html[data-skin=slate][data-theme=light] body .ch-top .ch-new.ch-new{width:38px!important;height:38px!important;background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,.38))!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.85),0 0 0 1px rgba(0,0,0,.07)!important;color:#55585c!important}
 html[data-skin=slate][data-theme=light] body .ch-top .ch-new.ch-new svg{stroke:#55585c!important;color:#55585c!important}
+/* Reels: the column of icons stands in the middle of the screen's height (Alex, 16 Nov) */
+.rl-side{top:50%!important;bottom:auto!important;transform:translateY(-50%)}
