@@ -2830,3 +2830,42 @@ html body .ch-send,html body .ch-send.ready{background:color-mix(in srgb,rgb(var
 .ch-row{padding:8px 10px;gap:11px}
 .ch-who b{font-size:14.5px}.ch-who small{font-size:13px}.ch-side small{font-size:11.5px}
 @media (max-width:860px){ .ch-foot{border-radius:20px} .ch-bub{max-width:80%} }
+
+/* ===== Chat: New message, Requests and Jobs (Alex, 15 Nov) ===== */
+.ch-new{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;padding:0;border:1px solid var(--rim);background:rgba(255,255,255,.55);color:rgb(var(--a));cursor:pointer;transition:transform .3s var(--gl-land),box-shadow .3s var(--gl-land)}
+.ch-new:active{transform:scale(.9);transition-duration:.07s;box-shadow:var(--gl-split)}
+.ch-new svg{width:18px;height:18px}
+html[data-theme=dark] .ch-new{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);color:#ff9d93}
+.ch-top{flex-wrap:wrap!important}
+.ch-top .input{flex:1 1 100%}
+.ch-tabs{margin:0 0 12px}
+.ch-tabs:empty{display:none}
+.ch-tabs .seg{width:100%}
+.ch-tabs .seg button{flex:1}
+.ch-tab{display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.ch-tab em{font-style:normal;min-width:18px;height:18px;padding:0 5px;border-radius:999px;display:inline-grid;place-items:center;font-size:10.5px;font-weight:700;letter-spacing:0;background:rgba(128,134,148,.22);color:var(--ink);-webkit-text-fill-color:currentColor;box-sizing:border-box}
+html[data-theme=dark] .ch-tab em{color:#e6e9ef}
+.ch-tab em.new{background:var(--a-solid,#d40000);color:#fff}
+.job-badge{flex:none;display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;font-style:normal;font-size:10px;font-weight:var(--w-strong);letter-spacing:.04em;color:#0d7a4f;background:rgba(47,182,122,.14);border:1px solid rgba(47,182,122,.4)}
+html[data-theme=dark] .job-badge{color:#6fe0ad;background:rgba(47,182,122,.14)}
+.ch-jobs{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.ch-jobs:empty{display:none}
+.ch-job{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;padding:12px;border-radius:16px;background:rgba(47,182,122,.09);border:1px solid rgba(47,182,122,.28);animation:ch-page .34s cubic-bezier(.25,1.2,.45,1) backwards}
+.ch-job-ic{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#12925f;background:rgba(47,182,122,.16)}
+html[data-theme=dark] .ch-job-ic{color:#6fe0ad}
+.ch-job-ic svg{width:17px;height:17px}
+.ch-job-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ch-job-t small{font-size:11.5px;color:var(--muted)}
+.ch-job-t b{font-size:15px}
+.ch-job-m{font-size:13px;color:var(--ink)}
+.ch-job-n{font-size:13px;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
+.ch-job-acts{flex:1 1 100%;display:flex;gap:8px;justify-content:flex-end}
+.ch-req{position:sticky;bottom:calc(74px + max(10px,env(safe-area-inset-bottom)));z-index:19;display:flex;flex-direction:column;gap:10px;padding:12px;margin-bottom:8px;border-radius:18px;background:rgba(255,255,255,.86);border:1px solid var(--rim);box-shadow:0 10px 30px rgba(28,35,51,.12);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.ch-req[hidden]{display:none}
+html[data-theme=dark] .ch-req{background:rgba(44,48,56,.9);border-color:rgba(255,255,255,.1)}
+.ch-req>span{display:flex;flex-direction:column;gap:2px}
+.ch-req b{font-size:14.5px}.ch-req small{font-size:12.5px;color:var(--muted)}
+.ch-req-acts{display:flex;gap:8px;justify-content:flex-end}
+.form .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ch-tabs .seg button{white-space:nowrap;padding-left:8px;padding-right:8px;letter-spacing:.06em;font-size:11px}
+.ch-tab{white-space:nowrap}
