@@ -954,5 +954,6 @@ window.RD_EL = {
 "Slate": "Slate",
 "HQ on": "HQ ενεργό",
 "HQ off": "HQ ανενεργό",
-"Playing in high quality": "Παίζει σε υψηλή ποιότητα"
+"Playing in high quality": "Παίζει σε υψηλή ποιότητα",
+"Made with AI": "Φτιαγμένο με AI"
 };

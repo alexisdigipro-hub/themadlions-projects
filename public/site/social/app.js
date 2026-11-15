@@ -2002,14 +2002,14 @@ function openReels(fromArt, onClose, signedHq) {
   let auto = (() => { try { return localStorage.getItem('roardino-autoscroll') === '1'; } catch { return false; } })();
   const scroller = h('div', { class: 'rl-list' });
   const soundBtn = h('button', { type: 'button', class: 'rl-btn', 'aria-label': t('Sound') });
-  const faceSound = () => { soundBtn.innerHTML = feedSound ? ICON.vol : ICON.mute; };
+  const soundBtns = [];
+  const faceSound = () => { soundBtns.forEach((b) => { b.innerHTML = feedSound ? ICON.vol : ICON.mute; }); };
   faceSound();
   const veil = h('div', { class: 'rl', role: 'dialog', 'aria-label': t('Reels') },
     scroller,
     h('div', { class: 'rl-top' },
       h('button', { type: 'button', class: 'rl-btn', 'aria-label': t('Back'), html: ICON.left, onclick: () => close() }),
-      h('b', {}, t('Reels')),
-      soundBtn));
+      h('span', {})));
   const vids = [];
   const short = (n) => (n >= 10000 ? Math.round(n / 1000) + 'K' : n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : String(n || ''));
   const slides = list.map((it, i) => {
@@ -2024,6 +2024,15 @@ function openReels(fromArt, onClose, signedHq) {
     vids.push(v);
     const bar = h('i', { class: 'rl-prog' });
     v.addEventListener('timeupdate', () => { if (v.duration) bar.style.transform = `scaleX(${v.currentTime / v.duration})`; });
+    const GEM = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="gem-body" d="M7 4.6h10l3.6 5.1L12 19.8 3.4 9.7z"/><path d="M3.4 9.7h17.2M9.6 4.6 8.2 9.7 12 19.8l3.8-10.1-1.4-5.1"/></svg>';
+    const sb1 = h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Sound'), onclick: (e) => { e.stopPropagation(); soundBtn.onclick(); } });
+    soundBtns.push(sb1);
+    // HQ in the column (Alex, 15 Nov): the diamond, gold while the HQ copy plays; a tap goes to the light copy and back
+    const gem = hqSrc ? h('button', { type: 'button', class: 'rl-ico rl-gem on', 'aria-label': t('Play in high quality'), html: GEM, onclick: (e) => {
+      e.stopPropagation(); const on = !gem.classList.contains('on'); gem.classList.toggle('on', on);
+      const at = v.currentTime || 0; v.dataset.src = on ? hqSrc : urlOf(m.path); v.src = v.dataset.src;
+      v.addEventListener('loadedmetadata', () => { try { v.currentTime = at; } catch { /* start */ } v.play().catch(() => {}); }, { once: true });
+    } }) : null;
     v.addEventListener('ended', () => { if (auto && slides[i + 1]) slides[i + 1].scrollIntoView({ behavior: 'smooth' }); });
     const likeN = h('span', {});
     const likeB = h('button', { type: 'button', class: 'rl-ico like', 'aria-label': t('Like'), html: ICON.heart });
@@ -2032,23 +2041,22 @@ function openReels(fromArt, onClose, signedHq) {
     likeB.onclick = (e) => { e.stopPropagation(); like(); };
     drawLike();
     const pp = it.p;
-    const follow = !it.own && pp.id && !follows.has(pp.id) ? h('button', { type: 'button', class: 'rl-follow', onclick: async (e) => { e.stopPropagation(); const b = e.currentTarget; if (await toggleFollow(pp.id)) b.remove(); } }, t('Follow')) : null;
+    const follow = !it.own && pp.id && !follows.has(pp.id) ? h('button', { type: 'button', class: 'rl-follow', 'aria-label': t('Follow'), title: t('Follow'), html: ICON.plus, onclick: async (e) => { e.stopPropagation(); const b = e.currentTarget; if (await toggleFollow(pp.id)) b.remove(); } }) : null;
     const capEl = it.r.body ? h('p', { class: 'rl-cap', onclick: (e) => { e.stopPropagation(); e.currentTarget.classList.toggle('all'); } }, it.r.body) : null;
     const paused = h('span', { class: 'rl-paused', html: ICON.play });
     const slide = h('section', { class: 'rl-slide', 'data-i': String(i) },
       v, paused,
-      m.hq ? h('span', { class: 'rl-hq', title: t('Playing in high quality'), html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="gem-body" d="M7 4.6h10l3.6 5.1L12 19.8 3.4 9.7z"/><path d="M3.4 9.7h17.2M9.6 4.6 8.2 9.7 12 19.8l3.8-10.1-1.4-5.1"/></svg>' }) : null,
       h('div', { class: 'rl-side' },
         h('div', { class: 'rl-pair' }, likeB, likeN),
         it.r.comments_off ? null : h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Comment'), html: ICON.talk, onclick: (e) => { e.stopPropagation(); close(); it.comments(); } }), h('span', {}, it.talkN?.textContent || '')),
         h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: (e) => { e.stopPropagation(); v.pause(); sendToRoarMe(it.r, pp); } })),
-        h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); sheet(it); } })),
-      h('div', { class: 'rl-info' },
-        h('div', { class: 'rl-who' },
-          h('a', { href: `#/p/${pp.id}`, class: 'rl-av', onclick: () => close(true) }, avatar(pp)),
-          h('a', { href: `#/p/${pp.id}`, class: 'rl-name', onclick: () => close(true) }, h('b', {}, pp.name || ''), it.r.ai ? h('em', { class: 'ai-badge' }, 'AI') : null),
-          follow),
-        capEl),
+        gem,
+        it.r.ai ? h('span', { class: 'rl-ico rl-ai', title: t('Made with AI') }, 'AI') : null,
+        sb1,
+        h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); sheet(it); } }),
+        // the profile's picture under the dots (Alex, 15 Nov: no name), with a small + while I do not follow them
+        h('div', { class: 'rl-me' }, h('a', { href: `#/p/${pp.id}`, class: 'rl-av', 'aria-label': pp.name || '', onclick: () => close(true) }, avatar(pp)), follow)),
+      capEl ? h('div', { class: 'rl-info' }, capEl) : null,
       bar);
     // one tap pauses or plays, two taps like with the big heart
     let last = 0, tt = 0;
@@ -2064,6 +2072,7 @@ function openReels(fromArt, onClose, signedHq) {
     return slide;
   });
   put(scroller, ...slides);
+  faceSound();
   let toggled = false;
   soundBtn.onclick = () => { toggled = true; setFeedSound(!feedSound); faceSound(); vids.forEach((x) => { x.muted = !feedSound; }); };
   // the one on screen plays; the ones next to it load; the far ones drop their file
