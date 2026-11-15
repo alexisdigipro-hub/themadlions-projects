@@ -892,12 +892,53 @@ const select = (options, value, extra = {}) => h('select', { class: 'select', ..
 // a switch with the hub's glass lens (Alex, 5 Nov: "animation everywhere"): the lens remembers where it last stood for
 // the same set of choices and glides from there to the chosen one, even when the page around it is drawn anew
 const lensAt = new Map();
+// LIQUID GLASS (Alex, 15 Nov, from Apple's Liquid Glass): a lens that travels lifts and stretches toward where it goes,
+// then settles; a touched control swells a little like a drop of glass, a light pooling under the finger, and springs
+// back; on a computer a soft light follows the mouse over a control. One layer (.lg-drop) is laid over the control
+// touched, so no control's own look is changed. Off with reduced motion.
+const calmMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+function lensGo(lens) { if (calmMotion() || !lens) return; lens.classList.remove('lg-go'); void lens.offsetWidth; lens.classList.add('lg-go'); clearTimeout(lens._lg); lens._lg = setTimeout(() => lens.classList.remove('lg-go'), 260); }
+(() => {
+  const SEL = 'button, a.btn, .btn, .ig-ico, .rl-ico, .rl-btn, .tabbar a, .seg a, .pill, .chip, .fchip, .ico, .pf-thumb, .rl-follow, .cell, .ring, .ch-row, .pm-row, .rl-row';
+  const drop = document.createElement('span'); drop.className = 'lg-drop'; drop.setAttribute('aria-hidden', 'true');
+  let cur = null, hoverEl = null;
+  const fit = (el, x, y) => {
+    const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+    if (!drop.isConnected) document.body.append(drop);
+    drop.style.left = r.left + 'px'; drop.style.top = r.top + 'px'; drop.style.width = r.width + 'px'; drop.style.height = r.height + 'px';
+    drop.style.borderRadius = cs.borderRadius === '0px' ? '14px' : cs.borderRadius;
+    drop.style.setProperty('--lx', ((x - r.left) / (r.width || 1)) * 100 + '%'); drop.style.setProperty('--ly', ((y - r.top) / (r.height || 1)) * 100 + '%');
+  };
+  const pick = (t0) => { const el = t0?.closest?.(SEL); if (!el || el.disabled || el.closest('.lb, .rl-list > .rl-slide > video')) return null; const r = el.getBoundingClientRect(); return r.width > 360 || r.height > 200 ? null : el; };
+  document.addEventListener('pointerdown', (e) => {
+    if (calmMotion()) return;
+    const el = pick(e.target); if (!el) return;
+    cur = el; el.classList.remove('lg-out'); el.classList.add('lg-in');
+    fit(el, e.clientX, e.clientY); drop.className = 'lg-drop on';
+  }, { passive: true, capture: true });
+  const end = () => {
+    if (!cur) return; const el = cur; cur = null;
+    el.classList.remove('lg-in'); el.classList.add('lg-out'); setTimeout(() => el.classList.remove('lg-out'), 520);
+    drop.className = 'lg-drop off';
+  };
+  ['pointerup', 'pointercancel', 'dragstart'].forEach((ev) => document.addEventListener(ev, end, { passive: true, capture: true }));
+  document.addEventListener('scroll', () => { if (cur) end(); }, { passive: true, capture: true });
+  // a computer: a soft light follows the mouse over a control
+  if (window.matchMedia?.('(hover: hover) and (pointer: fine)').matches) {
+    document.addEventListener('pointermove', (e) => {
+      if (cur || calmMotion()) return;
+      const el = pick(e.target);
+      if (!el) { if (hoverEl) { hoverEl = null; drop.className = 'lg-drop'; } return; }
+      hoverEl = el; fit(el, e.clientX, e.clientY); drop.className = 'lg-drop hover';
+    }, { passive: true });
+  }
+})();
 function seg(items, on, pick) {
   const key = items.map((x) => x[0]).join('|');
   const lens = h('span', { class: 'lens', 'aria-hidden': 'true' });
   const box = h('div', { class: 'seg has-lens' }, lens, items.map(([k, s]) => h('button', { type: 'button', class: on === k ? 'on' : '', onclick: (e) => {
     const b = e.currentTarget;
-    lens.style.transform = `translateX(${b.offsetLeft}px)`; lens.style.width = `${b.offsetWidth}px`;
+    lensGo(lens); lens.style.transform = `translateX(${b.offsetLeft}px)`; lens.style.width = `${b.offsetWidth}px`;
     box.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
     pick(k); // at once: the redrawn switch glides from where the lens last stood
   } }, s)));
@@ -989,7 +1030,7 @@ function tabBar(on) {
   requestAnimationFrame(() => {
     const b = nav.querySelector('a.on');
     if (!b) { lens.style.opacity = '0'; return; }
-    if (tbLensAt) { lens.style.transition = 'none'; lens.style.opacity = '1'; lens.style.transform = `translateX(${tbLensAt.x}px)`; lens.style.width = `${tbLensAt.w}px`; void lens.offsetWidth; lens.style.transition = ''; requestAnimationFrame(() => place(b)); }
+    if (tbLensAt) { lens.style.transition = 'none'; lens.style.opacity = '1'; lens.style.transform = `translateX(${tbLensAt.x}px)`; lens.style.width = `${tbLensAt.w}px`; void lens.offsetWidth; lens.style.transition = ''; requestAnimationFrame(() => { if (tbLensAt.x !== b.offsetLeft) lensGo(lens); place(b); }); }
     else place(b, true);
   });
   // the old bar's lens is left where it was: the new bar starts from there and glides to its own tab
@@ -2061,6 +2102,25 @@ function openReels(fromArt, onClose) {
     if (!toggled) setFeedSound(soundBefore);
     if (!leaving) onClose?.();
   }
+  // a slide to the right from anywhere closes Reels (Alex, 15 Nov): the whole view follows the finger, shrinking a little
+  // as glass does; let go past a third of the screen, or with a quick flick, and it goes back to the feed
+  let sx = 0, sy = 0, st0 = 0, drag = null;
+  veil.addEventListener('touchstart', (e) => { if (e.touches.length !== 1 || e.target.closest('.rl-sheet-back')) return; sx = e.touches[0].clientX; sy = e.touches[0].clientY; st0 = Date.now(); drag = null; }, { passive: true });
+  veil.addEventListener('touchmove', (e) => {
+    if (drag === false || e.target.closest('.rl-sheet-back')) return;
+    const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
+    if (drag === null) { if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return; drag = dx > 0 && Math.abs(dx) > Math.abs(dy) * 1.3; if (!drag) return; veil.classList.add('rl-drag'); }
+    e.preventDefault();
+    const k = Math.max(0, dx), f = Math.min(1, k / innerWidth);
+    veil.style.transform = `translateX(${k}px) scale(${1 - f * 0.08})`; veil.style.borderRadius = `${Math.min(36, f * 90)}px`; veil.style.opacity = String(1 - f * 0.35);
+  }, { passive: false });
+  veil.addEventListener('touchend', (e) => {
+    if (!drag) { drag = null; return; }
+    const dx = (e.changedTouches[0]?.clientX || sx) - sx, fast = dx / Math.max(1, Date.now() - st0) > 0.6;
+    veil.classList.remove('rl-drag'); drag = null;
+    if (dx > innerWidth * 0.33 || (fast && dx > 40)) { veil.style.transform = `translateX(${innerWidth}px) scale(.9)`; veil.style.opacity = '0'; setTimeout(() => close(), 220); }
+    else { veil.style.transform = ''; veil.style.borderRadius = ''; veil.style.opacity = ''; }
+  });
   document.addEventListener('keydown', onKey);
   document.documentElement.classList.add('rl-open');
   document.body.append(veil);
