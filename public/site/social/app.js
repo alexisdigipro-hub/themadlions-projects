@@ -1988,10 +1988,13 @@ async function peopleList(p, what) {
    ⋯ has Auto-scroll (the next video comes by itself when one ends). Only the video on screen plays; its neighbours
    load ahead, the far ones let go of their file. */
 const reelOf = new WeakMap();
-function openReels(fromArt, onClose) {
+function openReels(fromArt, onClose, signedHq) {
   const arts = [...document.querySelectorAll('article.post.ig')].filter((a) => reelOf.has(a));
   const list = arts.map((a) => reelOf.get(a));
   if (!list.length) return;
+  // Reels play in HQ (Alex, 15 Nov: "HQ matters most in the Reels"): the HQ copies get their links first
+  const hqs = list.map((it) => it.media[0].hq).filter(Boolean);
+  if (!signedHq && hqs.some((x) => !urlOf(x))) { sign(hqs).catch(() => {}).finally(() => openReels(fromArt, onClose, true)); return; }
   const start = Math.max(0, arts.indexOf(fromArt));
   document.querySelectorAll('video').forEach((v) => { if (!v.paused) v.pause(); });
   const soundBefore = feedSound;
@@ -2013,7 +2016,10 @@ function openReels(fromArt, onClose) {
     const m = it.media[0];
     const tall = m.w && m.h ? m.h > m.w : true;
     const v = h('video', { class: 'rl-v' + (tall ? ' tall' : ''), playsInline: true, loop: !auto, preload: 'none', poster: urlOf(m.poster) || null, muted: !feedSound });
-    v.dataset.src = urlOf(m.path);
+    const hqSrc = m.hq ? urlOf(m.hq) : '';
+    v.dataset.src = hqSrc || urlOf(m.path);
+    // if the HQ copy cannot play here, the light one takes over
+    if (hqSrc) v.addEventListener('error', () => { if (v.dataset.src !== urlOf(m.path)) { v.dataset.src = urlOf(m.path); v.src = v.dataset.src; v.play().catch(() => {}); } });
     v.addEventListener('loadedmetadata', () => { v.classList.toggle('tall', v.videoHeight > v.videoWidth); }, { once: true });
     vids.push(v);
     const bar = h('i', { class: 'rl-prog' });
@@ -2031,6 +2037,7 @@ function openReels(fromArt, onClose) {
     const paused = h('span', { class: 'rl-paused', html: ICON.play });
     const slide = h('section', { class: 'rl-slide', 'data-i': String(i) },
       v, paused,
+      m.hq ? h('span', { class: 'rl-hq', title: t('Playing in high quality') }, 'HQ') : null,
       h('div', { class: 'rl-side' },
         h('div', { class: 'rl-pair' }, likeB, likeN),
         it.r.comments_off ? null : h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Comment'), html: ICON.talk, onclick: (e) => { e.stopPropagation(); close(); it.comments(); } }), h('span', {}, it.talkN?.textContent || '')),

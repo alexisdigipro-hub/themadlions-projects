@@ -3581,3 +3581,12 @@ html[data-skin=slate][data-theme=light] .pm-tiles{margin:0!important}
   background:linear-gradient(180deg,#232323,#121212) padding-box,conic-gradient(from 210deg,#6b3d0b,#c98a1e 12%,#ffe7a3 22%,#f2b84a 32%,#7a4a10 46%,#d9a032 60%,#fff1c2 70%,#b87818 82%,#6b3d0b 100%) border-box!important;
   box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)!important}
 .ig-hq.on b::after{content:none!important}
+/* Reels play in HQ: the gold HQ mark at the top right of the video (Alex, 15 Nov) */
+.rl-hq{position:absolute;right:14px;top:calc(env(safe-area-inset-top) + 60px);z-index:3;height:21px;padding:0 6px;border-radius:6.5px;display:grid;place-items:center;
+  font-family:'Geist Mono',ui-monospace,Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.1em;color:#fff;border:1.5px solid transparent;
+  background:linear-gradient(180deg,#232323,#121212) padding-box,conic-gradient(from 210deg,#6b3d0b,#c98a1e 12%,#ffe7a3 22%,#f2b84a 32%,#7a4a10 46%,#d9a032 60%,#fff1c2 70%,#b87818 82%,#6b3d0b 100%) border-box;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none}
+/* Reels: the name, Follow and the caption in the middle (Alex, 15 Nov) */
+.rl-info{left:64px!important;right:64px!important;align-items:center;text-align:center}
+.rl-who{justify-content:center}
+.rl-cap{text-align:center}
