@@ -962,6 +962,7 @@ async function route() {
   document.documentElement.classList.remove('in-room'); chatRoomLive = null; // a conversation's own layout ends with it
   if (location.hash.startsWith('#/legal')) return viewLegal(['terms', 'contact'].includes(location.hash.split('/')[2]) ? location.hash.split('/')[2] : 'privacy');
   if (!session) return viewFront();
+  if (!document.documentElement.dataset.accent && prefs.accent && prefs.accent !== 'red') wearPrefs();
   const [, a = 'feed', b] = (location.hash || '#/feed').split('/');
   try {
     if (a === 'people') return await viewPeople();
@@ -1050,6 +1051,9 @@ window.addEventListener('hashchange', () => { crumb('go ' + location.hash); rout
    Before sign-in
    ===================================================================================================================== */
 async function viewFront() {
+  // the front page is always in Roardino's own red, whatever colour this device chose in Settings (Alex, 15 Nov: blue on
+  // his computer, red in the app); the chosen colour comes back once signed in
+  delete document.documentElement.dataset.accent;
   document.title = 'Roardino · ' + t('The whole crew in one place');
   let mode = 'in';
   const f = { name: '', email: '', password: '' };
