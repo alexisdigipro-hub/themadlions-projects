@@ -1098,11 +1098,15 @@ async function viewFront() {
   draw();
   // the front, less business and more of a film's (Alex, 15 Nov): no kicker, no chips, no count, no three boxes
   // no top bar, no footer, no boxes (Alex, 15 Nov: "all these go"): the name, the words and the card only
+  // 2026 (Alex, 15 Nov: "more beautiful, more 2026"): a slow aurora of light behind, film grain over it, the words
+  // coming in one by one, and the card as liquid glass with a light that runs round its rim
+  const heroWords = (html) => { const box = h('h1', { class: 'hero', html }); let i = 0; box.querySelectorAll('b').forEach((b) => b.classList.add('hl')); const walk = (n) => { [...n.childNodes].forEach((c) => { if (c.nodeType === 3) { const parts = c.textContent.split(/(\s+)/); const frag = document.createDocumentFragment(); parts.forEach((w) => { if (!w) return; if (/^\s+$/.test(w)) frag.append(w); else frag.append(h('span', { class: 'hw', style: { '--i': i++ } }, w)); }); c.replaceWith(frag); } else walk(c); }); }; walk(box); return box; };
   put(app,
+    h('div', { class: 'aura', 'aria-hidden': 'true' }, h('i'), h('i'), h('i'), h('span', { class: 'grain' })),
     h('main', { class: 'front art' },
       h('div', { class: 'front-words' },
         h('span', { class: 'front-mark' }, mark()),
-        h('h1', { class: 'hero', html: t('Together we make <b>the work.</b>') }),
+        heroWords(t('Together we make <b>the work.</b>')),
         h('p', { class: 'lede' }, t('Actors, models, dancers, directors, crews, photographers. Show your work, find your next role, find the person your shoot is missing.'))),
       card));
 }
