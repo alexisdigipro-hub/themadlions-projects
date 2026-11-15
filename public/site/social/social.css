@@ -2672,3 +2672,43 @@ html.in-room .foot{display:none}
 /* the chat's fine points: readable names and times on the dark theme, and a column of its own on a computer */
 html[data-theme=dark] .ch-by,html[data-theme=dark] .ch-row.new .ch-side small,html[data-theme=dark] .ch-reply b,html[data-theme=dark] .ch-msg:not(.mine) .ch-heart{color:#ff9d93}
 @media (min-width:861px){ .ch-room,.ch-list{max-width:780px;margin-left:auto;margin-right:auto;width:100%} }
+
+/* ===== The chat in liquid glass (Alex, 15 Nov: "all the liquid glass animation effects we have, here too") =====
+   The same family and the same timings as RoarMe's: GLASS DROP (what arrives rises in and settles), GLASS PRESS (the
+   colours split at the rim of what a finger is on), GLASS MORPH (what opens grows out of its place), GLASS MERGE (Send
+   buds out once there are words). Only transform, opacity and box-shadow move. */
+.ch-list,.ch-room{animation:ch-page .34s cubic-bezier(.25,1.2,.45,1) both}
+@keyframes ch-page{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+@media (max-width:860px){ .ch-room{animation-name:ch-slide} }
+@keyframes ch-slide{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+/* the head and the writing box: thicker glass with a sheen and a bright rim */
+.ch-head,.ch-foot{background-image:var(--sheen);background-blend-mode:soft-light}
+.ch-head::after,.ch-foot::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(255,255,255,.18)}
+html[data-theme=dark] .ch-head::after,html[data-theme=dark] .ch-foot::after{box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -1px 0 rgba(255,255,255,.04)}
+/* GLASS DROP: a message that has just come, or just gone out */
+.ch-msg.drop .ch-bub{animation:ch-drop .42s cubic-bezier(.25,1.45,.45,1) both;transform-origin:bottom left}
+.ch-msg.mine.drop .ch-bub{transform-origin:bottom right}
+@keyframes ch-drop{0%{opacity:0;transform:translateY(14px) scale(.86);box-shadow:-2px 0 0 rgba(255,60,60,.5),2px 0 0 rgba(60,120,255,.5)}
+  60%{opacity:1;box-shadow:-1px 0 0 rgba(255,60,60,.28),1px 0 0 rgba(60,120,255,.28)}100%{opacity:1;transform:none;box-shadow:0 0 0 rgba(255,60,60,0),0 0 0 rgba(60,120,255,0)}}
+/* the unread bead in the list, and a heart as it lands */
+.ch-side em{animation:ch-bead .4s cubic-bezier(.25,1.45,.45,1) both}
+@keyframes ch-bead{from{transform:scale(0)}to{transform:scale(1)}}
+.ch-heart.pop{animation:ch-bead .45s cubic-bezier(.25,1.6,.45,1) both}
+/* GLASS PRESS: in at once, out on the spring, the colours split at the rim */
+.ch-bub,.ch-row,.ch-name{transition:transform .3s cubic-bezier(.25,1.45,.45,1),box-shadow .3s cubic-bezier(.25,1.45,.45,1),background-color .2s}
+.ch-bub:active{transform:scale(.97);transition-duration:.07s;box-shadow:-1.5px 0 0 rgba(255,60,60,.55),1.5px 0 0 rgba(60,120,255,.55),0 -1px 0 rgba(60,220,120,.3),0 1px 0 rgba(255,210,60,.3)}
+.ch-row:active{transform:scale(.985);transition-duration:.07s;box-shadow:inset 1.5px 0 0 rgba(255,60,60,.4),inset -1.5px 0 0 rgba(60,120,255,.4)}
+:is(.ch-back,.ch-clip,.ch-send,.ch-reply-x){transition:transform .3s cubic-bezier(.25,1.45,.45,1),box-shadow .3s cubic-bezier(.25,1.45,.45,1),background-color .2s,opacity .2s}
+:is(.ch-back,.ch-clip,.ch-reply-x):active{transform:scale(.9);transition-duration:.07s;box-shadow:-1.5px 0 0 rgba(255,60,60,.6),1.5px 0 0 rgba(60,120,255,.6),0 -1px 0 rgba(60,220,120,.35),0 1px 0 rgba(255,210,60,.35)}
+/* GLASS MERGE: Send waits small and dim, and buds out of the writing box once there are words */
+html body .ch-send{transform:scale(.82);opacity:.55;box-shadow:none}
+html body .ch-send.ready{transform:scale(1);opacity:1;box-shadow:0 6px 16px rgba(var(--a),.32);animation:ch-bud .36s cubic-bezier(.25,1.45,.45,1)}
+html body .ch-send.ready:active{transform:scale(.9);box-shadow:-1.5px 0 0 rgba(255,255,255,.7),1.5px 0 0 rgba(60,120,255,.6),0 6px 16px rgba(var(--a),.32)}
+@keyframes ch-bud{0%{transform:scale(.6)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+.ch-reply:not([hidden]){animation:ch-drop .32s cubic-bezier(.25,1.45,.45,1) both;transform-origin:bottom center}
+/* GLASS MORPH: a message's menu grows as a drop, the split colours at its rim while it opens */
+.veil.pm-veil .win:has(.ch-menu){animation:ch-morph .34s cubic-bezier(.25,1.35,.45,1) both}
+@keyframes ch-morph{0%{opacity:0;transform:scale(.72);border-radius:44px;box-shadow:-3px 0 0 rgba(255,60,60,.5),3px 0 0 rgba(60,120,255,.5)}
+  70%{opacity:1;box-shadow:-1px 0 0 rgba(255,60,60,.25),1px 0 0 rgba(60,120,255,.25),0 24px 60px rgba(28,35,51,.2)}100%{opacity:1;transform:none}}
+/* a picture in a message comes up softly */
+.ch-pic{animation:fade .35s ease both}

@@ -1495,7 +1495,7 @@ async function sendToRoarMe(r, p) {
     if (!q) { found = null; return draw(); }
     const rd = rdPeople.filter((x) => matches(x._k, q)).slice(0, 15);
     // RoarMe's people read once, then found the Roardino way: Greek, Greeklish, with or without accents
-    everyone ||= ((await sb.from('roar_profiles').select('id,username,display_name,avatar_url').neq('id', meId).limit(2000)).data || []).map((u) => ({ ...u, _k: ' ' + fold(`${u.display_name} ${u.username.replace(/_/g, ' ')} ${u.username}`) + ' ' }));
+    everyone ||= ((await sb.from('roar_people').select('id,username,display_name,avatar_url').neq('id', meId).limit(2000)).data || []).map((u) => ({ ...u, _k: ' ' + fold(`${u.display_name} ${u.username.replace(/_/g, ' ')} ${u.username}`) + ' ' }));
     if (e.target.value.trim() !== q) return;
     const onRd = new Set(rdPeople.map((x) => x.id));
     const data = everyone.filter((u) => !onRd.has(u.id) && matches(u._k, q)).slice(0, 15);
@@ -1534,7 +1534,7 @@ async function sendToRoarMe(r, p) {
     const directIds = rooms.filter((m) => m.room.kind === 'direct').map((m) => m.room_id);
     const others = directIds.length ? (await sb.from('roar_members').select('room_id,user_id').in('room_id', directIds).neq('user_id', meId)).data || [] : [];
     const profIds = [...new Set(others.map((o) => o.user_id))];
-    const profs = profIds.length ? (await sb.from('roar_profiles').select('id,username,display_name,avatar_url').in('id', profIds)).data || [] : [];
+    const profs = profIds.length ? (await sb.from('roar_people').select('id,username,display_name,avatar_url').in('id', profIds)).data || [] : [];
     recent = rooms.map((m) => {
       if (m.room.kind === 'group') return { key: 'r:' + m.room_id, kind: 'room', id: m.room_id, name: m.room.title || t('Group'), sub: t('Group'), avatar: m.room.avatar_url };
       const o = others.find((x) => x.room_id === m.room_id); const pr = profs.find((x) => x.id === o?.user_id);
@@ -3481,7 +3481,7 @@ const CHAT_PAGE = 50;
 const ROARME_ORIGIN = new URL(ROARME).origin;
 const chatPeople = new Map(); // account id -> { id, name, username, avatar }
 const chatSigned = new Map(); // bucket|path -> { url, until }
-let chatRooms = null, chatWatching = null, chatRoomLive = null, chatListDraw = null;
+let chatRooms = null, chatWatching = null, chatRoomLive = null, chatListDraw = null, chatMine = null;
 const chatKey = (f) => (f.bucket || 'roar-files') + '|' + f.path;
 const chatUrl = (f) => (f?.path ? chatSigned.get(chatKey(f))?.url || '' : '');
 async function chatSign(files) {
@@ -3495,8 +3495,12 @@ async function chatSign(files) {
 async function chatLoadPeople(ids) {
   const miss = [...new Set(ids)].filter((x) => x && !chatPeople.has(x));
   if (!miss.length) return;
-  const { data } = await sb.from('roar_profiles').select('id,username,display_name,avatar_url').in('id', miss);
-  (data || []).forEach((u) => chatPeople.set(u.id, { id: u.id, name: u.display_name || u.username || t('Member'), username: u.username, avatar: /^https?:/.test(u.avatar_url || '') ? u.avatar_url : null }));
+  // roar_people is the view RoarMe itself reads (roar_profiles, the table under it, is closed to an account: the names
+  // came back empty, Alex, 15 Nov); roar_contacts holds the name and picture I saved someone under, which win
+  chatMine ||= sb.from('roar_contacts').select('person,nickname,photo_url').eq('owner', session.user.id).then(({ data }) => new Map((data || []).map((c) => [c.person, c])), () => new Map());
+  const [{ data }, mineOf] = await Promise.all([sb.from('roar_people').select('id,username,display_name,avatar_url').in('id', miss), chatMine]);
+  (data || []).forEach((u) => { const c = mineOf.get(u.id); const pic = c?.photo_url || u.avatar_url || '';
+    chatPeople.set(u.id, { id: u.id, name: c?.nickname || u.display_name || (u.username ? '@' + u.username : t('Member')), username: u.username, avatar: /^https?:/.test(pic) ? pic : null }); });
 }
 const chatSealed = (body) => typeof body === 'string' && body.startsWith('e2e1.');
 // what a message is, in a few words: for the list, a reply's quote and the cards of what only RoarMe opens
@@ -3585,11 +3589,12 @@ async function viewChatRoom(roomId) {
   if (!room) { toast(t('This conversation is not here.')); location.hash = '#/chat'; return; }
   const group = room.kind !== 'direct';
   let msgs = [], hearts = {}, replyTo = null, more = true, sealedRoom = false, clearedAt = null;
+  const fresh = new Set(); // messages that arrived while the conversation is open: they drop in (GLASS DROP)
   const hidden = new Set();
   const list = h('div', { class: 'ch-msgs' }, h('p', { class: 'wait' }, t('Loading…')));
   const replyBox = h('div', { class: 'ch-reply', hidden: true });
   const text = h('textarea', { class: 'ch-input', rows: 1, placeholder: t('Message'), maxlength: 4000,
-    oninput: () => { text.style.height = 'auto'; text.style.height = Math.min(text.scrollHeight, 132) + 'px'; },
+    oninput: () => { text.style.height = 'auto'; text.style.height = Math.min(text.scrollHeight, 132) + 'px'; sendBtn.classList.toggle('ready', !!text.value.trim()); },
     onkeydown: (e) => { if (e.key === 'Enter' && !e.shiftKey && !isPhone()) { e.preventDefault(); send(); } } });
   const pick = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: (e) => { const fs = [...e.target.files].slice(0, 10); e.target.value = ''; sendFiles(fs); } });
   const sendBtn = h('button', { type: 'button', class: 'ch-send', title: t('Send'), 'aria-label': t('Send'), html: ICON.send, onclick: () => send() });
@@ -3632,7 +3637,8 @@ async function viewChatRoom(roomId) {
     else body = h('span', { class: 'ch-text' }, ...chatText(m.body));
     const q = m.reply_to ? msgs.find((x) => x.id === m.reply_to) : null;
     const hs = hearts[m.id] || [];
-    return h('div', { class: 'ch-msg' + (mine ? ' mine' : '') + (first ? ' first' : ''), 'data-id': m.id },
+    const drop = fresh.delete(m.id);
+    return h('div', { class: 'ch-msg' + (mine ? ' mine' : '') + (first ? ' first' : '') + (drop ? ' drop' : ''), 'data-id': m.id },
       !mine && group ? (first ? avatar(chatPeople.get(m.user_id) || { name: nameOf(m.user_id) }, 'ch-av xs') : h('span', { class: 'ch-av xs none' })) : null,
       h('div', { class: 'ch-bub' + ((m.kind === 'image' || video) && !m.deleted_at && f.path ? ' pic' : ''), onclick: () => { if (!m.deleted_at) chatMenu(m); } },
         !mine && group && first ? h('b', { class: 'ch-by' }, nameOf(m.user_id)) : null,
@@ -3686,8 +3692,8 @@ async function viewChatRoom(roomId) {
     const { data, error } = await sb.from('roar_messages').insert({ room_id: roomId, user_id: meId, body, reply_to }).select().single();
     sendBtn.disabled = false;
     if (error) return fail(error);
-    text.value = ''; text.style.height = 'auto'; setReply(null);
-    if (!msgs.some((x) => x.id === data.id)) { msgs.push(data); draw(); }
+    text.value = ''; text.style.height = 'auto'; sendBtn.classList.remove('ready'); setReply(null);
+    if (!msgs.some((x) => x.id === data.id)) { msgs.push(data); fresh.add(data.id); draw(); }
     seen();
   }
   async function sendFiles(files) {
@@ -3709,7 +3715,7 @@ async function viewChatRoom(roomId) {
         setReply(null);
         await signAll([data]);
         wait.remove();
-        if (!msgs.some((x) => x.id === data.id)) { msgs.push(data); draw(); }
+        if (!msgs.some((x) => x.id === data.id)) { msgs.push(data); fresh.add(data.id); draw(); }
       } catch (e) { wait.remove(); fail(e); }
     }
     seen();
@@ -3720,12 +3726,13 @@ async function viewChatRoom(roomId) {
     const liked = (hearts[m.id] || []).includes(meId);
     const row = (ic, label, fn, cls = '') => h('button', { type: 'button', class: 'pm-row ' + cls, onclick: () => { close(); fn(); } }, h('span', { class: 'pm-ic', html: ICON[ic] }), label);
     const words = !chatSealed(m.body) && m.body ? m.body : '';
-    close = openWin(nameOf(m.user_id), h('div', { class: 'pm' }, h('div', { class: 'pm-group' },
+    close = openWin(nameOf(m.user_id), h('div', { class: 'pm ch-menu' }, h('div', { class: 'pm-group' },
       sealedRoom ? null : row('talk', t('Reply'), () => setReply(m)),
       row('heart', liked ? t('Remove the heart') : t('Like'), async () => {
         const { error } = liked ? await sb.from('roar_reactions').delete().eq('message_id', m.id).eq('user_id', meId) : await sb.from('roar_reactions').upsert({ message_id: m.id, room_id: roomId, user_id: meId, emoji: '❤️' });
         if (error) return fail(error);
         await loadHearts(); draw('stay');
+        if (!liked) list.querySelector(`.ch-msg[data-id="${m.id}"] .ch-heart`)?.classList.add('pop');
       }),
       words ? row('link', t('Copy'), async () => { try { await navigator.clipboard.writeText(words); toast(t('Copied')); } catch { /* not allowed */ } }) : null,
       mine ? row('trash', t('Delete for everyone'), async () => {
@@ -3741,7 +3748,7 @@ async function viewChatRoom(roomId) {
       if (!here()) return;
       const i = msgs.findIndex((x) => x.id === m.id);
       const end = atEnd();
-      if (i >= 0) msgs[i] = { ...msgs[i], ...m }; else if (ev === 'INSERT') { await Promise.all([chatLoadPeople([m.user_id]), signAll([m])]); if (!msgs.some((x) => x.id === m.id)) msgs.push(m); } else return;
+      if (i >= 0) msgs[i] = { ...msgs[i], ...m }; else if (ev === 'INSERT') { await Promise.all([chatLoadPeople([m.user_id]), signAll([m])]); if (!msgs.some((x) => x.id === m.id)) { msgs.push(m); fresh.add(m.id); } } else return;
       draw(i >= 0 || !end ? 'stay' : undefined);
       if (i < 0 && m.user_id !== meId) seen();
     },
