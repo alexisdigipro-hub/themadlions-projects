@@ -112,8 +112,33 @@ if (shell) {
   document.documentElement.classList.add('in-app');
   const noBar = () => shellCall('Keyboard', 'setAccessoryBarVisible', { isVisible: false });
   noBar(); document.addEventListener('focusin', noBar); // said again whenever a field is entered, in case the first word was too early
-  shellListen('Keyboard', 'keyboardWillShow', () => { document.documentElement.classList.add('kb'); window.dispatchEvent(new Event('roardino-kb')); });
-  shellListen('Keyboard', 'keyboardWillHide', () => { document.documentElement.classList.remove('kb'); window.dispatchEvent(new Event('roardino-kb')); });
+  // The shell makes the page shorter only once the keyboard has finished coming up, so what stands at the foot came up
+  // "a while after" it (Alex, 15 Nov). Until that moment the foot rides up with the keyboard by itself (html.kb-rise,
+  // --kbup = the keyboard's height); the instant the page really gets shorter (resize) the ride is dropped, and the foot
+  // is where it was. Going down, the same the other way round.
+  const root = document.documentElement;
+  let kbH = 0, falling = false, riseT = 0;
+  shellListen('Keyboard', 'keyboardWillShow', (e) => {
+    kbH = Math.round(e?.keyboardHeight || 0); falling = false;
+    root.style.setProperty('--kbup', kbH + 'px');
+    root.classList.add('kb'); if (kbH) root.classList.add('kb-rise');
+    clearTimeout(riseT); riseT = setTimeout(() => root.classList.remove('kb-rise'), 1200); // never left hanging
+    window.dispatchEvent(new Event('roardino-kb'));
+  });
+  shellListen('Keyboard', 'keyboardWillHide', () => {
+    root.classList.remove('kb', 'kb-rise'); falling = !!kbH;
+    setTimeout(() => { falling = false; }, 700);
+    window.dispatchEvent(new Event('roardino-kb'));
+  });
+  window.addEventListener('resize', () => {
+    if (root.classList.contains('kb-rise')) { root.classList.remove('kb-rise'); window.dispatchEvent(new Event('roardino-kb')); return; }
+    if (falling) { // the page has just grown back while the keyboard is still on its way down
+      falling = false;
+      root.classList.add('kb-fall-from'); void root.offsetWidth;
+      root.classList.add('kb-fall'); root.classList.remove('kb-fall-from');
+      setTimeout(() => root.classList.remove('kb-fall'), 320);
+    }
+  });
 }
 
 // what people do: in front (on camera, on stage) or behind
@@ -3882,7 +3907,7 @@ async function viewChatRoom(roomId) {
       if (i < 0 && m.user_id !== meId) seen();
     },
     hearts: async () => { if (!here()) return; await loadHearts(); draw('stay'); } };
-  const follow = () => { if (!here()) { window.removeEventListener('resize', follow); window.removeEventListener('roardino-kb', follow); return; } if (document.activeElement === text || atEnd()) [60, 220, 420].forEach((ms) => setTimeout(() => here() && toEnd(), ms)); };
+  const follow = () => { if (!here()) { window.removeEventListener('resize', follow); window.removeEventListener('roardino-kb', follow); return; } if (document.activeElement === text || atEnd()) { toEnd(); [60, 220, 420].forEach((ms) => setTimeout(() => here() && toEnd(), ms)); } };
   window.addEventListener('resize', follow); window.addEventListener('roardino-kb', follow);
   text.addEventListener('focus', follow);
   const [rows, mem, hid] = await Promise.all([load(),
