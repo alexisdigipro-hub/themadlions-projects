@@ -3357,3 +3357,20 @@ html[data-skin=slate] :is(.add-pic,.face) :is(b,strong,span){font-size:12px;lett
   html[data-skin=slate] body .tabbar{background-color:rgba(40,50,58,.38)!important;background-image:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03))!important;border:1px solid rgba(220,235,242,.26)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 10px 30px rgba(0,0,0,.22)!important}
   html[data-skin=slate] body .tabbar a.on{background:rgba(255,255,255,.13)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important}
 }
+/* HQ, second look (Alex, 15 Nov: "a fresher 2026 font, squarer but still curved, more minimal; I must see it switch on"):
+   Geist Mono, a small squared pill of dark glass with a hairline rim; the percent beside HQ while it loads, the pill
+   filling; lit white with dark letters when on; a short HQ on / HQ off in the middle of the video as it switches */
+.ig-hq{height:24px!important;min-width:0!important;padding:0 8px!important;border-radius:7px!important;gap:6px;display:inline-flex!important;align-items:center;
+  font-family:'Geist Mono',ui-monospace,'SF Mono',Menlo,monospace!important;font-size:10.5px!important;font-weight:600!important;letter-spacing:.12em!important;
+  background:rgba(12,14,18,.38)!important;border:1px solid rgba(255,255,255,.32)!important;color:#fff!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:none!important}
+.ig-hq b{font-weight:600}
+.ig-hq small{position:relative;z-index:1;font-size:10px;font-weight:500;letter-spacing:.02em;opacity:.85}
+.ig-hq small:empty{display:none}
+.ig-hq-fill{background:rgba(255,255,255,.28)!important}
+.ig-hq.loading b{animation:none!important}
+.ig-hq.on{background:#fff!important;color:#0e1013!important;border-color:#fff!important}
+.ig-hq.on b::after{content:" ✓";letter-spacing:0}
+.ig-hq-flash{position:absolute;left:50%;top:50%;z-index:6;transform:translate(-50%,-50%);padding:8px 14px;border-radius:9px;background:rgba(12,14,18,.55);border:1px solid rgba(255,255,255,.28);color:#fff;font-family:'Geist Mono',ui-monospace,Menlo,monospace;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;pointer-events:none;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);animation:hq-flash 1.3s ease both}
+@keyframes hq-flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.92)}15%{opacity:1;transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0}}
+html[data-skin=slate] .ig-hq{background:rgba(12,14,18,.38)!important;box-shadow:none!important;border:1px solid rgba(255,255,255,.32)!important}
+html[data-skin=slate] .ig-hq.on{background:#fff!important;color:#0e1013!important;-webkit-text-fill-color:#0e1013!important}
