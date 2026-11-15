@@ -3689,3 +3689,28 @@ html[data-skin=slate][data-theme=light] body .ch-room :is(.ch-back,.ch-clip,.ch-
 html[data-skin=slate][data-theme=light] body .ch-room :is(.ch-back,.ch-clip,.ch-send) svg{stroke:#3b3d40!important;color:#3b3d40!important}
 html[data-skin=slate][data-theme=light] .ch-input::placeholder{color:#8b8e92!important}
 html[data-skin=slate][data-theme=light] .ch-name small{color:#8b8e92!important}
+/* Reels: every icon in one horizontal bar of glass at the foot (Alex, 16 Nov, from a "Get Started" glass button): a
+   rounded slab of dark glass with a soft glow of colour inside and a fine rim of light that changes colour round it;
+   the icons small and bare inside it, counts beside them */
+.rl-side{top:auto!important;transform:none!important;left:50%!important;right:auto!important;translate:-50% 0;bottom:calc(env(safe-area-inset-bottom) + 22px)!important;
+  flex-direction:row!important;align-items:center!important;gap:2px!important;height:50px;padding:0 8px;max-width:calc(100vw - 20px);box-sizing:border-box;
+  border-radius:20px;border:1.2px solid transparent;
+  background:
+    radial-gradient(120px 60px at 28% 80%,rgba(120,170,110,.26),transparent 70%) padding-box,
+    radial-gradient(130px 70px at 55% 95%,rgba(215,105,105,.3),transparent 70%) padding-box,
+    radial-gradient(140px 70px at 85% 60%,rgba(120,100,200,.28),transparent 70%) padding-box,
+    linear-gradient(rgba(22,22,26,.5),rgba(22,22,26,.5)) padding-box,
+    linear-gradient(100deg,rgba(255,255,255,.4),rgba(200,190,150,.35) 30%,rgba(140,190,200,.4) 55%,rgba(150,120,230,.6) 100%) border-box;
+  -webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.rl-side .rl-pair{flex-direction:row!important;align-items:center!important;gap:0!important}
+.rl-side .rl-pair span{margin:0 4px 0 -4px;font-size:11.5px!important;text-shadow:none}
+.rl-side .rl-ico{width:34px!important;height:34px!important;background:none!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.rl-side .rl-ico svg{width:20px!important;height:20px!important}
+.rl-side .rl-ai{font-size:10.5px}
+.rl-side .rl-me{margin:0 2px 0 4px!important}
+.rl-side .rl-me .rl-av .av{width:30px;height:30px;font-size:11px}
+.rl-side .rl-me .rl-follow{width:15px!important;height:15px!important;bottom:-5px}
+.rl-side .rl-me .rl-follow svg{width:9px;height:9px}
+.rl-info{bottom:calc(env(safe-area-inset-bottom) + 84px)!important;right:14px!important}
+.rl-slide::after{height:34%}
+@media (min-width:821px){.rl-side{max-width:460px}}
