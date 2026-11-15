@@ -3043,3 +3043,7 @@ html:not([data-theme=dark]) .front.art .auth-pill{background:rgba(255,255,255,.7
 .front.art .lede{opacity:1;animation:hw 1s cubic-bezier(.2,.9,.25,1) .7s backwards!important}
 .front-mark{opacity:1;animation:hw .8s cubic-bezier(.2,.9,.25,1) backwards!important}
 @media (max-width:860px){ .front.art{grid-template-columns:minmax(0,1fr)!important;padding-left:16px;padding-right:16px} .front.art .auth{width:100%;max-width:100%;box-sizing:border-box;margin:0} .front.art>*{min-width:0} }
+/* the line's words are seen by default and only come in out of a blur while the animation runs: on Alex's Mac (15 Nov)
+   they stayed hidden, waiting on an animation that never ended */
+.front.art .hero .hw{opacity:1;transform:none;filter:none;animation:hw-in .9s cubic-bezier(.2,.9,.25,1) backwards;animation-delay:calc(.12s + var(--i) * .09s)}
+@keyframes hw-in{from{opacity:0;transform:translateY(.35em) rotate(2deg);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
