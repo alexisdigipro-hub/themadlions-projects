@@ -3656,3 +3656,18 @@ html body .rl .rl-me .rl-follow svg{color:#111!important;stroke:#111!important}
 html[data-skin=slate] .btn.mt,html[data-skin=slate][data-theme=light] .btn.mt{height:auto!important;min-height:62px!important;padding:10px 6px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:6px!important;border-radius:16px!important;line-height:1.2!important}
 html[data-skin=slate] .btn.mt svg{width:20px!important;height:20px!important}
 html[data-skin=slate] .btn.mt .tip{position:static!important;transform:none!important;font-size:12.5px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important;opacity:1!important;padding:0!important;background:none!important;color:#3b3d40!important;-webkit-text-fill-color:#3b3d40!important;white-space:nowrap}
+/* Chat and Industry in the same hand as the rest (Alex, 15 Nov: "it looks like another site"): their titles as every
+   page's (26px, the strong weight, no capitals), the chat rows in the site's sizes and weights, quiet RoarMe marks,
+   thin rings on pictures, the pencil as the other flat glass buttons */
+html[data-skin=slate] .ind-title{font-size:26px!important;font-weight:var(--w-strong,600)!important;letter-spacing:-.01em!important;text-transform:none!important}
+html[data-skin=slate] .ch-list{gap:0!important;padding:4px!important}
+html[data-skin=slate] .ch-row{padding:9px 10px!important;gap:12px!important}
+html[data-skin=slate] .av.ch-av{width:46px!important;height:46px!important;font-size:14px!important;box-shadow:0 0 0 1px rgba(0,0,0,.06)!important;border:0!important}
+html[data-skin=slate] .ch-who{gap:2px!important}
+html[data-skin=slate] .ch-who b{font-size:15px!important;font-weight:var(--w-strong,600)!important;color:var(--ink)!important;letter-spacing:-.005em}
+html[data-skin=slate] .ch-who small{font-size:13.5px!important;font-weight:var(--w-text,400)!important;color:var(--muted)!important}
+html[data-skin=slate] .ch-row.new .ch-who small{color:var(--ink)!important;font-weight:var(--w-mid,500)!important}
+html[data-skin=slate] .ch-side small{font-size:12px!important;font-weight:var(--w-text,400)!important;color:var(--muted)!important}
+html[data-skin=slate] .ch-who b .rm-badge,html[data-skin=slate] .rm-badge{height:17px!important;padding:0 6px!important;margin-left:7px!important;font-size:10px!important;font-weight:500!important;letter-spacing:.02em!important;border-radius:6px!important;display:inline-grid!important;place-items:center;background:rgba(0,0,0,.05)!important;border:0!important;color:#8b8e92!important;-webkit-text-fill-color:#8b8e92!important}
+html[data-skin=slate][data-theme=light] body .ch-top .ch-new.ch-new{width:38px!important;height:38px!important;background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,.38))!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.85),0 0 0 1px rgba(0,0,0,.07)!important;color:#55585c!important}
+html[data-skin=slate][data-theme=light] body .ch-top .ch-new.ch-new svg{stroke:#55585c!important;color:#55585c!important}
