@@ -972,16 +972,28 @@ function topBar(on) {
     h('button', { type: 'button', class: 'ico theme', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { setPref('theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); e.currentTarget.innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon; } }),
     menu));
 }
+let tbLensAt = null;
 function tabBar(on) {
   const m = me();
   // on a phone (Alex, 5 Nov): Feed, Industry, Chat and me with my own picture; Calls and Seminars live on my profile's tiles
   const tab = ([k, s, ic]) => h('a', { href: `#/${k}`, class: on === k ? 'on' : '', onclick: k === 'feed' ? goHome : null }, icon(ic), t(s));
   const tabs = NAV.filter(([k]) => !['calls', 'seminars', 'search'].includes(k));
   // Home, Industry, the + that posts in the middle (Alex, 14 Nov), Chat, me; Search sits on the top left
-  return h('nav', { class: 'tabbar' }, ...tabs.slice(0, 2).map(tab),
+  // the chosen tab's soft capsule glides from the tab you were on to the new one (Alex, 15 Nov: "animation everywhere")
+  const lens = h('span', { class: 'tb-lens', 'aria-hidden': 'true' });
+  const nav = h('nav', { class: 'tabbar' }, lens, ...tabs.slice(0, 2).map(tab),
     h('button', { type: 'button', class: 'tab-plus', title: t('Create'), 'aria-label': t('Create'), onclick: createMenu }, h('span', { html: ICON.plus })),
     ...tabs.slice(2).map(tab),
     h('a', { href: m ? `#/p/${m.id}` : '#/edit/new', class: 'tab-me' + (on === 'me' ? ' on' : '') }, m ? avatar(m, 'tab-av') : icon('user'), t('Me')));
+  const place = (el, still) => { if (!el) { lens.style.opacity = '0'; return; } if (still) lens.style.transition = 'none'; lens.style.opacity = '1'; lens.style.transform = `translateX(${el.offsetLeft}px)`; lens.style.width = `${el.offsetWidth}px`; tbLensAt = { x: el.offsetLeft, w: el.offsetWidth }; if (still) { void lens.offsetWidth; lens.style.transition = ''; } };
+  requestAnimationFrame(() => {
+    const b = nav.querySelector('a.on');
+    if (!b) { lens.style.opacity = '0'; return; }
+    if (tbLensAt) { lens.style.transition = 'none'; lens.style.opacity = '1'; lens.style.transform = `translateX(${tbLensAt.x}px)`; lens.style.width = `${tbLensAt.w}px`; void lens.offsetWidth; lens.style.transition = ''; requestAnimationFrame(() => place(b)); }
+    else place(b, true);
+  });
+  // the old bar's lens is left where it was: the new bar starts from there and glides to its own tab
+  return nav;
 }
 // the footer (Alex, 5 Nov): Roardino by THE MAD LIONS, themadlions.com and its places
 function footBar() {

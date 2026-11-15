@@ -3374,3 +3374,32 @@ html[data-skin=slate] :is(.add-pic,.face) :is(b,strong,span){font-size:12px;lett
 @keyframes hq-flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.92)}15%{opacity:1;transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0}}
 html[data-skin=slate] .ig-hq{background:rgba(12,14,18,.38)!important;box-shadow:none!important;border:1px solid rgba(255,255,255,.32)!important}
 html[data-skin=slate] .ig-hq.on{background:#fff!important;color:#0e1013!important;-webkit-text-fill-color:#0e1013!important}
+/* motion everywhere, smooth (Alex, 15 Nov: "it kicks, goes back for a moment and comes again; animation everywhere"):
+   one calm curve with no overshoot for things that slide (--sm), a quick soft press for things that are touched */
+:root{--sm:cubic-bezier(.32,.72,0,1)}
+.seg .lens,.pf-choice button{transition:transform .38s var(--sm),width .38s var(--sm),background .3s var(--sm),box-shadow .3s var(--sm),opacity .2s!important}
+.seg button.on{animation:none!important}
+.seg button,.seg a{transition:color .3s var(--sm)!important}
+/* Slate: only the lens is lit, so the chosen word no longer flashes in place before the lens arrives */
+html[data-skin=slate] :is(.seg button.on,.seg a.on){background:none!important;box-shadow:none!important}
+html[data-skin=slate] .seg .lens{top:3px!important;bottom:3px!important;height:auto!important;border-radius:9px!important;border:0!important;background:rgba(255,255,255,.12)!important;box-shadow:inset 0 0 0 1px rgba(238,243,247,.3)!important}
+html[data-skin=slate] .seg button{position:relative;z-index:1}
+/* the foot menu's capsule glides between tabs (the bar is already fixed, so the lens sits inside it) */
+.tb-lens{display:none}
+@media (max-width:820px){
+  html body .tabbar .tb-lens{display:block;position:absolute;top:5px;left:0;height:44px;width:0;border-radius:999px;background:rgba(255,255,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);pointer-events:none;z-index:0;opacity:0;transition:transform .42s var(--sm),width .42s var(--sm),opacity .2s}
+  html[data-theme=light] body .tabbar .tb-lens{background:rgba(28,35,51,.08)}
+  html body .tabbar a.on{background:none!important;box-shadow:none!important}
+  html body .tabbar a,html body .tabbar .tab-plus{position:relative;z-index:1}
+}
+/* every button and icon answers a touch the same soft way */
+:is(.btn,.pill,.chip,.fchip,.ig-ico,.rl-ico,.win-x,.pf-pill,.pf-chip,.ig-hq,.tabbar a,.tab-plus,.ch-back,.ch-send,.ch-clip,.seg button){transition:transform .22s var(--sm),background-color .3s var(--sm),box-shadow .3s var(--sm),color .25s var(--sm),opacity .25s var(--sm)}
+:is(.btn,.pill,.chip,.fchip,.win-x,.pf-pill,.pf-chip,.ig-hq,.ch-back,.ch-send,.ch-clip):active{transform:scale(.95);transition-duration:.08s}
+/* pages and windows come in softly, no bounce */
+.page>*{animation:gl-page .34s var(--sm) backwards!important}
+@keyframes gl-page{from{opacity:0;transform:translateY(8px)}}
+.veil .win{animation:win-in .32s var(--sm) both}
+@keyframes win-in{from{opacity:0;transform:translateY(10px) scale(.98)}}
+.menu,.pm{animation:menu-in .24s var(--sm) both}
+@keyframes menu-in{from{opacity:0;transform:translateY(-4px) scale(.98)}}
+@media (prefers-reduced-motion:reduce){.page>*,.veil .win,.menu,.pm{animation:none!important}.tb-lens,.seg .lens{transition:none!important}}
