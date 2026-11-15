@@ -3590,3 +3590,14 @@ html[data-skin=slate][data-theme=light] .pm-tiles{margin:0!important}
 .rl-info{left:64px!important;right:64px!important;align-items:center;text-align:center}
 .rl-who{justify-content:center}
 .rl-cap{text-align:center}
+/* Slate segments as they were before the raised pill (Alex, 15 Nov: "these buttons as before"): a quiet track with a
+   hairline, small capitals, the chosen one a clear lens with a fine rim sliding inside the track; in the milky colours */
+html[data-skin=slate][data-theme=light] :is(.seg,.pf-choice,.ch-tabs .seg){background:rgba(0,0,0,.045)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.07)!important;padding:3px!important}
+html[data-skin=slate][data-theme=light] :is(.seg button,.seg a,.pf-choice button){height:28px!important;color:#8b8e92!important;font-size:11.5px!important;font-weight:500!important;letter-spacing:.06em!important;text-transform:uppercase!important;text-shadow:none!important}
+html[data-skin=slate][data-theme=light] :is(.seg button.on,.seg a.on,.pf-choice button.on){color:#3b3d40!important;font-weight:600!important}
+html[data-skin=slate][data-theme=light] .seg .lens{top:3px!important;bottom:3px!important;border-radius:9px!important;background:rgba(255,255,255,.75)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 0 0 1px rgba(0,0,0,.06),0 2px 6px rgba(0,0,0,.06)!important}
+html[data-skin=slate][data-theme=light] .seg:not(.has-lens) :is(button.on,a.on),html[data-skin=slate][data-theme=light] .pf-choice button.on{background:rgba(255,255,255,.75)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 0 0 1px rgba(0,0,0,.06),0 2px 6px rgba(0,0,0,.06)!important;border-radius:9px!important;margin:0!important;height:28px!important}
+html[data-skin=slate][data-theme=light] :is(.seg,.pf-choice){border-radius:12px!important}
+/* the square icon buttons beside them (Stories) the same: clear glass with a fine rim, grey icon */
+html[data-skin=slate][data-theme=light] .feed-head .btn,html[data-skin=slate][data-theme=light] .feed-head .ico{background:rgba(255,255,255,.55)!important;background-image:none!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 0 0 1px rgba(0,0,0,.06),0 2px 6px rgba(0,0,0,.05)!important;color:#55585c!important;-webkit-text-fill-color:#55585c!important;text-shadow:none!important}
+html[data-skin=slate][data-theme=light] .feed-head .btn svg,html[data-skin=slate][data-theme=light] .feed-head .ico svg{color:#55585c!important;stroke:#55585c!important}
