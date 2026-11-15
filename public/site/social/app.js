@@ -987,7 +987,6 @@ function topBar(on) {
     h('button', { type: 'button', onclick: (e) => { e.stopPropagation(); setPref('theme', dark() ? 'light' : 'dark'); fill(); } }, icon(dark() ? 'sun' : 'moon'), dark() ? t('Switch to light') : t('Switch to dark')),
     h('hr'),
     ...mine.filter((x) => x !== m).map((x) => h('a', { href: `#/p/${x.id}` }, avatar(x, 'sm'), x.name)),
-    h('a', { href: '#/edit/kid' }, icon('child'), t('Add my child\'s profile')),
     h('hr'),
     h('small', {}, session.user.email),
     h('button', { type: 'button', onclick: async () => { if (await ask(t('Sign out of Roardino?'), t('Sign out'), false)) sb.auth.signOut(); } }, icon('out'), t('Log out')));
@@ -1487,8 +1486,7 @@ function meCard() {
         h('h3', {}, t('Make your profile')),
         h('p', { class: 'hint', style: { marginBottom: '14px' } }, JOBS ? t('To post your work, apply to calls and be found, you need a profile. It takes two minutes.') : t('To post your work and be found, you need a profile. It takes two minutes.')),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
-          h('a', { class: 'btn main', href: '#/edit/new' }, icon('plus'), t('Create your profile')),
-          h('a', { class: 'btn', href: '#/edit/kid' }, icon('child'), t('My child\'s profile')))));
+          h('a', { class: 'btn main', href: '#/edit/new' }, icon('plus'), t('Create your profile')))));
   }
   const stats = h('div', { class: 'me-stats' }, h('button', { type: 'button', class: 'stat-btn', onclick: () => peopleList(m, 'followers') }, h('b', {}, '·'), h('small', {}, t('Followers'))), h('button', { type: 'button', class: 'stat-btn', onclick: () => peopleList(m, 'following') }, h('b', {}, String(follows.size)), h('small', {}, t('Following'))), h('a', { class: 'stat-btn', href: `#/p/${m.id}` }, h('b', {}, '·'), h('small', {}, t('Works'))));
   // the card stays small (Alex, 5 Nov): who I am, my numbers, View my profile; skills and work live on the profile
@@ -1581,7 +1579,6 @@ function meTiles() {
     tile('#/settings', 'gear', t('Settings')),
     ...(JOBS ? [phoneTile('#/calls', 'calls', t('Calls')), phoneTile('#/seminars', 'cal', t('Seminars'))] : []),
     tile('#/me', JOBS ? 'star' : 'people', JOBS ? t('Applied') : t('Profiles')),
-    tile('#/edit/kid', 'child', t('Child')),
     h('button', { type: 'button', class: 'btn main mt out', 'aria-label': t('Sign out'), onclick: () => sb.auth.signOut() }, ...inner('out', t('Sign out'))));
 }
 
@@ -3357,14 +3354,13 @@ async function viewMe() {
     h('button', { type: 'button', class: 'btn', onclick: () => sb.auth.signOut() }, icon('out'), t('Sign out'))),
   h('div', { class: 'block' }, h('h2', {}, t('My profiles'))),
   h('div', { class: 'faces' }, mine.map(faceTile),
-    h('a', { class: 'add-pic', href: '#/edit/new' }, h('span', { class: 'add-ic', html: ICON.plus }), t('New profile')),
-    h('a', { class: 'add-pic', href: '#/edit/kid' }, h('span', { class: 'add-ic', html: ICON.child }), t('My child\'s profile'))),
-  h('p', { class: 'hint', style: { marginTop: '10px' } }, t('One account can hold several profiles: your own, and your children\'s as their parent.')),
+    h('a', { class: 'add-pic', href: '#/edit/new' }, h('span', { class: 'add-ic', html: ICON.plus }), t('New profile'))),
   (applies || []).length ? h('div', { class: 'block' }, h('h2', {}, t('My applications')), h('div', { class: 'credits' }, applies.map((x) => h('a', { href: `#/c/${x.call?.id}` }, `${x.call?.title || ''} · ${t('as {name}', { name: x.person?.name || '' })} · ${t(state[x.status])}`)))) : null,
   (seats || []).length ? h('div', { class: 'block' }, h('h2', {}, t('My seats')), h('div', { class: 'credits' }, seats.map((x) => h('a', { href: x.sem?.id ? `#/s/${x.sem.id}` : '#/seminars' }, `${x.sem?.title || ''}${x.sem?.starts_at ? ' · ' + when(x.sem.starts_at) : ''}`)))) : null);
 }
 
 async function viewEdit(which) {
+  if (which === 'kid') { location.hash = '#/me'; return; } // no children's profiles for now (Alex, 15 Nov: 18 and over only)
   const kid = which === 'kid';
   const old = which === 'new' || kid ? null : mine.find((m) => m.id === which);
   if (!old && !['new', 'kid'].includes(which)) { location.hash = '#/me'; return; }
@@ -3976,7 +3972,7 @@ async function openNotes(anchor) {
 const LEGAL_DATE = '5 November 2026';
 const INFO_MAIL = 'info@themadlions.com';
 const PRIVACY = [
-  ['In short', ['Roardino is a place to show your work and to find people for film, theatre, dance and photography. What you put on a profile is seen by the members of Roardino, as you choose. Children under 18 join only through a parent, and their profiles are seen only by trusted productions. We do not sell data and we show no ads.']],
+  ['In short', ['Roardino is a place to show your work and to find people for film, theatre, dance and photography. What you put on a profile is seen by the members of Roardino, as you choose. Roardino is for people 18 and over. We do not sell data and we show no ads.']],
   ['Who we are', [`The Mad Lions, a film production house in Athens, Greece, is responsible for your data on Roardino. Write to ${INFO_MAIL}.`]],
   ['What we keep', [
     'Your account: your name, your email and your password as a secure hash. It is your Roar Account, the same one that signs you in to the other Roar apps.',
@@ -3990,10 +3986,9 @@ const PRIVACY = [
     'Profiles and posts are seen only by signed-in members. A profile you turn off in Settings does not show in Industry.',
     'Your date of birth is never shown; only your age, and only on profiles in front of the camera.',
     'Your email and phone show on your profile only if you choose so. Whoever runs a call you apply to sees them, so they can reach you.',
-    'A child\'s profile is seen only by productions and casting directors we trust, and by whoever runs a call the child applied to. The only contact shown is the parent\'s.',
     'Applications are seen by you and by whoever runs the call. Seats at a seminar are seen by you and by its organisers.',
   ]],
-  ['Children', ['A profile under 18 can be made only from the account of a parent or legal guardian, with their name, phone, email and consent. The parent manages the profile and is the only contact. The parent can delete it at any time.']],
+  ['Age', ['Roardino is for people 18 and over. Profiles for anyone under 18 cannot be made.']],
   ['Pictures and files', ['Pictures, videos and CVs are kept in private storage and shown through links that expire within an hour. Pictures are made lighter in your browser before they go up.']],
   ['The camera', ['The camera is used only when you choose Camera for a story, and nothing is recorded until you press the button. Nothing goes up until you press Share.']],
   ['The chat', ['The chat inside Roardino is RoarMe, with the same account. Its own privacy policy applies to your messages: alexisdigipro-hub.github.io/roarme/?legal=privacy.']],
@@ -4011,8 +4006,8 @@ const PRIVACY = [
 ];
 const TERMS = [
   ['Roardino', ['Roardino is a place for people who make film, theatre, dance and photography: to show their work, to find work, and to find each other. It is run by The Mad Lions, Athens, Greece.']],
-  ['Your account', ['You must be 15 or older to have an account. Children under 18 join only through the account of a parent or legal guardian. Keep your password to yourself; what happens through your account is your responsibility.']],
-  ['Be real', ['A profile is you, or your child if you are their parent or guardian. Do not make profiles for other people, do not pretend to be someone else, and keep what you say about your work true.']],
+  ['Your account', ['You must be 18 or older to have an account. Keep your password to yourself; what happens through your account is your responsibility.']],
+  ['Be real', ['A profile is you. Do not make profiles for other people, do not pretend to be someone else, and keep what you say about your work true.']],
   ['What you post is yours', ['Your pictures, videos and words stay yours. You let us keep them and show them to members as you set, only to run Roardino. Post only what you have the right to post, and only pictures of people who agree to be shown.']],
   ['Not allowed', ['Nudity or sexual content; harassment, threats or hate; spam, scams or fake calls; asking a child for anything except through their parent; sharing someone else\'s contact details without their consent; anything against the law.']],
   ['Calls', ['A call is between the person who posts it and the people who apply. We are not part of the deal. Check a call before you go, and never pay to apply. A production that works with children follows the law on children at work, with the parent present.']],

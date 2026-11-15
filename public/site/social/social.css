@@ -3652,3 +3652,7 @@ html[data-skin=slate][data-theme=light] .feed-head :is(.btn,.ico){box-shadow:ins
 .rl-hq{display:none!important}
 html body .rl .rl-me .rl-follow{background:#fff!important;color:#111!important;box-shadow:0 1px 4px rgba(0,0,0,.3)!important;border:0!important;width:18px!important;height:18px!important;padding:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html body .rl .rl-me .rl-follow svg{color:#111!important;stroke:#111!important}
+/* the Settings tiles (Profile, Profiles, Sign out): their own height, the icon over the word, nothing cut (Alex, 15 Nov) */
+html[data-skin=slate] .btn.mt,html[data-skin=slate][data-theme=light] .btn.mt{height:auto!important;min-height:62px!important;padding:10px 6px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:6px!important;border-radius:16px!important;line-height:1.2!important}
+html[data-skin=slate] .btn.mt svg{width:20px!important;height:20px!important}
+html[data-skin=slate] .btn.mt .tip{position:static!important;transform:none!important;font-size:12.5px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important;opacity:1!important;padding:0!important;background:none!important;color:#3b3d40!important;-webkit-text-fill-color:#3b3d40!important;white-space:nowrap}
