@@ -3731,3 +3731,18 @@ html[data-skin=slate][data-theme=light] .ch-name small{color:#8b8e92!important}
 .rl-side .rl-me .rl-follow{bottom:0!important;left:auto!important;right:0!important;transform:none!important;width:13px!important;height:13px!important}
 html body .rl .rl-side .rl-me .rl-follow{width:12px!important;height:12px!important;bottom:2px!important;right:2px!important;left:auto!important;transform:none!important}
 html body .rl .rl-side .rl-me .rl-follow svg{width:8px!important;height:8px!important}
+/* Reels bar clearer and bigger (Alex, 16 Nov): less tint, lighter glows, a taller wider bar with larger icons */
+.rl-side{height:60px!important;padding:0 10px!important;border-radius:24px!important;gap:4px!important;
+  background:
+    radial-gradient(140px 70px at 28% 80%,rgba(120,170,110,.14),transparent 70%) padding-box,
+    radial-gradient(150px 80px at 55% 95%,rgba(215,105,105,.16),transparent 70%) padding-box,
+    radial-gradient(160px 80px at 85% 60%,rgba(120,100,200,.16),transparent 70%) padding-box,
+    linear-gradient(rgba(22,22,26,.2),rgba(22,22,26,.2)) padding-box,
+    linear-gradient(100deg,rgba(255,255,255,.5),rgba(200,190,150,.4) 30%,rgba(140,190,200,.45) 55%,rgba(150,120,230,.6) 100%) border-box!important;
+  -webkit-backdrop-filter:blur(14px) saturate(1.4)!important;backdrop-filter:blur(14px) saturate(1.4)!important;box-shadow:0 8px 24px rgba(0,0,0,.18)!important}
+.rl-side .rl-ico{width:44px!important;height:44px!important}
+.rl-side .rl-ico svg{width:25px!important;height:25px!important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.rl-side .rl-pair span{font-size:13px!important;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.rl-side .rl-me{width:44px!important;height:44px!important}
+.rl-side .rl-me .rl-av .av{width:30px!important;height:30px!important;font-size:11px!important}
+.rl-info{bottom:calc(env(safe-area-inset-bottom) + 96px)!important}
