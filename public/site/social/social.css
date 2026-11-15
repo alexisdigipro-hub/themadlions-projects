@@ -3601,3 +3601,20 @@ html[data-skin=slate][data-theme=light] :is(.seg,.pf-choice){border-radius:12px!
 /* the square icon buttons beside them (Stories) the same: clear glass with a fine rim, grey icon */
 html[data-skin=slate][data-theme=light] .feed-head .btn,html[data-skin=slate][data-theme=light] .feed-head .ico{background:rgba(255,255,255,.55)!important;background-image:none!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 0 0 1px rgba(0,0,0,.06),0 2px 6px rgba(0,0,0,.05)!important;color:#55585c!important;-webkit-text-fill-color:#55585c!important;text-shadow:none!important}
 html[data-skin=slate][data-theme=light] .feed-head .btn svg,html[data-skin=slate][data-theme=light] .feed-head .ico svg{color:#55585c!important;stroke:#55585c!important}
+/* HQ as a line icon beside Save (Alex, 15 Nov): a cut diamond drawn like the other icons; a thin ring fills round it
+   while the HQ copy loads; on, the diamond turns gold */
+.ig-gem{position:relative;display:grid;place-items:center}
+.ig-gem .gem{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;transition:color .3s,transform .4s cubic-bezier(.25,1.45,.45,1)}
+.ig-gem .gem-ring{position:absolute;inset:50% auto auto 50%;width:34px;height:34px;margin:-17px 0 0 -17px;transform:rotate(-90deg);fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:calc(1 - var(--p,0));opacity:0;transition:opacity .2s,stroke-dashoffset .2s linear;pointer-events:none}
+.ig-gem.loading .gem-ring{opacity:.9}
+.ig-gem.loading .gem{animation:gem-breathe 1.2s ease-in-out infinite}
+@keyframes gem-breathe{50%{opacity:.5}}
+.ig-gem.on{color:#e0a83a!important}
+.ig-gem.on .gem{transform:scale(1.08)}
+.ig-gem.on .gem-body{fill:rgba(242,184,74,.35)}
+.post.ig.has-media .mwrap .ig-gem.on{color:#f2c25a!important;filter:drop-shadow(0 0 6px rgba(242,184,74,.55))}
+@media (prefers-reduced-motion:reduce){.ig-gem.loading .gem{animation:none}}
+/* in Reels the HQ mark is the same gold diamond (Alex, 15 Nov: no "HQ" word) */
+.rl-hq{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;width:24px;height:24px;color:#f2c25a;filter:drop-shadow(0 0 6px rgba(242,184,74,.55)) drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.rl-hq svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.rl-hq .gem-body{fill:rgba(242,184,74,.35)}

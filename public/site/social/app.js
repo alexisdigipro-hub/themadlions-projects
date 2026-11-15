@@ -2037,7 +2037,7 @@ function openReels(fromArt, onClose, signedHq) {
     const paused = h('span', { class: 'rl-paused', html: ICON.play });
     const slide = h('section', { class: 'rl-slide', 'data-i': String(i) },
       v, paused,
-      m.hq ? h('span', { class: 'rl-hq', title: t('Playing in high quality') }, 'HQ') : null,
+      m.hq ? h('span', { class: 'rl-hq', title: t('Playing in high quality'), html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="gem-body" d="M7 4.6h10l3.6 5.1L12 19.8 3.4 9.7z"/><path d="M3.4 9.7h17.2M9.6 4.6 8.2 9.7 12 19.8l3.8-10.1-1.4-5.1"/></svg>' }) : null,
       h('div', { class: 'rl-side' },
         h('div', { class: 'rl-pair' }, likeB, likeN),
         it.r.comments_off ? null : h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Comment'), html: ICON.talk, onclick: (e) => { e.stopPropagation(); close(); it.comments(); } }), h('span', {}, it.talkN?.textContent || '')),
@@ -2406,7 +2406,7 @@ function postCard(r, st, refresh) {
     }
   }
   // the sound sign beside the views (Alex, 15 Nov): videos start silent; a press lets this one be heard, another quiets it
-  let soundEl = null;
+  let soundEl = null, hqEl = null;
   if (slides && media[0].type === 'video') {
     const v0 = slides.querySelector('video.fv');
     if (v0 && !v0.dataset.cant) {
@@ -2426,8 +2426,12 @@ function postCard(r, st, refresh) {
       let hqUrl = '', loading = false;
       // the pill says what it is doing (Alex, 15 Nov: "I don't feel it does anything"): HQ · then the percent while the
       // HQ copy comes down, the pill filling · then HQ lit white with a tick, and a short "HQ" over the video as it switches
-      const word = h('b', {}, 'HQ'), pct = h('small', {}), fillEl = h('i', { class: 'ig-hq-fill' });
-      const hqBtn = h('button', { type: 'button', class: 'ig-hq', title: t('Play in high quality'), 'aria-label': t('Play in high quality') }, fillEl, word, pct);
+      // HQ as an icon beside Save (Alex, 15 Nov: "not the word, an icon, a line like Save"): a cut diamond, the sign of
+      // the sharp copy; a thin ring fills round it while the HQ copy comes down; when on, the diamond turns gold
+      const pct = h('small', {}), fillEl = h('i');
+      const hqBtn = h('button', { type: 'button', class: 'ig-ico ig-gem', title: t('Play in high quality'), 'aria-label': t('Play in high quality'),
+        html: '<svg class="gem-ring" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" pathLength="1"/></svg><svg class="gem" viewBox="0 0 24 24" aria-hidden="true"><path class="gem-body" d="M7 4.6h10l3.6 5.1L12 19.8 3.4 9.7z"/><path d="M3.4 9.7h17.2M9.6 4.6 8.2 9.7 12 19.8l3.8-10.1-1.4-5.1"/></svg>' });
+      hqEl = hqBtn;
       const flash = (txt) => { const f = h('span', { class: 'ig-hq-flash' }, txt); (slides.parentElement || slides).append(f); setTimeout(() => f.remove(), 1300); };
       const swap = (src) => { const at = v0.currentTime || 0; delete v0.dataset.held; v0.dataset.src = src; v0.src = src; v0.addEventListener('loadedmetadata', () => { try { v0.currentTime = at; } catch { /* start */ } v0.play().catch(() => { v0.muted = true; v0.play().catch(() => {}); }); }, { once: true }); v0.load(); };
       const lowSrc = urlOf(media[0].path);
@@ -2444,16 +2448,15 @@ function postCard(r, st, refresh) {
           if (!res.ok) throw new Error('hq');
           const total = +res.headers.get('content-length') || 0, rd = res.body?.getReader?.();
           let blob;
-          if (rd) { const parts = []; let got = 0; for (;;) { const { done: end, value } = await rd.read(); if (end) break; parts.push(value); got += value.length; if (total) { const k = Math.min(1, got / total); fillEl.style.transform = `scaleX(${k})`; pct.textContent = Math.round(k * 100) + '%'; } else pct.textContent = (got / 1048576).toFixed(0) + ' MB'; } blob = new Blob(parts, { type: res.headers.get('content-type') || 'video/mp4' }); }
+          if (rd) { const parts = []; let got = 0; for (;;) { const { done: end, value } = await rd.read(); if (end) break; parts.push(value); got += value.length; if (total) { const k = Math.min(1, got / total); fillEl.style.transform = `scaleX(${k})`; pct.textContent = Math.round(k * 100) + '%'; hqBtn.style.setProperty('--p', k); } else pct.textContent = (got / 1048576).toFixed(0) + ' MB'; } blob = new Blob(parts, { type: res.headers.get('content-type') || 'video/mp4' }); }
           else blob = await res.blob();
           hqUrl = URL.createObjectURL(blob);
           setOn(true); swap(hqUrl);
         } catch { pct.textContent = ''; toast(t('The HQ video could not be loaded.')); }
-        loading = false; hqBtn.classList.remove('loading'); fillEl.style.transform = '';
+        loading = false; hqBtn.classList.remove('loading'); fillEl.style.transform = ''; hqBtn.style.removeProperty('--p');
       };
       // a touch on the pill never reaches the post's own taps
       ['pointerdown', 'touchstart', 'touchend', 'mousedown', 'dblclick'].forEach((ev) => hqBtn.addEventListener(ev, (e) => e.stopPropagation(), { passive: true }));
-      queueMicrotask(() => (slides.parentElement || slides).append(hqBtn)); // beside the slides, not one of them
     }
   }
   const bar =
@@ -2462,7 +2465,7 @@ function postCard(r, st, refresh) {
       h('button', { type: 'button', class: 'ig-ico', title: t('Send on RoarMe'), 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: () => sendToRoarMe(r, p) }),
       viewsEl, soundEl,
       h('span', { class: 'grow' }),
-      own ? null : h('button', { type: 'button', class: 'btn sm main', onclick: () => jobOffer({ owner: r.owner, name: p.name }) }, t('Work with me')), saveBtn);
+      own ? null : h('button', { type: 'button', class: 'btn sm main', onclick: () => jobOffer({ owner: r.owner, name: p.name }) }, t('Work with me')), hqEl, saveBtn);
   const time = h('p', { class: 'ig-time' }, ago(r.created_at));
   if (!media.length) return h('article', { class: 'post ig', 'data-post': r.id }, head, r.body ? h('p', { class: 'post-body big' }, ...tagText(r.body)) : null, bar, cap, time, talk);
   // a picture or a video only, on a phone (Alex, 5 Nov): one tap slides in who it is (top) and the icons (bottom) over it,
