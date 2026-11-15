@@ -2729,3 +2729,6 @@ html.kb .form-foot{bottom:8px}
 /* the chat's search opens from the top bar's search sign and is away otherwise (Alex, 15 Nov) */
 .ch-top .input[hidden]{display:none!important}
 .ch-top .input:not([hidden]){animation:ch-drop .3s cubic-bezier(.25,1.45,.45,1) backwards;transform-origin:top center}
+/* the sound sign of a feed video, beside its views (Alex, 15 Nov) */
+.ig-sound.on{color:rgb(var(--a))}
+.post.ig.has-media .ig-bar .ig-sound.on{color:#fff;filter:drop-shadow(0 0 6px rgba(255,255,255,.6))}
