@@ -86,6 +86,17 @@ function wearPrefs() {
 function setPref(k, v) { prefs[k] = v; try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* full */ } wearPrefs(); }
 darkQuery.addEventListener?.('change', wearPrefs);
 wearPrefs();
+// inside the iPhone app (Alex, 15 Nov): no bar of arrows and a tick over the keyboard, as in RoarMe, and the page knows
+// while the keyboard is up (html.kb), so what stands at the foot sits right on it
+try {
+  const K = window.Capacitor?.Plugins?.Keyboard;
+  if (window.Capacitor?.isNativePlatform?.() && K) {
+    document.documentElement.classList.add('in-app');
+    K.setAccessoryBarVisible?.({ isVisible: false })?.catch?.(() => {});
+    K.addListener?.('keyboardWillShow', () => { document.documentElement.classList.add('kb'); window.dispatchEvent(new Event('roardino-kb')); });
+    K.addListener?.('keyboardWillHide', () => { document.documentElement.classList.remove('kb'); window.dispatchEvent(new Event('roardino-kb')); });
+  }
+} catch { /* a browser */ }
 
 // what people do: in front (on camera, on stage) or behind
 const KINDS = [
@@ -3789,6 +3800,9 @@ async function viewChatRoom(roomId) {
       if (i < 0 && m.user_id !== meId) seen();
     },
     hearts: async () => { if (!here()) return; await loadHearts(); draw('stay'); } };
+  const follow = () => { if (!here()) { window.removeEventListener('resize', follow); window.removeEventListener('roardino-kb', follow); return; } if (document.activeElement === text || atEnd()) [60, 220, 420].forEach((ms) => setTimeout(() => here() && toEnd(), ms)); };
+  window.addEventListener('resize', follow); window.addEventListener('roardino-kb', follow);
+  text.addEventListener('focus', follow);
   const [rows, mem, hid] = await Promise.all([load(),
     sb.from('roar_members').select('cleared_at').eq('room_id', roomId).eq('user_id', meId).maybeSingle(),
     sb.from('roar_msg_hides').select('message_id').eq('room_id', roomId).eq('user_id', meId)]);

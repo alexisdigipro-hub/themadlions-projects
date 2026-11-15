@@ -2719,3 +2719,10 @@ html body .ch-send.ready:active{transform:scale(.9);box-shadow:-1.5px 0 0 rgba(2
 .ch-who b .rm-badge,.ch-name b .rm-badge{flex:none}
 .ch-room{will-change:transform;touch-action:pan-y}
 .ch-msg .ch-bub{will-change:transform}
+
+/* the keyboard inside the iPhone app (Alex, 15 Nov: a gap between the writing box and the keyboard): while it is up
+   the screen ends at the keyboard, so the writing box keeps only a small step from it, not the home line's room */
+html.kb .ch-foot{bottom:8px}
+html.kb .ch-room{padding-bottom:8px}
+html.kb .tabbar{display:none}
+html.kb .form-foot{bottom:8px}
