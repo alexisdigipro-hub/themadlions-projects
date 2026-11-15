@@ -3222,3 +3222,81 @@ html[data-theme=dark] .rl-row+.rl-row{border-color:rgba(255,255,255,.07)}
 html[data-theme=dark] .rl-grab{background:rgba(255,255,255,.25)}
 @media (min-width:821px){.rl-list{width:min(480px,100vw);left:50%;transform:translateX(-50%)}.rl-v.tall{object-fit:cover}}
 @media (prefers-reduced-motion:reduce){.rl,.rl.out,.rl-sheet,.rl-sheet-back{animation:none}}
+/* ===== SLATE (Alex, 15 Nov, from "Source btn v.02"): grey glass, no accent. A cool grey gradient wall, panels of frosted
+   grey with a fine light rim, and every button a polished lens: clear glass, a bright hairline rim with a dark groove
+   outside it, a soft light pooled at its bottom, silver letters. Rides on the dark theme; nothing else changes. ===== */
+html[data-skin=slate]{
+  --bg1:#5b656d; --bg2:#454e56;
+  --ink:#eef1f4; --ink2:#d3d9de; --muted:#b4bcc3; --faint:#8e979f;
+  --line:rgba(255,255,255,.1);
+  --glass:rgba(150,160,168,.16);
+  --rim:rgba(235,240,245,.24); --rim-out:rgba(30,36,42,.28);
+  --top:inset 0 1px 0 rgba(255,255,255,.22);
+  --shadow:0 18px 40px rgba(20,26,32,.28),0 2px 6px rgba(20,26,32,.18);
+  --letters:linear-gradient(180deg,#ffffff 0%,#e3e8ec 45%,#b9c2c9 100%);
+  --letters-dim:linear-gradient(180deg,rgba(255,255,255,.8),rgba(190,199,206,.75));
+  --letters-lit:linear-gradient(180deg,#ffffff,#d6dde2);
+  --tint:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04));
+  --accent:#e9edf0; --a:214,221,227; --a-solid:#c9d1d7; --a-lo:#aab4bc; --a-hi:#f2f5f7; --a-rim:240,244,247;
+  --brand:#e9edf0;
+  --sl-lens:linear-gradient(180deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.03) 48%,rgba(255,255,255,.1) 100%);
+  --sl-rim:inset 0 0 0 1.5px rgba(238,243,247,.62),inset 0 -12px 18px -8px rgba(255,255,255,.22),inset 0 8px 14px -10px rgba(20,26,32,.3),0 0 0 1px rgba(36,42,48,.38),0 8px 18px rgba(20,26,32,.22);
+  --sl-rim-press:inset 0 0 0 1.5px rgba(238,243,247,.5),inset 0 6px 14px -6px rgba(20,26,32,.35),0 0 0 1px rgba(36,42,48,.4),0 3px 8px rgba(20,26,32,.2);
+}
+html[data-skin=slate],html[data-skin=slate] body{background-color:#525c64!important}
+html[data-skin=slate] body{background:radial-gradient(1100px 760px at 22% 32%,#86919a 0%,transparent 62%),radial-gradient(900px 700px at 100% 100%,#3f474f 0%,transparent 60%),linear-gradient(160deg,#6a747c 0%,#56606a 45%,#434c54 100%) fixed!important}
+/* panels: frosted grey with a fine light rim */
+html[data-skin=slate] :is(.bar-in,.tabbar,.foot-in,.card,.tile,.sec,.face,.win,.compose,.empty,.auth,.post:not(.ig),.why>div){background:rgba(150,160,168,.18)!important;background-image:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.02))!important;border:1px solid rgba(235,240,245,.26)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 18px 40px rgba(20,26,32,.26)!important}
+html[data-skin=slate] :is(.bar .menu,.menu,.pm,.sheet){background:rgba(98,108,116,.96)!important;border-color:rgba(235,240,245,.26)!important}
+/* every button a polished lens */
+html[data-skin=slate] :is(.btn,.btn.main,.btn.sm,.pill,.chip,.fchip,.win-x,.lb-x,.rl-follow,.post-follow,.pf-pill,.pf-chip,.auth-go,.ig-hq,.ch-new,.cov-btn,.ico.theme){background:var(--sl-lens)!important;background-color:rgba(150,160,168,.12)!important;border:0!important;box-shadow:var(--sl-rim)!important;color:#f1f4f6!important;-webkit-text-fill-color:currentColor!important;text-shadow:0 1px 1px rgba(20,26,32,.35)}
+html[data-skin=slate] :is(.btn,.pill,.chip,.fchip,.win-x,.pf-pill,.pf-chip,.auth-go):active{box-shadow:var(--sl-rim-press)!important;transform:scale(.96)}
+html[data-skin=slate] .btn.main{background-image:var(--sl-lens)!important;font-weight:var(--w-strong,600)}
+html[data-skin=slate] :is(.btn,.pill,.win-x) svg{color:#f1f4f6!important;stroke:currentColor}
+/* the chosen option: a lens a little brighter */
+html[data-skin=slate] :is(.seg,.pf-choice,.ch-tabs .seg){background:rgba(40,46,52,.22)!important;box-shadow:inset 0 1px 3px rgba(20,26,32,.35),0 0 0 1px rgba(235,240,245,.16)!important;border:0!important}
+html[data-skin=slate] :is(.seg button,.seg a,.pf-choice button){color:#c9d0d6!important;-webkit-text-fill-color:currentColor!important;background-image:none!important}
+html[data-skin=slate] :is(.seg button.on,.seg a.on,.pf-choice button.on,.seg .lens){color:#fff!important;background:var(--sl-lens)!important;box-shadow:var(--sl-rim)!important}
+/* fields: a soft sunk glass */
+html[data-skin=slate] :is(.input,.select,.textarea,.auth-in,.ch-in,.pf-cap){background:rgba(40,46,52,.22)!important;border:1px solid rgba(235,240,245,.2)!important;box-shadow:inset 0 2px 6px rgba(20,26,32,.28)!important;color:#f1f4f6!important}
+html[data-skin=slate] :is(.input,.textarea,.auth-in)::placeholder{color:#9aa3ab}
+/* the bars' own buttons and the menu at the foot */
+html[data-skin=slate] .tabbar a{color:#cfd6dc!important}
+html[data-skin=slate] .tabbar a.on{color:#fff!important;background:var(--sl-lens)!important;box-shadow:var(--sl-rim)!important}
+html[data-skin=slate] body .tabbar .tab-plus span{background:var(--sl-lens)!important;background-color:rgba(150,160,168,.3)!important;border:0!important;color:#fff!important;box-shadow:var(--sl-rim)!important;-webkit-backdrop-filter:blur(12px)!important;backdrop-filter:blur(12px)!important}
+html[data-skin=slate] body .tabbar .tab-plus svg{stroke:#fff!important}
+/* words in the accent become silver; the brand's dot too */
+html[data-skin=slate] :is(.brand,.logo,.wordmark) :is(i,em,.dot),html[data-skin=slate] .brand-dot{background:#e9edf0!important;color:#e9edf0!important;box-shadow:0 0 8px rgba(255,255,255,.5)!important}
+html[data-skin=slate] .ig-ico.like.on,html[data-skin=slate] .rl-ico.like.on,html[data-skin=slate] .post.ig.has-media .mwrap .ig-ico.like.on{color:#fff!important}
+html[data-skin=slate] .ig-ico.like.on svg{fill:currentColor}
+html[data-skin=slate] :is(.badge,.dot-n,.n-badge,.job-badge){background:#e9edf0!important;color:#2f363c!important}
+html[data-skin=slate] .rl-switch.on{background:#c9d1d7}
+html[data-skin=slate] .ch-row.me .ch-b,html[data-skin=slate] .ch-b.me{background:linear-gradient(180deg,#9aa4ac,#7e8891)!important;color:#fff!important}
+html[data-skin=slate] .ig-media,html[data-skin=slate] .ig-media.has-cover{background-color:#3f474f}
+html[data-skin=slate] .veil{background:rgba(40,46,52,.45)}
+/* Slate: the bars solid enough that nothing shows through them; small labels without their dark pill */
+html[data-skin=slate] :is(.bar-in,.tabbar,.foot-in){background:rgba(104,114,122,.82)!important;-webkit-backdrop-filter:blur(18px) saturate(1.1)!important;backdrop-filter:blur(18px) saturate(1.1)!important}
+html[data-skin=slate] .mt .tip{background:none!important;color:#eef1f4!important;-webkit-text-fill-color:#eef1f4!important;box-shadow:none!important;text-shadow:0 1px 1px rgba(20,26,32,.35)}
+/* Slate on a computer: the page and the fade above the feed wear the same grey wall, fixed, so no band shows */
+@media (min-width:821px){
+  html[data-skin=slate] body,html[data-skin=slate] .two.feed-two::before{background:radial-gradient(1100px 760px at 22% 32%,#86919a 0%,transparent 62%),radial-gradient(900px 700px at 100% 100%,#3f474f 0%,transparent 60%),linear-gradient(160deg,#6a747c 0%,#56606a 45%,#434c54 100%)!important;background-attachment:fixed!important}
+  html[data-skin=slate] .fs-card,html[data-skin=slate] .fs-card.tint{background:rgba(150,160,168,.16)!important;border-color:rgba(235,240,245,.24)!important}
+  html[data-skin=slate] .fs-card.tint::after{background:none!important}
+  html[data-skin=slate] .feed-find{background:rgba(40,46,52,.2)!important;border-color:rgba(235,240,245,.2)!important}
+}
+html[data-skin=slate] body :is(.bar-in,.tabbar,.foot-in){background:rgba(104,114,122,.82)!important}
+/* Slate: no colour anywhere, the small marks in silver too */
+html[data-skin=slate] .rm-badge,html[data-skin=slate] .job-badge,html[data-skin=slate] .ai-badge{background:rgba(255,255,255,.12)!important;color:#eef1f4!important;-webkit-text-fill-color:#eef1f4!important;border:1px solid rgba(235,240,245,.35)!important}
+html[data-skin=slate] .ch-row.unread small,html[data-skin=slate] .ch-row .ch-when.on,html[data-skin=slate] .ch-row.new .ch-meta small{color:#fff!important}
+html[data-skin=slate] :is(.ch-by,.ch-msg:not(.mine) .ch-heart,.ch-reply b,.ch-row.new .ch-side small,.ch-new){color:#fff!important}
+html[data-skin=slate] .ch-side em{background:#e9edf0!important;color:#2f363c!important}
+html[data-skin=slate] .ch-msg.mine .ch-b,html[data-skin=slate] .ch-mine .ch-b{background:linear-gradient(180deg,#a3adb5,#86909a)!important;color:#fff!important}
+html[data-skin=slate] .ch-head{background:rgba(104,114,122,.82)!important;border:1px solid rgba(235,240,245,.26)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 12px 30px rgba(20,26,32,.25)!important;-webkit-backdrop-filter:blur(18px)!important;backdrop-filter:blur(18px)!important}
+html[data-skin=slate] .ch-back{background:var(--sl-lens)!important;box-shadow:var(--sl-rim)!important;border:0!important;color:#fff!important}
+html[data-skin=slate] .ch-msg.mine .ch-bub{background:linear-gradient(180deg,#a3adb5,#8a949d)!important;color:#fff!important}
+html[data-skin=slate] .ch-msg:not(.mine) .ch-bub{background:rgba(150,160,168,.28)!important;color:#f1f4f6!important}
+html[data-skin=slate] .ch-write{background:none!important;border:0!important;box-shadow:none!important}
+html[data-skin=slate] .ch-foot>*:not(.ch-req):not(.ch-jobs):first-child,html[data-skin=slate] .ch-foot{background:rgba(104,114,122,.82)!important;border:1px solid rgba(235,240,245,.26)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 12px 30px rgba(20,26,32,.25)!important;-webkit-backdrop-filter:blur(18px)!important;backdrop-filter:blur(18px)!important}
+html[data-skin=slate] :is(.ch-clip,.ch-send){background:var(--sl-lens)!important;box-shadow:var(--sl-rim)!important;border:0!important;color:#fff!important}
+html[data-skin=slate] .ch-input{color:#f1f4f6!important}
+html[data-skin=slate] .ch-input::placeholder{color:#a9b2b9}
