@@ -953,5 +953,6 @@ window.RD_EL = {
 "More options": "Περισσότερες επιλογές",
 "Slate": "Slate",
 "HQ on": "HQ ενεργό",
-"HQ off": "HQ ανενεργό"
+"HQ off": "HQ ανενεργό",
+"Playing in high quality": "Παίζει σε υψηλή ποιότητα"
 };
