@@ -2758,3 +2758,40 @@ html.kb .form-foot{bottom:8px}
   .post.ig.has-media.vid:not(.open) .mwrap .post-head>*,.post.ig.has-media.vid:not(.open) .mwrap .ig-bar>*{opacity:0}
   .post.ig.has-media.open .ig-media>*{transform:none;filter:brightness(.92)}
 }
+
+/* ===== Liquid glass in the whole of Roardino (Alex, 15 Nov: "everything we have as animation and effects in RoarMe,
+   in the whole app"). RoarMe's family, with its own timings and curves, in Roardino's colours. Only transform, opacity
+   and box-shadow move. The site's own rule for prefers-reduced-motion turns all of it off. ===== */
+:root{--gl-land:cubic-bezier(.25,1.45,.45,1);--gl-go:cubic-bezier(.3,.7,.4,1);
+  --gl-split:-1.5px 0 0 rgba(255,60,60,.55),1.5px 0 0 rgba(60,120,255,.55),0 -1px 0 rgba(60,220,120,.3),0 1px 0 rgba(255,210,60,.3)}
+/* GLASS PRESS: what a finger is on sinks at once and the colours split at its rim; it comes back on the spring */
+:is(.btn,.pill,.ico,.ig-ico,.react,.who-me,.tabbar a,.ring,.cell,.thumb,.add-pic,.pm-row,.pm-tile,.note,.fchip,.ind-g,.face,.fs-card,.ch-row,.mt,.wz-tile,.stm-row,.ep-btn,.lb-x){
+  transition:transform .3s var(--gl-land),box-shadow .3s var(--gl-land),background-color .2s,color .2s,filter .2s,opacity .2s}
+:is(.btn,.pill,.ico,.react,.who-me,.ring,.add-pic,.pm-tile,.fchip,.ind-g,.mt,.wz-tile,.ep-btn,.lb-x):active{transform:scale(.94);transition-duration:.07s;box-shadow:var(--gl-split)}
+:is(.pm-row,.note,.stm-row,.fs-card,.face,.cell):active{transform:scale(.975);transition-duration:.07s;box-shadow:var(--gl-split)}
+:is(.ig-ico,.tabbar a):active{transform:scale(.88);transition-duration:.07s}
+/* GLASS TRAVEL: the lens of a switch on its way to a new choice */
+.seg .lens{transition:transform .3s var(--gl-land),width .3s var(--gl-land),box-shadow .3s var(--gl-land),opacity .2s}
+.seg.lens-go .lens{transition:transform .15s var(--gl-go),width .15s var(--gl-go),box-shadow .15s var(--gl-go);
+  box-shadow:-2px 0 0 rgba(255,60,60,.6),2px 0 0 rgba(60,120,255,.6),0 -1px 0 rgba(60,220,120,.35),0 1px 0 rgba(255,210,60,.35),0 6px 16px rgba(var(--a),.16)!important;
+  filter:brightness(1.06)}
+.seg.lens-land .lens{box-shadow:0 0 0 rgba(255,60,60,0),0 0 0 rgba(60,120,255,0)!important}
+.seg button.on{animation:gl-word .42s var(--gl-land)}
+@keyframes gl-word{0%{transform:scale(.94)}100%{transform:none}}
+/* GLASS MORPH: what opens grows out as a round drop with the split rim */
+.menu,.win,.bell-panel,.notes-panel{animation:gl-morph .34s cubic-bezier(.25,1.35,.45,1) backwards!important}
+@keyframes gl-morph{0%{opacity:0;transform:scale(.8);box-shadow:-3px 0 0 rgba(255,60,60,.5),3px 0 0 rgba(60,120,255,.5)}
+  70%{opacity:1}100%{opacity:1;transform:none}}
+.veil{animation:fade .18s ease both}
+/* GLASS DROP: what arrives rises in and settles */
+.toast.on{animation:gl-toast .42s var(--gl-land) both}
+@keyframes gl-toast{from{opacity:0;transform:translate(-50%,22px) scale(.86)}to{opacity:1;transform:translate(-50%,0)}}
+.bell b,.note.new,.cmt-fresh,.up-done{animation:gl-bead .45s var(--gl-land) backwards}
+@keyframes gl-bead{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+/* the tab that has just been chosen in the bottom bar pops, and a heart as it is given */
+.tabbar a.on svg,.tabbar a.on .av{animation:gl-pop .42s var(--gl-land)}
+.ig-ico.like.on svg{animation:gl-pop .45s cubic-bezier(.25,1.7,.45,1)}
+@keyframes gl-pop{0%{transform:scale(.7)}100%{transform:none}}
+/* a page comes in as one piece, short and small, with one soft overshoot */
+.page>*{animation:gl-page .32s cubic-bezier(.25,1.2,.45,1) backwards}
+@keyframes gl-page{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}

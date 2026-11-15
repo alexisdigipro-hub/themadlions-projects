@@ -799,6 +799,13 @@ function seg(items, on, pick) {
       void lens.offsetWidth; lens.style.transition = '';
     }
     lens.style.transform = `translateX(${now.x}px)`; lens.style.width = `${now.w}px`;
+    // GLASS TRAVEL (RoarMe's, Alex, 15 Nov: "everything we have as animation in RoarMe, in the whole app"): as the lens
+    // moves to a new choice it lifts into clearer glass with the colours split at its rim (150 ms), then lands (300 ms)
+    if (prev && (prev.x !== now.x || prev.w !== now.w)) {
+      box.classList.add('lens-go');
+      setTimeout(() => { box.classList.remove('lens-go'); box.classList.add('lens-land'); }, 150);
+      setTimeout(() => box.classList.remove('lens-land'), 470);
+    }
     lensAt.set(key, now);
   });
   return box;
