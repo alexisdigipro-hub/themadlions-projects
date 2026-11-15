@@ -3757,3 +3757,5 @@ html body .rl .rl-side .rl-me .rl-follow svg{width:8px!important;height:8px!impo
 .ig-gem:not(.on) .gem,.rl-side .rl-gem:not(.on){opacity:.75}
 /* every line icon a touch softer: round ends and joins everywhere */
 svg[stroke]{stroke-linecap:round;stroke-linejoin:round}
+/* the Reels bar stays still while the videos slide under it */
+.rl>.rl-side{z-index:4}
