@@ -945,5 +945,7 @@ window.RD_EL = {
 "Replace": "Αντικατάσταση",
 "Video frame": "Καρέ βίντεο",
 "Zoom": "Ζουμ",
-"Drag to move, pinch or slide to zoom. The bright frame is what shows on your profile.": "Σύρε για να μετακινήσεις, τσίμπησε ή σύρε τη μπάρα για ζουμ. Το φωτεινό κάδρο είναι αυτό που φαίνεται στο προφίλ σου."
+"Drag to move, pinch or slide to zoom. The bright frame is what shows on your profile.": "Σύρε για να μετακινήσεις, τσίμπησε ή σύρε τη μπάρα για ζουμ. Το φωτεινό κάδρο είναι αυτό που φαίνεται στο προφίλ σου.",
+"Play in high quality": "Αναπαραγωγή σε υψηλή ποιότητα",
+"The HQ video could not be loaded.": "Το βίντεο HQ δεν φόρτωσε."
 };

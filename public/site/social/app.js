@@ -538,11 +538,23 @@ async function shrink(file, onProg) {
 // a video is made lighter before it goes up (Alex, 15 Nov: "H.265, not squeezed much, it must look good on phones"):
 // 1080 on its long side; H.265 at 3 Mbit/s where this device's recorder can make it (about what H.264 needs 5 for),
 // else H.264 at 4.5. A phone plays either at once in the feed.
-// a little lighter again (Alex, 15 Nov: "it stutters, compress a little more, not much, keep the quality"): 3.5 / 2.4 Mbit/s
-const VID_SIDE = 1080, VID_BPS = 3500000, VID_BPS_HEVC = 2400000;
+// two copies of every video (Alex, 15 Nov: "a light one that flows in the feed for everyone, and an HQ button to see the
+// work properly"): the feed copy 1080 on its long side at H.265 1.9 / H.264 2.8 Mbit/s; the HQ copy up to 1920 at
+// H.265 7 / H.264 10 Mbit/s, made in the same play (one video, two canvases, two recorders). A video already light
+// enough for the feed goes as it is with no HQ; one already fine as HQ (up to 1920 and ~13 Mbit/s) is its own HQ.
+const VID_SIDE = 1080, VID_BPS = 2800000, VID_BPS_HEVC = 1900000;
+const HQ_SIDE = 1920, HQ_BPS = 10000000, HQ_BPS_HEVC = 7000000;
 const VID_TYPES = [['video/mp4;codecs=hvc1,mp4a.40.2', 'hevc'], ['video/mp4;codecs=hvc1', 'hevc'], ['video/mp4;codecs=hev1', 'hevc'], ['video/mp4;codecs=avc1', ''], ['video/mp4', ''], ['video/webm;codecs=vp9,opus', ''], ['video/webm', '']];
 // can this device show an H.265 video? (most phones and computers can; a few browsers cannot)
 const playsHevc = (() => { let ok = null; return () => { if (ok == null) { try { ok = !!document.createElement('video').canPlayType('video/mp4; codecs="hvc1.1.6.L120.90"'); } catch { ok = false; } } return ok; }; })();
+// the first kind this device's recorder really starts with: H.265 first, then H.264, then what there is
+function makeRecorder(stream, bps, bpsHevc) {
+  for (const [x, cd] of VID_TYPES) {
+    if (!MediaRecorder.isTypeSupported?.(x)) continue;
+    try { return { rec: new MediaRecorder(stream, { mimeType: x, videoBitsPerSecond: cd === 'hevc' ? bpsHevc : bps, audioBitsPerSecond: 160000 }), type: x, codec: cd }; } catch { /* next */ }
+  }
+  try { return { rec: new MediaRecorder(stream, { videoBitsPerSecond: bps, audioBitsPerSecond: 160000 }), type: '', codec: '' }; } catch { return null; }
+}
 function shrinkVideo(file, onProg) {
   return new Promise((done) => {
     const keep = () => { clean(); done(file); };
@@ -552,7 +564,7 @@ function shrinkVideo(file, onProg) {
     v.src = url; v.muted = false; v.playsInline = true; v.preload = 'auto';
     v.style.cssText = 'position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none';
     document.body.append(v);
-    let ac = null, rec = null, timer = 0, raf = 0;
+    let ac = null, timer = 0, raf = 0;
     const note = h('div', { class: 'vid-note' }, h('span', { class: 'vid-note-bar' }, h('i')), h('b', {}, t('Making the video lighter…')));
     const clean = () => { cancelAnimationFrame(raf); clearInterval(timer); try { ac?.close(); } catch { /* gone */ } v.pause(); v.remove(); note.remove(); URL.revokeObjectURL(url); };
     v.onerror = keep;
@@ -561,48 +573,45 @@ function shrinkVideo(file, onProg) {
       if (!W || !H || !isFinite(dur) || !dur) return keep();
       const bps = (file.size * 8) / dur;
       if (bps < VID_BPS_HEVC * 1.15 && Math.max(W, H) <= VID_SIDE) return keep();
-      const k = Math.min(1, VID_SIDE / Math.max(W, H));
-      const c = document.createElement('canvas');
-      c.width = Math.round(W * k / 2) * 2; c.height = Math.round(H * k / 2) * 2;
-      const g = c.getContext('2d');
-      // every frame of the video once, exactly when the video shows it (requestVideoFrameCallback), so the copy has no
-      // doubled or dropped frames, which is what made a video judder; rAF at 30 fps where the browser has no such call
+      const ownHq = Math.max(W, H) <= HQ_SIDE && bps <= HQ_BPS * 1.3 && file.size <= MAX_VIDEO;
       const exact = 'requestVideoFrameCallback' in v && window.CanvasCaptureMediaStreamTrack && 'requestFrame' in CanvasCaptureMediaStreamTrack.prototype;
-      const stream = c.captureStream(exact ? 0 : 30);
-      const track = stream.getVideoTracks()[0];
+      // one canvas per copy; every frame of the video drawn once on each, exactly when the video shows it
+      const canvasOf = (side) => { const k = Math.min(1, side / Math.max(W, H)); const c = document.createElement('canvas'); c.width = Math.round(W * k / 2) * 2; c.height = Math.round(H * k / 2) * 2; const stream = c.captureStream(exact ? 0 : 30); return { c, g: c.getContext('2d'), stream, track: stream.getVideoTracks()[0] }; };
+      const outs = [canvasOf(VID_SIDE)];
+      if (!ownHq) outs.push(canvasOf(HQ_SIDE));
       try {
         ac = new (window.AudioContext || window.webkitAudioContext)();
         const src = ac.createMediaElementSource(v), dest = ac.createMediaStreamDestination();
         src.connect(dest);
-        dest.stream.getAudioTracks().forEach((tr) => stream.addTrack(tr));
+        outs.forEach((o, i) => dest.stream.getAudioTracks().forEach((tr) => o.stream.addTrack(i ? tr.clone() : tr)));
       } catch { v.muted = true; }
-      // the first kind this device's recorder really starts with: H.265 first, then H.264, then what there is
-      let type = '', codec = '';
-      for (const [x, cd] of VID_TYPES) {
-        if (!MediaRecorder.isTypeSupported?.(x)) continue;
-        try { rec = new MediaRecorder(stream, { mimeType: x, videoBitsPerSecond: cd === 'hevc' ? VID_BPS_HEVC : VID_BPS, audioBitsPerSecond: 160000 }); type = x; codec = cd; break; } catch { rec = null; }
-      }
-      if (!rec) { try { rec = new MediaRecorder(stream, { videoBitsPerSecond: VID_BPS, audioBitsPerSecond: 160000 }); } catch { return keep(); } }
-      const parts = [];
-      rec.ondataavailable = (e) => { if (e.data?.size) parts.push(e.data); };
-      rec.onstop = () => {
-        const out = new Blob(parts, { type: rec.mimeType || type || 'video/mp4' });
+      const made = outs.map((o, i) => makeRecorder(o.stream, i ? HQ_BPS : VID_BPS, i ? HQ_BPS_HEVC : VID_BPS_HEVC));
+      if (!made[0]) return keep();
+      if (made[1] === null) { made.pop(); outs.pop(); }
+      const results = made.map(({ rec, type, codec }) => new Promise((res) => {
+        const parts = [];
+        rec.ondataavailable = (e) => { if (e.data?.size) parts.push(e.data); };
+        rec.onstop = () => { const out = new Blob(parts, { type: rec.mimeType || type || 'video/mp4' }); res({ out, codec }); };
+      }));
+      Promise.all(results).then(([feed, hq]) => {
         clean();
-        const ext = /mp4/.test(out.type) ? 'mp4' : 'webm';
-        if (!(out.size > 10000 && out.size < file.size)) return done(file);
-        const made = new File([out], file.name.replace(/\.\w+$/, '') + '.' + ext, { type: out.type.split(';')[0] });
-        if (codec) made._codec = codec;
-        done(made);
-      };
+        const fileOf = (r, tag) => { const ext = /mp4/.test(r.out.type) ? 'mp4' : 'webm'; const f = new File([r.out], file.name.replace(/\.\w+$/, '') + tag + '.' + ext, { type: r.out.type.split(';')[0] }); if (r.codec) f._codec = r.codec; return f; };
+        if (!(feed.out.size > 10000 && feed.out.size < file.size)) return done(file);
+        const light = fileOf(feed, '');
+        if (ownHq) light._hq = file;
+        else if (hq && hq.out.size > 10000 && hq.out.size <= MAX_VIDEO) light._hq = fileOf(hq, '-hq');
+        done(light);
+      });
       if (!onProg) document.body.append(note); // with onProg the progress shows on the thing itself (Alex, 5 Nov)
       const bar = note.querySelector('i');
+      const drawAll = () => outs.forEach((o) => { o.g.drawImage(v, 0, 0, o.c.width, o.c.height); if (exact) o.track.requestFrame(); });
       const paint = exact
-        ? () => { g.drawImage(v, 0, 0, c.width, c.height); track.requestFrame(); if (!v.ended) v.requestVideoFrameCallback(paint); }
-        : () => { g.drawImage(v, 0, 0, c.width, c.height); if (!v.ended) raf = requestAnimationFrame(paint); };
+        ? () => { drawAll(); if (!v.ended) v.requestVideoFrameCallback(paint); }
+        : () => { drawAll(); if (!v.ended) raf = requestAnimationFrame(paint); };
       timer = setInterval(() => { const k = Math.min(1, v.currentTime / dur); bar.style.width = `${k * 100}%`; onProg?.(k); }, 250);
-      v.onended = () => { g.drawImage(v, 0, 0, c.width, c.height); setTimeout(() => rec.state !== 'inactive' && rec.stop(), 120); };
+      v.onended = () => { drawAll(); setTimeout(() => made.forEach(({ rec }) => rec.state !== 'inactive' && rec.stop()), 120); };
       try { await ac?.resume(); await v.play(); } catch { return keep(); }
-      rec.start(1000); paint();
+      made.forEach(({ rec }) => rec.start(1000)); paint();
     };
   });
 }
@@ -806,17 +815,20 @@ async function upload(personId, file, sub = '', onProg) {
   const vid = /^video\//.test(file.type);
   const f = await shrink(file, onProg && vid ? (k) => onProg(k * 0.5) : undefined);
   if (f._codec) file._codec = f._codec; // the post keeps what the video was made in
+  file._hqPath = null;
   if (/^video\//.test(f.type) && f.size > MAX_VIDEO) throw new Error(t('The video is over 200 MB. Keep it to a minute or two.'));
   const ext = (f.name.match(/\.(\w+)$/) || [, 'bin'])[1].toLowerCase();
   const path = `${session.user.id}/${personId}/${sub}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}.${ext}`;
   if (onProg && session?.access_token && window.XMLHttpRequest && !window.__LOCAL_UPLOADS) {
-    const base = vid ? 0.5 : 0;
-    await putWithProgress(path, f, (k) => onProg(base + k * (1 - base)));
+    const base = vid ? 0.5 : 0, cut = f._hq ? 0.35 : 1 - base;
+    await putWithProgress(path, f, (k) => onProg(base + k * cut));
+    if (f._hq) { const hp = path.replace(/(\.\w+)$/, '-hq$1'); try { await putWithProgress(hp, f._hq, (k) => onProg(base + cut + k * (1 - base - cut))); file._hqPath = hp; } catch { /* the post goes up without its HQ */ } }
     onProg(1);
     return path;
   }
   const { error } = await sb.storage.from(BUCKET).upload(path, f, { contentType: f.type || undefined, upsert: false });
   if (error) throw error;
+  if (f._hq) { const hp = path.replace(/(\.\w+)$/, '-hq$1'); const r2 = await sb.storage.from(BUCKET).upload(hp, f._hq, { contentType: f._hq.type || undefined, upsert: false }); if (!r2.error) file._hqPath = hp; }
   onProg?.(1);
   return path;
 }
@@ -1588,7 +1600,7 @@ function composer(done, kind0 = 'work', asId = null) {
         const path = await upload(as, f, 'posts/', f._cover ? (k) => set(k * 0.95) : set);
         const poster = f._cover ? await upload(as, f._cover, 'posts/') : null;
         set(1);
-        media.push({ path, type: /^video/.test(f.type) ? 'video' : 'image', ...(await dimsOf(f)), ...(poster ? { poster } : {}), ...(f._codec ? { codec: f._codec } : {}) });
+        media.push({ path, type: /^video/.test(f.type) ? 'video' : 'image', ...(await dimsOf(f)), ...(poster ? { poster } : {}), ...(f._codec ? { codec: f._codec } : {}), ...(f._hqPath ? { hq: f._hqPath } : {}) });
       }
       const { error } = await sb.from('roardino_posts').insert({ person_id: as, body: text.value.trim() || null, media, kind });
       if (error) throw error;
@@ -1761,7 +1773,7 @@ async function postFlow(opts = {}) {
           const path = await upload(st.as, x.file, 'posts/', (k) => prog(i, k * (x.cover ? 0.95 : 1)));
           const poster = isVid(x) && x.cover ? await upload(st.as, x.cover, 'posts/') : null;
           prog(i, 1);
-          media.push({ path, type: isVid(x) ? 'video' : 'image', ...(await dimsOf(x.file)), ...(poster ? { poster } : {}), ...(x.file._codec ? { codec: x.file._codec } : {}) });
+          media.push({ path, type: isVid(x) ? 'video' : 'image', ...(await dimsOf(x.file)), ...(poster ? { poster } : {}), ...(x.file._codec ? { codec: x.file._codec } : {}), ...(x.file._hqPath ? { hq: x.file._hqPath } : {}) });
         }
         const row = { person_id: st.as, body: st.caption.trim() || null, media, kind: st.kind, hide_likes: st.hideLikes, comments_off: st.commentsOff };
         const extra = { ...(st.place ? { place: st.place } : {}), ...(st.ai ? { ai: true } : {}) };
@@ -1953,7 +1965,7 @@ function lightbox(media, start = 0, opts = {}) {
     count.textContent = media.length > 1 ? `${i + 1} / ${media.length}` : '';
   };
   const go = (d) => { i = (i + d + media.length) % media.length; show(); };
-  const close = () => { veil.classList.add('out'); setTimeout(() => veil.remove(), 280); document.removeEventListener('keydown', onKey); };
+  const close = () => { veil.classList.add('out'); setTimeout(() => veil.remove(), 280); document.removeEventListener('keydown', onKey); opts.onClose?.(); };
   const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1); };
   const veil = h('div', { class: 'lb' + (bare ? ' bare' : ''), onclick: (e) => { if (e.target === veil || e.target === stage) close(); } }, stage, count,
     bare ? null : h('button', { type: 'button', class: 'lb-x', 'aria-label': t('Close'), html: ICON.x, onclick: close }),
@@ -2027,7 +2039,7 @@ function postMenu(r, p, { own, media, refresh, saveBtn }) {
         if (!(await ask(t('Delete this post?')))) return;
         const { error } = await sb.from('roardino_posts').delete().eq('id', r.id);
         if (error) return fail(error);
-        removeFiles(media.flatMap((m) => [m.path, m.poster])); refresh();
+        removeFiles(media.flatMap((m) => [m.path, m.poster, m.hq])); refresh();
       }, 'red'))
       : [h('div', { class: 'pm-group' },
         follows.has(p.id) ? row('unfollow', t('Unfollow'), () => toggleFollow(p.id).then((ok) => ok && refresh?.())) : row('follow', t('Follow'), () => toggleFollow(p.id).then((ok) => ok && refresh?.()))),
@@ -2060,7 +2072,7 @@ function editPost(r, p, refresh) {
       e.currentTarget.disabled = true;
       const { error } = await sb.from('roardino_posts').update({ body, media }).eq('id', r.id);
       if (error) { e.currentTarget.disabled = false; return fail(error); }
-      if (gone.length) removeFiles(gone.flatMap((m) => [m.path, m.poster]).filter(Boolean));
+      if (gone.length) removeFiles(gone.flatMap((m) => [m.path, m.poster, m.hq]).filter(Boolean));
       r.body = body; r.media = media;
       close(); toast(t('Saved')); refresh?.();
     } }, t('Save'))]);
@@ -2196,6 +2208,35 @@ function postCard(r, st, refresh) {
       } });
       v0.addEventListener('volumechange', face); face();
     }
+    if (v0 && media[0].hq) {
+      // HQ (Alex, 15 Nov): the whole HQ copy comes down first, the button filling as it does, then the video goes on
+      // from the same moment in HQ; a second press goes back to the light copy
+      let hqUrl = '', loading = false;
+      const hqBtn = h('button', { type: 'button', class: 'ig-hq', title: t('Play in high quality'), 'aria-label': t('Play in high quality') }, h('i', { class: 'ig-hq-fill' }), h('b', {}, 'HQ'));
+      const swap = (src) => { const at = v0.currentTime || 0, wasOn = !v0.paused; v0.dataset.src = src; v0.src = src; v0.addEventListener('loadedmetadata', () => { try { v0.currentTime = at; } catch { /* start */ } if (wasOn || !v0.dataset.held) v0.play().catch(() => { v0.muted = true; v0.play().catch(() => {}); }); }, { once: true }); };
+      const lowSrc = urlOf(media[0].path);
+      hqBtn.onclick = async (e) => {
+        e.stopPropagation();
+        if (loading) return;
+        if (hqBtn.classList.contains('on')) { hqBtn.classList.remove('on'); swap(lowSrc); return; }
+        if (hqUrl) { hqBtn.classList.add('on'); swap(hqUrl); return; }
+        loading = true; hqBtn.classList.add('loading');
+        const fillEl = hqBtn.querySelector('.ig-hq-fill');
+        try {
+          await sign([media[0].hq]);
+          const res = await fetch(urlOf(media[0].hq));
+          if (!res.ok) throw new Error('hq');
+          const total = +res.headers.get('content-length') || 0, rd = res.body?.getReader?.();
+          let blob;
+          if (rd && total) { const parts = []; let got = 0; for (;;) { const { done: end, value } = await rd.read(); if (end) break; parts.push(value); got += value.length; fillEl.style.transform = `scaleX(${Math.min(1, got / total)})`; } blob = new Blob(parts, { type: res.headers.get('content-type') || 'video/mp4' }); }
+          else blob = await res.blob();
+          hqUrl = URL.createObjectURL(blob);
+          hqBtn.classList.add('on'); swap(hqUrl);
+        } catch { toast(t('The HQ video could not be loaded.')); }
+        loading = false; hqBtn.classList.remove('loading'); fillEl.style.transform = '';
+      };
+      queueMicrotask(() => (slides.parentElement || slides).append(hqBtn)); // beside the slides, not one of them
+    }
   }
   const bar =
     h('div', { class: 'ig-bar' }, h('span', { class: 'ig-pair' }, bravoBtn, likeN),
@@ -2238,11 +2279,9 @@ function postCard(r, st, refresh) {
       clearTimeout(tapT);
       const now = Date.now();
       // a phone: the first touch only brings the icons; a touch while they show plays or pauses
-      // a video cut to 4:5 opens whole with one tap (Alex, 15 Nov), as a reel on Instagram
-      if (slides.classList.contains('cut') && !slides.classList.contains('many')) { if (isPhone()) peek(); tapT = setTimeout(() => { v.pause(); v.dataset.held = '1'; lightbox(media, slideAt(), { onLike: () => { if (!own && !bravoBtn.classList.contains('on')) bravoBtn.click(); } }); }, 120); return; }
       if (isPhone() && !art.classList.contains('open') && now - lastTap >= 320) { lastTap = now; peek(); return; }
       if (isPhone()) peek();
-      if (now - lastTap < 320) { lastTap = 0; v.pause(); v.dataset.held = '1'; lightbox(media, slideAt(), { onLike: () => { if (!own && !bravoBtn.classList.contains('on')) bravoBtn.click(); } }); return; }
+      if (now - lastTap < 320) { lastTap = 0; v.pause(); v.dataset.held = '1'; lightbox(media, slideAt(), { onLike: () => { if (!own && !bravoBtn.classList.contains('on')) bravoBtn.click(); }, onClose: () => { delete v.dataset.held; const r0 = v.getBoundingClientRect(); if (r0.bottom > 0 && r0.top < innerHeight) v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } }); return; }
       lastTap = now;
       tapT = setTimeout(() => { if (v.paused) { delete v.dataset.held; if (!v.src && v.dataset.src) v.src = v.dataset.src; v.play().catch(() => {}); } else { v.pause(); v.dataset.held = '1'; } }, 300);
       return;
