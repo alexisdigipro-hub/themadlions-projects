@@ -3714,3 +3714,20 @@ html[data-skin=slate][data-theme=light] .ch-name small{color:#8b8e92!important}
 .rl-info{bottom:calc(env(safe-area-inset-bottom) + 84px)!important;right:14px!important}
 .rl-slide::after{height:34%}
 @media (min-width:821px){.rl-side{max-width:460px}}
+/* Reels bar: one hand for every icon (Alex, 16 Nov: "same size, same look"): each in a 36px cell, drawn 21px with the
+   same 1.6 line in white; what is on is the same drawing filled (like, HQ diamond); AI is a drawn spark, not letters;
+   the picture is the size of an icon */
+.rl-side{gap:0!important;padding:0 6px!important}
+.rl-side .rl-ico{width:36px!important;height:36px!important;color:#fff!important;display:grid!important;place-items:center}
+.rl-side .rl-ico svg{width:21px!important;height:21px!important;fill:none;stroke:currentColor!important;stroke-width:1.6!important;stroke-linecap:round;stroke-linejoin:round}
+.rl-side .rl-ico.like.on{color:#fff!important}
+.rl-side .rl-ico.like.on svg{fill:currentColor!important}
+.rl-side .rl-gem.on{color:#fff!important}
+.rl-side .rl-gem.on .gem-body{fill:rgba(255,255,255,.9)!important}
+.rl-side .rl-gem:not(.on){opacity:.6}
+.rl-side .rl-pair span{font-size:11.5px!important;font-weight:500!important;margin:0 5px 0 -5px!important}
+.rl-side .rl-me{width:36px;height:36px;display:grid;place-items:center;margin:0!important}
+.rl-side .rl-me .rl-av .av{width:24px!important;height:24px!important;font-size:9px!important;box-shadow:0 0 0 1.6px #fff!important}
+.rl-side .rl-me .rl-follow{bottom:0!important;left:auto!important;right:0!important;transform:none!important;width:13px!important;height:13px!important}
+html body .rl .rl-side .rl-me .rl-follow{width:12px!important;height:12px!important;bottom:2px!important;right:2px!important;left:auto!important;transform:none!important}
+html body .rl .rl-side .rl-me .rl-follow svg{width:8px!important;height:8px!important}

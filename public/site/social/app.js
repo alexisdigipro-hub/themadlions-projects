@@ -2051,7 +2051,7 @@ function openReels(fromArt, onClose, signedHq) {
         it.r.comments_off ? null : h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Comment'), html: ICON.talk, onclick: (e) => { e.stopPropagation(); close(); it.comments(); } }), h('span', {}, it.talkN?.textContent || '')),
         h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: (e) => { e.stopPropagation(); v.pause(); sendToRoarMe(it.r, pp); } })),
         gem,
-        it.r.ai ? h('span', { class: 'rl-ico rl-ai', title: t('Made with AI') }, 'AI') : null,
+        it.r.ai ? h('span', { class: 'rl-ico rl-ai', title: t('Made with AI'), role: 'img', 'aria-label': t('Made with AI'), html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4.5l1.7 4.6 4.6 1.7-4.6 1.7-1.7 4.6-1.7-4.6-4.6-1.7 4.6-1.7z"/><path d="M18 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg>' }) : null,
         sb1,
         h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); sheet(it); } }),
         // the profile's picture under the dots (Alex, 15 Nov: no name), with a small + while I do not follow them
