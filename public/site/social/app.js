@@ -75,10 +75,11 @@ let prefs = { ...PREF_DEFAULTS };
 try { prefs = { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; } catch { /* private window */ }
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 function wearPrefs() {
-  const dark = prefs.theme === 'dark' || (prefs.theme === 'auto' && darkQuery.matches);
+  const front = document.documentElement.classList.contains('was-front'); // the front page keeps its own light and red
+  const dark = !front && (prefs.theme === 'dark' || (prefs.theme === 'auto' && darkQuery.matches));
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   document.documentElement.dataset.text = prefs.text;
-  if (ACCENTS.some(([k]) => k === prefs.accent) && prefs.accent !== 'red') document.documentElement.dataset.accent = prefs.accent; else delete document.documentElement.dataset.accent;
+  if (!front && ACCENTS.some(([k]) => k === prefs.accent) && prefs.accent !== 'red') document.documentElement.dataset.accent = prefs.accent; else delete document.documentElement.dataset.accent;
   document.querySelector('meta[name=theme-color]')?.setAttribute('content', dark ? '#15171b' : '#eceef1');
   // inside the iPhone app the clock and the battery take the colour that reads on the theme (the shell's StatusBar plugin)
   setTimeout(() => typeof shellCall === 'function' && shellCall('StatusBar', 'setStyle', { style: dark ? 'DARK' : 'LIGHT' }));
@@ -962,7 +963,7 @@ async function route() {
   document.documentElement.classList.remove('in-room'); chatRoomLive = null; // a conversation's own layout ends with it
   if (location.hash.startsWith('#/legal')) return viewLegal(['terms', 'contact'].includes(location.hash.split('/')[2]) ? location.hash.split('/')[2] : 'privacy');
   if (!session) return viewFront();
-  if (!document.documentElement.dataset.accent && prefs.accent && prefs.accent !== 'red') wearPrefs();
+  if (document.documentElement.classList.contains('was-front') || (!document.documentElement.dataset.accent && prefs.accent && prefs.accent !== 'red')) { document.documentElement.classList.remove('was-front'); wearPrefs(); }
   const [, a = 'feed', b] = (location.hash || '#/feed').split('/');
   try {
     if (a === 'people') return await viewPeople();
@@ -1054,6 +1055,12 @@ async function viewFront() {
   // the front page is always in Roardino's own red, whatever colour this device chose in Settings (Alex, 15 Nov: blue on
   // his computer, red in the app); the chosen colour comes back once signed in
   delete document.documentElement.dataset.accent;
+  document.documentElement.classList.add('was-front');
+  // and always light, as Alex chose it (15 Nov: "this is how it must show to everyone, full stop"), whatever the device's
+  // theme; the device's theme comes back once signed in
+  document.documentElement.dataset.theme = 'light';
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', '#eceef1');
+  setTimeout(() => typeof shellCall === 'function' && shellCall('StatusBar', 'setStyle', { style: 'LIGHT' }));
   document.title = 'Roardino · ' + t('The whole crew in one place');
   let mode = 'in';
   const f = { name: '', email: '', password: '' };
@@ -1637,7 +1644,7 @@ async function postFlow(opts = {}) {
     const kindSeg = h('div');
     const drawKind = () => put(kindSeg, seg([['work', t('Portfolio')], ['photo', t('Personal')]], st.kind, (k) => { st.kind = k; drawKind(); }));
     drawKind();
-    put(layer, h('div', { class: 'pf-two' },
+    put(layer, h('div', { class: 'pf-two', style: it0 ? { '--pf-pic': `url("${urlOf2(it0)}")` } : {} },
       h('div', { class: 'pf-head' },
         h('button', { type: 'button', class: 'pf-round', 'aria-label': t('Back'), html: ICON.left, onclick: () => { if (!busy) stepOne(); } }),
         h('b', {}, t('New post')), h('span', { class: 'pf-sp' })),
