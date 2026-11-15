@@ -358,7 +358,7 @@ const ICON = {
   lock: SVG('<rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7"/>'),
   unlock: SVG('<rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 6.8-1.2"/>'),
   move: SVG('<path d="M4 12h14M13 6.5 18.5 12 13 17.5"/>'),
-  home: SVG('<path d="M3.6 10.2 12 3.6l8.4 6.6v9.6a.7.7 0 0 1-.7.7H15v-5.6a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5.6H4.3a.7.7 0 0 1-.7-.7z"/>'),
+  home: SVG('<path d="M4.2 10.6 10.7 5a2 2 0 0 1 2.6 0l6.5 5.6a1.6 1.6 0 0 1 .6 1.2v6.7a1.8 1.8 0 0 1-1.8 1.8h-3.1v-4.8a1.5 1.5 0 0 0-1.5-1.5h-4a1.5 1.5 0 0 0-1.5 1.5v4.8H5.4a1.8 1.8 0 0 1-1.8-1.8v-6.7a1.6 1.6 0 0 1 .6-1.2z"/>'),
   people: SVG('<circle cx="12" cy="12" r="8.6"/><path d="m15.6 8.4-2.1 5.1-5.1 2.1 2.1-5.1z"/>'),
   calls: SVG('<rect x="3" y="7.2" width="18" height="13" rx="2.2"/><path d="M8.6 7.2V5.4a1.6 1.6 0 0 1 1.6-1.6h3.6a1.6 1.6 0 0 1 1.6 1.6v1.8M3 12.6h18"/>'),
   cal: SVG('<rect x="3.5" y="5" width="17" height="15.5" rx="2.2"/><path d="M8 3v4M16 3v4M3.5 10h17"/>'),
@@ -367,14 +367,14 @@ const ICON = {
   down: SVG('<path d="m6.5 9.5 5.5 5.5 5.5-5.5"/>'),
   plus: SVG('<path d="M12 5v14M5 12h14"/>'),
   x: SVG('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>'),
-  vol: SVG('<path d="M4 9.6h3.2l4.6-3.7v12.2l-4.6-3.7H4z"/><path d="M15.4 9.2a4 4 0 0 1 0 5.6"/><path d="M17.9 6.6a7.6 7.6 0 0 1 0 10.8"/>'),
-  mute: SVG('<path d="M4 9.6h3.2l4.6-3.7v12.2l-4.6-3.7H4z"/><path d="m15.6 9.6 4.8 4.8"/><path d="m20.4 9.6-4.8 4.8"/>'),
-  heart: SVG('<path d="M12 20.2 4.4 12.8a4.9 4.9 0 0 1 0-7 4.8 4.8 0 0 1 6.9 0l.7.7.7-.7a4.8 4.8 0 0 1 6.9 0 4.9 4.9 0 0 1 0 7z"/>'),
+  vol: SVG('<path d="M4.6 9.6h2.3a1 1 0 0 0 .6-.2l3-2.4a.8.8 0 0 1 1.3.6v8.8a.8.8 0 0 1-1.3.6l-3-2.4a1 1 0 0 0-.6-.2H4.6a1 1 0 0 1-1-1v-2.8a1 1 0 0 1 1-1z"/><path d="M15.4 9.2a4 4 0 0 1 0 5.6"/><path d="M17.9 6.6a7.6 7.6 0 0 1 0 10.8"/>'),
+  mute: SVG('<path d="M4.6 9.6h2.3a1 1 0 0 0 .6-.2l3-2.4a.8.8 0 0 1 1.3.6v8.8a.8.8 0 0 1-1.3.6l-3-2.4a1 1 0 0 0-.6-.2H4.6a1 1 0 0 1-1-1v-2.8a1 1 0 0 1 1-1z"/><path d="m15.6 9.6 4.8 4.8"/><path d="m20.4 9.6-4.8 4.8"/>'),
+  heart: SVG('<path d="M12 19.6c-.4 0-.8-.2-1.1-.4C8 17 4 13.6 4 9.5a4.4 4.4 0 0 1 8-2.6 4.4 4.4 0 0 1 8 2.6c0 4.1-4 7.5-6.9 9.7-.3.2-.7.4-1.1.4z"/>'),
   clap: SVG('<path d="M8 13l-2.5-2.5a1.8 1.8 0 012.5-2.5l5 5"/><path d="M10 9.5L8.5 8a1.8 1.8 0 012.5-2.5l5.5 5.5c2 2 2 5 0 7s-5 2-7 0L5 13.5a1.8 1.8 0 012.5-2.5"/><path d="M16 3l.5 2M20 6l-2 .5M19 2l-1.2 1.6"/>'),
   talk: SVG('<path d="M20.6 12.1a8.6 8.6 0 1 0-3.8 7.1l3.9 1.2-1-3.8a8.5 8.5 0 0 0 .9-4.5z"/>'),
   pic: SVG('<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="9" cy="9.2" r="1.7"/><path d="m20.5 15.5-4.6-4.6-9.4 9.6"/>'),
   pin: SVG('<path d="M12 21s-6.8-6.1-6.8-11.6a6.8 6.8 0 0 1 13.6 0C18.8 14.9 12 21 12 21z"/><circle cx="12" cy="9.4" r="2.5"/>'),
-  bookmark: SVG('<path d="M6 3.5h12v17.2l-6-5.6-6 5.6z"/>'),
+  bookmark: SVG('<path d="M8 3.6h8a2 2 0 0 1 2 2v13.2a.9.9 0 0 1-1.5.7L12 15.6l-4.5 3.9a.9.9 0 0 1-1.5-.7V5.6a2 2 0 0 1 2-2z"/>'),
   dots: SVG('<circle cx="5.5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.4" fill="currentColor" stroke="none"/>'),
   flag: SVG('<path d="M5.5 21V4.5M5.5 4.5h11.3a.6.6 0 0 1 .5.9l-2.2 3.7 2.2 3.7a.6.6 0 0 1-.5.9H5.5"/>'),
   unfollow: SVG('<circle cx="10" cy="8.2" r="4"/><path d="M3 20.5a7 7 0 0 1 12.6-4.2M16.5 18.5h5"/>'),
@@ -399,7 +399,7 @@ const ICON = {
   insta: SVG('<rect x="3.5" y="3.5" width="17" height="17" rx="4.8"/><circle cx="12" cy="12" r="3.8"/><circle cx="16.9" cy="7.1" r=".5" fill="currentColor"/>'),
   globe: SVG('<circle cx="12" cy="12" r="8.6"/><path d="M3.4 12h17.2M12 3.4c2.4 2.4 3.6 5.3 3.6 8.6s-1.2 6.2-3.6 8.6c-2.4-2.4-3.6-5.3-3.6-8.6S9.6 5.8 12 3.4z"/>'),
   ticket: SVG('<path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h14a1.5 1.5 0 0 1 1.5 1.5v2.2a2.3 2.3 0 0 0 0 4.6v2.2A1.5 1.5 0 0 1 19 18H5a1.5 1.5 0 0 1-1.5-1.5v-2.2a2.3 2.3 0 0 0 0-4.6z"/><path d="M14.5 6v12" stroke-dasharray="1.8 2"/>'),
-  send: SVG('<path d="M4.2 4h15.6a.8.8 0 0 1 .7 1.2l-7.6 14.3a.8.8 0 0 1-1.4-.1l-2.8-7.6L3.6 5.3A.8.8 0 0 1 4.2 4z"/><path d="m8.7 11.8 6.1-3.6"/>'),
+  send: SVG('<path d="M5.2 4.6h13.9a1.4 1.4 0 0 1 1.2 2.1l-6.9 12.9a1.4 1.4 0 0 1-2.5-.2L8.6 12.6 4.2 6.9a1.4 1.4 0 0 1 1-2.3z"/><path d="m8.9 12.2 5.6-3.3"/>'),
   grid: SVG('<rect x="3.5" y="3.5" width="17" height="17" rx="1"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/>'),
   gear: SVG('<circle cx="12" cy="12" r="3"/><path d="M19.4 13.6a7.6 7.6 0 0 0 0-3.2l2-1.5-2-3.4-2.3.9a7.5 7.5 0 0 0-2.8-1.6L14 2.4h-4l-.4 2.4a7.5 7.5 0 0 0-2.8 1.6l-2.3-.9-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3.2l-2 1.5 2 3.4 2.3-.9a7.5 7.5 0 0 0 2.8 1.6l.4 2.4h4l.4-2.4a7.5 7.5 0 0 0 2.8-1.6l2.3.9 2-3.4z"/>'),
   sun: SVG('<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>'),
@@ -407,7 +407,7 @@ const ICON = {
   cam: SVG('<path d="M4 7.6h3.4l1.5-2.4a1 1 0 0 1 .8-.4h4.6a1 1 0 0 1 .8.4l1.5 2.4H20a1.6 1.6 0 0 1 1.6 1.6v9.3A1.6 1.6 0 0 1 20 20.1H4a1.6 1.6 0 0 1-1.6-1.6V9.2A1.6 1.6 0 0 1 4 7.6z"/><circle cx="12" cy="13.6" r="3.6"/>'),
   flip: SVG('<path d="M20 11a8 8 0 0 0-14.3-4.6M4 13a8 8 0 0 0 14.3 4.6"/><path d="M5.2 3.6v3.4h3.4M18.8 20.4V17h-3.4"/>'),
   bell: SVG('<path d="M6.2 9.4a5.8 5.8 0 0 1 11.6 0c0 5.9 2.4 7.6 2.4 7.6H3.8s2.4-1.7 2.4-7.6z"/><path d="M10 20.4a2.3 2.3 0 0 0 4 0"/>'),
-  eye: SVG('<path d="M3 12s3.4-6 9-6 9 6 9 6-3.4 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.8"/>'),
+  eye: SVG('<path d="M3.4 12.6a1 1 0 0 1 0-1.2C4.6 9.7 7.6 6.2 12 6.2s7.4 3.5 8.6 5.2a1 1 0 0 1 0 1.2c-1.2 1.7-4.2 5.2-8.6 5.2s-7.4-3.5-8.6-5.2z"/><circle cx="12" cy="12" r="2.8"/>'),
   eyeoff: SVG('<path d="M3.5 3.5l17 17"/><path d="M10.4 6.1A9.6 9.6 0 0 1 12 6c5.6 0 9 6 9 6a15 15 0 0 1-2.6 3.3M6.5 7.6A15 15 0 0 0 3 12s3.4 6 9 6a9 9 0 0 0 4.4-1.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'),
   rings: SVG('<circle cx="12" cy="12" r="8.6" stroke-dasharray="3.6 2.2"/><circle cx="12" cy="12" r="4.2"/>'),
   zoomin: SVG('<circle cx="10.8" cy="10.8" r="7.3"/><path d="m16.2 16.2 4.6 4.6M8 10.8h5.6M10.8 8v5.6"/>'),
@@ -2024,7 +2024,7 @@ function openReels(fromArt, onClose, signedHq) {
     vids.push(v);
     const bar = h('i', { class: 'rl-prog' });
     v.addEventListener('timeupdate', () => { if (v.duration) bar.style.transform = `scaleX(${v.currentTime / v.duration})`; });
-    const GEM = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="gem-body" d="M7 4.6h10l3.6 5.1L12 19.8 3.4 9.7z"/><path d="M3.4 9.7h17.2M9.6 4.6 8.2 9.7 12 19.8l3.8-10.1-1.4-5.1"/></svg>';
+    const GEM = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9V7.5a3 3 0 0 1 3-3H9M15 4.5h1.5a3 3 0 0 1 3 3V9M19.5 15v1.5a3 3 0 0 1-3 3H15M9 19.5H7.5a3 3 0 0 1-3-3V15"/><circle class="gem-body" cx="12" cy="12" r="3.1"/></svg>';
     const sb1 = h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Sound'), onclick: (e) => { e.stopPropagation(); soundBtn.onclick(); } });
     soundBtns.push(sb1);
     // HQ in the column (Alex, 15 Nov): the diamond, gold while the HQ copy plays; a tap goes to the light copy and back
@@ -2047,15 +2047,17 @@ function openReels(fromArt, onClose, signedHq) {
     const slide = h('section', { class: 'rl-slide', 'data-i': String(i) },
       v, paused,
       h('div', { class: 'rl-side' },
-        h('div', { class: 'rl-pair' }, likeB, likeN),
-        it.r.comments_off ? null : h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Comment'), html: ICON.talk, onclick: (e) => { e.stopPropagation(); close(); it.comments(); } }), h('span', {}, it.talkN?.textContent || '')),
-        h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: (e) => { e.stopPropagation(); v.pause(); sendToRoarMe(it.r, pp); } })),
-        gem,
-        it.r.ai ? h('span', { class: 'rl-ico rl-ai', title: t('Made with AI'), role: 'img', 'aria-label': t('Made with AI'), html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4.5l1.7 4.6 4.6 1.7-4.6 1.7-1.7 4.6-1.7-4.6-4.6-1.7 4.6-1.7z"/><path d="M18 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg>' }) : null,
-        sb1,
-        h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); sheet(it); } }),
-        // the profile's picture under the dots (Alex, 15 Nov: no name), with a small + while I do not follow them
-        h('div', { class: 'rl-me' }, h('a', { href: `#/p/${pp.id}`, class: 'rl-av', 'aria-label': pp.name || '', onclick: () => close(true) }, avatar(pp)), follow)),
+        h('div', { class: 'rl-grp' },
+          h('div', { class: 'rl-pair' }, likeB, likeN),
+          it.r.comments_off ? null : h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Comment'), html: ICON.talk, onclick: (e) => { e.stopPropagation(); close(); it.comments(); } }), h('span', {}, it.talkN?.textContent || '')),
+          h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: (e) => { e.stopPropagation(); v.pause(); sendToRoarMe(it.r, pp); } }))),
+        // the profile's picture in the middle of the bar (Alex, 16 Nov), with a small + while I do not follow them
+        h('div', { class: 'rl-me' }, h('a', { href: `#/p/${pp.id}`, class: 'rl-av', 'aria-label': pp.name || '', onclick: () => close(true) }, avatar(pp)), follow),
+        h('div', { class: 'rl-grp' },
+          gem,
+          it.r.ai ? h('span', { class: 'rl-ico rl-ai', title: t('Made with AI'), role: 'img', 'aria-label': t('Made with AI'), html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4.5l1.7 4.6 4.6 1.7-4.6 1.7-1.7 4.6-1.7-4.6-4.6-1.7 4.6-1.7z"/><path d="M18 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg>' }) : null,
+          sb1,
+          h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); sheet(it); } }))),
       capEl ? h('div', { class: 'rl-info' }, capEl) : null,
       bar);
     // one tap pauses or plays, two taps like with the big heart
@@ -2439,7 +2441,7 @@ function postCard(r, st, refresh) {
       // the sharp copy; a thin ring fills round it while the HQ copy comes down; when on, the diamond turns gold
       const pct = h('small', {}), fillEl = h('i');
       const hqBtn = h('button', { type: 'button', class: 'ig-ico ig-gem', title: t('Play in high quality'), 'aria-label': t('Play in high quality'),
-        html: '<svg class="gem-ring" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" pathLength="1"/></svg><svg class="gem" viewBox="0 0 24 24" aria-hidden="true"><path class="gem-body" d="M7 4.6h10l3.6 5.1L12 19.8 3.4 9.7z"/><path d="M3.4 9.7h17.2M9.6 4.6 8.2 9.7 12 19.8l3.8-10.1-1.4-5.1"/></svg>' });
+        html: '<svg class="gem-ring" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" pathLength="1"/></svg><svg class="gem" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9V7.5a3 3 0 0 1 3-3H9M15 4.5h1.5a3 3 0 0 1 3 3V9M19.5 15v1.5a3 3 0 0 1-3 3H15M9 19.5H7.5a3 3 0 0 1-3-3V15"/><circle class="gem-body" cx="12" cy="12" r="3.1"/></svg>' });
       hqEl = hqBtn;
       const flash = (txt) => { const f = h('span', { class: 'ig-hq-flash' }, txt); (slides.parentElement || slides).append(f); setTimeout(() => f.remove(), 1300); };
       const swap = (src) => { const at = v0.currentTime || 0; delete v0.dataset.held; v0.dataset.src = src; v0.src = src; v0.addEventListener('loadedmetadata', () => { try { v0.currentTime = at; } catch { /* start */ } v0.play().catch(() => { v0.muted = true; v0.play().catch(() => {}); }); }, { once: true }); v0.load(); };
