@@ -768,7 +768,21 @@ function coverPicker(src, start = 0) {
       const { w, h: hh, fw, fh } = size(); const [nw, nh] = natural(); const k = nw / w;
       const sx = (w / 2 - st.x - fw / 2) * k, sy = (hh / 2 - st.y - fh / 2) * k;
       const c = document.createElement('canvas'); c.width = 1080; c.height = 1350;
-      try { c.getContext('2d').drawImage(media(), sx, sy, fw * k, fh * k, 0, 0, c.width, c.height); c.toBlob((b) => res(b ? new File([b], 'cover.jpg', { type: 'image/jpeg' }) : null), 'image/jpeg', 0.86); } catch { res(null); }
+      try {
+        c.getContext('2d').drawImage(media(), sx, sy, fw * k, fh * k, 0, 0, c.width, c.height);
+        c.toBlob((b) => {
+          if (!b) return res(null);
+          const cut = new File([b], 'cover.jpg', { type: 'image/jpeg' });
+          // the whole frame too (Alex, 16 Nov: "in the feed no crop, the same cover in its own shape"): the 4:5 cut is
+          // for the profile's grid, the whole frame for the feed
+          try {
+            const q = Math.min(1, 1920 / Math.max(nw, nh)), c2 = document.createElement('canvas');
+            c2.width = Math.round(nw * q); c2.height = Math.round(nh * q);
+            c2.getContext('2d').drawImage(media(), 0, 0, c2.width, c2.height);
+            c2.toBlob((b2) => { if (b2) cut._full = new File([b2], 'cover-full.jpg', { type: 'image/jpeg' }); res(cut); }, 'image/jpeg', 0.86);
+          } catch { res(cut); }
+        }, 'image/jpeg', 0.86);
+      } catch { res(null); }
     });
     const row = (ic, el) => h('div', { class: 'cv-row' }, h('span', { class: 'cv-ic', html: ICON[ic] || '' }), el);
     const scrubRow = row('play', scrub);
@@ -1831,8 +1845,9 @@ async function postFlow(opts = {}) {
         for (const [i, x] of st.items.entries()) {
           const path = await upload(st.as, x.file, 'posts/', (k) => prog(i, k * (x.cover ? 0.95 : 1)));
           const poster = isVid(x) && x.cover ? await upload(st.as, x.cover, 'posts/') : null;
+          const posterFull = poster && x.cover._full ? await upload(st.as, x.cover._full, 'posts/').catch(() => null) : null;
           prog(i, 1);
-          media.push({ path, type: isVid(x) ? 'video' : 'image', ...(await dimsOf(x.file)), ...(poster ? { poster } : {}), ...(x.file._codec ? { codec: x.file._codec } : {}), ...(x.file._hqPath ? { hq: x.file._hqPath } : {}) });
+          media.push({ path, type: isVid(x) ? 'video' : 'image', ...(await dimsOf(x.file)), ...(poster ? { poster } : {}), ...(posterFull ? { posterFull } : {}), ...(x.file._codec ? { codec: x.file._codec } : {}), ...(x.file._hqPath ? { hq: x.file._hqPath } : {}) });
         }
         const row = { person_id: st.as, body: st.caption.trim() || null, media, kind: st.kind, hide_likes: st.hideLikes, comments_off: st.commentsOff };
         const extra = { ...(st.place ? { place: st.place } : {}), ...(st.ai ? { ai: true } : {}) };
@@ -1881,7 +1896,7 @@ async function posts(rows, refresh) {
   const bravos = {}, mineB = new Set(), comments = {};
   (b.data || []).forEach((x) => { bravos[x.post_id] = (bravos[x.post_id] || 0) + 1; if (x.user_id === session.user.id) mineB.add(x.post_id); });
   (c.data || []).forEach((x) => { comments[x.post_id] = (comments[x.post_id] || 0) + 1; });
-  await sign(rows.flatMap((r) => [r.person?.avatar, ...(r.media || []).flatMap((m) => [m.path, m.poster])]));
+  await sign(rows.flatMap((r) => [r.person?.avatar, ...(r.media || []).flatMap((m) => [m.path, m.poster, m.posterFull])]));
   return rows.map((r) => postCard(r, { bravos: bravos[r.id] || 0, mine: mineB.has(r.id), comments: comments[r.id] || 0 }, refresh));
 }
 // a post as Instagram shows one (Alex, 4 Nov: "more Instagram"): who, the picture edge to edge (swipe when there are
@@ -2015,7 +2030,7 @@ function openReels(fromArt, onClose, signedHq) {
   const slides = list.map((it, i) => {
     const m = it.media[0];
     const tall = m.w && m.h ? m.h > m.w : true;
-    const v = h('video', { class: 'rl-v' + (tall ? ' tall' : ''), playsInline: true, loop: !auto, preload: 'none', poster: urlOf(m.poster) || null, muted: !feedSound });
+    const v = h('video', { class: 'rl-v' + (tall ? ' tall' : ''), playsInline: true, loop: !auto, preload: 'none', poster: urlOf(m.posterFull || m.poster) || null, muted: !feedSound });
     const hqSrc = m.hq ? urlOf(m.hq) : '';
     v.dataset.src = hqSrc || urlOf(m.path);
     // if the HQ copy cannot play here, the light one takes over
@@ -2179,7 +2194,7 @@ function lightbox(media, start = 0, opts = {}) {
   const count = h('span', { class: 'lb-count' });
   const show = () => {
     const m = media[i];
-    const el = m.type === 'video' ? h('video', { src: urlOf(m.path), poster: urlOf(m.poster) || null, controls: !bare, autoplay: true, playsInline: true, loop: bare }) : h('img', { src: urlOf(m.path), alt: '' });
+    const el = m.type === 'video' ? h('video', { src: urlOf(m.path), poster: urlOf(m.posterFull || m.poster) || null, controls: !bare, autoplay: true, playsInline: true, loop: bare }) : h('img', { src: urlOf(m.path), alt: '' });
     // bare: the X sits in the picture's own top right corner, not on the window (Alex, 5 Nov)
     // as big as the screen allows, in its own shape (Alex, 6 Nov: "show the video much bigger"): a small file is drawn larger too
     const fit = (w, hh) => {
@@ -2264,11 +2279,12 @@ function postMenu(r, p, { own, media, refresh, saveBtn }) {
         if (!f) return;
         try {
           const poster = await upload(r.person_id || p.id, f, 'posts/');
-          const old = media[0].poster;
-          const next = (r.media || media).map((x, k) => (k ? x : { ...x, poster }));
+          const posterFull = f._full ? await upload(r.person_id || p.id, f._full, 'posts/').catch(() => null) : null;
+          const old = media[0].poster, oldFull = media[0].posterFull;
+          const next = (r.media || media).map((x, k) => { if (k) return x; const y = { ...x, poster }; if (posterFull) y.posterFull = posterFull; else delete y.posterFull; return y; });
           const { error } = await sb.from('roardino_posts').update({ media: next }).eq('id', r.id);
           if (error) throw error;
-          if (old) removeFiles([old]);
+          if (old) removeFiles([old, oldFull].filter(Boolean));
           toast(t('Cover changed')); refresh?.();
         } catch (e) { fail(e); }
       }) : null,
@@ -2286,7 +2302,7 @@ function postMenu(r, p, { own, media, refresh, saveBtn }) {
         if (!(await ask(t('Delete this post?')))) return;
         const { error } = await sb.from('roardino_posts').delete().eq('id', r.id);
         if (error) return fail(error);
-        removeFiles(media.flatMap((m) => [m.path, m.poster, m.hq])); refresh();
+        removeFiles(media.flatMap((m) => [m.path, m.poster, m.posterFull, m.hq])); refresh();
       }, 'red'))
       : [h('div', { class: 'pm-group' },
         follows.has(p.id) ? row('unfollow', t('Unfollow'), () => toggleFollow(p.id).then((ok) => ok && refresh?.())) : row('follow', t('Follow'), () => toggleFollow(p.id).then((ok) => ok && refresh?.()))),
@@ -2319,7 +2335,7 @@ function editPost(r, p, refresh) {
       e.currentTarget.disabled = true;
       const { error } = await sb.from('roardino_posts').update({ body, media }).eq('id', r.id);
       if (error) { e.currentTarget.disabled = false; return fail(error); }
-      if (gone.length) removeFiles(gone.flatMap((m) => [m.path, m.poster, m.hq]).filter(Boolean));
+      if (gone.length) removeFiles(gone.flatMap((m) => [m.path, m.poster, m.posterFull, m.hq]).filter(Boolean));
       r.body = body; r.media = media;
       close(); toast(t('Saved')); refresh?.();
     } }, t('Save'))]);
@@ -2388,7 +2404,7 @@ function postCard(r, st, refresh) {
     try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ }
   };
   const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
-    ? feedVideo(urlOf(m.path), urlOf(m.poster), m.codec)
+    ? feedVideo(urlOf(m.path), urlOf(m.posterFull || m.poster), m.codec)
     : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', decoding: 'async', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
   // a video in its own shape, the width fixed and the height its own (Alex, 5 Nov: "the pictures were fine, only the
   // videos keep their aspect ratio"): the size kept at upload, else the video's own once it loads; pictures stay 4:5
@@ -2405,7 +2421,21 @@ function postCard(r, st, refresh) {
     }, { once: true });
   }
   if (slides && media[0].type === 'video') {
-    if (urlOf(media[0].poster)) { slides.classList.add('has-cover'); slides.style.setProperty('--cover', `url("${urlOf(media[0].poster)}")`); }
+    const cov = urlOf(media[0].posterFull || media[0].poster);
+    if (cov) {
+      slides.classList.add('has-cover'); slides.style.setProperty('--cover', `url("${cov}")`);
+      // a cover cut to another shape than a wide video (the 4:5 cut of the profile's grid, on posts made before the
+      // whole frame was kept): the feed shows the video's own first frame instead of a cropped, blown-up cover
+      const m0 = media[0], vr = m0.w && m0.h ? m0.w / m0.h : 0;
+      if (vr > 4 / 5 + 0.02 && !m0.posterFull) { const im = new Image(); im.onload = () => {
+        if (Math.abs(im.naturalWidth / im.naturalHeight - vr) < 0.06) return;
+        slides.classList.remove('has-cover'); slides.style.removeProperty('--cover');
+        const v = slides.querySelector('video.fv'); if (!v) return;
+        v.removeAttribute('poster'); v.classList.add('live');
+        if (v.dataset.src && !v.dataset.src.includes('#')) v.dataset.src += '#t=0.1';
+        if (v.getAttribute('src') && v.paused && !v.currentTime) { v.src = v.dataset.src; v.preload = 'metadata'; }
+      }; im.src = cov; }
+    }
     // as Instagram (Alex, 15 Nov): a video taller than 4:5 (a 9:16) shows in the feed cut to 4:5, top and bottom off,
     // and opens whole with a tap; a wider one keeps its own shape
     const shape = (w, hh) => { if (!w || !hh) return; if (w / hh >= 4 / 5) slides.style.setProperty('--ar', `${w} / ${hh}`); else { slides.style.setProperty('--ar', '4 / 5'); slides.classList.add('cut'); } };
@@ -3109,7 +3139,7 @@ async function viewPerson(id) {
     sb.from('roardino_posts').select('*').eq('person_id', id).order('pos', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }).limit(120),
     sb.from('roardino_contacts').select('email,phone').eq('person_id', id).maybeSingle(),
     loadStories(id)]);
-  await sign([p.avatar, p.data?.cover, ...photos, p.reel, p.cv, ...(grid || []).flatMap((g) => (g.media || []).slice(0, 1).flatMap((m) => [m.path, m.poster]))]);
+  await sign([p.avatar, p.data?.cover, ...photos, p.reel, p.cv, ...(grid || []).flatMap((g) => (g.media || []).slice(0, 1).flatMap((m) => [m.path, m.poster, m.posterFull]))]);
   const d = p.data || {};
   const L = d.looks || {}, S = d.skills || {}, C = d.contact || {};
   const a = age(p.birth);
@@ -3349,7 +3379,7 @@ function sortable(box, done) {
 }
 async function openPost(r, p) {
   if ((r.media || []).length) {
-    await sign(r.media.flatMap((m) => [m.path, m.poster]));
+    await sign(r.media.flatMap((m) => [m.path, m.poster, m.posterFull]));
     let liked = null;
     // the ⋯ in the picture's corner (Alex, 14 Nov: "there must be a way to edit the posts"): its owner edits it, others save or share it
     lightbox(r.media, 0, { bare: true, onMenu: () => postMenu(r, p, { own: r.owner === session.user.id, media: r.media, refresh: () => route(), saveBtn: null }), onLike: async () => {
