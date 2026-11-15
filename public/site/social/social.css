@@ -3458,3 +3458,67 @@ html[data-theme=light] :is(.win-x,.lb-x,.ch-back,.ch-send,.ch-clip,.ch-new){box-
 /* the light under a finger is a small lens too: a clearer centre and the colours at its rim */
 .lg-drop.on{-webkit-backdrop-filter:saturate(1.6) brightness(1.06);backdrop-filter:saturate(1.6) brightness(1.06)}
 @media (prefers-reduced-motion:reduce){.switch:active::after,.rl-switch:active i{transform:none}.switch:checked:active::after{transform:translateX(18px)}}
+/* ===== SLATE, second look (Alex, 15 Nov, from a picture: "this colouring, these curves, the glass's texture; the thin
+   menu on top is very nice"): soft grey glass on a near white page. Panels a light grey with a soft fall of shadow;
+   tracks a middle grey with white words; the chosen item a raised pill of lighter grey that stands taller than its thin
+   track; no accent. It rides on the light theme; the page's colour runs into the iPhone's top and bottom edges. ===== */
+html[data-skin=slate][data-theme=light]{
+  --bg1:#efefef; --bg2:#e4e4e4;
+  --ink:#3b3d40; --ink2:#55585c; --muted:#8b8e92; --faint:#adb0b4;
+  --line:rgba(0,0,0,.07);
+  --glass:rgba(214,214,214,.62); --rim:rgba(255,255,255,.7); --rim-out:rgba(0,0,0,.04);
+  --top:inset 0 1px 0 rgba(255,255,255,.6);
+  --shadow:0 18px 40px rgba(0,0,0,.07),0 2px 6px rgba(0,0,0,.04);
+  --letters:linear-gradient(180deg,#5a5d61,#3b3d40); --letters-dim:linear-gradient(180deg,#8b8e92,#6c6f73); --letters-lit:linear-gradient(180deg,#4a4d51,#2f3134);
+  --accent:#6b6e72; --a:120,123,127; --a-solid:#8a8d91; --a-lo:#76797d; --a-hi:#a0a3a7; --a-rim:255,255,255; --brand:#6b6e72;
+  --mi-panel:#dadada; --mi-track:rgba(150,150,150,.62); --mi-pill:linear-gradient(180deg,#c6c6c6,#b1b1b1);
+  --mi-pill-shadow:0 5px 12px rgba(0,0,0,.14),0 1px 2px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.4),inset 0 -2px 5px rgba(0,0,0,.05);
+  color-scheme:light;
+}
+html[data-skin=slate][data-theme=light],html[data-skin=slate][data-theme=light] body{background:#ececec!important}
+html[data-skin=slate][data-theme=light] body{background:linear-gradient(180deg,#f2f2f2 0%,#ebebeb 55%,#e6e6e6 100%) fixed!important;color:var(--ink)}
+@media (min-width:821px){html[data-skin=slate][data-theme=light] body,html[data-skin=slate][data-theme=light] .two.feed-two::before{background:linear-gradient(180deg,#f2f2f2 0%,#ebebeb 55%,#e6e6e6 100%)!important;background-attachment:fixed!important}}
+/* the strip under the iPhone's clock and the edge past the page take the page's own colour */
+html[data-skin=slate][data-theme=light] .bar::before{background:#f2f2f2!important}
+/* panels: light grey with a soft fall */
+html[data-skin=slate][data-theme=light] :is(.bar-in,.foot-in,.card,.tile,.sec,.face,.win,.compose,.empty,.auth,.post:not(.ig),.why>div,.ch-head,.ch-foot,.feed-top,.fs-card,.fs-card.tint){background:var(--mi-panel)!important;background-image:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0))!important;border:0!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 18px 40px rgba(0,0,0,.07),0 2px 6px rgba(0,0,0,.04)!important;color:var(--ink)!important;-webkit-backdrop-filter:blur(18px)!important;backdrop-filter:blur(18px)!important}
+html[data-skin=slate][data-theme=light] :is(.menu,.pm,.sheet,.bar .menu){background:#e2e2e2!important;border:0!important;box-shadow:0 20px 44px rgba(0,0,0,.14)!important}
+/* buttons: raised grey pills with white words */
+html[data-skin=slate][data-theme=light] :is(.btn,.btn.main,.btn.sm,.pill,.chip,.fchip,.pf-pill,.pf-chip,.auth-go,.post-follow,.ch-new,.cov-btn,.win-x,.ch-back,.ch-send,.ch-clip){background:var(--mi-pill)!important;background-color:#bcbcbc!important;border:0!important;color:#fff!important;-webkit-text-fill-color:#fff!important;box-shadow:var(--mi-pill-shadow)!important;text-shadow:0 1px 1px rgba(0,0,0,.12)!important}
+html[data-skin=slate][data-theme=light] :is(.btn,.pill,.win-x,.ch-back,.ch-send,.ch-clip) svg{color:#fff!important;stroke:#fff}
+html[data-skin=slate][data-theme=light] :is(.btn,.pill,.chip,.pf-pill,.win-x):active{box-shadow:0 2px 5px rgba(0,0,0,.14),inset 0 2px 5px rgba(0,0,0,.1)!important}
+/* the thin menu on top: a slim middle-grey track, white words, the chosen one a lighter raised pill taller than the track */
+html[data-skin=slate][data-theme=light] :is(.seg,.pf-choice,.ch-tabs .seg){background:var(--mi-track)!important;border:0!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.08)!important;padding:2px!important;overflow:visible!important}
+html[data-skin=slate][data-theme=light] :is(.seg button,.seg a,.pf-choice button){height:26px!important;color:rgba(255,255,255,.82)!important;-webkit-text-fill-color:currentColor!important;font-weight:500!important;text-transform:none!important;letter-spacing:.01em!important;font-size:12.5px!important;background:none!important;box-shadow:none!important}
+html[data-skin=slate][data-theme=light] :is(.seg button.on,.seg a.on,.pf-choice button.on){color:#fff!important;font-weight:600!important}
+html[data-skin=slate][data-theme=light] .seg .lens{top:-4px!important;bottom:-4px!important;border-radius:999px!important;background:var(--mi-pill)!important;box-shadow:var(--mi-pill-shadow)!important;border:0!important}
+html[data-skin=slate][data-theme=light] .pf-choice button.on{background:var(--mi-pill)!important;box-shadow:var(--mi-pill-shadow)!important;border-radius:999px!important}
+/* fields: a soft sunk white */
+html[data-skin=slate][data-theme=light] :is(.input,.select,.textarea,.auth-in,.ch-in,.pf-cap,.feed-find){background:rgba(255,255,255,.62)!important;border:0!important;box-shadow:inset 0 1px 3px rgba(0,0,0,.08)!important;color:var(--ink)!important}
+html[data-skin=slate][data-theme=light] .ch-input{color:var(--ink)!important}
+/* the menu at the foot: the middle-grey track, white icons, the chosen one a raised lighter pill */
+@media (max-width:820px){
+  html[data-skin=slate][data-theme=light] body .tabbar{background:#a9a9a9!important;background-image:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,0))!important;border:0!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.08),0 12px 30px rgba(0,0,0,.12)!important;-webkit-backdrop-filter:blur(18px)!important;backdrop-filter:blur(18px)!important}
+  html[data-skin=slate][data-theme=light] body .tabbar a,html[data-skin=slate][data-theme=light] body .tabbar .tab-plus{color:rgba(255,255,255,.85)!important}
+  html[data-skin=slate][data-theme=light] body .tabbar a.on{color:#fff!important}
+  html[data-skin=slate][data-theme=light] body .tabbar .tb-lens{top:-1px;height:56px;background:var(--mi-pill);box-shadow:var(--mi-pill-shadow)}
+  html[data-skin=slate][data-theme=light] body .tabbar a.on .tab-av{box-shadow:0 0 0 2px #fff!important}
+}
+@media (min-width:821px){html[data-skin=slate][data-theme=light] .tabbar{background:var(--mi-panel)!important}}
+/* small marks in grey */
+html[data-skin=slate][data-theme=light] :is(.rm-badge,.job-badge,.ai-badge){background:rgba(0,0,0,.06)!important;color:#55585c!important;-webkit-text-fill-color:#55585c!important;border:1px solid rgba(0,0,0,.1)!important}
+html[data-skin=slate][data-theme=light] :is(.badge,.dot-n,.n-badge,.ch-side em){background:#8b8e92!important;color:#fff!important}
+html[data-skin=slate][data-theme=light] :is(.ch-by,.ch-reply b,.ch-row.new .ch-side small,.ch-msg:not(.mine) .ch-heart){color:#3b3d40!important}
+html[data-skin=slate][data-theme=light] .ch-msg.mine .ch-bub{background:linear-gradient(180deg,#bdbdbd,#a7a7a7)!important;color:#fff!important}
+html[data-skin=slate][data-theme=light] .ch-msg:not(.mine) .ch-bub{background:#dcdcdc!important;color:var(--ink)!important}
+html[data-skin=slate][data-theme=light] .ig-ico.like.on,html[data-skin=slate][data-theme=light] .post.ig.has-media .mwrap .ig-ico.like.on{color:#55585c!important}
+html[data-skin=slate][data-theme=light] .post.ig.has-media .mwrap .ig-ico.like.on{color:#fff!important}
+html[data-skin=slate][data-theme=light] .mt .tip{color:var(--ink)!important;-webkit-text-fill-color:var(--ink)!important;text-shadow:none}
+html[data-skin=slate][data-theme=light] .switch{background:rgba(150,150,150,.5)}
+html[data-skin=slate][data-theme=light] .switch:checked{background:#9a9a9a}
+html[data-skin=slate][data-theme=light] .lg-drop{background:radial-gradient(110px 110px at var(--lx,50%) var(--ly,50%),rgba(255,255,255,.55),rgba(255,255,255,.12) 45%,transparent 70%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),-1px 0 0 rgba(255,80,80,.18),1px 0 0 rgba(80,140,255,.18)}
+html[data-skin=slate][data-theme=light] .ig-media,html[data-skin=slate][data-theme=light] .ig-media.has-cover{background-color:#d4d4d4}
+html[data-skin=slate][data-theme=light] :is(.brand,.logo,.wordmark) :is(i,em,.dot),html[data-skin=slate][data-theme=light] .brand-dot{background:#8b8e92!important;color:#8b8e92!important;box-shadow:none!important}
+html[data-skin=slate][data-theme=light] .seg:not(.has-lens) :is(button.on,a.on){background:var(--mi-pill)!important;box-shadow:var(--mi-pill-shadow)!important;border-radius:999px!important;margin:-4px 0;height:34px!important}
+html[data-skin=slate][data-theme=light] .mt .tip{color:#fff!important;-webkit-text-fill-color:#fff!important}
+@media (max-width:820px){html[data-skin=slate][data-theme=light] body .tabbar .tab-plus,html[data-skin=slate][data-theme=light] body .tabbar .tab-plus span{color:rgba(255,255,255,.85)!important}}

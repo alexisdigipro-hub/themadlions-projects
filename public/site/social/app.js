@@ -80,12 +80,13 @@ function wearPrefs() {
   const front = document.documentElement.classList.contains('was-front'); // the front page keeps its own light and red
   // Slate (Alex, 15 Nov): a theme of its own on top of the dark one: grey glass, silver buttons with a polished rim, no accent
   const slate = !front && prefs.theme === 'slate';
-  const dark = !front && (slate || prefs.theme === 'dark' || (prefs.theme === 'auto' && darkQuery.matches));
+  // since 15 Nov Slate is light (Alex, from a picture: soft grey glass on near white), so it rides on the light theme
+  const dark = !front && !slate && (prefs.theme === 'dark' || (prefs.theme === 'auto' && darkQuery.matches));
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   if (slate) document.documentElement.dataset.skin = 'slate'; else delete document.documentElement.dataset.skin;
   document.documentElement.dataset.text = prefs.text;
   if (!front && !slate && ACCENTS.some(([k]) => k === prefs.accent) && prefs.accent !== 'red') document.documentElement.dataset.accent = prefs.accent; else delete document.documentElement.dataset.accent;
-  document.querySelector('meta[name=theme-color]')?.setAttribute('content', slate ? '#5b656d' : dark ? '#15171b' : '#eceef1');
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', slate ? '#ededed' : dark ? '#15171b' : '#eceef1');
   // inside the iPhone app the clock and the battery take the colour that reads on the theme (the shell's StatusBar plugin)
   setTimeout(() => typeof shellCall === 'function' && shellCall('StatusBar', 'setStyle', { style: dark ? 'DARK' : 'LIGHT' }));
 }
