@@ -805,7 +805,7 @@ function topBar(on) {
     // on a computer, right of the search (Alex, 6 Nov: the column on the left goes): Settings, Sign out (light / dark lives in Settings),
     // my picture (to my profile), then the bell
     h('div', { class: 'bar-acts' },
-      h('button', { type: 'button', class: 'ico', title: t('Search'), 'aria-label': t('Search'), html: ICON.search, onclick: () => { closeBarPops(); location.hash = '#/people'; setTimeout(() => document.querySelector('.page input[type=search]')?.focus(), 500); } }),
+      h('button', { type: 'button', class: 'ico find-btn', title: t('Search'), 'aria-label': t('Search'), html: ICON.search, onclick: () => { closeBarPops(); location.hash = '#/people'; setTimeout(() => document.querySelector('.page input[type=search]')?.focus(), 500); } }),
     ),
     // then the bell, the ≡ menu and, at the very right, my picture (Alex, 6 Nov)
     bellButton(),
@@ -3492,7 +3492,7 @@ const CHAT_PAGE = 50;
 const ROARME_ORIGIN = new URL(ROARME).origin;
 const chatPeople = new Map(); // account id -> { id, name, username, avatar }
 const chatSigned = new Map(); // bucket|path -> { url, until }
-let chatRooms = null, chatWatching = null, chatRoomLive = null, chatListDraw = null, chatMine = null;
+let chatRooms = null, chatWatching = null, chatRoomLive = null, chatListDraw = null, chatMine = null, chatFinding = false;
 const chatKey = (f) => (f.bucket || 'roar-files') + '|' + f.path;
 const chatUrl = (f) => (f?.path ? chatSigned.get(chatKey(f))?.url || '' : '');
 async function chatSign(files) {
@@ -3572,7 +3572,16 @@ async function viewChat(roomId) {
   const box = h('div', { class: 'card ch-list' }, h('p', { class: 'wait' }, t('Loading…')));
   let q = '';
   const find = input('', { type: 'search', class: 'input search ind-search', placeholder: t('Search conversations'), 'aria-label': t('Search conversations'), oninput: (e) => { q = fold(e.target.value.trim()); draw(); } });
-  frame('chat', h('div', { class: 'head ind-head' }, h('h1', { class: 'ind-title' }, t('Chat')), find), box);
+  // no search field on the page (Alex, 15 Nov): the search sign of the top bar searches the chat while one is in it. It
+  // opens the field, and a second press (or leaving the field empty) puts it away
+  find.hidden = !chatFinding;
+  frame('chat', h('div', { class: 'head ind-head ch-top' }, h('h1', { class: 'ind-title' }, t('Chat')), find), box);
+  document.querySelectorAll('.bar a[href="#/search"], .bar .find-btn').forEach((el) => el.addEventListener('click', (e) => {
+    e.preventDefault(); e.stopImmediatePropagation();
+    chatFinding = find.hidden; find.hidden = !chatFinding;
+    if (chatFinding) find.focus(); else { find.value = ''; q = ''; draw(); }
+  }, true));
+  find.addEventListener('blur', () => { if (!find.value.trim()) { chatFinding = false; setTimeout(() => { if (!chatFinding) find.hidden = true; }, 150); } });
   const meId = session.user.id;
   const draw = () => {
     const rows = (chatRooms || []).filter((r) => !q || fold(r.name + ' ' + (r.other?.username || '')).includes(q));
