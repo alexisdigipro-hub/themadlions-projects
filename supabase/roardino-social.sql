@@ -741,3 +741,47 @@ create policy rd_comments_add on public.roardino_comments for insert with check 
   owner = auth.uid()
   and exists (select 1 from public.roardino_posts p where p.id = roardino_comments.post_id and (not p.comments_off or p.owner = auth.uid()))
   and (person_id is null or exists (select 1 from public.roardino_people x where x.id = roardino_comments.person_id and x.owner = auth.uid())));
+
+-- 15 Nov 2026: the chat's Requests and Jobs (applied on 15 Nov). roardino_chat_ok: the requests I accepted;
+-- roardino_chat_jobs: a job offer sent into a conversation (read by its members); roardino_chat_known(): the
+-- conversations that are not requests for me (groups, the ones I opened, wrote in or accepted). RoarMe's own tables
+-- are only read.
+create table if not exists public.roardino_chat_ok (
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  room_id uuid not null,
+  created_at timestamptz not null default now(),
+  primary key (user_id, room_id)
+);
+alter table public.roardino_chat_ok enable row level security;
+drop policy if exists rd_chat_ok_own on public.roardino_chat_ok;
+create policy rd_chat_ok_own on public.roardino_chat_ok for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+grant select, insert, delete on public.roardino_chat_ok to authenticated;
+
+create table if not exists public.roardino_chat_jobs (
+  id uuid primary key default gen_random_uuid(),
+  room_id uuid not null,
+  from_user uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  title text not null,
+  details jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists roardino_chat_jobs_room on public.roardino_chat_jobs (room_id);
+alter table public.roardino_chat_jobs enable row level security;
+drop policy if exists rd_chat_jobs_read on public.roardino_chat_jobs;
+create policy rd_chat_jobs_read on public.roardino_chat_jobs for select using (public.roar_is_member(room_id));
+drop policy if exists rd_chat_jobs_add on public.roardino_chat_jobs;
+create policy rd_chat_jobs_add on public.roardino_chat_jobs for insert with check (from_user = auth.uid() and public.roar_is_member(room_id));
+drop policy if exists rd_chat_jobs_del on public.roardino_chat_jobs;
+create policy rd_chat_jobs_del on public.roardino_chat_jobs for delete using (from_user = auth.uid());
+grant select, insert, delete on public.roardino_chat_jobs to authenticated;
+
+create or replace function public.roardino_chat_known() returns setof uuid
+language sql stable security definer set search_path = public as $$
+  select mm.room_id from roar_members mm join roar_rooms r on r.id = mm.room_id
+  where mm.user_id = auth.uid()
+    and (r.kind <> 'direct' or r.created_by = auth.uid()
+      or exists (select 1 from roar_messages m where m.room_id = mm.room_id and m.user_id = auth.uid())
+      or exists (select 1 from roardino_chat_ok k where k.room_id = mm.room_id and k.user_id = auth.uid()))
+$$;
+revoke all on function public.roardino_chat_known() from public, anon;
+grant execute on function public.roardino_chat_known() to authenticated;
