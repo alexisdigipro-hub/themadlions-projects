@@ -3746,3 +3746,14 @@ html body .rl .rl-side .rl-me .rl-follow svg{width:8px!important;height:8px!impo
 .rl-side .rl-me{width:44px!important;height:44px!important}
 .rl-side .rl-me .rl-av .av{width:30px!important;height:30px!important;font-size:11px!important}
 .rl-info{bottom:calc(env(safe-area-inset-bottom) + 96px)!important}
+/* Reels bar: the picture in the middle, the icons shared out evenly on its two sides (Alex, 16 Nov) */
+.rl-side{display:grid!important;grid-template-columns:1fr auto 1fr;width:min(360px,calc(100vw - 24px));gap:0!important}
+.rl-side .rl-grp{display:flex;align-items:center;justify-content:space-evenly;min-width:0}
+/* HQ is a focus frame now: its dot fills when on; no gold */
+.ig-gem.on,.post.ig.has-media .mwrap .ig-gem.on{color:inherit!important;filter:none!important}
+.post.ig.has-media .mwrap .ig-gem.on{color:#fff!important}
+.ig-gem .gem-body,.rl-gem .gem-body{fill:none}
+.ig-gem.on .gem-body,.rl-side .rl-gem.on .gem-body{fill:currentColor!important}
+.ig-gem:not(.on) .gem,.rl-side .rl-gem:not(.on){opacity:.75}
+/* every line icon a touch softer: round ends and joins everywhere */
+svg[stroke]{stroke-linecap:round;stroke-linejoin:round}
