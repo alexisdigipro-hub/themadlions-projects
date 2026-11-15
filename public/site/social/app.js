@@ -317,6 +317,8 @@ const ICON = {
   down: SVG('<path d="m6.5 9.5 5.5 5.5 5.5-5.5"/>'),
   plus: SVG('<path d="M12 5v14M5 12h14"/>'),
   x: SVG('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>'),
+  vol: SVG('<path d="M4 9.6h3.2l4.6-3.7v12.2l-4.6-3.7H4z"/><path d="M15.4 9.2a4 4 0 0 1 0 5.6"/><path d="M17.9 6.6a7.6 7.6 0 0 1 0 10.8"/>'),
+  mute: SVG('<path d="M4 9.6h3.2l4.6-3.7v12.2l-4.6-3.7H4z"/><path d="m15.6 9.6 4.8 4.8"/><path d="m20.4 9.6-4.8 4.8"/>'),
   heart: SVG('<path d="M12 20.2 4.4 12.8a4.9 4.9 0 0 1 0-7 4.8 4.8 0 0 1 6.9 0l.7.7.7-.7a4.8 4.8 0 0 1 6.9 0 4.9 4.9 0 0 1 0 7z"/>'),
   clap: SVG('<path d="M8 13l-2.5-2.5a1.8 1.8 0 012.5-2.5l5 5"/><path d="M10 9.5L8.5 8a1.8 1.8 0 012.5-2.5l5.5 5.5c2 2 2 5 0 7s-5 2-7 0L5 13.5a1.8 1.8 0 012.5-2.5"/><path d="M16 3l.5 2M20 6l-2 .5M19 2l-1.2 1.6"/>'),
   talk: SVG('<path d="M20.6 12.1a8.6 8.6 0 1 0-3.8 7.1l3.9 1.2-1-3.8a8.5 8.5 0 0 0 .9-4.5z"/>'),
@@ -427,13 +429,17 @@ document.addEventListener('play', (e) => {
   if (e.target?.tagName !== 'VIDEO') return;
   document.querySelectorAll('video').forEach((o) => { if (o !== e.target && !o.paused) o.pause(); });
 }, true);
-function feedVideo(src, poster) {
+function feedVideo(src, poster, codec) {
   // the cover stays until the video really moves (Alex, 9 Nov: "it plays black before"): the video shows only once a
   // third of a second has played, the cover (behind it, on the post) until then
   const v = h('video', { class: 'fv' + (poster ? '' : ' live'), playsInline: true, preload: 'none', muted: prefs.mutedVideos, loop: true, poster: poster || null,
     ontimeupdate: (e) => { if (e.target.currentTime > 0.3) e.target.classList.add('live'); },
     // a computer: the mouse over a video starts it (and so stops the others)
     onmouseenter: () => { if (isPhone()) return; delete v.dataset.held; if (!v.src && v.dataset.src) v.src = v.dataset.src; if (v.paused) v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } });
+  // an H.265 video on the few browsers that cannot show one: its cover stays, nothing is fetched
+  if (codec === 'hevc' && !playsHevc()) { v.dataset.cant = '1'; return v; }
+  // out of sight it goes quiet again, so the next time it starts by itself it may (a phone lets only silent videos start)
+  v.addEventListener('pause', () => { if (!v.muted && prefs.mutedVideos) { v.muted = true; v.dispatchEvent(new Event('volumechange')); } });
   if (vidNear && vidPlay) { v.dataset.src = src; vidNear.observe(v); vidPlay.observe(v); } else v.src = src;
   return v;
 }
@@ -470,7 +476,13 @@ async function shrink(file, onProg) {
 // 2.5 Mbit/s with its sound (H.264 MP4 on iPhones and Macs, WebM elsewhere). It takes as long as the video lasts, with
 // the progress in a small note. A video already light (under ~3.5 Mbit/s and 1080px) or one the browser cannot
 // play or record goes as it is, so nothing is ever lost.
-const VID_SIDE = 1080, VID_BPS = 2500000;
+// a video is made lighter before it goes up (Alex, 15 Nov: "H.265, not squeezed much, it must look good on phones"):
+// 1080 on its long side; H.265 at 3 Mbit/s where this device's recorder can make it (about what H.264 needs 5 for),
+// else H.264 at 4.5. A phone plays either at once in the feed.
+const VID_SIDE = 1080, VID_BPS = 4500000, VID_BPS_HEVC = 3000000;
+const VID_TYPES = [['video/mp4;codecs=hvc1,mp4a.40.2', 'hevc'], ['video/mp4;codecs=hvc1', 'hevc'], ['video/mp4;codecs=hev1', 'hevc'], ['video/mp4;codecs=avc1', ''], ['video/mp4', ''], ['video/webm;codecs=vp9,opus', ''], ['video/webm', '']];
+// can this device show an H.265 video? (most phones and computers can; a few browsers cannot)
+const playsHevc = (() => { let ok = null; return () => { if (ok == null) { try { ok = !!document.createElement('video').canPlayType('video/mp4; codecs="hvc1.1.6.L120.90"'); } catch { ok = false; } } return ok; }; })();
 function shrinkVideo(file, onProg) {
   return new Promise((done) => {
     const keep = () => { clean(); done(file); };
@@ -488,7 +500,7 @@ function shrinkVideo(file, onProg) {
       const W = v.videoWidth, H = v.videoHeight, dur = v.duration;
       if (!W || !H || !isFinite(dur) || !dur) return keep();
       const bps = (file.size * 8) / dur;
-      if (bps < VID_BPS * 1.4 && Math.max(W, H) <= VID_SIDE) return keep();
+      if (bps < VID_BPS_HEVC * 1.15 && Math.max(W, H) <= VID_SIDE) return keep();
       const k = Math.min(1, VID_SIDE / Math.max(W, H));
       const c = document.createElement('canvas');
       c.width = Math.round(W * k / 2) * 2; c.height = Math.round(H * k / 2) * 2;
@@ -500,15 +512,23 @@ function shrinkVideo(file, onProg) {
         src.connect(dest);
         dest.stream.getAudioTracks().forEach((tr) => stream.addTrack(tr));
       } catch { v.muted = true; }
-      const type = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find((x) => MediaRecorder.isTypeSupported?.(x)) || '';
-      try { rec = new MediaRecorder(stream, { ...(type ? { mimeType: type } : {}), videoBitsPerSecond: VID_BPS, audioBitsPerSecond: 128000 }); } catch { return keep(); }
+      // the first kind this device's recorder really starts with: H.265 first, then H.264, then what there is
+      let type = '', codec = '';
+      for (const [x, cd] of VID_TYPES) {
+        if (!MediaRecorder.isTypeSupported?.(x)) continue;
+        try { rec = new MediaRecorder(stream, { mimeType: x, videoBitsPerSecond: cd === 'hevc' ? VID_BPS_HEVC : VID_BPS, audioBitsPerSecond: 160000 }); type = x; codec = cd; break; } catch { rec = null; }
+      }
+      if (!rec) { try { rec = new MediaRecorder(stream, { videoBitsPerSecond: VID_BPS, audioBitsPerSecond: 160000 }); } catch { return keep(); } }
       const parts = [];
       rec.ondataavailable = (e) => { if (e.data?.size) parts.push(e.data); };
       rec.onstop = () => {
         const out = new Blob(parts, { type: rec.mimeType || type || 'video/mp4' });
         clean();
         const ext = /mp4/.test(out.type) ? 'mp4' : 'webm';
-        done(out.size > 10000 && out.size < file.size ? new File([out], file.name.replace(/\.\w+$/, '') + '.' + ext, { type: out.type.split(';')[0] }) : file);
+        if (!(out.size > 10000 && out.size < file.size)) return done(file);
+        const made = new File([out], file.name.replace(/\.\w+$/, '') + '.' + ext, { type: out.type.split(';')[0] });
+        if (codec) made._codec = codec;
+        done(made);
       };
       if (!onProg) document.body.append(note); // with onProg the progress shows on the thing itself (Alex, 5 Nov)
       const bar = note.querySelector('i');
@@ -673,6 +693,7 @@ function putWithProgress(path, f, onProg) {
 async function upload(personId, file, sub = '', onProg) {
   const vid = /^video\//.test(file.type);
   const f = await shrink(file, onProg && vid ? (k) => onProg(k * 0.5) : undefined);
+  if (f._codec) file._codec = f._codec; // the post keeps what the video was made in
   if (/^video\//.test(f.type) && f.size > MAX_VIDEO) throw new Error(t('The video is over 200 MB. Keep it to a minute or two.'));
   const ext = (f.name.match(/\.(\w+)$/) || [, 'bin'])[1].toLowerCase();
   const path = `${session.user.id}/${personId}/${sub}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}.${ext}`;
@@ -1429,7 +1450,7 @@ function composer(done, kind0 = 'work', asId = null) {
         const path = await upload(as, f, 'posts/', f._cover ? (k) => set(k * 0.95) : set);
         const poster = f._cover ? await upload(as, f._cover, 'posts/') : null;
         set(1);
-        media.push({ path, type: /^video/.test(f.type) ? 'video' : 'image', ...(await dimsOf(f)), ...(poster ? { poster } : {}) });
+        media.push({ path, type: /^video/.test(f.type) ? 'video' : 'image', ...(await dimsOf(f)), ...(poster ? { poster } : {}), ...(f._codec ? { codec: f._codec } : {}) });
       }
       const { error } = await sb.from('roardino_posts').insert({ person_id: as, body: text.value.trim() || null, media, kind });
       if (error) throw error;
@@ -1794,7 +1815,7 @@ function postCard(r, st, refresh) {
     try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ }
   };
   const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
-    ? feedVideo(urlOf(m.path), urlOf(m.poster))
+    ? feedVideo(urlOf(m.path), urlOf(m.poster), m.codec)
     : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', decoding: 'async', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
   // a video in its own shape, the width fixed and the height its own (Alex, 5 Nov: "the pictures were fine, only the
   // videos keep their aspect ratio"): the size kept at upload, else the video's own once it loads; pictures stay 4:5
@@ -1844,11 +1865,26 @@ function postCard(r, st, refresh) {
       viewWatch.observe(slides);
     }
   }
+  // the sound sign beside the views (Alex, 15 Nov): videos start silent; a press lets this one be heard, another quiets it
+  let soundEl = null;
+  if (slides && media[0].type === 'video') {
+    const v0 = slides.querySelector('video.fv');
+    if (v0 && !v0.dataset.cant) {
+      const face = () => { soundEl.innerHTML = v0.muted ? ICON.mute : ICON.vol; soundEl.classList.toggle('on', !v0.muted); soundEl.title = v0.muted ? t('Sound on') : t('Sound off'); soundEl.setAttribute('aria-label', soundEl.title); };
+      soundEl = h('button', { type: 'button', class: 'ig-ico ig-sound', onclick: (e) => {
+        e.stopPropagation();
+        v0.muted = !v0.muted;
+        if (!v0.muted) { document.querySelectorAll('video.fv').forEach((o) => { if (o !== v0 && !o.muted) o.muted = true; }); if (!v0.src && v0.dataset.src) v0.src = v0.dataset.src; delete v0.dataset.held; v0.play().catch(() => {}); }
+        face();
+      } });
+      v0.addEventListener('volumechange', face); face();
+    }
+  }
   const bar =
     h('div', { class: 'ig-bar' }, h('span', { class: 'ig-pair' }, bravoBtn, likeN),
       r.comments_off ? null : h('span', { class: 'ig-pair' }, h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: () => { if (talk.classList.contains('hidden')) { openTalk(); cap?.classList.remove('hidden'); } else { talk.classList.add('hidden'); cap?.classList.add('hidden'); } } }), talkN),
       h('button', { type: 'button', class: 'ig-ico', title: t('Send on RoarMe'), 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: () => sendToRoarMe(r, p) }),
-      viewsEl,
+      viewsEl, soundEl,
       h('span', { class: 'grow' }),
       own ? null : h('a', { class: 'btn sm main', href: `#/p/${p.id}` }, t('Work with me')), saveBtn);
   const time = h('p', { class: 'ig-time' }, ago(r.created_at));

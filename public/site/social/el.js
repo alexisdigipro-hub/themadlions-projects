@@ -879,5 +879,7 @@ window.RD_EL = {
 "edited": "επεξεργάστηκε",
 "{name} has no Roardino profile yet.": "Ο/Η {name} δεν έχει ακόμα προφίλ στο Roardino.",
 "{n} members": "{n} μέλη",
-"{name} is on RoarMe only, with no Roardino profile yet.": "Ο/Η {name} είναι μόνο στο RoarMe, δεν έχει ακόμα προφίλ στο Roardino."
+"{name} is on RoarMe only, with no Roardino profile yet.": "Ο/Η {name} είναι μόνο στο RoarMe, δεν έχει ακόμα προφίλ στο Roardino.",
+"Sound on": "Με ήχο",
+"Sound off": "Χωρίς ήχο"
 };
