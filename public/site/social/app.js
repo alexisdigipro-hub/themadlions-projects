@@ -75,7 +75,6 @@ let prefs = { ...PREF_DEFAULTS };
 try { prefs = { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; } catch { /* private window */ }
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 function wearPrefs() {
-  setTimeout(() => typeof chatLook === 'function' && chatLook());
   const dark = prefs.theme === 'dark' || (prefs.theme === 'auto' && darkQuery.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   document.documentElement.dataset.text = prefs.text;
@@ -878,6 +877,7 @@ function safeCard() {
 
 async function route() {
   document.querySelectorAll('.veil').forEach((v) => v.remove()); // a window never outlives its page
+  document.documentElement.classList.remove('in-room'); chatRoomLive = null; // a conversation's own layout ends with it
   if (location.hash.startsWith('#/legal')) return viewLegal(['terms', 'contact'].includes(location.hash.split('/')[2]) ? location.hash.split('/')[2] : 'privacy');
   if (!session) return viewFront();
   const [, a = 'feed', b] = (location.hash || '#/feed').split('/');
@@ -893,7 +893,7 @@ async function route() {
     if (JOBS && a === 's' && b) return await viewSeminar(b);
     if (a === 'me') return await viewMe();
     if (a === 'inbox' && isAdmin) return await viewInbox();
-    if (a === 'chat') return viewChat();
+    if (a === 'chat') return viewChat(b);
     if (a === 'settings') return viewSettings();
     if (a === 'edit') return await viewEdit(b || 'new');
     return await viewFeed();
@@ -3449,9 +3449,7 @@ function viewSettings() {
     isAdmin ? h('section', { class: 'sec' }, h('h2', {}, t('Admin')),
       row(t('Site messages'), t('What people send through the contact form on themadlions.com.'), h('a', { class: 'btn sm', href: '#/inbox' }, icon('mail'), t('Open'), siteUnread ? ` (${siteUnread})` : ''))) : null,
     h('section', { class: 'sec' }, h('h2', {}, t('Chat')),
-      row(t('Chat settings'), t('Notifications, privacy, chats and folders, blocked people, the look of the chat.'), h('button', { type: 'button', class: 'btn sm', onclick: () => openChat('settings') }, icon('gear'), t('Open'))),
-      row(t('Contacts'), t('Everyone you talk to.'), h('button', { type: 'button', class: 'btn sm', onclick: () => openChat('contacts') }, icon('user'), t('Open'))),
-      row(t('Calls'), t('Voice and video calls you made and missed.'), h('button', { type: 'button', class: 'btn sm', onclick: () => openChat('calls') }, icon('phone'), t('Open')))),
+      row(t('RoarMe'), t('Calls, voice messages and the rest of the chat live in RoarMe, with the same account.'), h('a', { class: 'btn sm', href: ROARME, target: '_blank', rel: 'noopener' }, icon('talk'), t('Open')))),
     h('section', { class: 'sec' }, h('h2', {}, t('Feed')),
       JOBS ? row(t('Calls in the feed'), t('Open calls show between the posts.'), toggle('feedCalls')) : null,
       row(t('Videos start muted'), null, toggle('mutedVideos')),
@@ -3471,79 +3469,313 @@ function viewSettings() {
       msg)));
 }
 
+const CHAT_PAGE = 50;
 /* =====================================================================================================================
-   Chat: RoarMe in a frame, the same account (signed in once inside it, then remembered)
+   Chat (Alex, 15 Nov: "the chat's code and build are Roardino's own, it only talks with RoarMe; our colours, the right
+   sizes, and RoarMe is not touched"). Roardino and RoarMe share one database and one account, so this reads and writes
+   RoarMe's own conversations (roar_my_rooms, roar_messages, roar_reactions, the bucket roar-files): what is written
+   here shows in RoarMe and the other way round. Minimal on purpose: the list, a conversation with words, photos and
+   videos, reply, a heart, delete of one's own message. Calls, voice, polls, places and Encrypted Chats stay RoarMe's:
+   here they show as a small card, and an Encrypted Chat is not written to from here.
    ===================================================================================================================== */
-let chatFrame = null;
 const ROARME_ORIGIN = new URL(ROARME).origin;
-// the chat opens already signed in (Alex, 14 Nov: "since I am in my Roardino account it must connect by itself"). RoarMe
-// knows nothing of Roardino since 8 Nov, so Roardino does it alone: the Roar Account handover (roar-connect) gives a
-// one-time token, a throwaway client here turns it into a session of its own (never Roardino's own refresh token), and
-// the frame is loaded with that session in its address, which RoarMe's own Supabase client picks up as any sign-in link
-let chatBusy = false;
-async function viewChat() {
+const chatPeople = new Map(); // account id -> { id, name, username, avatar }
+const chatSigned = new Map(); // bucket|path -> { url, until }
+let chatRooms = null, chatWatching = null, chatRoomLive = null, chatListDraw = null;
+const chatKey = (f) => (f.bucket || 'roar-files') + '|' + f.path;
+const chatUrl = (f) => (f?.path ? chatSigned.get(chatKey(f))?.url || '' : '');
+async function chatSign(files) {
+  const need = {};
+  for (const f of files) { if (!f?.path) continue; const hit = chatSigned.get(chatKey(f)); if (hit && hit.until > Date.now()) continue; (need[f.bucket || 'roar-files'] ||= new Set()).add(f.path); }
+  await Promise.all(Object.entries(need).map(async ([b, set]) => {
+    const { data } = await sb.storage.from(b).createSignedUrls([...set], 3600);
+    (data || []).forEach((r) => { if (r?.signedUrl && r.path) chatSigned.set(b + '|' + r.path, { url: r.signedUrl, until: Date.now() + 3300e3 }); });
+  }));
+}
+async function chatLoadPeople(ids) {
+  const miss = [...new Set(ids)].filter((x) => x && !chatPeople.has(x));
+  if (!miss.length) return;
+  const { data } = await sb.from('roar_profiles').select('id,username,display_name,avatar_url').in('id', miss);
+  (data || []).forEach((u) => chatPeople.set(u.id, { id: u.id, name: u.display_name || u.username || t('Member'), username: u.username, avatar: /^https?:/.test(u.avatar_url || '') ? u.avatar_url : null }));
+}
+const chatSealed = (body) => typeof body === 'string' && body.startsWith('e2e1.');
+// what a message is, in a few words: for the list, a reply's quote and the cards of what only RoarMe opens
+function chatWords(m) {
+  const f = m.file || {};
+  if (m.deleted_at) return t('Message deleted');
+  if (m.body === 'e2e:on') return t('Encrypted Chat on');
+  if (m.body === 'e2e:off') return t('Encrypted Chat off');
+  if (chatSealed(m.body)) return t('Encrypted message');
+  if (f.poll) return m.body || t('Poll');
+  if (f.live) return t('Live location');
+  if (f.location) return t('Location');
+  if (f.groupcall) return LANG === 'el' ? 'Κλήση' : t('Call');
+  if (f.contact) return t('Contact') + (f.contact.name ? ': ' + f.contact.name : '');
+  if (m.kind === 'image') return m.body || t('Photo');
+  if (m.kind === 'voice') return t('Voice message');
+  if (m.kind === 'file') return m.body || (f.round ? t('Video message') : /^video\//.test(f.type || '') ? t('Video') : /^audio\//.test(f.type || '') ? t('Audio') : f.name || t('File'));
+  return m.body || '';
+}
+const chatTime = (iso) => { if (!iso) return ''; const d = new Date(iso), n = new Date(); return d.toDateString() === n.toDateString() ? d.toLocaleTimeString(LOCALE(), { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }) : d.toLocaleDateString(LOCALE(), n - d < 6 * 864e5 ? { weekday: 'short' } : { day: 'numeric', month: 'short' }); };
+async function chatLoadRooms() {
+  const { data, error } = await sb.rpc('roar_my_rooms');
+  if (error) { fail(error); return chatRooms || []; }
+  const meId = session.user.id;
+  const rows = (data || []).filter((r) => !r.archived);
+  await chatLoadPeople(rows.flatMap((r) => [...(r.kind === 'direct' ? (r.members || []).filter((u) => u !== meId) : []), r.last_user]));
+  chatRooms = rows.map((r) => {
+    const o = r.kind === 'direct' ? chatPeople.get((r.members || []).find((u) => u !== meId)) : null;
+    return { ...r, id: r.room_id, name: o ? o.name : r.title || (r.kind === 'direct' ? t('Saved messages') : t('Group')), avatar: o ? o.avatar : /^https?:/.test(r.avatar_url || '') ? r.avatar_url : null, other: o || null };
+  }).sort((a, b) => String(b.last_message_at || '').localeCompare(String(a.last_message_at || '')));
+  return chatRooms;
+}
+// one listener for the whole visit: a new or changed message redraws the open conversation or the list
+function chatWatch() {
+  if (chatWatching) return;
+  let tm = null;
+  chatWatching = sb.channel('roardino-chat-' + session.user.id)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'roar_messages' }, (p) => {
+      const m = p.new && p.new.id ? p.new : null;
+      if (m && chatRoomLive && chatRoomLive.id === m.room_id) chatRoomLive.take(m, p.eventType);
+      clearTimeout(tm); tm = setTimeout(() => { if (chatListDraw && (location.hash || '') === '#/chat') chatListDraw(); }, 500);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'roar_reactions' }, (p) => { const r = p.new?.room_id || p.old?.room_id; if (chatRoomLive && (!r || r === chatRoomLive.id)) chatRoomLive.hearts(); })
+    .subscribe();
+}
+async function viewChat(roomId) {
   document.title = 'Roardino · ' + t('Chat');
-  // one frame kept for the whole visit, so going back to the chat is instant and keeps the conversation open
-  if (chatFrame) return frame('chat', h('div', { class: 'chat-wrap' }, chatFrame));
-  frame('chat', h('div', { class: 'chat-wrap' }, h('p', { class: 'wait' }, t('Loading…'))));
-  if (chatBusy) return;
-  chatBusy = true;
-  const hash = await chatSession();
-  chatBusy = false;
-  chatFrame = h('iframe', { class: 'chat-frame', src: ROARME + hash, title: 'RoarMe', allow: 'camera; microphone; clipboard-write; autoplay; fullscreen; display-capture' });
-  if ((location.hash || '').startsWith('#/chat')) frame('chat', h('div', { class: 'chat-wrap' }, chatFrame));
+  chatWatch();
+  document.documentElement.classList.toggle('in-room', !!roomId);
+  if (roomId) return viewChatRoom(roomId);
+  chatRoomLive = null;
+  const box = h('div', { class: 'card ch-list' }, h('p', { class: 'wait' }, t('Loading…')));
+  let q = '';
+  const find = input('', { type: 'search', class: 'input search ind-search', placeholder: t('Search conversations'), 'aria-label': t('Search conversations'), oninput: (e) => { q = fold(e.target.value.trim()); draw(); } });
+  frame('chat', h('div', { class: 'head ind-head' }, h('h1', { class: 'ind-title' }, t('Chat')), find), box);
+  const meId = session.user.id;
+  const draw = () => {
+    const rows = (chatRooms || []).filter((r) => !q || fold(r.name + ' ' + (r.other?.username || '')).includes(q));
+    if (!rows.length) return put(box, h('div', { class: 'empty first-post' }, h('span', { class: 'fp-ic', html: ICON.talk }), h('b', {}, q ? t('Nothing found') : t('No conversations yet')), h('p', {}, q ? t('Try another name.') : t('Open someone\'s profile and press Message to start one.')), q ? null : h('a', { class: 'btn main fp-btn', href: '#/people' }, t('Industry'))));
+    put(box, ...rows.map((r) => {
+      const last = { kind: r.last_kind, body: r.last_body, deleted_at: r.last_deleted ? 1 : null, file: {} };
+      const words = r.last_kind || r.last_body ? chatWords(last) : '';
+      const by = r.last_user === meId ? t('You') + ': ' : r.kind !== 'direct' && chatPeople.get(r.last_user) ? chatPeople.get(r.last_user).name.split(' ')[0] + ': ' : '';
+      return h('a', { class: 'ch-row' + (r.unread > 0 ? ' new' : ''), href: `#/chat/${r.id}` },
+        avatar({ name: r.name, avatar: r.avatar }, 'ch-av'),
+        h('span', { class: 'ch-who' }, h('b', {}, r.name), h('small', {}, words ? by + words : r.kind === 'direct' ? '' : t('Group'))),
+        h('span', { class: 'ch-side' }, h('small', {}, chatTime(r.last_message_at)), r.unread > 0 ? h('em', {}, r.unread > 99 ? '99+' : String(r.unread)) : r.muted ? h('i', { class: 'ch-mute', html: ICON.bell }) : null));
+    }));
+  };
+  chatListDraw = async () => { await chatLoadRooms(); if ((location.hash || '') === '#/chat') draw(); };
+  if (chatRooms) draw();
+  await chatListDraw();
 }
-async function chatSession() {
-  try {
-    const FN = SB_URL + '/functions/v1/roar-connect';
-    const call = async (body, token) => {
-      const r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SB_KEY, ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: JSON.stringify(body) });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok || j.error) throw new Error(j.error || 'HTTP ' + r.status);
-      return j;
-    };
-    const { data: cur } = await sb.auth.getSession();
-    const token = cur.session?.access_token;
-    if (!token) return '';
-    const start = await call({ do: 'start', app: 'roardino' });
-    await call({ do: 'allow', code: start.code }, token);
-    let th = null;
-    for (let i = 0; i < 10 && !th; i++) {
-      const a = await call({ do: 'poll', code: start.code, secret: start.secret });
-      if (a.token_hash) th = a.token_hash; else if (a.expired) return ''; else await new Promise((r) => setTimeout(r, 800));
+// words with their links made into links
+function chatText(body) {
+  const out = []; let i = 0;
+  String(body || '').replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)\]]/g, (u, at) => { if (at > i) out.push(body.slice(i, at)); out.push(h('a', { href: u, target: '_blank', rel: 'noopener', onclick: (e) => e.stopPropagation() }, u.replace(/^https?:\/\//, '').slice(0, 60))); i = at + u.length; return u; });
+  if (i < String(body || '').length) out.push(String(body).slice(i));
+  return out;
+}
+async function viewChatRoom(roomId) {
+  const meId = session.user.id;
+  if (!chatRooms) await chatLoadRooms();
+  let room = (chatRooms || []).find((r) => r.id === roomId);
+  if (!room) { await chatLoadRooms(); room = (chatRooms || []).find((r) => r.id === roomId); }
+  if (!room) { toast(t('This conversation is not here.')); location.hash = '#/chat'; return; }
+  const group = room.kind !== 'direct';
+  let msgs = [], hearts = {}, replyTo = null, more = true, sealedRoom = false, clearedAt = null;
+  const hidden = new Set();
+  const list = h('div', { class: 'ch-msgs' }, h('p', { class: 'wait' }, t('Loading…')));
+  const replyBox = h('div', { class: 'ch-reply', hidden: true });
+  const text = h('textarea', { class: 'ch-input', rows: 1, placeholder: t('Message'), maxlength: 4000,
+    oninput: () => { text.style.height = 'auto'; text.style.height = Math.min(text.scrollHeight, 132) + 'px'; },
+    onkeydown: (e) => { if (e.key === 'Enter' && !e.shiftKey && !isPhone()) { e.preventDefault(); send(); } } });
+  const pick = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: (e) => { const fs = [...e.target.files].slice(0, 10); e.target.value = ''; sendFiles(fs); } });
+  const sendBtn = h('button', { type: 'button', class: 'ch-send', title: t('Send'), 'aria-label': t('Send'), html: ICON.send, onclick: () => send() });
+  const foot = h('div', { class: 'ch-foot' }, replyBox, h('div', { class: 'ch-write' },
+    h('button', { type: 'button', class: 'ch-clip', title: t('Photo / video'), 'aria-label': t('Photo / video'), html: ICON.pic, onclick: () => pick.click() }), pick, text, sendBtn));
+  const sub = group ? t('{n} members', { n: (room.members || []).length }) : room.other?.username ? '@' + room.other.username : '';
+  const person = !group && room.other ? () => sb.from('roardino_people').select('id').eq('owner', room.other.id).eq('minor', false).limit(1).then(({ data }) => { if (data?.[0]) location.hash = `#/p/${data[0].id}`; else toast(t('{name} has no Roardino profile yet.', { name: room.name })); }) : null;
+  frame('chat', h('div', { class: 'ch-room' },
+    h('div', { class: 'ch-head' },
+      h('a', { class: 'ch-back', href: '#/chat', title: t('Back'), 'aria-label': t('Back'), html: ICON.left }),
+      h(person ? 'button' : 'div', { type: person ? 'button' : null, class: 'ch-name', onclick: person }, avatar({ name: room.name, avatar: room.avatar }, 'ch-av sm'), h('span', {}, h('b', {}, room.name), sub ? h('small', {}, sub) : null)),
+    ),
+    list, foot));
+  const here = () => (location.hash || '') === `#/chat/${roomId}`;
+  const atEnd = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 160;
+  const toEnd = () => window.scrollTo(0, document.documentElement.scrollHeight);
+  const nameOf = (id) => (id === meId ? t('You') : chatPeople.get(id)?.name || t('Member'));
+  const seen = () => sb.from('roar_members').update({ last_read_at: new Date().toISOString() }).eq('room_id', roomId).eq('user_id', meId).then(() => { if (room.unread) { room.unread = 0; drawBadges?.(); } }, () => {});
+  const setReply = (m) => {
+    replyTo = m;
+    replyBox.hidden = !m;
+    if (m) { put(replyBox, h('span', {}, h('b', {}, nameOf(m.user_id)), h('small', {}, chatWords(m).slice(0, 90))), h('button', { type: 'button', class: 'ch-reply-x', 'aria-label': t('Cancel'), html: ICON.x, onclick: () => setReply(null) })); text.focus(); }
+  };
+  const shown = () => msgs.filter((m) => !hidden.has(m.id) && (!clearedAt || m.created_at > clearedAt));
+  const bubble = (m, prev) => {
+    const f = m.file || {};
+    if (m.kind === 'system' || m.body === 'e2e:on' || m.body === 'e2e:off') return h('p', { class: 'ch-sys' }, chatWords(m));
+    const mine = m.user_id === meId;
+    const first = !prev || prev.user_id !== m.user_id || prev.kind === 'system';
+    let body;
+    const video = m.kind === 'file' && (/^video\//.test(f.type || '') || f.round);
+    if (m.deleted_at) body = h('i', { class: 'ch-gone' }, t('Message deleted'));
+    else if (chatSealed(m.body)) body = h('i', { class: 'ch-gone' }, t('Encrypted message. Open it in RoarMe.'));
+    else if ((m.kind === 'image' || video) && f.path) {
+      const small = chatUrl(f.thumb ? { path: f.thumb, bucket: f.bucket } : f);
+      const open = async (e) => { e.stopPropagation(); await chatSign([f]); if (chatUrl(f)) lightbox([{ type: video ? 'video' : 'image', path: chatUrl(f), poster: video ? small : null }], 0, { bare: true }); };
+      body = [h('button', { type: 'button', class: 'ch-pic' + (video ? ' vid' : ''), style: small && (m.kind === 'image' || f.thumb) ? { backgroundImage: `url("${small}")` } : {}, 'aria-label': video ? t('Video') : t('Photo'), onclick: open }, video ? h('span', { class: 'ch-play', html: ICON.play }) : null),
+        m.body ? h('span', { class: 'ch-cap' }, ...chatText(m.body)) : null];
+    } else if ((m.kind && m.kind !== 'text') || f.poll || f.location || f.groupcall || f.contact || f.live) body = h('span', { class: 'ch-card' }, h('b', {}, chatWords(m)), h('small', {}, t('Open it in RoarMe')));
+    else body = h('span', { class: 'ch-text' }, ...chatText(m.body));
+    const q = m.reply_to ? msgs.find((x) => x.id === m.reply_to) : null;
+    const hs = hearts[m.id] || [];
+    return h('div', { class: 'ch-msg' + (mine ? ' mine' : '') + (first ? ' first' : ''), 'data-id': m.id },
+      !mine && group ? (first ? avatar(chatPeople.get(m.user_id) || { name: nameOf(m.user_id) }, 'ch-av xs') : h('span', { class: 'ch-av xs none' })) : null,
+      h('div', { class: 'ch-bub' + ((m.kind === 'image' || video) && !m.deleted_at && f.path ? ' pic' : ''), onclick: () => { if (!m.deleted_at) chatMenu(m); } },
+        !mine && group && first ? h('b', { class: 'ch-by' }, nameOf(m.user_id)) : null,
+        q ? h('span', { class: 'ch-quote' }, h('b', {}, nameOf(q.user_id)), h('small', {}, chatWords(q).slice(0, 80))) : null,
+        body,
+        h('span', { class: 'ch-meta' }, hs.length ? h('em', { class: 'ch-heart' + (hs.includes(meId) ? ' on' : '') }, h('span', { html: ICON.heart }), hs.length > 1 ? String(hs.length) : '') : null,
+          m.edited_at && !m.deleted_at ? t('edited') + ' · ' : '', new Date(m.created_at).toLocaleTimeString(LOCALE(), { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }))));
+  };
+  const draw = (keep) => {
+    const rows = shown();
+    // an Encrypted Chat is written only in RoarMe: its key lives there
+    const lastMark = [...rows].reverse().find((m) => m.body === 'e2e:on' || m.body === 'e2e:off');
+    const lastWords = [...rows].reverse().find((m) => m.kind === 'text' && !m.deleted_at && m.body !== 'e2e:on' && m.body !== 'e2e:off');
+    sealedRoom = lastMark ? lastMark.body === 'e2e:on' : !!(lastWords && chatSealed(lastWords.body));
+    foot.classList.toggle('locked', sealedRoom);
+    text.disabled = sealedRoom; text.placeholder = sealedRoom ? t('Encrypted Chat: write in RoarMe') : t('Message');
+    const before = document.documentElement.scrollHeight - window.scrollY;
+    const out = []; let day = '', prev = null;
+    if (more && rows.length) out.push(h('button', { type: 'button', class: 'btn sm ch-older', onclick: older }, t('Earlier messages')));
+    for (const m of rows) {
+      const d = new Date(m.created_at).toDateString();
+      if (d !== day) { day = d; out.push(h('p', { class: 'ch-day' }, new Date(m.created_at).toLocaleDateString(LOCALE(), { weekday: 'long', day: 'numeric', month: 'long' }))); prev = null; }
+      out.push(bubble(m, prev)); prev = m;
     }
-    if (!th) return '';
-    const mem = {};
-    const side = window.supabase.createClient(SB_URL, SB_KEY, { auth: { storageKey: 'roardino-chat-handover', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false,
-      storage: { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; }, removeItem: (k) => { delete mem[k]; } } } });
-    const { data, error } = await side.auth.verifyOtp({ token_hash: th, type: 'magiclink' });
-    const s2 = data?.session;
-    if (error || !s2) return '';
-    return '#' + new URLSearchParams({ access_token: s2.access_token, refresh_token: s2.refresh_token, expires_in: String(s2.expires_in || 3600), expires_at: String(s2.expires_at || ''), token_type: 'bearer', type: 'magiclink' }).toString();
-  } catch (e) { console.warn('chat sign-in', e); return ''; }
+    if (!rows.length) out.push(h('p', { class: 'ch-day' }, t('Say hello.')));
+    put(list, ...out);
+    if (keep === 'top') window.scrollTo(0, document.documentElement.scrollHeight - before); else if (keep !== 'stay') toEnd();
+  };
+  const signAll = (rows) => chatSign(rows.filter((m) => !m.deleted_at && m.file?.path && (m.kind === 'image' || m.kind === 'file')).map((m) => (m.file.thumb ? { path: m.file.thumb, bucket: m.file.bucket } : m.kind === 'image' ? m.file : null)).filter(Boolean));
+  const loadHearts = async () => {
+    const ids = msgs.map((m) => m.id); if (!ids.length) return;
+    const { data } = await sb.from('roar_reactions').select('message_id,user_id,emoji').eq('room_id', roomId).in('message_id', ids.slice(-200));
+    hearts = {}; (data || []).forEach((r) => { if (String(r.emoji || '').startsWith('❤')) (hearts[r.message_id] ||= []).push(r.user_id); }); // RoarMe's other reactions stay RoarMe's
+  };
+  async function load(before) {
+    let req = sb.from('roar_messages').select('*').eq('room_id', roomId).order('created_at', { ascending: false }).limit(CHAT_PAGE);
+    if (before) req = req.lt('created_at', before);
+    const { data, error } = await req;
+    if (error) { fail(error); return []; }
+    const rows = (data || []).reverse();
+    if (rows.length < CHAT_PAGE) more = false;
+    await Promise.all([chatLoadPeople(rows.map((m) => m.user_id)), signAll(rows)]);
+    return rows;
+  }
+  async function older() { const rows = await load(msgs[0]?.created_at); msgs = [...rows, ...msgs]; await loadHearts(); if (here()) draw('top'); }
+  async function send() {
+    const body = text.value.trim();
+    if (!body || sealedRoom) return;
+    sendBtn.disabled = true;
+    const reply_to = replyTo?.id || null;
+    const { data, error } = await sb.from('roar_messages').insert({ room_id: roomId, user_id: meId, body, reply_to }).select().single();
+    sendBtn.disabled = false;
+    if (error) return fail(error);
+    text.value = ''; text.style.height = 'auto'; setReply(null);
+    if (!msgs.some((x) => x.id === data.id)) { msgs.push(data); draw(); }
+    seen();
+  }
+  async function sendFiles(files) {
+    if (sealedRoom) return;
+    for (const raw of files) {
+      const img = /^image\//.test(raw.type), vid = /^video\//.test(raw.type);
+      if (!img && !vid) continue;
+      if (raw.size > 45 * 1024 * 1024) { toast(t('Too big for here (over 45 MB). Send it in RoarMe.')); continue; }
+      const wait = h('div', { class: 'ch-msg mine' }, h('div', { class: 'ch-bub' }, h('span', { class: 'ch-text' }, t('Sending…'))));
+      list.append(wait); toEnd();
+      try {
+        const file = img && !/gif|svg/.test(raw.type) ? await shrink(raw) : raw;
+        const safe = (raw.name || 'file').normalize('NFKD').replace(/[^\w.-]+/g, '_').slice(-80) || 'file';
+        const up = async (blob, name) => { const path = `${roomId}/${crypto.randomUUID()}-${name}`; const { error } = await sb.storage.from('roar-files').upload(path, blob, { contentType: blob.type || raw.type }); if (error) throw error; return path; };
+        const meta = { path: await up(file, safe), name: raw.name || safe, size: file.size, type: file.type || raw.type };
+        if (vid) { try { const cover = await videoCover(raw); if (cover) meta.thumb = await up(cover, 'cover.jpg'); } catch { /* RoarMe reads the first frame itself */ } }
+        const { data, error } = await sb.from('roar_messages').insert({ room_id: roomId, user_id: meId, kind: img && !/gif|svg/.test(raw.type) ? 'image' : 'file', body: '', file: meta, reply_to: replyTo?.id || null }).select().single();
+        if (error) throw error;
+        setReply(null);
+        await signAll([data]);
+        wait.remove();
+        if (!msgs.some((x) => x.id === data.id)) { msgs.push(data); draw(); }
+      } catch (e) { wait.remove(); fail(e); }
+    }
+    seen();
+  }
+  function chatMenu(m) {
+    let close;
+    const mine = m.user_id === meId;
+    const liked = (hearts[m.id] || []).includes(meId);
+    const row = (ic, label, fn, cls = '') => h('button', { type: 'button', class: 'pm-row ' + cls, onclick: () => { close(); fn(); } }, h('span', { class: 'pm-ic', html: ICON[ic] }), label);
+    const words = !chatSealed(m.body) && m.body ? m.body : '';
+    close = openWin(nameOf(m.user_id), h('div', { class: 'pm' }, h('div', { class: 'pm-group' },
+      sealedRoom ? null : row('talk', t('Reply'), () => setReply(m)),
+      row('heart', liked ? t('Remove the heart') : t('Like'), async () => {
+        const { error } = liked ? await sb.from('roar_reactions').delete().eq('message_id', m.id).eq('user_id', meId) : await sb.from('roar_reactions').upsert({ message_id: m.id, room_id: roomId, user_id: meId, emoji: '❤️' });
+        if (error) return fail(error);
+        await loadHearts(); draw('stay');
+      }),
+      words ? row('link', t('Copy'), async () => { try { await navigator.clipboard.writeText(words); toast(t('Copied')); } catch { /* not allowed */ } }) : null,
+      mine ? row('trash', t('Delete for everyone'), async () => {
+        if (!(await ask(t('Delete this message for everyone?')))) return;
+        const { error } = await sb.from('roar_messages').update({ deleted_at: new Date().toISOString(), body: '' }).eq('id', m.id);
+        if (error) return fail(error);
+        m.deleted_at = new Date().toISOString(); m.body = ''; draw('stay');
+      }, 'red') : null)), null);
+    document.querySelector('.veil:last-of-type')?.classList.add('pm-veil');
+  }
+  chatRoomLive = { id: roomId,
+    take: async (m, ev) => {
+      if (!here()) return;
+      const i = msgs.findIndex((x) => x.id === m.id);
+      const end = atEnd();
+      if (i >= 0) msgs[i] = { ...msgs[i], ...m }; else if (ev === 'INSERT') { await Promise.all([chatLoadPeople([m.user_id]), signAll([m])]); if (!msgs.some((x) => x.id === m.id)) msgs.push(m); } else return;
+      draw(i >= 0 || !end ? 'stay' : undefined);
+      if (i < 0 && m.user_id !== meId) seen();
+    },
+    hearts: async () => { if (!here()) return; await loadHearts(); draw('stay'); } };
+  const [rows, mem, hid] = await Promise.all([load(),
+    sb.from('roar_members').select('cleared_at').eq('room_id', roomId).eq('user_id', meId).maybeSingle(),
+    sb.from('roar_msg_hides').select('message_id').eq('room_id', roomId).eq('user_id', meId)]);
+  if (!here()) return;
+  msgs = rows; clearedAt = mem.data?.cleared_at || null; (hid.data || []).forEach((x) => hidden.add(x.message_id));
+  await loadHearts();
+  if (!here()) return;
+  draw(); seen();
+  requestAnimationFrame(toEnd);
 }
-// what Roardino says to the framed RoarMe: its look, and a one-time sign-in token for the same Roar Account
-const toChat = (msg) => { try { chatFrame?.contentWindow?.postMessage(msg, ROARME_ORIGIN); } catch { /* not there */ } };
-// Message on a profile (Alex, 5 Nov): the direct chat on RoarMe with the profile's account (a child's: the parent's)
+// a still frame of a video, for the chat's small picture of it
+function videoCover(file) {
+  return new Promise((ok) => {
+    const v = document.createElement('video'); const url = URL.createObjectURL(file);
+    const done = (b) => { URL.revokeObjectURL(url); ok(b); };
+    v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
+    v.onloadeddata = () => { v.currentTime = Math.min(0.5, (v.duration || 1) / 2); };
+    v.onseeked = () => { try { const k = Math.min(1, 640 / Math.max(v.videoWidth, v.videoHeight)); const c = document.createElement('canvas'); c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k); c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); c.toBlob((b) => done(b), 'image/jpeg', 0.72); } catch { done(null); } };
+    v.onerror = () => done(null); setTimeout(() => done(null), 8000);
+  });
+}
+// Message on a profile (Alex, 5 Nov): the conversation with the profile's account (a child's: the parent's)
 async function messageOnRoarMe(p) {
   if (!p.owner || p.owner === session.user.id) return;
   const { data: room, error } = await sb.rpc('roar_open_direct', { other: p.owner });
   if (error || !room) { toast(t('{name} is not on RoarMe yet.', { name: p.name })); return; }
   document.querySelectorAll('.veil').forEach((v) => v.remove());
-  openChat({ page: 'room', room: typeof room === 'string' ? room : room.id || room });
+  chatRooms = null;
+  location.hash = `#/chat/${typeof room === 'string' ? room : room.id || room}`;
 }
-// which page of the chat to show (Alex, 5 Nov: the chat's settings live in Roardino's Settings; on a phone RoarMe's own bar is hidden)
-let chatReady = false, chatPending = null;
-function openChat(page) {
-  chatPending = page;
-  if (location.hash !== '#/chat') location.hash = '#/chat'; else viewChat();
-}
-const chatLook = () => toChat({ type: 'roardino:look', theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light' });
-window.addEventListener('message', (e) => {
-  if (e.origin !== ROARME_ORIGIN || !chatFrame || e.source !== chatFrame.contentWindow) return;
-  const d = e.data || {};
-  if (d.type === 'roarme:ready') { chatReady = !!d.signedIn; chatLook(); if (chatPending) { toChat(typeof chatPending === 'object' ? { type: 'roardino:open', ...chatPending } : { type: 'roardino:open', page: chatPending }); chatPending = null; } }
-});
 
 /* =====================================================================================================================
    Seminars
