@@ -2141,7 +2141,9 @@ function postCard(r, st, refresh) {
   }
   if (slides && media[0].type === 'video') {
     if (urlOf(media[0].poster)) { slides.classList.add('has-cover'); slides.style.setProperty('--cover', `url("${urlOf(media[0].poster)}")`); }
-    const shape = (w, hh) => { if (w && hh) slides.style.setProperty('--ar', `${w} / ${hh}`); };
+    // as Instagram (Alex, 15 Nov): a video taller than 4:5 (a 9:16) shows in the feed cut to 4:5, top and bottom off,
+    // and opens whole with a tap; a wider one keeps its own shape
+    const shape = (w, hh) => { if (!w || !hh) return; if (w / hh >= 4 / 5) slides.style.setProperty('--ar', `${w} / ${hh}`); else { slides.style.setProperty('--ar', '4 / 5'); slides.classList.add('cut'); } };
     const m0 = media[0];
     if (m0.w && m0.h) shape(m0.w, m0.h);
     else slides.firstElementChild?.addEventListener('loadedmetadata', (e) => {
@@ -2229,6 +2231,8 @@ function postCard(r, st, refresh) {
       clearTimeout(tapT);
       const now = Date.now();
       // a phone: the first touch only brings the icons; a touch while they show plays or pauses
+      // a video cut to 4:5 opens whole with one tap (Alex, 15 Nov), as a reel on Instagram
+      if (slides.classList.contains('cut') && !slides.classList.contains('many')) { if (isPhone()) peek(); tapT = setTimeout(() => { v.pause(); v.dataset.held = '1'; lightbox(media, slideAt(), { onLike: () => { if (!own && !bravoBtn.classList.contains('on')) bravoBtn.click(); } }); }, 120); return; }
       if (isPhone() && !art.classList.contains('open') && now - lastTap >= 320) { lastTap = now; peek(); return; }
       if (isPhone()) peek();
       if (now - lastTap < 320) { lastTap = 0; v.pause(); v.dataset.held = '1'; lightbox(media, slideAt(), { onLike: () => { if (!own && !bravoBtn.classList.contains('on')) bravoBtn.click(); } }); return; }

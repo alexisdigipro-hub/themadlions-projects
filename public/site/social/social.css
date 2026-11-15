@@ -3131,3 +3131,6 @@ html[data-theme=dark] .pf-choice button.on{background:rgba(255,255,255,.14);colo
 .cover-veil .win .foot .btn{width:100%;justify-content:center;margin:0}
 /* the profile grid on a phone is 4:5 too, so the frame chosen for a cover is exactly what shows there */
 @media (max-width:820px){.page .grid .cell{aspect-ratio:4/5}}
+/* a 9:16 video in the feed fills a 4:5 frame, top and bottom cut (Alex, 15 Nov, as Instagram); a tap opens it whole */
+.ig-media.cut>video,.ig-media.cut:not(.many)>video{object-fit:cover!important;max-height:none!important}
+.ig-media.cut video{cursor:zoom-in}
