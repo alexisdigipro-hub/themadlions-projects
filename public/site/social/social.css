@@ -2795,3 +2795,11 @@ html.kb .form-foot{bottom:8px}
 /* a page comes in as one piece, short and small, with one soft overshoot */
 .page>*{animation:gl-page .32s cubic-bezier(.25,1.2,.45,1) backwards}
 @keyframes gl-page{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+
+/* the writing box rides up with the keyboard inside the iPhone app, not after it (Alex, 15 Nov); see app.js, the shell's
+   keyboard: kb-rise until the page itself gets shorter, kb-fall as the keyboard goes down */
+html.kb-rise .ch-foot,html.kb-rise .ch-msgs{transform:translateY(calc(-1 * var(--kbup,0px) + 26px));transition:transform .27s cubic-bezier(.17,.59,.4,.99)}
+html.kb-fall-from .ch-foot,html.kb-fall-from .ch-msgs{transform:translateY(calc(-1 * var(--kbup,0px) + 26px));transition:none}
+html.kb-fall .ch-foot,html.kb-fall .ch-msgs{transform:none;transition:transform .25s cubic-bezier(.17,.59,.4,.99)}
+html.kb-rise .ch-foot{bottom:max(10px,env(safe-area-inset-bottom))}
+html.kb-rise .ch-room{padding-bottom:max(10px,env(safe-area-inset-bottom))}
