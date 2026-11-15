@@ -2060,6 +2060,9 @@ function openReels(fromArt, onClose, signedHq) {
           h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); sheet(it); } }))),
       capEl ? h('div', { class: 'rl-info' }, capEl) : null,
       bar);
+    // the bar does not ride with the video (Alex, 16 Nov: "it stays still while I scroll"): it is kept aside and
+    // laid over the whole view for the video on screen
+    const side = slide.querySelector('.rl-side'); side.remove(); slide._side = side;
     // one tap pauses or plays, two taps like with the big heart
     let last = 0, tt = 0;
     slide.addEventListener('click', (e) => {
@@ -2082,6 +2085,7 @@ function openReels(fromArt, onClose, signedHq) {
   const show = (i) => {
     if (i === cur) return;
     cur = i;
+    veil.querySelector(':scope > .rl-side')?.remove(); veil.append(slides[i]._side);
     vids.forEach((x, k) => {
       const d = Math.abs(k - i);
       if (d <= 1 && !x.getAttribute('src')) { x.src = x.dataset.src; x.preload = 'auto'; }
