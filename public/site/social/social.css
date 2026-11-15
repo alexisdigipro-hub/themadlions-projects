@@ -2803,3 +2803,30 @@ html.kb-fall-from .ch-foot,html.kb-fall-from .ch-msgs{transform:translateY(calc(
 html.kb-fall .ch-foot,html.kb-fall .ch-msgs{transform:none;transition:transform .25s cubic-bezier(.17,.59,.4,.99)}
 html.kb-rise .ch-foot{bottom:max(10px,env(safe-area-inset-bottom))}
 html.kb-rise .ch-room{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+
+/* the conversation in the measure of the rest of Roardino (Alex, 15 Nov: "very big bubbles, very big letters, level it
+   with the whole app; the red too strong, more matte, lighter; no outlines, flat") */
+.ch-bub{padding:7px 11px 5px;border-radius:16px;border-bottom-left-radius:6px;font-size:14px;line-height:1.36;gap:2px;border:0!important;box-shadow:none;background:rgba(255,255,255,.78)}
+html[data-theme=dark] .ch-bub{background:rgba(255,255,255,.075)}
+.ch-msg.mine .ch-bub{border-radius:16px;border-bottom-right-radius:6px;background:color-mix(in srgb,rgb(var(--a)) 58%,#8a8f99);color:#fff}
+html[data-theme=dark] .ch-msg.mine .ch-bub{background:color-mix(in srgb,rgb(var(--a)) 52%,#3a3e46)}
+@supports not (background:color-mix(in srgb,red,blue)){ .ch-msg.mine .ch-bub{background:rgba(var(--a),.72)} }
+.ch-meta{font-size:10px;gap:5px}
+.ch-msg{gap:6px}.ch-msg.first{margin-top:6px}.ch-msgs{gap:2px;padding-top:12px}
+.ch-by{font-size:12px}.ch-gone{font-size:13.5px}.ch-quote{font-size:12px;padding:4px 8px}
+.ch-card small{font-size:11.5px}
+.ch-day,.ch-sys{font-size:11.5px;padding:4px 10px;margin:10px 0 6px}
+.ch-bub.pic{padding:3px 3px 5px}.ch-pic{width:min(58vw,260px);border-radius:13px}
+.ch-heart{height:18px;padding:0 5px}.ch-heart svg{width:11px;height:11px}
+.ch-head{padding:6px;border-radius:16px}
+.ch-back,.ch-clip,.ch-send{width:36px;height:36px}
+.ch-back svg,.ch-clip svg,.ch-send svg{width:18px;height:18px}
+.av.ch-av.sm{width:34px;height:34px;font-size:12px}
+.ch-name b{font-size:14.5px}.ch-name small{font-size:12px}
+.ch-foot{padding:6px;border-radius:22px}
+.ch-input{font-size:15px;padding:8px 4px}
+html body .ch-send,html body .ch-send.ready{background:color-mix(in srgb,rgb(var(--a)) 70%,#7d828c);box-shadow:none}
+.av.ch-av{width:46px;height:46px;font-size:15px}
+.ch-row{padding:8px 10px;gap:11px}
+.ch-who b{font-size:14.5px}.ch-who small{font-size:13px}.ch-side small{font-size:11.5px}
+@media (max-width:860px){ .ch-foot{border-radius:20px} .ch-bub{max-width:80%} }

@@ -1001,6 +1001,19 @@ window.addEventListener('hashchange', () => { crumb('go ' + location.hash); rout
   // a field that gets the focus inside a window stays in sight once the keyboard is up
   document.addEventListener('focusin', (e) => { if (e.target.closest?.('.win')) setTimeout(() => e.target.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 350); });
 })();
+// a slide to the right from the screen's left edge goes back a page, as an iPhone's own apps do (Alex, 15 Nov: "the
+// slide back should catch at the edges of the screen too"); a conversation has its own, from anywhere
+(() => {
+  if (!('ontouchstart' in window)) return;
+  let st = null;
+  window.addEventListener('touchstart', (e) => { const p = e.touches[0]; st = e.touches.length === 1 && p.clientX < 30 && !document.documentElement.classList.contains('in-room') && !e.target.closest?.('.veil,.lb,.st-veil,input,textarea') ? { x: p.clientX, y: p.clientY, at: Date.now() } : null; }, { passive: true });
+  window.addEventListener('touchend', (e) => {
+    if (!st) return;
+    const p = e.changedTouches[0], dx = p.clientX - st.x, dy = Math.abs(p.clientY - st.y), quick = Date.now() - st.at < 300;
+    st = null;
+    if (dx > (quick ? 50 : 100) && dy < dx * 0.6 && !/^#\/(feed)?$/.test(location.hash || '#/') && history.length > 1) history.back();
+  }, { passive: true });
+})();
 // pull down from the top to refresh, as in an app (Alex, 5 Nov): the installed web app on a phone has no pull-to-refresh of its own
 (() => {
   if (!('ontouchstart' in window)) return;
@@ -3738,8 +3751,9 @@ async function viewChatRoom(roomId) {
   (() => {
     const roomEl = list.parentElement; let st = null;
     const still = (el, x) => { el.style.transition = 'transform .3s cubic-bezier(.25,1.45,.45,1)'; el.style.transform = x; setTimeout(() => { el.style.transition = ''; if (!x) el.style.transform = ''; }, 320); };
-    roomEl.addEventListener('touchstart', (e) => { if (e.touches.length !== 1 || e.target.closest('textarea,input,.ch-reply')) { st = null; return; } const p = e.touches[0]; st = { x: p.clientX, y: p.clientY, at: Date.now(), lock: '', msg: e.target.closest('.ch-msg'), dx: 0 }; }, { passive: true });
-    roomEl.addEventListener('touchmove', (e) => {
+    const on = (ev, fn, opt) => { const f = (e) => { if (!here() || !roomEl.isConnected) { window.removeEventListener(ev, f, opt); return; } fn(e); }; window.addEventListener(ev, f, opt); };
+    on('touchstart', (e) => { if (e.touches.length !== 1 || e.target.closest?.('textarea,input,.ch-reply,.veil,.lb,.bar,.menu')) { st = null; return; } const p = e.touches[0]; st = { x: p.clientX, y: p.clientY, at: Date.now(), lock: '', msg: e.target.closest?.('.ch-msg'), dx: 0 }; }, { passive: true });
+    on('touchmove', (e) => {
       if (!st) return;
       const p = e.touches[0], dx = p.clientX - st.x, dy = p.clientY - st.y;
       if (!st.lock) { if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return; st.lock = Math.abs(dx) > Math.abs(dy) * 1.4 ? (dx > 0 ? 'back' : st.msg && !sealedRoom ? 'reply' : 'no') : 'no'; }
@@ -3761,7 +3775,7 @@ async function viewChatRoom(roomId) {
       }
       st = null;
     };
-    roomEl.addEventListener('touchend', end); roomEl.addEventListener('touchcancel', end);
+    on('touchend', end); on('touchcancel', end);
   })();
   const atEnd = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 160;
   const toEnd = () => window.scrollTo(0, document.documentElement.scrollHeight);
