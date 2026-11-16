@@ -4373,3 +4373,55 @@ html[data-theme=dark] .ch-post{background:rgba(255,255,255,.07)}
 @media (min-width:861px){.post.ig.clean .mwrap{--pr:22px;border-radius:22px}}
 .post.ig.has-media .mwrap .ig-media,.post.ig.has-media .mwrap .ig-bar,.post.ig.has-media .mwrap .post-head{border-radius:0}
 .post.ig.has-media .ig-media video,.post.ig.has-media .ig-media img{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+
+/* =====================================================================================================================
+   ONE LOOK FOR THE WHOLE SITE AND APP (Alex, 16 Nov: "as the New post window: the look, the blur, the rounding, on every
+   window and frame; one set of letter sizes; balance everywhere"). The last word on frames and type; it comes last and
+   wins. Glass: a soft light-to-clear gradient, a bright inner rim, a deep soft shadow, a strong blur behind.
+   Corners: windows 30px, frames 24px, tiles inside them 18px. Letters: titles 24, window titles 17, section titles 15,
+   text 15, second lines 13, labels 11 in capitals.
+   ===================================================================================================================== */
+:root{
+  --g1-bg:linear-gradient(160deg,rgba(255,255,255,.62),rgba(255,255,255,.38) 55%,rgba(255,255,255,.5));
+  --g1-rim:inset 0 0 0 1px rgba(255,255,255,.75),inset 0 2px 0 rgba(255,255,255,.9);
+  --g1-shadow:0 24px 60px rgba(28,35,51,.12);
+  --g1-blur:blur(40px) saturate(1.6);
+  --g1-tile:rgba(255,255,255,.42);
+  --t-title:24px;--t-win:17px;--t-sec:15px;--t-text:15px;--t-sub:13px;--t-label:11px;
+}
+html[data-theme=dark]{
+  --g1-bg:linear-gradient(160deg,rgba(60,64,72,.6),rgba(34,37,44,.45) 55%,rgba(44,47,54,.55));
+  --g1-rim:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 1px 0 rgba(255,255,255,.14);
+  --g1-shadow:0 24px 60px rgba(0,0,0,.4);
+  --g1-tile:rgba(255,255,255,.06);
+}
+/* frames */
+html[data-theme][data-theme] body :is(.card,.feed-top,.sec,.ch-split .ch-pane,.ch-split .ch-room,.ch-split .ch-blank,.pf-two,.me-card,.wz-main,.wz-sidecard){
+  background:var(--g1-bg)!important;background-color:transparent!important;border:0!important;border-radius:24px!important;
+  box-shadow:var(--g1-rim),var(--g1-shadow)!important;-webkit-backdrop-filter:var(--g1-blur)!important;backdrop-filter:var(--g1-blur)!important}
+/* windows (not those opened inside Reels, which wear the Reels glass) */
+html:not(.rl-open)[data-theme][data-theme] body:not(:has(.rl)) .veil:not(:has(.pm)) .win{
+  background:var(--g1-bg)!important;background-color:transparent!important;border:0!important;border-radius:30px!important;
+  box-shadow:var(--g1-rim),0 40px 100px rgba(28,35,51,.22)!important;-webkit-backdrop-filter:var(--g1-blur)!important;backdrop-filter:var(--g1-blur)!important}
+html:not(.rl-open)[data-theme=dark][data-theme] body:not(:has(.rl)) .veil:not(:has(.pm)) .win{box-shadow:var(--g1-rim),0 40px 100px rgba(0,0,0,.5)!important}
+html:not(.rl-open)[data-theme][data-theme] body:not(:has(.rl)) .veil:not(:has(.pm)){background:rgba(210,214,220,.28)!important;-webkit-backdrop-filter:blur(26px) saturate(1.3)!important;backdrop-filter:blur(26px) saturate(1.3)!important}
+html:not(.rl-open)[data-theme=dark][data-theme] body:not(:has(.rl)) .veil:not(:has(.pm)){background:rgba(0,0,0,.4)!important}
+/* tiles inside frames */
+html[data-theme][data-theme] body :is(.fs-card,.set-row,.cp-card,.ind-g,.me-tiles>*){border-radius:18px!important}
+html[data-theme][data-theme] body :is(.fs-card){background:var(--g1-tile)!important;background-image:none!important;border:0!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.6)!important}
+html[data-theme=dark][data-theme] body .fs-card{box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)!important}
+/* type: page titles */
+html[data-theme][data-theme] body .page>.head h1,html[data-theme][data-theme] body .page .ind-title,html[data-theme][data-theme] body .page>.head .wz-title{font-size:var(--t-title)!important;font-weight:700!important;letter-spacing:-.01em!important;text-transform:none!important;line-height:1.2}
+html[data-theme][data-theme] body .ch-split .ch-pane .ch-top .ind-title{font-size:18px!important;letter-spacing:-.01em!important;text-transform:none!important;font-weight:700!important}
+/* window titles */
+html[data-theme][data-theme] body .veil .win .win-head h2{font-size:var(--t-win)!important;font-weight:600!important;letter-spacing:-.005em!important;text-transform:none!important}
+/* section titles */
+html[data-theme][data-theme] body :is(.sec>h2,.sec>h3,.block>h2,.card>h2,.card>h3,.sec-t){font-size:var(--t-sec)!important;font-weight:650!important;letter-spacing:0!important;text-transform:none!important}
+/* text and second lines */
+html[data-theme][data-theme] body :is(.post-body,.th-text,.ch-text,.set-row b,.stm-who b,.ch-who b,.fs-card b,.block p){font-size:var(--t-text)!important}
+html[data-theme][data-theme] body :is(.set-row small,.stm-who small,.ch-who small,.fs-card small,.hint,.th-main b small){font-size:var(--t-sub)!important}
+/* small capitals labels */
+html[data-theme][data-theme] body :is(.fs-apps-head b,.stm-sec,.ig-sec,.pf-sec){font-size:var(--t-label)!important;letter-spacing:.14em!important;text-transform:uppercase!important}
+/* a frame inside a frame stays plain: one sheet of glass, not two */
+html[data-theme][data-theme] body :is(.ch-split .ch-pane .ch-list,.card .card,.sec .card,.card .sec){background:none!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-radius:0!important}
+html.rl-open body:has(.veil) .rl .rl-info{opacity:0!important;transition:opacity .2s}
