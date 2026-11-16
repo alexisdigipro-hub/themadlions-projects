@@ -3902,3 +3902,12 @@ html.rl-open .toast{z-index:150}
 .th-text{font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
 /* a post of words alone in a grid shows its words (it showed an empty tile) */
 .cell-text{display:-webkit-box!important;-webkit-line-clamp:7;-webkit-box-orient:vertical;overflow:hidden;padding:10px!important;font-size:12.5px!important;line-height:1.35;color:var(--ink)!important;text-align:left;align-self:start;white-space:normal}
+/* hashtags live in a thread (Alex, 16 Nov), as small chips under the words */
+.pf-th-box{min-height:120px}
+.pf-th-tags{margin-top:8px}
+.pf-th-tags .pf-chip{height:30px;padding:0 11px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);font:inherit;font-size:12.5px;cursor:pointer}
+.pf-th-tags .pf-chip.on{background:#fff;color:#111;border-color:#fff}
+@media (min-width:861px){.pf-thread .pf-th-tags .pf-chip{border-color:var(--line);background:rgba(128,134,148,.1);color:var(--ink2)}.pf-thread .pf-th-tags .pf-chip.on{background:var(--ink);color:var(--bg1)}}
+html[data-skin] body .pf-thread .pf-th-tags .pf-chip{height:30px!important;padding:0 11px!important;border-radius:999px!important;border:0!important;background:rgba(255,255,255,.08)!important;background-image:none!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)!important;color:rgba(255,255,255,.82)!important;-webkit-text-fill-color:rgba(255,255,255,.82)!important;font-size:12.5px!important;font-weight:400!important;letter-spacing:0!important;text-transform:none!important;text-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html[data-skin] body .pf-thread .pf-th-tags .pf-chip.on{background:#fff!important;color:#111!important;-webkit-text-fill-color:#111!important;box-shadow:none!important}
+.pf-th-box{min-height:90px!important}
