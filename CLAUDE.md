@@ -15,6 +15,8 @@ Its own address since 14 Nov 2026: https://roardino.com (domain bought by Alex a
 
 - **The keyboard rule** (Alex, 16 Nov, after it came back several times: "I tap to write in a box, the keyboard comes up and a while later the box comes up too; write it in your memory, fix it at once whenever you make such a thing, quick to answer"). Inside the iPhone app the page gets shorter only after the keyboard has finished rising. So anything that holds a field and stands at the foot or in the middle of the screen (a writing box, a sheet, a window, a bar) must ride up with the keyboard and come down with it: add it to THE KEYBOARD RULE lists at the end of social.css (html.kb-rise / kb-fall-from / kb-fall, moved with `translate` by --kbup), the way the chat's writing box and the Reels comments do. Do this in the same change that adds the field, and prove it with a keyboard test (rise position equal to the final one) before shipping. The same holds for any Roar app with a keyboard on a phone.
 
+- **Roardino's chat is its own** (Alex, 16 Nov: "no contact at all, ANY, with RoarMe"): rdc_rooms, rdc_members, rdc_messages, rdc_reactions, rdc_hides, rdc_my_rooms(), rdc_open_direct() and the private bucket roardino-chat (supabase/roardino-chat.sql, applied 16 Nov). Nothing in Roardino reads or writes RoarMe's roar_* conversations; people in a chat are Roardino profiles only. Only the account (email and password) stays shared.
+
 ## RoarMe
 RoarMe (repository alexisdigipro-hub/roarme, Supabase project bzmjhbnwhdwmncxkqkdl) is a separate public chat app with no tie to the hub since 1 Nov 2026 (roarme_drop.sql here, hub-unlink.sql there). Never link them again unless Alex asks.
 
