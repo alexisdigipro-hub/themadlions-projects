@@ -1787,7 +1787,10 @@ async function postFlow(opts = {}) {
     c.toBlob((b) => { if (!b) return; const f = new File([b], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' }); if (st.mode === 'story') return toStory(f); st.items.push({ file: f, cover: null }); st.cur = st.items.length - 1; stepOne(); }, 'image/jpeg', 0.92);
   };
   const libCall = () => (typeof shell !== 'undefined' && shell?.nativePromise ? (mth, o = {}) => shell.nativePromise('Media', mth, o) : null);
-  const lib = { items: null, want: 60, off: !libCall(), busy: new Set() };
+  // is the Media plugin in this build of the app? (an older build has the bridge but not the plugin, and a call to it never answers)
+  const hasMedia = () => { try { const hd = shell?.PluginHeaders; return !Array.isArray(hd) || hd.some((x) => x?.name === 'Media'); } catch { return true; } };
+  const lib = { items: null, want: 60, off: !libCall() || !hasMedia(), busy: new Set(), state: 'wait' };
+  if (libCall() && !hasMedia()) lib.why = 'update the app in TestFlight';
   const LIB_EXT = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', heic: 'image/heic', heif: 'image/heif', gif: 'image/gif', webp: 'image/webp', mov: 'video/quicktime', mp4: 'video/mp4', m4v: 'video/x-m4v' };
   // the whole photo or video of the library as a File: read through the shell's own file address, or, if the page may
   // not fetch that, through the Filesystem plugin
@@ -1804,7 +1807,7 @@ async function postFlow(opts = {}) {
   }
   async function libLoad() {
     if (lib.off) return;
-    try { const r = await libCall()('getMedias', { quantity: lib.want, thumbnailWidth: 300, thumbnailHeight: 300, thumbnailQuality: 65, types: 'all' }); lib.items = r?.medias || []; }
+    try { const r = await Promise.race([libCall()('getMedias', { quantity: lib.want, thumbnailWidth: 300, thumbnailHeight: 300, thumbnailQuality: 65, types: 'all' }), new Promise((_, no) => setTimeout(() => no(new Error('no answer from the app')), 12000))]); lib.items = r?.medias || []; lib.state = lib.items.length ? 'ok' : 'empty'; }
     catch (e) { lib.off = true; lib.why = String(e?.message || e?.errorMessage || e || 'no answer').slice(0, 90); }
     if (layer.isConnected && layer.querySelector('.pf-one')) stepOne();
   }
@@ -1821,6 +1824,9 @@ async function postFlow(opts = {}) {
   const libGrid = () => {
     const mmss = (sec) => `${Math.floor((sec || 0) / 60)}:${String(Math.round(sec || 0) % 60).padStart(2, '0')}`;
     const end = h('i', { class: 'pf-lib-end' });
+    if (lib.state !== 'ok') return h('div', { class: 'pf-lib pf-lib-note' },
+      lib.state === 'wait' ? h('span', { class: 'dots3' }, h('i'), h('i'), h('i')) : h('p', {}, t('No photos to show. In the iPhone\'s Settings > Roardino > Photos choose Full Access, then open this again.')),
+      lib.state === 'empty' ? h('button', { type: 'button', class: 'pf-pill', onclick: () => pick.click() }, t('Open Gallery')) : null);
     const grid = h('div', { class: 'pf-lib' }, ...(lib.items || []).map((a) => {
       const n = st.mode === 'story' ? -1 : st.items.findIndex((x) => x.lib === a.identifier);
       return h('button', { type: 'button', class: 'pf-lib-cell' + (n >= 0 ? ' on' : '') + (lib.busy.has(a.identifier) ? ' busy' : ''), onclick: () => libTap(a) },
@@ -1875,7 +1881,7 @@ async function postFlow(opts = {}) {
           story && typeof storyCamera === 'function' ? h('button', { type: 'button', class: 'pf-flip', 'aria-label': t('Record a video'), title: t('Record a video'), html: ICON.play, onclick: () => { leave(); storyCamera(); } }) : h('span', {}),
           h('button', { type: 'button', class: 'pf-shutter', 'aria-label': t('Take a photo'), onclick: shoot }, h('i')),
           h('button', { type: 'button', class: 'pf-flip', 'aria-label': t('Flip camera'), html: ICON.flip || ICON.cam, onclick: () => { camFacing = camFacing === 'user' ? 'environment' : 'user'; stopCam(); startCam(); } })));
-      startCam();
+      startCam(); if (cam) camV.play().catch(() => {});
     }
     else stage.append(h('button', { type: 'button', class: 'pf-empty', onclick: () => pick.click() }, h('span', { html: ICON.pic }), h('b', {}, t('Choose photos or videos')), h('small', {}, t('Up to six in one post'))));
     if (it) stopCam();
