@@ -4497,3 +4497,27 @@ html[data-theme][data-theme] body .bar .menu.menu :is(a,button){padding:0 14px!i
 html[data-theme][data-theme] body .bar .menu.menu hr{margin:6px 14px!important}
 html[data-theme][data-theme] body .bar .menu.menu small{padding:8px 14px 2px!important}
 html[data-theme][data-theme] body .bar .menu.menu hr+hr{display:none!important}
+
+/* A BACKGROUND WITH MORE LIGHT IN IT (Alex, 16 Nov: "more gradient spots, so the glass shows more"): soft pools of
+   light and shade in the theme's own greys, with a faint cool and a faint warm tint, fixed behind the page, so every
+   glass surface has something to bend. */
+html[data-theme=light][data-theme] body,html[data-theme=light][data-theme] body .two.feed-two::before{
+  background:
+    radial-gradient(620px 460px at 8% 12%,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 70%),
+    radial-gradient(560px 520px at 92% 8%,rgba(196,208,226,.75) 0%,rgba(196,208,226,0) 70%),
+    radial-gradient(700px 560px at 78% 58%,rgba(224,214,232,.6) 0%,rgba(224,214,232,0) 70%),
+    radial-gradient(640px 520px at 18% 72%,rgba(206,214,222,.85) 0%,rgba(206,214,222,0) 70%),
+    radial-gradient(520px 420px at 52% 36%,rgba(255,255,255,.7) 0%,rgba(255,255,255,0) 70%),
+    radial-gradient(760px 600px at 60% 100%,rgba(236,226,214,.7) 0%,rgba(236,226,214,0) 70%),
+    radial-gradient(480px 380px at 100% 88%,rgba(186,194,204,.7) 0%,rgba(186,194,204,0) 70%),
+    linear-gradient(170deg,#f1f2f4 0%,#e7e9ec 50%,#e2e4e8 100%)!important;
+  background-attachment:fixed!important}
+html[data-theme=dark][data-theme] body,html[data-theme=dark][data-theme] body .two.feed-two::before{
+  background:
+    radial-gradient(620px 460px at 8% 12%,rgba(92,100,114,.55) 0%,rgba(92,100,114,0) 70%),
+    radial-gradient(560px 520px at 92% 8%,rgba(64,80,110,.5) 0%,rgba(64,80,110,0) 70%),
+    radial-gradient(700px 560px at 78% 58%,rgba(84,70,100,.42) 0%,rgba(84,70,100,0) 70%),
+    radial-gradient(640px 520px at 18% 72%,rgba(70,78,90,.6) 0%,rgba(70,78,90,0) 70%),
+    radial-gradient(760px 600px at 60% 100%,rgba(96,84,72,.35) 0%,rgba(96,84,72,0) 70%),
+    linear-gradient(170deg,#1b1d22 0%,#16181c 50%,#121418 100%)!important;
+  background-attachment:fixed!important}
