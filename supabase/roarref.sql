@@ -49,3 +49,80 @@ create policy roarref_files_update on storage.objects for update to authenticate
 drop policy if exists roarref_files_delete on storage.objects;
 create policy roarref_files_delete on storage.objects for delete to authenticated
   using (bucket_id = 'roarref' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+-- ---------------------------------------------------------------------------------------------------------------
+-- RoarRef Pro (Alex, 16 Nov 2026: "a PRO version with no limit on the characters, make me PRO, and an admin panel
+-- where I make anyone Pro for 3 or 6 months or for life"). Who is Pro and until when; an admin of RoarMe (roar_admins)
+-- gives and takes it. Without Pro: 10 sheets, as before. When Pro ends the sheets stay; only new ones wait for room.
+-- Safe to re-run.
+create table if not exists roarref_pro (
+  user_id    uuid primary key references auth.users(id) on delete cascade,
+  plan       text not null default 'life',          -- '3m', '6m' or 'life'
+  until      timestamptz,                           -- null: for life
+  granted_by uuid references auth.users(id) on delete set null,
+  granted_at timestamptz not null default now(),
+  constraint roarref_pro_plan check (plan in ('3m','6m','life'))
+);
+alter table roarref_pro enable row level security;
+drop policy if exists roarref_pro_own on roarref_pro;
+create policy roarref_pro_own on roarref_pro for select to authenticated using (user_id = (select auth.uid()));
+
+create or replace function roarref_is_pro(u uuid) returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from roarref_pro where user_id = u and (until is null or until > now()));
+$$;
+revoke execute on function roarref_is_pro(uuid) from public, anon, authenticated;
+
+-- the limit: none for Pro, 10 for everyone else
+create or replace function roarref_limit() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if roarref_is_pro(new.owner) then return new; end if;
+  if (select count(*) from roarref_sheets where owner = new.owner) >= 10 then
+    raise exception 'roarref_limit: up to 10 sheets' using errcode = 'P0001';
+  end if;
+  return new;
+end $$;
+revoke execute on function roarref_limit() from public, anon, authenticated;
+
+-- what the page asks about the person signed in
+create or replace function roarref_me() returns json language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'pro',   roarref_is_pro(auth.uid()),
+    'plan',  (select plan from roarref_pro where user_id = auth.uid()),
+    'until', (select until from roarref_pro where user_id = auth.uid()),
+    'admin', exists (select 1 from roar_admins where user_id = auth.uid()));
+$$;
+revoke execute on function roarref_me() from public, anon;
+grant execute on function roarref_me() to authenticated;
+
+-- the admin's list: Roar Accounts by email, with their sheets and their Pro; q narrows it, without q the Pro ones and
+-- those who have sheets come first
+create or replace function roarref_admin_list(q text default '') returns json language plpgsql stable security definer set search_path = public as $$
+begin
+  if not exists (select 1 from roar_admins where user_id = auth.uid()) then raise exception 'not allowed' using errcode = '42501'; end if;
+  return coalesce((select json_agg(t) from (
+    select u.id, u.email, u.created_at,
+           (select count(*) from roarref_sheets s where s.owner = u.id) as sheets,
+           p.plan, p.until, p.granted_at,
+           (p.user_id is not null and (p.until is null or p.until > now())) as pro
+    from auth.users u left join roarref_pro p on p.user_id = u.id
+    where u.email is not null and (coalesce(q, '') = '' or u.email ilike '%' || replace(replace(q, '%', ''), '_', '') || '%')
+    order by (p.user_id is not null) desc, (select count(*) from roarref_sheets s where s.owner = u.id) desc, u.created_at desc
+    limit 60) t), '[]'::json);
+end $$;
+revoke execute on function roarref_admin_list(text) from public, anon;
+grant execute on function roarref_admin_list(text) to authenticated;
+
+-- the admin gives Pro ('3m', '6m', 'life') or takes it away ('off'); months count from today
+create or replace function roarref_admin_set(target uuid, new_plan text) returns json language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from roar_admins where user_id = auth.uid()) then raise exception 'not allowed' using errcode = '42501'; end if;
+  if not exists (select 1 from auth.users where id = target) then raise exception 'no such account' using errcode = 'P0002'; end if;
+  if new_plan = 'off' then delete from roarref_pro where user_id = target; return json_build_object('pro', false); end if;
+  if new_plan not in ('3m','6m','life') then raise exception 'bad plan' using errcode = '22023'; end if;
+  insert into roarref_pro (user_id, plan, until, granted_by, granted_at)
+  values (target, new_plan, case new_plan when '3m' then now() + interval '3 months' when '6m' then now() + interval '6 months' else null end, auth.uid(), now())
+  on conflict (user_id) do update set plan = excluded.plan, until = excluded.until, granted_by = excluded.granted_by, granted_at = excluded.granted_at;
+  return json_build_object('pro', true, 'plan', new_plan, 'until', (select until from roarref_pro where user_id = target));
+end $$;
+revoke execute on function roarref_admin_set(uuid, text) from public, anon;
+grant execute on function roarref_admin_set(uuid, text) to authenticated;

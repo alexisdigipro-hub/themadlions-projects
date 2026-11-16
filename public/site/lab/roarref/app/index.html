@@ -260,6 +260,23 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .pinfo b{display:block;font:700 17px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pinfo small{color:var(--muted);font-size:11.5px}
 .pcardm{max-width:520px;display:flex;flex-direction:column;gap:14px}
+.probadge{display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;font:700 11px var(--body);letter-spacing:.12em;color:#1a1206;background:linear-gradient(135deg,#ffe29a,#f0a938);box-shadow:0 0 16px rgba(240,169,56,.35)}
+.phead .pill svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.modal.adm{z-index:70}
+.admcard{max-width:760px;display:flex;flex-direction:column;gap:14px;max-height:min(86vh,820px)}
+.admcard .row{display:flex;gap:10px;align-items:center}
+.admcard .psearch{flex:none}
+.admlist{display:flex;flex-direction:column;gap:8px;overflow:auto;min-height:120px;padding-right:2px}
+.arowu{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 12px 10px 16px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid var(--line)}
+.arowu.on{border-color:rgba(240,169,56,.55)}
+.arowu.wait{opacity:.55;pointer-events:none}
+.awho{flex:1;min-width:180px;display:flex;flex-direction:column;gap:2px}
+.awho b{font:600 14.5px var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.awho small{color:var(--muted);font-size:12.5px}
+.aset{display:flex;gap:6px;flex-wrap:wrap}
+.aset .pill{height:34px;padding:0 13px;font-size:13px}
+.aset .pill[aria-pressed="true"]{background:linear-gradient(135deg,rgba(255,226,154,.28),rgba(240,169,56,.3));border-color:rgba(240,169,56,.6)}
+.aset .pill.danger{color:#ff6b6b}.aset .pill.off{opacity:.3;pointer-events:none}
 .pcardm .field{width:100%;box-sizing:border-box}
 .pcardm .plabel{margin:0 0 -8px;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .pcardm .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -2143,7 +2160,12 @@ function toast(t){ const d=document.createElement('div'); d.className='toast'; d
    Table roarref_sheets {id, name, data:{S, photos:[{path, w, h, s, ox, oy, flip, rot}]}, thumb}, at most 5 a person (supabase/roarref.sql);
    photos and thumbnails in the private bucket roarref under <user id>/<sheet id>/. Pictures are kept in IndexedDB too ('blob:<path>'),
    so a sheet opens fast the second time. Sheets made before this in the browser alone are brought into the account once. */
-const SB_URL = 'https://bzmjhbnwhdwmncxkqkdl.supabase.co', SB_KEY = 'sb_publishable_7mQ3e0NH5lCmdoIKx2-FUA_EgCoXx9X', MAX_SHEETS = 10;
+const SB_URL = 'https://bzmjhbnwhdwmncxkqkdl.supabase.co', SB_KEY = 'sb_publishable_7mQ3e0NH5lCmdoIKx2-FUA_EgCoXx9X', FREE_SHEETS = 10;
+/* RoarRef Pro (Alex, 16 Nov: "a PRO version with no limit on the characters, and an admin panel to make anyone Pro for 3 or 6
+   months or for life"): supabase/roarref.sql roarref_pro. The page asks roarref_me() once at the start; the limit itself is kept
+   by the database (the trigger roarref_limit), the page only shows it. An admin of RoarMe gets the Admin button on Home. */
+let MAX_SHEETS = FREE_SHEETS, pro = {pro:false, plan:null, until:null, admin:false};
+async function readPro(){ try{ const { data, error } = await sb.rpc('roarref_me'); if(!error && data){ pro = data; MAX_SHEETS = data.pro ? Infinity : FREE_SHEETS; } }catch{} }
 const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'roar-account' } }) : null;
 const bucket = () => sb.storage.from('roarref');
 /* Where the files live (Alex, 14 Nov: "can they go up to another server, so Supabase is not loaded"): Cloudflare R2, bucket
@@ -2439,7 +2461,7 @@ async function listSheets(){
 }
 async function insertSheet(name, data){
   const { data:row, error } = await sb.from('roarref_sheets').insert({name, data}).select('id,name,thumb,updated_at,data').single();
-  if(error){ toast(/roarref_limit/.test(error.message) ? `Up to ${MAX_SHEETS} sheets: delete one to make room.` : 'The sheet could not be made. Check the connection.'); return null; }
+  if(error){ toast(/roarref_limit/.test(error.message) ? `Up to ${FREE_SHEETS} sheets: delete one to make room.` : 'The sheet could not be made. Check the connection.'); return null; }
   return row;
 }
 async function openSheet(id){
@@ -2471,6 +2493,7 @@ async function bringLocal(){ // sheets made before sign-in, kept in this browser
 async function start(){
   $('gate').hidden = true;
   try{
+    await readPro();
     sheets.list = await listSheets();
     const moved = await bringLocal();
     if(moved){ sheets.list = await listSheets(); toast(`${moved} sheet${moved>1?'s':''} from this browser are now in your account.`); }
@@ -2555,11 +2578,14 @@ async function openSheets(first){
     const full = sheets.list.length >= MAX_SHEETS;
     const opt = (k, v, label, icon) => `<button type="button" class="pill${icon ? ' round' : ''}" data-pv="${k}:${v}" aria-pressed="${pv[k] === v}" title="${label}" aria-label="${label}">${icon ? `<svg viewBox="0 0 24 24">${icon}</svg>` : label}</button>`;
     m.innerHTML = `<header class="phead"><div class="mark">Roar<b>Ref</b></div><span style="flex:1"></span>
+        ${pro.pro ? `<span class="probadge" title="${pro.until ? 'Pro until ' + new Date(pro.until).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) : 'Pro for life'}">PRO</span>` : ''}
         <span class="pwho"><i>${esc((me.email || '?')[0].toUpperCase())}</i>${esc(me.email || '')}</span>
+        ${pro.admin ? '<button type="button" class="pill" id="shAdmin"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>Admin</button>' : ''}
         <button type="button" class="pill" id="shOut">Sign out</button></header>
       <div class="pwrap">
         <div class="phero"><div><p class="pkick">Character sheets for AI</p><h1>Your characters</h1></div>
-          <div class="pcount" title="${sheets.list.length} of ${MAX_SHEETS} projects">${Array.from({length:MAX_SHEETS}, (_, i) => `<i class="${i < sheets.list.length ? 'on' : ''}"></i>`).join('')}<span>${sheets.list.length} of ${MAX_SHEETS}</span></div></div>
+          ${pro.pro ? `<div class="pcount" title="Pro: as many characters as you like"><span style="margin-left:0">${sheets.list.length} character${sheets.list.length === 1 ? '' : 's'} · no limit</span></div>`
+            : `<div class="pcount" title="${sheets.list.length} of ${MAX_SHEETS} projects">${Array.from({length:MAX_SHEETS}, (_, i) => `<i class="${i < sheets.list.length ? 'on' : ''}"></i>`).join('')}<span>${sheets.list.length} of ${MAX_SHEETS}</span></div>`}</div>
         <div class="ptools">
           <label class="psearch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="pQ" placeholder="Search your characters" aria-label="Search your characters" value="${esc(query)}"></label>
           <div class="pseg" role="group" aria-label="Order">${opt('sort', 'recent', 'Recent')}${opt('sort', 'name', 'Name')}${opt('sort', 'made', 'Created')}</div>
@@ -2596,6 +2622,7 @@ async function openSheets(first){
       const pick = t.id ? '#' + t.id : ['open','dup','sure'].map(k => t.dataset[k] != null ? `[data-${k}="${t.dataset[k]}"]` : '').find(Boolean);
       busy(true); await m._sync; busy(false); t = pick && m.querySelector(pick); if(!t || !document.body.contains(m)) return; }
     if(t.id === 'shOut'){ close(); await save(); await sb.auth.signOut(); return; }
+    if(t.id === 'shAdmin'){ openAdmin(() => paint()); return; }
     if(t.dataset.pv){ const [k, v] = t.dataset.pv.split(':'); pv[k] = v; keep(); m.querySelectorAll(`[data-pv^="${k}:"]`).forEach(x => x.setAttribute('aria-pressed', x === t)); paintList(); return; }
     if(t.id === 'shNew' || t.id === 'shNew2'){ if(sheets.list.length >= MAX_SHEETS) return; busy(true); await newSheet(false); busy(false); return close(); }
     if(t.dataset.open){ if(t.dataset.open === sheets.cur) return close(); busy(true); await switchSheet(t.dataset.open); busy(false); return close(); }
@@ -2624,6 +2651,48 @@ async function openSheets(first){
   // a click made in that moment waits for it to end, then does its work (m._sync)
   m._sync = (async () => { try{ await save(); await saveThumb(); try{ sheets.list = await listSheets(); }catch{} if(document.body.contains(m)) await draw(); }catch{} })();
   await m._sync; m._sync = null;
+}
+
+/* Admin (Alex, 16 Nov): who is Pro. Roar Accounts found by email; each gets 3 months, 6 months, For life, or Pro taken away.
+   Only an admin of RoarMe sees the button, and the database refuses anyone else (roarref_admin_list / roarref_admin_set). */
+function openAdmin(after){
+  if(document.querySelector('.modal.adm')) return;
+  const m = document.createElement('div'); m.className = 'modal adm'; let list = [], q = '', timer = null, busyId = '';
+  const day = t => { try{ return new Date(t).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}); }catch{ return ''; } };
+  const state = u => u.pro ? (u.until ? 'Pro until ' + day(u.until) : 'Pro for life') : (u.plan ? 'Pro ended ' + day(u.until) : 'Free');
+  const rowsHtml = () => list.length ? list.map(u => `<div class="arowu${u.pro ? ' on' : ''}${busyId === u.id ? ' wait' : ''}" data-u="${u.id}">
+      <div class="awho"><b>${esc(u.email)}</b><small>${u.sheets} character${u.sheets === 1 ? '' : 's'} · ${esc(state(u))}</small></div>
+      <div class="aset">${[['3m','3 months'],['6m','6 months'],['life','For life']].map(([k, l]) => `<button type="button" class="pill" data-plan="${k}" aria-pressed="${!!u.pro && u.plan === k}">${l}</button>`).join('')}
+        <button type="button" class="pill danger${u.plan ? '' : ' off'}" data-plan="off" title="Take Pro away">Remove</button></div></div>`).join('')
+    : `<p class="pnone">${q ? 'No account with that in its email.' : 'No accounts yet.'}</p>`;
+  const paintRows = () => { const b = m.querySelector('#admList'); if(b) b.innerHTML = rowsHtml(); const c = m.querySelector('#admCount'); if(c) c.textContent = `${list.filter(u => u.pro).length} Pro`; };
+  const load = async () => { const { data, error } = await sb.rpc('roarref_admin_list', {q});
+    if(error){ const b = m.querySelector('#admList'); if(b) b.innerHTML = '<p class="pnone">The list could not be read. Check the connection.</p>'; return; }
+    list = data || []; paintRows(); };
+  m.innerHTML = `<div class="card admcard"><div class="row"><h2 style="flex:1">Admin · RoarRef Pro</h2><span class="pcnt" id="admCount"></span><button type="button" class="pill" id="admX">Close</button></div>
+    <p>Pro has no limit on characters. Months count from the day you press. Without Pro an account keeps up to ${FREE_SHEETS}.</p>
+    <label class="psearch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="admQ" placeholder="Find an account by email" aria-label="Find an account by email" autocomplete="off"></label>
+    <div id="admList" class="admlist"><p class="pnone">Reading…</p></div></div>`;
+  const close = () => { m.remove(); document.removeEventListener('keydown', esc4); if(after) after(); };
+  const esc4 = e => { if(e.key === 'Escape') close(); };
+  document.addEventListener('keydown', esc4);
+  m.querySelector('#admQ').oninput = e => { q = e.target.value.trim(); clearTimeout(timer); timer = setTimeout(load, 250); };
+  m.onclick = async e => {
+    if(e.target === m) return close();
+    const t = e.target.closest('button'); if(!t) return;
+    if(t.id === 'admX') return close();
+    const row = t.closest('[data-u]'); if(!row || !t.dataset.plan || busyId) return;
+    const id = row.dataset.u, u = list.find(x => x.id === id); if(!u) return;
+    busyId = id; paintRows();
+    const { data, error } = await sb.rpc('roarref_admin_set', {target:id, new_plan:t.dataset.plan});
+    busyId = '';
+    if(error){ toast('That could not be saved. Check the connection.'); paintRows(); return; }
+    if(data && data.pro){ u.pro = true; u.plan = data.plan; u.until = data.until; } else { u.pro = false; u.plan = null; u.until = null; }
+    paintRows(); toast(u.pro ? `${u.email}: ${state(u)}` : `${u.email}: Pro removed`);
+    if(me && id === me.id) await readPro(); // my own Pro changed: the page follows at once
+  };
+  document.body.appendChild(m); load();
+  if(!isPhone()) m.querySelector('#admQ').focus();
 }
 
 /* This project (Alex, 16 Nov): a window opened by the name in the top row: the name, what the project holds, a copy, delete */
