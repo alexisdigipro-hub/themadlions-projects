@@ -4803,8 +4803,14 @@ async function viewChatRoom(roomId, pane) {
     };
     on('touchend', end); on('touchcancel', end);
   })();
-  const atEnd = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 160;
-  const toEnd = () => window.scrollTo(0, document.documentElement.scrollHeight);
+  // on a computer the conversation is a panel of its own and its messages scroll inside it (Alex, 16 Nov: "balance,
+  // coherence"); on a phone the page itself scrolls, as before
+  const inPane = () => !!list.closest('.ch-split');
+  const scH = () => (inPane() ? list.scrollHeight : document.documentElement.scrollHeight);
+  const scY = () => (inPane() ? list.scrollTop : window.scrollY);
+  const scTo = (y) => { if (inPane()) list.scrollTop = y; else window.scrollTo(0, y); };
+  const atEnd = () => (inPane() ? list.clientHeight : window.innerHeight) + scY() >= scH() - 160;
+  const toEnd = () => scTo(scH());
   const nameOf = (id) => (id === meId ? t('You') : chatPeople.get(id)?.name || t('Member'));
   const seen = () => room.req ? null : sb.from('rdc_members').update({ last_read_at: new Date().toISOString() }).eq('room_id', roomId).eq('user_id', meId).then(() => { if (room.unread) { room.unread = 0; drawBadges?.(); } }, () => {});
   const setReply = (m) => {
@@ -4849,7 +4855,7 @@ async function viewChatRoom(roomId, pane) {
     sealedRoom = lastMark ? lastMark.body === 'e2e:on' : !!(lastWords && chatSealed(lastWords.body));
     foot.classList.toggle('locked', sealedRoom);
     text.disabled = sealedRoom; text.placeholder = sealedRoom ? t('Message') : t('Message');
-    const before = document.documentElement.scrollHeight - window.scrollY;
+    const before = scH() - scY();
     const out = []; let day = '', prev = null;
     if (more && rows.length) out.push(h('button', { type: 'button', class: 'btn sm ch-older', onclick: older }, t('Earlier messages')));
     for (const m of rows) {
@@ -4859,7 +4865,7 @@ async function viewChatRoom(roomId, pane) {
     }
     if (!rows.length) out.push(h('p', { class: 'ch-day' }, t('Say hello.')));
     put(list, ...out);
-    if (keep === 'top') window.scrollTo(0, document.documentElement.scrollHeight - before); else if (keep !== 'stay') toEnd();
+    if (keep === 'top') scTo(scH() - before); else if (keep !== 'stay') toEnd();
   };
   const signAll = (rows) => chatSign(rows.filter((m) => !m.deleted_at && m.file?.path && (m.kind === 'image' || m.kind === 'file')).map((m) => (m.file.thumb ? { path: m.file.thumb, bucket: m.file.bucket } : m.kind === 'image' ? m.file : null)).filter(Boolean));
   const loadHearts = async () => {
