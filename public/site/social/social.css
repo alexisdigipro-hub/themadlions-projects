@@ -4287,3 +4287,18 @@ html body .feed-side>.fs-apps-head{justify-content:space-between;margin:2px 6px 
   /* messages: one width, readable */
   html body .ch-split .ch-bub{max-width:min(560px,72%)}
 }
+
+/* a post shared in a chat shows as the post (Alex, 16 Nov) */
+.ch-post{display:flex;flex-direction:column;gap:8px;width:min(260px,62vw);margin:2px 0 4px;padding:10px;border-radius:16px;text-decoration:none;color:inherit;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(128,134,148,.18);box-sizing:border-box}
+.ch-msg.mine .ch-post{background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);color:#fff}
+html[data-theme=dark] .ch-post{background:rgba(255,255,255,.07)}
+.ch-post-who{display:flex;align-items:center;gap:8px;min-width:0}
+.ch-post-who b{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-post-pic{position:relative;display:block;width:100%;aspect-ratio:4/5;border-radius:12px;background:#222 center/cover no-repeat}
+.ch-post-pic .ch-play{position:absolute;inset:0;display:grid;place-items:center;color:#fff}
+.ch-post-pic .ch-play svg{width:34px;height:34px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
+.ch-post-text{font-size:14px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.ch-post-text.cap{font-size:13px;opacity:.85;-webkit-line-clamp:2}
+.ch-post-wait{display:block;height:90px;border-radius:12px;background:rgba(128,134,148,.14)}
+.ch-post-gone{font-size:13px;opacity:.7}
+.ch-bub:has(.ch-post) .ch-text{display:block;margin-bottom:4px}
