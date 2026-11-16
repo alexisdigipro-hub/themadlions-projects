@@ -3780,3 +3780,6 @@ html.rl-open .toast{z-index:150}
 /* HQ as a lens iris (Alex, 16 Nov: "HQ differently"): a round aperture with its six blades; on, the lens fills softly */
 .ig-gem.on .gem-body,.rl-side .rl-gem.on .gem-body{fill:currentColor!important;fill-opacity:.38}
 .ig-gem.on .gem,.rl-side .rl-gem.on svg{stroke-width:1.9!important}
+/* Reels sliding away with the finger: nothing but the slide; the bar's blur rests meanwhile */
+.rl.rl-drag .rl-side{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.rl{will-change:transform}

@@ -463,6 +463,14 @@ const vidNear = 'IntersectionObserver' in window ? new IntersectionObserver((lis
   const v = en.target;
   if (en.isIntersecting && !v.src && v.dataset.src) { v.src = v.dataset.src + (v.poster || v.dataset.src.includes('#') ? '' : '#t=0.1'); v.preload = 'metadata'; }
 }), { rootMargin: '400px 0px' }) : null;
+// far from the screen a feed video lets go of its file (Alex, 16 Nov: "posts sometimes go black"): an iPhone keeps only a
+// few videos alive at once and blanks the rest; near again, vidNear gives it back its source and its cover shows meanwhile
+const vidFar = 'IntersectionObserver' in window ? new IntersectionObserver((list) => list.forEach((en) => {
+  const v = en.target;
+  if (en.isIntersecting || !v.getAttribute('src') || !v.paused) return;
+  if (v.poster) v.classList.remove('live');
+  v.removeAttribute('src'); v.load();
+}), { rootMargin: '1800px 0px' }) : null;
 const vidPlay = 'IntersectionObserver' in window ? new IntersectionObserver((list) => list.forEach((en) => {
   const v = en.target;
   if (en.intersectionRatio >= 0.6 && !v.dataset.held) {
@@ -474,10 +482,11 @@ const vidPlay = 'IntersectionObserver' in window ? new IntersectionObserver((lis
     if (nx && !nx.dataset.cant) { if (!nx.src && nx.dataset.src) nx.src = nx.dataset.src; nx.preload = 'auto'; }
     all.forEach((o) => { if (o !== v && o !== nx && o.preload === 'auto') o.preload = 'metadata'; });
     // with the sound remembered on, the next video comes with its sound; if the phone refuses, it plays quiet
+    if (!v.getAttribute('src') && v.dataset.src) v.src = v.dataset.src;
     if (prefs.mutedVideos) v.muted = !feedSound;
     v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });
   }
-  else if (!v.paused) v.pause();
+  else { if (!v.paused) v.pause(); if (v.poster && en.intersectionRatio === 0) v.classList.remove('live'); }
 }), { threshold: [0, 0.6] }) : null;
 // video views (Alex, 8 Nov: "every time someone passes and sees it, it counts"): each time a feed video comes into sight
 const viewSeen = new WeakMap();
@@ -505,7 +514,7 @@ function feedVideo(src, poster, codec) {
   if (codec === 'hevc' && !playsHevc()) { v.dataset.cant = '1'; return v; }
   // out of sight it goes quiet again, so the next time it starts by itself it may (a phone lets only silent videos start)
   v.addEventListener('pause', () => { if (!v.muted && prefs.mutedVideos && !feedSound) { v.muted = true; v.dispatchEvent(new Event('volumechange')); } });
-  if (vidNear && vidPlay) { v.dataset.src = src; vidNear.observe(v); vidPlay.observe(v); } else v.src = src;
+  if (vidNear && vidPlay) { v.dataset.src = src; vidNear.observe(v); vidPlay.observe(v); vidFar?.observe(v); } else v.src = src;
   return v;
 }
 function cellVideo(m) {
@@ -2011,7 +2020,7 @@ function openReels(fromArt, onClose, signedHq) {
   const hqs = list.map((it) => it.media[0].hq).filter(Boolean);
   if (!signedHq && hqs.some((x) => !urlOf(x))) { sign(hqs).catch(() => {}).finally(() => openReels(fromArt, onClose, true)); return; }
   const start = Math.max(0, arts.indexOf(fromArt));
-  document.querySelectorAll('video').forEach((v) => { if (!v.paused) v.pause(); });
+  document.querySelectorAll('video').forEach((v) => { if (!v.paused) v.pause(); if (v.classList.contains('fv') && v.poster) v.classList.remove('live'); });
   const soundBefore = feedSound;
   setFeedSound(true); // two taps are a touch, so the phone lets it be heard
   let auto = (() => { try { return localStorage.getItem('roardino-autoscroll') === '1'; } catch { return false; } })();
@@ -2141,18 +2150,19 @@ function openReels(fromArt, onClose, signedHq) {
   }
   const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'ArrowDown') slides[cur + 1]?.scrollIntoView({ behavior: 'smooth' }); if (e.key === 'ArrowUp') slides[cur - 1]?.scrollIntoView({ behavior: 'smooth' }); };
   let closed = false;
-  function close(leaving) {
+  function close(leaving, gone) {
     if (closed) return; closed = true;
     io.disconnect(); vids.forEach((x) => { x.pause(); x.removeAttribute('src'); x.load(); });
     document.removeEventListener('keydown', onKey);
     document.documentElement.classList.remove('rl-open');
-    veil.classList.add('out'); setTimeout(() => veil.remove(), 260);
+    // slid away already: it just goes, with no second animation that would bring it back for a moment
+    if (gone) veil.remove(); else { veil.classList.add('out'); setTimeout(() => veil.remove(), 260); }
     if (!toggled) setFeedSound(soundBefore);
     if (!leaving) onClose?.();
   }
   // a slide to the right from anywhere closes Reels (Alex, 15 Nov): the whole view follows the finger, shrinking a little
   // as glass does; let go past a third of the screen, or with a quick flick, and it goes back to the feed
-  let sx = 0, sy = 0, st0 = 0, drag = null;
+  let sx = 0, sy = 0, st0 = 0, drag = null, dragRaf = 0, dragX = 0;
   // a touch on a button of the bar, the top or a sheet presses it at once on touchend (Alex, 16 Nov: "no button works"
   // on the iPhone): it no longer waits for the phone's own click, which the slide gestures here could swallow
   let tapEl = null, tx = 0, ty = 0, tt0 = 0;
@@ -2170,14 +2180,16 @@ function openReels(fromArt, onClose, signedHq) {
     if (drag === null) { if (Math.abs(dx) < 18 && Math.abs(dy) < 18) return; drag = dx > 0 && Math.abs(dx) > Math.abs(dy) * 1.5; if (!drag) return; veil.classList.add('rl-drag'); }
     e.preventDefault();
     const k = Math.max(0, dx), f = Math.min(1, k / innerWidth);
-    veil.style.transform = `translateX(${k}px) scale(${1 - f * 0.08})`; veil.style.borderRadius = `${Math.min(36, f * 90)}px`; veil.style.opacity = String(1 - f * 0.35);
+    // plain and steady (Alex, 16 Nov: "it makes artifacts, not stable"): the view only slides with the finger, one write a frame
+    void f; if (!dragRaf) dragRaf = requestAnimationFrame(() => { dragRaf = 0; veil.style.transform = `translate3d(${dragX}px,0,0)`; }); dragX = k;
   }, { passive: false });
   veil.addEventListener('touchend', (e) => {
     if (!drag) { drag = null; return; }
     const dx = (e.changedTouches[0]?.clientX || sx) - sx, fast = dx / Math.max(1, Date.now() - st0) > 0.6;
     veil.classList.remove('rl-drag'); drag = null;
-    if (dx > innerWidth * 0.33 || (fast && dx > 40)) { veil.style.transform = `translateX(${innerWidth}px) scale(.9)`; veil.style.opacity = '0'; setTimeout(() => close(), 220); }
-    else { veil.style.transform = ''; veil.style.borderRadius = ''; veil.style.opacity = ''; }
+    cancelAnimationFrame(dragRaf); dragRaf = 0;
+    if (dx > innerWidth * 0.33 || (fast && dx > 40)) { veil.style.transform = `translate3d(${innerWidth}px,0,0)`; setTimeout(() => close(false, true), 240); }
+    else veil.style.transform = '';
   });
   document.addEventListener('keydown', onKey);
   document.documentElement.classList.add('rl-open');
