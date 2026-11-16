@@ -1605,19 +1605,18 @@ function drawFeedSide(two, calls, seminars) {
     h('img', { class: 'fs-app-ic', src: `https://themadlions.com/lab/icons/${id}.png`, alt: '' }), h('span', { class: 'fs-app-t' }, h('b', {}, name), h('small', {}, line)), h('span', { class: 'fs-app-go', html: ICON.right })));
   const sep = h('hr', { class: 'fs-sep' });
   // a small title over them (Alex, 9 Nov: "our projects, apps, you decide")
-  const appsHead = h('div', { class: 'fs-apps-head' }, h('b', {}, t('Our apps')));
-  // the heading and the maker's line both stand under the apps (Alex, 16 Nov)
-  const appsFoot = h('small', { class: 'fs-apps-foot' }, t('Made by The Mad Lions Lab'));
+  // the heading with the maker's line, in one row as before, stands under the apps (Alex, 16 Nov)
+  const appsHead = h('div', { class: 'fs-apps-head' }, h('b', {}, t('Our apps')), h('small', {}, t('Made by The Mad Lions Lab')));
   // a small title over the newest too, the same as over the apps (Alex, 9 Nov: Home fresher)
   const newHead = h('div', { class: 'fs-apps-head' }, h('b', {}, t('Latest')), h('small', {}, t('Calls & seminars')));
-  const side = h('aside', { class: 'feed-side' }, ...(JOBS ? [newHead, ...items, sep] : []), ...apps, appsHead, appsFoot);
+  const side = h('aside', { class: 'feed-side' }, ...(JOBS ? [newHead, ...items, sep] : []), ...apps, appsHead);
   two.append(side);
   // the column never scrolls: the apps always show, and as many of the five as the screen holds above them
   const fit = () => {
     if (!side.isConnected) return;
     items.forEach((el) => { el.hidden = false; });
     const gap = 10;
-    let room = side.clientHeight - apps.reduce((n, el) => n + el.offsetHeight + gap, 0) - sep.offsetHeight - gap - appsHead.offsetHeight - gap - appsFoot.offsetHeight - gap - newHead.offsetHeight - gap;
+    let room = side.clientHeight - apps.reduce((n, el) => n + el.offsetHeight + gap, 0) - sep.offsetHeight - gap - appsHead.offsetHeight - gap - newHead.offsetHeight - gap;
     items.forEach((el, i) => { const need = el.offsetHeight + (i ? gap : 0); if (need <= room) room -= need; else el.hidden = true; });
     items.forEach((el, i) => { if (i && items[i - 1].hidden) el.hidden = true; });
   };
