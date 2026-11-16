@@ -299,7 +299,7 @@ function tagText(text) {
 /* ---------- threads: hashtags, length, marks (Alex, 16 Nov) ----------
    A thread holds at most 520 letters; its hashtags (up to five) are not counted. Bold, italic, underline and strike
    are Unicode's own letters and lines, as in RoarMe's names, so a thread stays plain text wherever it goes. */
-const TH_LIMIT = 340, TH_TAG_MAX = 5;
+const TH_LIMIT = 421, TH_TAG_MAX = 5; // 421 letters with the hashtags counted too (Alex, 16 Nov)
 const TAG_RE = /(^|[^\p{L}\p{N}_#])#([\p{L}\p{N}_]{1,40})/gu;
 // a letter's style: b bold, i italic, x bold italic, m typewriter; each the mathematical letters Unicode has for it
 const FX_RANGES = {
@@ -314,8 +314,8 @@ Object.entries(FX_RANGES).forEach(([k, rs]) => rs.forEach(([a0, z, st0]) => { fo
 // a tag as it is searched: plain letters, small
 function plainTag(tag) { return [...String(tag || '').normalize('NFD')].filter((g) => !/\p{M}/u.test(g)).map((g) => { const b0 = FX_BACK.get(g.codePointAt(0)); return b0 ? String.fromCodePoint(b0[0]) : g; }).join('').normalize('NFC').toLowerCase(); }
 function tagsOf(text) { const set = new Set(); let m; TAG_RE.lastIndex = 0; while ((m = TAG_RE.exec(String(text || '')))) set.add(plainTag(m[2])); return [...set]; }
-// letters that count: the hashtags taken out, marks and lines not counted, a styled letter is one letter
-function thLen(text) { return [...String(text || '').replace(TAG_RE, '$1').normalize('NFC')].filter((g) => !/\p{M}/u.test(g)).length; }
+// letters that count, hashtags too; marks and lines are not counted, a styled letter is one letter
+function thLen(text) { return [...String(text || '').normalize('NFC')].filter((g) => !/\p{M}/u.test(g)).length; }
 function fxRead(text) {
   const out = [];
   for (const g of String(text || '').normalize('NFD')) {
