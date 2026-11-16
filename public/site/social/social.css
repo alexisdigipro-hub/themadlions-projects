@@ -4322,3 +4322,35 @@ html[data-theme=dark] .ch-post{background:rgba(255,255,255,.07)}
   html[data-theme][data-theme] body .ch-split :is(.ch-pane .ch-top,.ch-room .ch-head){background:rgba(255,255,255,.4)!important;background-image:none!important;height:64px;min-height:64px!important}
   html[data-theme=dark][data-theme] body .ch-split :is(.ch-pane .ch-top,.ch-room .ch-head){background:rgba(255,255,255,.05)!important}
 }
+
+/* NEW POST, STEP 1, ON A COMPUTER (Alex, 16 Nov: "one photo or video, symmetric, more 2026, more see-through glass"):
+   one column on the middle line: the head, the picture (4:5) in a frame of dark glass, the Gallery pill under it, the
+   Post / Story / Thread switch at the foot; the window itself clearer glass over the page. */
+@media (min-width:861px){
+  html body .pf:has(.pf-one:not(.pf-thread)){background:rgba(210,214,220,.28)!important;-webkit-backdrop-filter:blur(26px) saturate(1.3)!important;backdrop-filter:blur(26px) saturate(1.3)!important}
+  html[data-theme=dark] body .pf:has(.pf-one:not(.pf-thread)){background:rgba(0,0,0,.4)!important}
+  html body .pf-one:not(.pf-thread){width:min(560px,100%)!important;height:min(800px,100%)!important;display:grid!important;grid-template-columns:1fr!important;grid-template-rows:auto minmax(0,1fr) auto auto auto!important;
+    background:linear-gradient(160deg,rgba(255,255,255,.62),rgba(255,255,255,.38) 55%,rgba(255,255,255,.5))!important;border:0!important;border-radius:34px!important;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.75),inset 0 2px 0 rgba(255,255,255,.9),0 40px 100px rgba(28,35,51,.22)!important;-webkit-backdrop-filter:blur(40px) saturate(1.6)!important;backdrop-filter:blur(40px) saturate(1.6)!important}
+  html[data-theme=dark] body .pf-one:not(.pf-thread){background:linear-gradient(160deg,rgba(60,64,72,.6),rgba(34,37,44,.45) 55%,rgba(44,47,54,.55))!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 40px 100px rgba(0,0,0,.5)!important}
+  html body .pf-one:not(.pf-thread) .pf-head{grid-column:1!important;grid-row:1!important;border-bottom:0!important;padding:16px 18px 6px!important;display:grid!important;grid-template-columns:44px 1fr auto;align-items:center}
+  html body .pf-one:not(.pf-thread) .pf-head b{text-align:center;font-size:15px;font-weight:600;letter-spacing:.01em}
+  html body .pf-one:not(.pf-thread) .pf-head .pf-next{min-width:72px}
+  html body .pf-one:not(.pf-thread) .pf-stagebox{grid-column:1!important;grid-row:2!important;justify-self:center;align-self:center;height:100%;max-height:100%;aspect-ratio:4/5;width:auto;max-width:calc(100% - 44px);margin:8px 0!important;border-radius:26px!important;
+    background:rgba(16,18,22,.62)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 18px 40px rgba(0,0,0,.18);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+  html body .pf-one:not(.pf-thread) .pf-pickrow{grid-column:1!important;grid-row:3!important;justify-self:center;align-self:center;display:flex;justify-content:center;padding:12px 0 4px!important}
+  html body .pf-one:not(.pf-thread) .pf-pickrow small:empty{display:none}
+  html body .pf-one:not(.pf-thread) .pf-gal{height:38px;padding:0 16px 0 14px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;
+    background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),0 6px 16px rgba(28,35,51,.08);color:var(--ink)!important}
+  html[data-theme=dark] body .pf-one:not(.pf-thread) .pf-gal{background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);color:#fff!important}
+  html body .pf-one:not(.pf-thread) .pf-gal i{display:none}
+  html body .pf-one:not(.pf-thread) .pf-strip,html body .pf-one:not(.pf-thread) .pf-lib{display:none!important}
+  html body .pf-one:not(.pf-thread) .pf-modes{grid-column:1!important;grid-row:5!important;justify-self:center!important;margin:10px 0 20px!important;background:rgba(255,255,255,.4)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.7)!important}
+  html[data-theme=dark] body .pf-one:not(.pf-thread) .pf-modes{background:rgba(255,255,255,.06)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)!important}
+  html body .pf-one:not(.pf-thread) .pf-empty{width:100%;height:100%;background:none;border:0}
+}
+@media (min-width:861px){
+  html body .pf-one:not(.pf-thread) .pf-stagebox{display:flex;flex-direction:column}
+  html body .pf-one:not(.pf-thread) .pf-stage{flex:1;min-height:0;height:100%;display:grid;place-items:center;position:relative}
+  html body .pf-one:not(.pf-thread) .pf-empty{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+}
