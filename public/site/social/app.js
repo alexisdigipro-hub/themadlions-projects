@@ -4618,7 +4618,14 @@ async function chatLoadPeople(ids) {
 // a shared post inside a message: its picture (or a thread's words), who made it; a tap opens it
 const chatPosts = new Map(); // id -> Promise of the row
 function chatPostCard(id) {
-  const card = h('a', { class: 'ch-post', href: `#/post/${id}`, onclick: (e) => e.stopPropagation() }, h('span', { class: 'ch-post-wait' }));
+  // a tap opens the post over the chat; its X closes it and the chat is where it was (Alex, 16 Nov: "it throws me to his profile")
+  const card = h('a', { class: 'ch-post', href: `#/post/${id}`, onclick: async (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const { data: r } = await sb.from('roardino_posts').select('*, person:roardino_people(id,name,avatar,kinds,headline)').eq('id', id).maybeSingle();
+    if (!r) return toast(t('This post is no longer here.'));
+    await sign([r.person?.avatar]);
+    openPost(r, r.person || {});
+  } }, h('span', { class: 'ch-post-wait' }));
   if (!chatPosts.has(id)) chatPosts.set(id, sb.from('roardino_posts').select('id,body,media,person:roardino_people(id,name,avatar)').eq('id', id).maybeSingle().then(async ({ data }) => {
     if (data) { const m0 = (data.media || [])[0]; await sign([data.person?.avatar, m0 && (m0.type === 'video' ? m0.posterFull || m0.poster : m0.path)].filter(Boolean)); }
     return data;
