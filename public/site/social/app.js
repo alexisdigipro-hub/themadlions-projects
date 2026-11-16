@@ -2145,7 +2145,8 @@ function openReels(fromArt, onClose, signedHq) {
     scroller,
     h('div', { class: 'rl-top' },
       h('button', { type: 'button', class: 'rl-btn', 'aria-label': t('Back'), html: ICON.left, onclick: () => close() }),
-      h('span', {})));
+      h('span', {}),
+      h('button', { type: 'button', class: 'rl-btn rl-dots', 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); reelMenu(); } })));
   const vids = [];
   const short = (n) => (n >= 10000 ? Math.round(n / 1000) + 'K' : n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : String(n || ''));
   const slides = list.map((it, i) => {
@@ -2200,6 +2201,12 @@ function openReels(fromArt, onClose, signedHq) {
     // the bar does not ride with the video (Alex, 16 Nov: "it stays still while I scroll"): it is kept aside and
     // laid over the whole view for the video on screen
     const side = slide.querySelector('.rl-side'); side.remove(); slide._side = side;
+    // what the ⋯ menu at the top does for this video
+    let hqOn = !!hqSrc;
+    const shortSide = (cap) => (m.w && m.h ? Math.round(Math.min(m.w, m.h) * Math.min(1, cap / Math.max(m.w, m.h))) : 0);
+    slide._act = { it, like, liked: () => !!it.st.mine, likes: () => (!it.r.hide_likes || it.own ? it.st.bravos || 0 : 0), comments: () => talkSheet(it, talkCount), talkN: () => talkCount.textContent,
+      send: () => { v.pause(); sendToRoarMe(it.r, pp); }, hasHq: !!hqSrc, hqOn: () => hqOn, stdP: shortSide(1080), hqP: shortSide(1920),
+      setHq: (on) => { if (!hqSrc || on === hqOn) return; hqOn = on; if (gem) gem.classList.toggle('on', on); const at = v.currentTime || 0; v.dataset.src = on ? hqSrc : urlOf(m.path); v.src = v.dataset.src; v.addEventListener('loadedmetadata', () => { try { v.currentTime = at; } catch { /* start */ } v.play().catch(() => {}); }, { once: true }); } };
     // one tap pauses or plays, two taps like with the big heart
     let last = 0, tt = 0;
     slide.addEventListener('click', (e) => {
@@ -2222,7 +2229,7 @@ function openReels(fromArt, onClose, signedHq) {
   const show = (i) => {
     if (i === cur) return;
     cur = i;
-    veil.querySelector(':scope > .rl-side')?.remove(); veil.append(slides[i]._side);
+    veil.querySelector('.rl-menu-back')?.remove();
     vids.forEach((x, k) => {
       const d = Math.abs(k - i);
       if (d <= 1 && !x.getAttribute('src')) { x.src = x.dataset.src; x.preload = 'auto'; }
@@ -2243,6 +2250,41 @@ function openReels(fromArt, onClose, signedHq) {
       h('div', { class: 'rl-sheet rl-sheet-talk' }, h('i', { class: 'rl-grab' }), h('b', { class: 'rl-sheet-title' }, t('Comments')), box));
     veil.append(back);
     drawTalk(box, it.r, it.st, () => { const n = it.st.comments || 0; countEl.textContent = n ? String(n) : ''; if (it.talkN) it.talkN.textContent = countEl.textContent; });
+  }
+  // the ⋯ at the top right drops everything down (Alex, 16 Nov: no bar at the foot; "three dots that drop the whole
+  // menu: like, comment, all of them, and Settings at the end with the video's quality, as YouTube's"). Settings
+  // holds Quality (the two copies a video has: the light one and HQ, each with its real size) and Auto-scroll
+  function reelMenu() {
+    const a = slides[cur]?._act; if (!a) return;
+    veil.querySelector('.rl-menu-back')?.remove();
+    const pp = a.it.p;
+    const card = h('div', { class: 'rl-menu' });
+    const back = h('div', { class: 'rl-menu-back', onclick: (e) => { if (e.target === back) back.remove(); } }, card);
+    const row = (ic, label, fn, right, cls = '') => h('button', { type: 'button', class: 'rl-mrow ' + cls, onclick: (e) => { e.stopPropagation(); fn(); } }, h('span', { class: 'rl-mic', html: ic }), h('b', {}, label), right ? h('small', {}, right) : null);
+    const TICK = ICON.check;
+    const main = () => put(card,
+      row(ICON.heart, a.liked() ? t('Liked') : t('Like'), () => { a.like(); main(); }, a.likes() ? String(a.likes()) : '', a.liked() ? 'on' : ''),
+      a.it.r.comments_off ? null : row(ICON.talk, t('Comments'), () => { back.remove(); a.comments(); }, a.talkN()),
+      row(ICON.send, t('Send'), () => { back.remove(); a.send(); }),
+      row(feedSound ? ICON.vol : ICON.mute, feedSound ? t('Sound on') : t('Sound off'), () => { soundBtn.onclick(); main(); }),
+      h('a', { class: 'rl-mrow', href: `#/p/${pp.id}`, onclick: () => close(true) }, h('span', { class: 'rl-mic' }, avatar(pp)), h('b', {}, pp.name || t('Profile'))),
+      h('i', { class: 'rl-mline' }),
+      row(ICON.gear || ICON.dots, t('Settings'), () => settings(), a.hasHq ? (a.hqOn() ? 'HQ' : t('Standard')) : ''));
+    const settings = () => {
+      const tog = h('span', { class: 'rl-switch' + (auto ? ' on' : '') }, h('i'));
+      put(card,
+        row(ICON.left, t('Settings'), () => main(), '', 'head'),
+        h('i', { class: 'rl-mline' }),
+        h('small', { class: 'rl-mcap' }, t('Quality')),
+        row(!a.hasHq || !a.hqOn() ? TICK : '', t('Standard'), () => { a.setHq(false); settings(); }, a.stdP ? `${a.stdP}p` : ''),
+        a.hasHq ? row(a.hqOn() ? TICK : '', 'HQ', () => { a.setHq(true); settings(); }, a.hqP ? `${a.hqP}p` : '') : h('small', { class: 'rl-mnote' }, t('This video has no HQ copy.')),
+        h('i', { class: 'rl-mline' }),
+        h('button', { type: 'button', class: 'rl-mrow', onclick: (e) => { e.stopPropagation(); auto = !auto; vids.forEach((x) => { x.loop = !auto; }); try { localStorage.setItem('roardino-autoscroll', auto ? '1' : '0'); } catch { /* private */ } settings(); } }, h('span', { class: 'rl-mic', html: ICON.play }), h('b', {}, t('Auto-scroll')), tog),
+        row(ICON.link, t('Copy link'), async () => { const url = `${location.origin}${location.pathname}#/p/${pp.id}`; try { await navigator.clipboard.writeText(url); toast(t('Link copied')); } catch { /* no */ } back.remove(); }),
+        row(ICON.dots, t('More options'), () => { back.remove(); close(); a.it.menu(); }));
+    };
+    main();
+    veil.append(back);
   }
   // ⋯: Auto-scroll and what can be done with the post
   function sheet(it) {
@@ -2278,14 +2320,14 @@ function openReels(fromArt, onClose, signedHq) {
   // a touch on a button of the bar, the top or a sheet presses it at once on touchend (Alex, 16 Nov: "no button works"
   // on the iPhone): it no longer waits for the phone's own click, which the slide gestures here could swallow
   let tapEl = null, tx = 0, ty = 0, tt0 = 0;
-  veil.addEventListener('touchstart', (e) => { const el = e.touches.length === 1 ? e.target.closest('.rl-side button, .rl-side a, .rl-top button, .rl-sheet button') : null; tapEl = el; if (el) { tx = e.touches[0].clientX; ty = e.touches[0].clientY; tt0 = Date.now(); } }, { passive: true, capture: true });
+  veil.addEventListener('touchstart', (e) => { const el = e.touches.length === 1 ? e.target.closest('.rl-side button, .rl-side a, .rl-top button, .rl-sheet button, .rl-menu button, .rl-menu a') : null; tapEl = el; if (el) { tx = e.touches[0].clientX; ty = e.touches[0].clientY; tt0 = Date.now(); } }, { passive: true, capture: true });
   veil.addEventListener('touchend', (e) => {
     const el = tapEl; tapEl = null;
     if (!el || !el.isConnected) return;
     const c = e.changedTouches[0]; if (!c || Math.hypot(c.clientX - tx, c.clientY - ty) > 14 || Date.now() - tt0 > 700) return;
     e.preventDefault(); e.stopPropagation(); el.click();
   }, { capture: true });
-  veil.addEventListener('touchstart', (e) => { if (e.touches.length !== 1 || e.target.closest('.rl-sheet-back, .rl-side, .rl-top')) { drag = false; return; } sx = e.touches[0].clientX; sy = e.touches[0].clientY; st0 = Date.now(); drag = null; }, { passive: true });
+  veil.addEventListener('touchstart', (e) => { if (e.touches.length !== 1 || e.target.closest('.rl-sheet-back, .rl-menu-back, .rl-side, .rl-top')) { drag = false; return; } sx = e.touches[0].clientX; sy = e.touches[0].clientY; st0 = Date.now(); drag = null; }, { passive: true });
   veil.addEventListener('touchmove', (e) => {
     if (drag === false || e.target.closest('.rl-sheet-back')) return;
     const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
