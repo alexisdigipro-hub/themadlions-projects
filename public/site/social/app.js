@@ -2268,15 +2268,20 @@ function openReels(fromArt, onClose, signedHq) {
     const back = h('div', { class: 'rl-menu-back', onclick: (e) => { if (e.target === back) back.remove(); } }, card);
     const row = (ic, label, fn, right, cls = '') => h('button', { type: 'button', class: 'rl-mrow ' + cls, onclick: (e) => { e.stopPropagation(); fn(); } }, h('span', { class: 'rl-mic', html: ic }), h('b', {}, label), right ? h('small', {}, right) : null);
     const TICK = ICON.check;
-    const main = () => put(card,
-      row(ICON.heart, a.liked() ? t('Liked') : t('Like'), () => { a.like(); main(); }, a.likes() ? String(a.likes()) : '', a.liked() ? 'on' : ''),
-      a.it.r.comments_off ? null : row(ICON.talk, t('Comments'), () => { back.remove(); a.comments(); }, a.talkN()),
-      row(ICON.send, t('Send'), () => { back.remove(); a.send(); }),
-      row(feedSound ? ICON.vol : ICON.mute, feedSound ? t('Sound on') : t('Sound off'), () => { soundBtn.onclick(); main(); }),
-      h('a', { class: 'rl-mrow', href: `#/p/${pp.id}`, onclick: () => close(true) }, h('span', { class: 'rl-mic' }, avatar(pp)), h('b', {}, pp.name || t('Profile'))),
-      h('i', { class: 'rl-mline' }),
-      row(ICON.gear || ICON.dots, t('Settings'), () => settings(), a.hasHq ? (a.hqOn() ? 'HQ' : t('Standard')) : ''));
+    // round icons dropping under the dots, no words (Alex, 16 Nov: "not a menu with letters; the round icons we had,
+    // right under the dots, as big as the dots' button")
+    const IRIS = '<svg viewBox="0 0 24 24" aria-hidden="true"><g transform="translate(12 12) scale(.88) translate(-12 -12)"><circle class="gem-body" cx="12" cy="12" r="10"/><path d="m14.31 8 5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16 3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"/></g></svg>';
+    const ico = (html, label, fn, cls = '') => h('button', { type: 'button', class: 'rl-ico ' + cls, 'aria-label': label, title: label, html, onclick: (e) => { e.stopPropagation(); fn(); } });
+    const main = () => { card.className = 'rl-menu ico'; put(card,
+      h('div', { class: 'rl-pair' }, ico(ICON.heart, t('Like'), () => { a.like(); main(); }, 'like' + (a.liked() ? ' on' : '')), h('span', {}, a.likes() ? String(a.likes()) : '')),
+      a.it.r.comments_off ? null : h('div', { class: 'rl-pair' }, ico(ICON.talk, t('Comments'), () => { back.remove(); a.comments(); }), h('span', {}, a.talkN() || '')),
+      ico(ICON.send, t('Send'), () => { back.remove(); a.send(); }),
+      a.hasHq ? ico(IRIS, 'HQ', () => { a.setHq(!a.hqOn()); main(); }, 'rl-gem' + (a.hqOn() ? ' on' : '')) : null,
+      ico(feedSound ? ICON.vol : ICON.mute, t('Sound'), () => { soundBtn.onclick(); main(); }),
+      ico(ICON.gear || ICON.dots, t('Settings'), () => settings()),
+      h('a', { class: 'rl-ico rl-dav', href: `#/p/${pp.id}`, 'aria-label': pp.name || t('Profile'), onclick: () => close(true) }, avatar(pp))); };
     const settings = () => {
+      card.className = 'rl-menu';
       const tog = h('span', { class: 'rl-switch' + (auto ? ' on' : '') }, h('i'));
       put(card,
         row(ICON.left, t('Settings'), () => main(), '', 'head'),
