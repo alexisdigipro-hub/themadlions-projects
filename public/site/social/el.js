@@ -973,5 +973,6 @@ window.RD_EL = {
 "Open Gallery": "Άνοιγμα Gallery",
 "Threads": "Threads",
 "No threads yet. Press + and choose Thread.": "Δεν υπάρχουν threads ακόμα. Πάτα + και διάλεξε Thread.",
-"No threads yet.": "Δεν υπάρχουν threads ακόμα."
+"No threads yet.": "Δεν υπάρχουν threads ακόμα.",
+"Loading HQ…": "Φορτώνει το HQ…"
 };
