@@ -1805,7 +1805,7 @@ async function postFlow(opts = {}) {
   async function libLoad() {
     if (lib.off) return;
     try { const r = await libCall()('getMedias', { quantity: lib.want, thumbnailWidth: 300, thumbnailHeight: 300, thumbnailQuality: 65, types: 'all' }); lib.items = r?.medias || []; }
-    catch { lib.off = true; }
+    catch (e) { lib.off = true; lib.why = String(e?.message || e?.errorMessage || e || 'no answer').slice(0, 90); }
     if (layer.isConnected && layer.querySelector('.pf-one')) stepOne();
   }
   async function libTap(a) {
@@ -1896,7 +1896,7 @@ async function postFlow(opts = {}) {
         h('b', {}, story ? t('New story') : t('New post')),
         story ? h('span', { style: { width: '44px' } }) : h('button', { type: 'button', class: 'pf-next', disabled: !st.items.length, onclick: stepTwo }, t('Next'))),
       h('div', { class: 'pf-stagebox' }, stage, tools),
-      h('div', { class: 'pf-pickrow' }, h('button', { type: 'button', class: 'pf-gal', onclick: () => pick.click() }, h('span', { html: ICON.pic }), t('Gallery'), h('i', { html: ICON.right })), h('small', {}, !story && st.items.length ? t('{n} of 6', { n: st.items.length }) : '')),
+      h('div', { class: 'pf-pickrow' }, h('button', { type: 'button', class: 'pf-gal', onclick: () => pick.click() }, h('span', { html: ICON.pic }), t('Gallery'), h('i', { html: ICON.right })), h('small', {}, !story && st.items.length ? t('{n} of 6', { n: st.items.length }) : lib.why ? `Photos: ${lib.why}` : '')),
       withLib ? [!story && st.items.length ? strip : null, libGrid()] : (story ? h('div', { class: 'pf-strip' }) : strip),
       modesRow(),
       pick));
