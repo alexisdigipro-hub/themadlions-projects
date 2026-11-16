@@ -2563,6 +2563,10 @@ function editPost(r, p, refresh) {
   let media = (r.media || []).slice();
   const gone = [];
   const text = area(r.body || '', { placeholder: t('Write a caption… Tag people with @'), rows: 4 });
+  // the box grows downwards with its words, and the window with it (Alex, 16 Nov); past what the screen holds the
+  // window scrolls inside, as every window does
+  const fit = () => { text.style.height = 'auto'; text.style.height = Math.max(130, text.scrollHeight + 2) + 'px'; };
+  text.addEventListener('input', fit);
   const box = h('div', { class: 'ep-pics' });
   const draw = () => put(box, ...media.map((m, i) => h('div', { class: 'ep-pic' + (i ? '' : ' first'), style: bg(m.type === 'video' ? m.poster : m.path) },
     m.type === 'video' ? h('span', { class: 'ep-vid', html: ICON.play || ICON.cam }) : null,
@@ -2585,6 +2589,7 @@ function editPost(r, p, refresh) {
       r.body = body; r.media = media;
       close(); toast(t('Saved')); refresh?.();
     } }, t('Save'))]);
+  requestAnimationFrame(fit);
 }
 async function aboutAccount(id) {
   const [{ data: q }, { data: stats }] = await Promise.all([sb.from('roardino_people').select('id,name,handle,avatar,kinds,city,created_at,minor').eq('id', id).maybeSingle(), sb.rpc('roardino_person_stats', { p: id })]);

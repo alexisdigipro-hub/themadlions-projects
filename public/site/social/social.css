@@ -4166,3 +4166,6 @@ html[data-theme][data-theme] body .veil .win.win:has(.pm) .win-head .win-x{posit
 html body .ig-bar .ig-views .ig-ico svg{transform:scale(1.12)!important}
 html body .ig-bar .ig-sound svg{transform:scale(1.3)!important}
 html body .ig-bar .ig-views{gap:5px!important}
+/* Edit post: the caption grows downwards with its words, the window with it (Alex, 16 Nov) */
+html body .form.ep textarea{overflow:hidden;max-height:none!important;height:auto}
+html body .veil .win:has(.form.ep){overflow-y:auto}
