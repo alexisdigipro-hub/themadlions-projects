@@ -4052,6 +4052,6 @@ html.rl-open[data-theme][data-theme] body .veil .win .win-x svg{opacity:1!import
 .rl-menu.ico .rl-sub .rl-ico:nth-child(2){animation-delay:.03s!important}.rl-menu.ico .rl-sub .rl-ico:nth-child(3){animation-delay:.06s!important}.rl-menu.ico .rl-sub .rl-ico:nth-child(4){animation-delay:.09s!important}
 @keyframes rl-sub-down{from{opacity:0;transform:translateY(-14px) scale(.7)}}
 
-/* Reels comments: the writing field is light glass with dark words, so what is typed reads on any video (Alex, 16 Nov: "white, they do not show") */
-html[data-theme][data-theme] body .rl-sheet.rl-sheet-talk :is(.input,textarea,input){background:rgba(255,255,255,.86)!important;background-image:none!important;box-shadow:none!important;border:0!important;color:#16181c!important;-webkit-text-fill-color:#16181c!important;caret-color:#16181c!important;opacity:1!important}
+/* Reels comments: the writing field is keeps its glass, only the words are dark (Alex, 16 Nov: "white, they do not show") */
+html[data-theme][data-theme] body .rl-sheet.rl-sheet-talk :is(.input,textarea,input){color:#16181c!important;-webkit-text-fill-color:#16181c!important;caret-color:#16181c!important;opacity:1!important}
 html[data-theme][data-theme] body .rl-sheet.rl-sheet-talk :is(.input,textarea,input)::placeholder{color:rgba(22,24,28,.55)!important;-webkit-text-fill-color:rgba(22,24,28,.55)!important;opacity:1!important}
