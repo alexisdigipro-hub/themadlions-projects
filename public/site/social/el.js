@@ -976,5 +976,16 @@ window.RD_EL = {
 "No threads yet.": "Δεν υπάρχουν threads ακόμα.",
 "Loading HQ…": "Φορτώνει το HQ…",
 "Auto-scroll on": "Αυτόματη κύλιση: ναι",
-"Auto-scroll off": "Αυτόματη κύλιση: όχι"
+"Auto-scroll off": "Αυτόματη κύλιση: όχι",
+"Write your reply…": "Γράψε την απάντησή σου…",
+"Up to {n} hashtags.": "Έως {n} hashtags.",
+"Replying to {name}": "Απάντηση σε {name}",
+"Reply to the chosen words": "Απάντηση σε αυτές τις λέξεις",
+"Reply with a thread": "Απάντηση με thread",
+"1 thread": "1 thread",
+"{n} threads": "{n} threads",
+"No threads with #{tag} yet.": "Δεν υπάρχουν ακόμα threads με #{tag}.",
+"Italic": "Πλάγια",
+"Underline": "Υπογράμμιση",
+"Strikethrough": "Διακριτή διαγραφή"
 };
