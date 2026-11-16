@@ -1854,6 +1854,16 @@ async function postFlow(opts = {}) {
     const left = h('small', { class: 'pf-th-left' }, String(THREAD_MAX - st.thread.length));
     const go = h('button', { type: 'button', class: 'pf-next', disabled: !st.thread.trim() }, t('Share'));
     const box = area(st.thread, { class: 'pf-th-box', placeholder: t('What is on your mind?'), maxlength: THREAD_MAX, rows: 6, oninput: (e) => { st.thread = e.target.value; left.textContent = String(THREAD_MAX - st.thread.length); go.disabled = !st.thread.trim(); } });
+    const TH_TAGS = ['#musicvideo', '#shortfilm', '#commercial', '#fashionfilm', '#bts', '#onset', '#dop', '#cinematography', '#casting', '#actor', '#model', '#dancer', '#director', '#editing', '#colorgrading', '#athens', '#greece'];
+    const thTags = h('div', { class: 'pf-tags pf-th-tags' });
+    const has = (tg) => new RegExp('(^|\\s)' + tg + '(?=\\s|$)', 'i').test(box.value);
+    const sync = () => { st.thread = box.value; left.textContent = String(THREAD_MAX - st.thread.length); go.disabled = !st.thread.trim(); drawThTags(); };
+    const drawThTags = () => put(thTags, ...TH_TAGS.map((tg) => h('button', { type: 'button', class: 'pf-chip' + (has(tg) ? ' on' : ''), onclick: () => {
+      if (has(tg)) box.value = box.value.replace(new RegExp('(^|\\s)' + tg + '(?=\\s|$)', 'gi'), '').replace(/[ \t]{2,}/g, ' ').trim();
+      else if (box.value.length + tg.length + 1 <= THREAD_MAX) box.value = box.value.replace(/\s+$/, '') + (box.value.trim() ? ' ' : '') + tg;
+      sync();
+    } }, tg)));
+    drawThTags(); box.addEventListener('input', drawThTags);
     go.onclick = async () => {
       if (go.disabled) return; go.disabled = true; go.textContent = t('Sharing…');
       const { error } = await sb.from('roardino_posts').insert({ person_id: st.as, body: st.thread.trim(), media: [], kind: 'photo' });
@@ -1865,7 +1875,7 @@ async function postFlow(opts = {}) {
         h('button', { type: 'button', class: 'pf-round', 'aria-label': t('Close'), html: ICON.x, onclick: async () => { if (st.thread.trim() && !(await ask(t('Leave this post?'), t('Leave'), true))) return; leave(); } }),
         h('b', {}, t('New thread')),
         go),
-      h('div', { class: 'pf-th' }, avatar(mine.find((x) => x.id === st.as) || m, 'pf-th-av'), h('div', { class: 'pf-th-main' }, h('b', {}, (mine.find((x) => x.id === st.as) || m).name || ''), box, left)),
+      h('div', { class: 'pf-th' }, avatar(mine.find((x) => x.id === st.as) || m, 'pf-th-av'), h('div', { class: 'pf-th-main' }, h('b', {}, (mine.find((x) => x.id === st.as) || m).name || ''), box, left, thTags)),
       modesRow()));
     setTimeout(() => box.focus(), 60);
   }
@@ -1941,9 +1951,7 @@ async function postFlow(opts = {}) {
           st.items.length > 1 ? h('em', { class: 'pf-count' }, `1/${st.items.length}`) : null,
           isVid(it0) ? h('button', { type: 'button', class: 'pf-cover', onclick: async () => { const c = await coverPicker(it0.file); if (c) { it0.cover = c; if (it0.url) URL.revokeObjectURL(it0.url); it0.url = null; st.caption = caption.value; stepTwo(); } } }, t('Edit cover')) : null) : null,
         withMentions(caption),
-        tagsRow,
         h('div', { class: 'pf-quick' },
-          h('button', { type: 'button', class: 'pf-pill', onclick: () => { tagsRow.hidden = !tagsRow.hidden; } }, h('b', {}, '#'), t('Hashtags')),
           h('button', { type: 'button', class: 'pf-pill', onclick: () => postTagPeople(addToCaption) }, h('span', { html: ICON.user }), t('Tag people'))),
         h('div', { class: 'pf-list' },
           h('div', { class: 'pf-row' }, h('span', { class: 'pf-ic', html: ICON.grid }), h('span', { class: 'pf-row-t' }, h('b', {}, t('Post to'))), kindSeg),
