@@ -70,7 +70,7 @@ const PREF_DEFAULTS = { theme: 'slate', text: 'normal', feedCalls: true, mutedVi
 // the accent colours (Alex, 5 Nov: "10 nice colours with the same gradient"); their light and dark shades live in social.css
 const ACCENTS = [['red', 'Red', '#e2766d,#d40000 55%,#8f0000'], ['orange', 'Orange', '#f0a070,#e05a00 55%,#9a3a00'], ['gold', 'Gold', '#d9b45a,#b88400 55%,#7a5500'],
   ['emerald', 'Emerald', '#6fcf97,#0f9d58 55%,#06623a'], ['teal', 'Teal', '#6cd4d0,#00a3a3 55%,#006466'], ['ocean', 'Ocean', '#7fb2f0,#1a6fe0 55%,#0b3f8f'],
-  ['indigo', 'Indigo', '#9a9cf0,#4b4fd9 55%,#2a2c8f'], ['violet', 'Violet', '#c18cf0,#8a2be2 55%,#541a8f'], ['pink', 'Pink', '#f08cc4,#e0157a 55%,#8f0a4c'], ['steel', 'Steel', '#7d8fb0,#4a6390 55%,#2b3a5c']];
+  ['indigo', 'Indigo', '#9a9cf0,#4b4fd9 55%,#2a2c8f'], ['violet', 'Violet', '#c18cf0,#8a2be2 55%,#541a8f'], ['pink', 'Pink', '#f08cc4,#e0157a 55%,#8f0a4c'], ['steel', 'Steel', '#7d8fb0,#4a6390 55%,#2b3a5c'], ['graphite', 'Graphite', '#5a5d63,#2b2d31 55%,#141517']];
 let prefs = { ...PREF_DEFAULTS };
 try { prefs = { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; } catch { /* private window */ }
 // Slate is put on once for everyone (Alex, 15 Nov: "make it and put it on"); Settings > Appearance > Theme changes it back

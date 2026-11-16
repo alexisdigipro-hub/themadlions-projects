@@ -991,5 +991,6 @@ window.RD_EL = {
 "Bold italic": "Έντονα πλάγια",
 "Typewriter": "Γραφομηχανή",
 "List": "Λίστα",
-"Clear formatting": "Καθαρισμός μορφής"
+"Clear formatting": "Καθαρισμός μορφής",
+"Graphite": "Γραφίτης"
 };
