@@ -2039,7 +2039,7 @@ function openReels(fromArt, onClose, signedHq) {
     vids.push(v);
     const bar = h('i', { class: 'rl-prog' });
     v.addEventListener('timeupdate', () => { if (v.duration) bar.style.transform = `scaleX(${v.currentTime / v.duration})`; });
-    const GEM = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9V7.5a3 3 0 0 1 3-3H9M15 4.5h1.5a3 3 0 0 1 3 3V9M19.5 15v1.5a3 3 0 0 1-3 3H15M9 19.5H7.5a3 3 0 0 1-3-3V15"/><circle class="gem-body" cx="12" cy="12" r="3.1"/></svg>';
+    const GEM = '<svg viewBox="0 0 24 24" aria-hidden="true"><g transform="translate(12 12) scale(.88) translate(-12 -12)"><circle class="gem-body" cx="12" cy="12" r="10"/><path d="m14.31 8 5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16 3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"/></g></svg>';
     const sb1 = h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Sound'), onclick: (e) => { e.stopPropagation(); soundBtn.onclick(); } });
     soundBtns.push(sb1);
     // HQ in the column (Alex, 15 Nov): the diamond, gold while the HQ copy plays; a tap goes to the light copy and back
@@ -2495,7 +2495,7 @@ function postCard(r, st, refresh) {
       // the sharp copy; a thin ring fills round it while the HQ copy comes down; when on, the diamond turns gold
       const pct = h('small', {}), fillEl = h('i');
       const hqBtn = h('button', { type: 'button', class: 'ig-ico ig-gem', title: t('Play in high quality'), 'aria-label': t('Play in high quality'),
-        html: '<svg class="gem-ring" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" pathLength="1"/></svg><svg class="gem" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9V7.5a3 3 0 0 1 3-3H9M15 4.5h1.5a3 3 0 0 1 3 3V9M19.5 15v1.5a3 3 0 0 1-3 3H15M9 19.5H7.5a3 3 0 0 1-3-3V15"/><circle class="gem-body" cx="12" cy="12" r="3.1"/></svg>' });
+        html: '<svg class="gem-ring" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" pathLength="1"/></svg><svg class="gem" viewBox="0 0 24 24" aria-hidden="true"><g transform="translate(12 12) scale(.88) translate(-12 -12)"><circle class="gem-body" cx="12" cy="12" r="10"/><path d="m14.31 8 5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16 3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"/></g></svg>' });
       hqEl = hqBtn;
       const flash = (txt) => { const f = h('span', { class: 'ig-hq-flash' }, txt); (slides.parentElement || slides).append(f); setTimeout(() => f.remove(), 1300); };
       const swap = (src) => { const at = v0.currentTime || 0; delete v0.dataset.held; v0.dataset.src = src; v0.src = src; v0.addEventListener('loadedmetadata', () => { try { v0.currentTime = at; } catch { /* start */ } v0.play().catch(() => { v0.muted = true; v0.play().catch(() => {}); }); }, { once: true }); v0.load(); };
