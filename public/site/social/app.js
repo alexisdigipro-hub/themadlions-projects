@@ -2194,10 +2194,17 @@ function openReels(fromArt, onClose, signedHq) {
     h('div', { class: 'rl-top' },
       h('button', { type: 'button', class: 'rl-btn', 'aria-label': t('Back'), html: ICON.left, onclick: () => close() }),
       h('span', {}),
-      h('button', { type: 'button', class: 'rl-btn rl-dots', 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); const open = veil.querySelector('.rl-menu-back'); if (open) { const pp = slides[cur]?._act?.it.p; menuOff(); if (pp?.id) { location.hash = `#/p/${pp.id}`; close(true); } } else reelMenu(); } })));
+      h('button', { type: 'button', class: 'rl-btn rl-dots', 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); const open = veil.querySelector('.rl-menu-back'); if (open) { const pp = slides[cur]?._act?.it.p; menuOff(true); if (pp?.id) { location.hash = `#/p/${pp.id}`; close(true); } } else reelMenu(); } })),
+    // previous and next, for a computer, where nothing is swiped
+    h('div', { class: 'rl-nav' },
+      h('button', { type: 'button', class: 'rl-btn rl-up', 'aria-label': t('Previous'), title: t('Previous'), html: ICON.left, onclick: (e) => { e.stopPropagation(); slides[cur - 1]?.scrollIntoView({ behavior: 'smooth' }); } }),
+      h('button', { type: 'button', class: 'rl-btn rl-down', 'aria-label': t('Next'), title: t('Next'), html: ICON.left, onclick: (e) => { e.stopPropagation(); slides[cur + 1]?.scrollIntoView({ behavior: 'smooth' }); } })));
   // the dots turn into the profile's picture while their menu is open (Alex, 16 Nov) and back when it closes
   const dotsFace = (pp) => { const d = veil.querySelector('.rl-dots'); if (!d) return; d.classList.toggle('as-av', !!pp); if (pp) put(d, avatar(pp)); else d.innerHTML = ICON.dots; };
-  const menuOff = () => { veil.querySelector('.rl-menu-back')?.remove(); dotsFace(null); };
+  // on a computer the column of icons stands beside the video all the time (Alex, 16 Nov: "Reels on desktop shaped for
+  // the desktop, the buttons and the width"), so there it is taken away only to be drawn again for the next video
+  const wideRl = () => window.matchMedia('(min-width:821px)').matches;
+  const menuOff = (force) => { if (wideRl() && !force) return; veil.querySelector('.rl-menu-back')?.remove(); dotsFace(null); };
   const vids = [];
   const short = (n) => (n >= 10000 ? Math.round(n / 1000) + 'K' : n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : String(n || ''));
   const slides = list.map((it, i) => {
@@ -2281,7 +2288,7 @@ function openReels(fromArt, onClose, signedHq) {
   const show = (i) => {
     if (i === cur) return;
     cur = i;
-    menuOff();
+    menuOff(true); if (wideRl()) reelMenu();
     vids.forEach((x, k) => {
       const d = Math.abs(k - i);
       if (d <= 1 && !x.getAttribute('src')) { x.src = x.dataset.src; x.preload = 'auto'; }
@@ -2309,7 +2316,7 @@ function openReels(fromArt, onClose, signedHq) {
   // holds Quality (the two copies a video has: the light one and HQ, each with its real size) and Auto-scroll
   function reelMenu() {
     const a = slides[cur]?._act; if (!a) return;
-    menuOff();
+    menuOff(true);
     const pp = a.it.p;
     const card = h('div', { class: 'rl-menu' });
     const back = h('div', { class: 'rl-menu-back', onclick: (e) => { if (e.target === back) menuOff(); } }, card);
