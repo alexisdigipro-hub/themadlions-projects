@@ -299,13 +299,16 @@ function tagText(text) {
 /* ---------- threads: hashtags, length, marks (Alex, 16 Nov) ----------
    A thread holds at most 520 letters; its hashtags (up to five) are not counted. Bold, italic, underline and strike
    are Unicode's own letters and lines, as in RoarMe's names, so a thread stays plain text wherever it goes. */
-const TH_LIMIT = 520, TH_TAG_MAX = 5;
+const TH_LIMIT = 340, TH_TAG_MAX = 5;
 const TAG_RE = /(^|[^\p{L}\p{N}_#])#([\p{L}\p{N}_]{1,40})/gu;
+// a letter's style: b bold, i italic, x bold italic, m typewriter; each the mathematical letters Unicode has for it
 const FX_RANGES = {
   b: [[0x41, 0x5a, 0x1d5d4], [0x61, 0x7a, 0x1d5ee], [0x30, 0x39, 0x1d7ec], [0x391, 0x3a9, 0x1d756], [0x3b1, 0x3c9, 0x1d770]],
   i: [[0x41, 0x5a, 0x1d608], [0x61, 0x7a, 0x1d622], [0x391, 0x3a9, 0x1d6e2], [0x3b1, 0x3c9, 0x1d6fc]],
+  x: [[0x41, 0x5a, 0x1d63c], [0x61, 0x7a, 0x1d656], [0x391, 0x3a9, 0x1d790], [0x3b1, 0x3c9, 0x1d7aa]],
+  m: [[0x41, 0x5a, 0x1d670], [0x61, 0x7a, 0x1d68a], [0x30, 0x39, 0x1d7f6]],
 };
-const FX_LINE = { u: '\u0332', s: '\u0336' };
+const FX_LINE = { u: '̲', s: '̶' };
 const FX_BACK = new Map();
 Object.entries(FX_RANGES).forEach(([k, rs]) => rs.forEach(([a0, z, st0]) => { for (let c = a0; c <= z; c++) FX_BACK.set(st0 + c - a0, [c, k]); }));
 // a tag as it is searched: plain letters, small
@@ -317,45 +320,58 @@ function fxRead(text) {
   const out = [];
   for (const g of String(text || '').normalize('NFD')) {
     if (g === FX_LINE.u || g === FX_LINE.s) { if (out.length) out[out.length - 1][g === FX_LINE.u ? 'u' : 's'] = true; continue; }
-    if (/[\u0300-\u036f]/.test(g) && out.length) { out[out.length - 1].acc = (out[out.length - 1].acc || '') + g; continue; }
+    if (/[̀-ͯ]/.test(g) && out.length) { out[out.length - 1].acc = (out[out.length - 1].acc || '') + g; continue; }
     const back = FX_BACK.get(g.codePointAt(0));
-    out.push(back ? { ch: String.fromCodePoint(back[0]), [back[1]]: true } : { ch: g });
+    out.push(back ? { ch: String.fromCodePoint(back[0]), st: back[1] } : { ch: g });
   }
   return out;
 }
 function fxWrite(letters) {
   return letters.map((l) => {
-    const cp = l.ch.codePointAt(0); const style = l.b ? 'b' : l.i ? 'i' : '';
-    const r = style && FX_RANGES[style].find(([a0, z]) => cp >= a0 && cp <= z);
+    const cp = l.ch.codePointAt(0);
+    const r = l.st && FX_RANGES[l.st].find(([a0, z]) => cp >= a0 && cp <= z);
     const ch = r ? String.fromCodePoint(r[2] + cp - r[0]) : l.ch;
     return ch + (l.acc || '') + (/\s/.test(l.ch) ? '' : (l.u ? FX_LINE.u : '') + (l.s ? FX_LINE.s : ''));
   }).join('').normalize('NFC');
 }
-const fxOffsets = (text) => { const at = []; let i = 0; const s0 = String(text || '').normalize('NFD'); for (const g of s0) { if (!/[\u0300-\u036f\u0332\u0336]/.test(g)) at.push(i); i += g.length; } at.push(s0.length); return at; };
-// one mark on or off for the chosen letters (string positions a..b); with nothing chosen, the word the cursor is in
+const fxOffsets = (text) => { const at = []; let i = 0; const s0 = String(text || '').normalize('NFD'); for (const g of s0) { if (!/[̀-̶̲ͯ]/.test(g)) at.push(i); i += g.length; } at.push(s0.length); return at; };
+// one mark on or off for the chosen letters (string positions a..b); with nothing chosen, the word the cursor is in.
+// k: b, i, x, m (a style, one at a time), u, s (lines), c (clear everything)
 function fxMark(text, a, b, k) {
   const src = String(text || '').normalize('NFD');
+  const toNfd = (n) => String(text || '').slice(0, n).normalize('NFD').length;
+  a = toNfd(a); b = toNfd(b);
   const at = fxOffsets(src); const letters = fxRead(src);
   let from = at.findIndex((x) => x >= a), to = at.findIndex((x) => x >= b);
   if (from < 0) from = letters.length; if (to < 0) to = letters.length;
   if (from >= to) { while (from > 0 && !/\s/.test(letters[from - 1].ch)) from--; to = from; while (to < letters.length && !/\s/.test(letters[to].ch)) to++; }
   if (from >= to) return null;
-  const part = letters.slice(from, to).filter((l) => !/\s/.test(l.ch));
-  const on = !part.every((l) => l[k]);
-  letters.slice(from, to).forEach((l) => { l[k] = on; if (on && k === 'b') l.i = false; if (on && k === 'i') l.b = false; });
-  const next = fxWrite(letters); const nat = fxOffsets(next.normalize('NFD'));
-  // positions in the NFC text the field holds
-  const toNfc = (n) => next.normalize('NFD').slice(0, n).normalize('NFC').length;
-  return { text: next, a: toNfc(nat[from] ?? next.length), b: toNfc(nat[to] ?? next.length) };
+  const sel = letters.slice(from, to), part = sel.filter((l) => !/\s/.test(l.ch));
+  if (k === 'c') sel.forEach((l) => { delete l.st; l.u = false; l.s = false; });
+  else if (k === 'u' || k === 's') { const on = !part.every((l) => l[k]); sel.forEach((l) => { l[k] = on; }); }
+  else { const on = !part.every((l) => l.st === k); sel.forEach((l) => { if (on) l.st = k; else delete l.st; }); }
+  const next = fxWrite(letters); const nfd = next.normalize('NFD'); const nat = fxOffsets(nfd);
+  const toNfc = (n) => nfd.slice(0, n).normalize('NFC').length;
+  return { text: next, a: toNfc(nat[from] ?? nfd.length), b: toNfc(nat[to] ?? nfd.length) };
 }
-// the B I U S buttons under a thread's box
+// a list: the chosen lines (or the cursor's line) start with "• ", or stop starting with it
+function fxList(text, a, b) {
+  const s0 = String(text || ''); const start = s0.lastIndexOf('\n', a - 1) + 1; let end = s0.indexOf('\n', b); if (end < 0) end = s0.length;
+  const lines = s0.slice(start, end).split('\n'); const on = !lines.every((l) => l.startsWith('• '));
+  const out = lines.map((l) => (on ? (l.startsWith('• ') ? l : '• ' + l) : l.replace(/^• /, ''))).join('\n');
+  return { text: s0.slice(0, start) + out + s0.slice(end), a: start, b: start + out.length };
+}
+// the tools over a thread's box, in one row (Alex, 16 Nov: "more tools, above the text, a little smaller, one line")
 function fxBar(box, after) {
   const doIt = (k) => {
-    const r = fxMark(box.value, box.selectionStart, box.selectionEnd, k); if (!r) return;
+    const r = k === 'l' ? fxList(box.value, box.selectionStart, box.selectionEnd) : fxMark(box.value, box.selectionStart, box.selectionEnd, k); if (!r) return;
     box.value = r.text; box.focus(); box.setSelectionRange(r.a, r.b); after?.();
   };
-  return h('div', { class: 'th-fx' }, ...[['b', t('Bold'), 'B'], ['i', t('Italic'), 'I'], ['u', t('Underline'), 'U'], ['s', t('Strikethrough'), 'S']].map(([k, label, ch]) =>
-    h('button', { type: 'button', class: 'th-fx-b fx-' + k, title: label, 'aria-label': label, onmousedown: (e) => e.preventDefault(), onclick: () => doIt(k) }, h(k === 'b' ? 'b' : k === 'i' ? 'i' : k === 'u' ? 'u' : 's', {}, ch))));
+  const LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg>';
+  const CLEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12M12 5 9 19M4 21 20 5"/></svg>';
+  const tools = [['b', t('Bold'), h('b', {}, 'B')], ['i', t('Italic'), h('i', {}, 'I')], ['x', t('Bold italic'), h('b', {}, h('i', {}, 'BI'))], ['u', t('Underline'), h('u', {}, 'U')], ['s', t('Strikethrough'), h('s', {}, 'S')], ['m', t('Typewriter'), h('code', {}, 'M')], ['l', t('List'), h('span', { html: LIST })], ['c', t('Clear formatting'), h('span', { html: CLEAR })]];
+  return h('div', { class: 'th-fx' }, ...tools.map(([k, label, face]) =>
+    h('button', { type: 'button', class: 'th-fx-b fx-' + k, title: label, 'aria-label': label, onmousedown: (e) => e.preventDefault(), onclick: () => doIt(k) }, face)));
 }
 // everyone who can be tagged, read once
 let tagPeople = null;
@@ -1998,8 +2014,8 @@ async function postFlow(opts = {}) {
         h('button', { type: 'button', class: 'pf-round', 'aria-label': t('Close'), html: ICON.x, onclick: async () => { if (st.thread.trim() && !(await ask(t('Leave this post?'), t('Leave'), true))) return; leave(); } }),
         h('b', {}, st.reply ? t('Reply') : t('New thread')),
         go),
-      h('div', { class: 'pf-th' }, avatar(mine.find((x) => x.id === st.as) || m, 'pf-th-av'), h('div', { class: 'pf-th-main' }, h('b', {}, (mine.find((x) => x.id === st.as) || m).name || ''), replyCard, box,
-        h('div', { class: 'th-tools' }, fxBar(box, sync), h('span', { class: 'grow' }), warn, left), thTags)),
+      h('div', { class: 'pf-th' }, avatar(mine.find((x) => x.id === st.as) || m, 'pf-th-av'), h('div', { class: 'pf-th-main' }, h('b', {}, (mine.find((x) => x.id === st.as) || m).name || ''), replyCard, fxBar(box, sync), box,
+        h('div', { class: 'th-tools' }, h('span', { class: 'grow' }), warn, left), thTags)),
       st.reply ? null : modesRow()));
     setTimeout(() => box.focus(), 60);
   }

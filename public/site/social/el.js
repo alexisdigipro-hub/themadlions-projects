@@ -987,5 +987,9 @@ window.RD_EL = {
 "No threads with #{tag} yet.": "Δεν υπάρχουν ακόμα threads με #{tag}.",
 "Italic": "Πλάγια",
 "Underline": "Υπογράμμιση",
-"Strikethrough": "Διακριτή διαγραφή"
+"Strikethrough": "Διακριτή διαγραφή",
+"Bold italic": "Έντονα πλάγια",
+"Typewriter": "Γραφομηχανή",
+"List": "Λίστα",
+"Clear formatting": "Καθαρισμός μορφής"
 };
