@@ -277,16 +277,85 @@ const slugOf = (name) => String(name || '').toLowerCase().normalize('NFD').repla
   .replace(/[α-ω]/g, (c) => GRH[c] ?? c).replace(/[^a-z0-9]+/g, '.').replace(/^[._]+|[._]+$/g, '').slice(0, 30);
 // text with @handles made into links to the profile
 function tagText(text) {
-  const out = []; let last = 0; const re = /@([A-Za-z0-9._]{3,30})/g; let m;
+  // @people and #hashtags are links (Alex, 16 Nov: "hashtags linkable as in Threads and X: a page with every thread that has it")
+  const out = []; let last = 0; const re = /@([A-Za-z0-9._]{3,30})|#([\p{L}\p{N}_]{1,40})/gu; let m;
   const str = String(text || '');
   while ((m = re.exec(str))) {
-    const hd = m[1].toLowerCase().replace(/[._]+$/, '');
-    if (m.index > last) out.push(str.slice(last, m.index));
-    out.push(h('a', { class: 'tag', href: `#/u/${hd}`, onclick: (e) => e.stopPropagation() }, '@' + hd));
-    last = m.index + 1 + hd.length;
+    if (m.index > 0 && /[\p{L}\p{N}_]/u.test(str[m.index - 1])) continue; // a # or @ in the middle of a word is not a tag
+    if (m[1]) {
+      const hd = m[1].toLowerCase().replace(/[._]+$/, '');
+      if (m.index > last) out.push(str.slice(last, m.index));
+      out.push(h('a', { class: 'tag', href: `#/u/${hd}`, onclick: (e) => e.stopPropagation() }, '@' + hd));
+      last = m.index + 1 + hd.length;
+    } else {
+      if (m.index > last) out.push(str.slice(last, m.index));
+      out.push(h('a', { class: 'tag htag', href: `#/tag/${encodeURIComponent(plainTag(m[2]))}`, onclick: (e) => e.stopPropagation() }, '#' + m[2]));
+      last = m.index + m[0].length;
+    }
   }
   if (last < str.length) out.push(str.slice(last));
   return out;
+}
+/* ---------- threads: hashtags, length, marks (Alex, 16 Nov) ----------
+   A thread holds at most 520 letters; its hashtags (up to five) are not counted. Bold, italic, underline and strike
+   are Unicode's own letters and lines, as in RoarMe's names, so a thread stays plain text wherever it goes. */
+const TH_LIMIT = 520, TH_TAG_MAX = 5;
+const TAG_RE = /(^|[^\p{L}\p{N}_#])#([\p{L}\p{N}_]{1,40})/gu;
+const FX_RANGES = {
+  b: [[0x41, 0x5a, 0x1d5d4], [0x61, 0x7a, 0x1d5ee], [0x30, 0x39, 0x1d7ec], [0x391, 0x3a9, 0x1d756], [0x3b1, 0x3c9, 0x1d770]],
+  i: [[0x41, 0x5a, 0x1d608], [0x61, 0x7a, 0x1d622], [0x391, 0x3a9, 0x1d6e2], [0x3b1, 0x3c9, 0x1d6fc]],
+};
+const FX_LINE = { u: '\u0332', s: '\u0336' };
+const FX_BACK = new Map();
+Object.entries(FX_RANGES).forEach(([k, rs]) => rs.forEach(([a0, z, st0]) => { for (let c = a0; c <= z; c++) FX_BACK.set(st0 + c - a0, [c, k]); }));
+// a tag as it is searched: plain letters, small
+function plainTag(tag) { return [...String(tag || '').normalize('NFD')].filter((g) => !/\p{M}/u.test(g)).map((g) => { const b0 = FX_BACK.get(g.codePointAt(0)); return b0 ? String.fromCodePoint(b0[0]) : g; }).join('').normalize('NFC').toLowerCase(); }
+function tagsOf(text) { const set = new Set(); let m; TAG_RE.lastIndex = 0; while ((m = TAG_RE.exec(String(text || '')))) set.add(plainTag(m[2])); return [...set]; }
+// letters that count: the hashtags taken out, marks and lines not counted, a styled letter is one letter
+function thLen(text) { return [...String(text || '').replace(TAG_RE, '$1').normalize('NFC')].filter((g) => !/\p{M}/u.test(g)).length; }
+function fxRead(text) {
+  const out = [];
+  for (const g of String(text || '').normalize('NFD')) {
+    if (g === FX_LINE.u || g === FX_LINE.s) { if (out.length) out[out.length - 1][g === FX_LINE.u ? 'u' : 's'] = true; continue; }
+    if (/[\u0300-\u036f]/.test(g) && out.length) { out[out.length - 1].acc = (out[out.length - 1].acc || '') + g; continue; }
+    const back = FX_BACK.get(g.codePointAt(0));
+    out.push(back ? { ch: String.fromCodePoint(back[0]), [back[1]]: true } : { ch: g });
+  }
+  return out;
+}
+function fxWrite(letters) {
+  return letters.map((l) => {
+    const cp = l.ch.codePointAt(0); const style = l.b ? 'b' : l.i ? 'i' : '';
+    const r = style && FX_RANGES[style].find(([a0, z]) => cp >= a0 && cp <= z);
+    const ch = r ? String.fromCodePoint(r[2] + cp - r[0]) : l.ch;
+    return ch + (l.acc || '') + (/\s/.test(l.ch) ? '' : (l.u ? FX_LINE.u : '') + (l.s ? FX_LINE.s : ''));
+  }).join('').normalize('NFC');
+}
+const fxOffsets = (text) => { const at = []; let i = 0; const s0 = String(text || '').normalize('NFD'); for (const g of s0) { if (!/[\u0300-\u036f\u0332\u0336]/.test(g)) at.push(i); i += g.length; } at.push(s0.length); return at; };
+// one mark on or off for the chosen letters (string positions a..b); with nothing chosen, the word the cursor is in
+function fxMark(text, a, b, k) {
+  const src = String(text || '').normalize('NFD');
+  const at = fxOffsets(src); const letters = fxRead(src);
+  let from = at.findIndex((x) => x >= a), to = at.findIndex((x) => x >= b);
+  if (from < 0) from = letters.length; if (to < 0) to = letters.length;
+  if (from >= to) { while (from > 0 && !/\s/.test(letters[from - 1].ch)) from--; to = from; while (to < letters.length && !/\s/.test(letters[to].ch)) to++; }
+  if (from >= to) return null;
+  const part = letters.slice(from, to).filter((l) => !/\s/.test(l.ch));
+  const on = !part.every((l) => l[k]);
+  letters.slice(from, to).forEach((l) => { l[k] = on; if (on && k === 'b') l.i = false; if (on && k === 'i') l.b = false; });
+  const next = fxWrite(letters); const nat = fxOffsets(next.normalize('NFD'));
+  // positions in the NFC text the field holds
+  const toNfc = (n) => next.normalize('NFD').slice(0, n).normalize('NFC').length;
+  return { text: next, a: toNfc(nat[from] ?? next.length), b: toNfc(nat[to] ?? next.length) };
+}
+// the B I U S buttons under a thread's box
+function fxBar(box, after) {
+  const doIt = (k) => {
+    const r = fxMark(box.value, box.selectionStart, box.selectionEnd, k); if (!r) return;
+    box.value = r.text; box.focus(); box.setSelectionRange(r.a, r.b); after?.();
+  };
+  return h('div', { class: 'th-fx' }, ...[['b', t('Bold'), 'B'], ['i', t('Italic'), 'I'], ['u', t('Underline'), 'U'], ['s', t('Strikethrough'), 'S']].map(([k, label, ch]) =>
+    h('button', { type: 'button', class: 'th-fx-b fx-' + k, title: label, 'aria-label': label, onmousedown: (e) => e.preventDefault(), onclick: () => doIt(k) }, h(k === 'b' ? 'b' : k === 'i' ? 'i' : k === 'u' ? 'u' : 's', {}, ch))));
 }
 // everyone who can be tagged, read once
 let tagPeople = null;
@@ -1163,6 +1232,7 @@ async function route() {
     if (a === 'people') return await viewPeople();
     if (a === 'search') return await viewSearch();
     if (a === 'p' && b) return await viewPerson(b);
+    if (a === 'tag' && b) return await viewTag(decodeURIComponent(b));
     if (a === 'post' && b) { const { data: one } = await sb.from('roardino_posts').select('*, person:roardino_people(id,name,avatar,kinds,headline)').eq('id', b).maybeSingle(); if (!one) return await viewFeed(); await viewPerson(one.person_id); await sign([one.person?.avatar, ...(one.media || []).map((m) => m.path)]); return openPost(one, one.person); }
     if (a === 'u' && b) { const { data: u } = await sb.from('roardino_people').select('id').eq('handle', decodeURIComponent(b).toLowerCase()).maybeSingle(); return await viewPerson(u?.id || '00000000-0000-0000-0000-000000000000'); }
     if (JOBS && a === 'calls') return await viewCalls();
@@ -1776,8 +1846,8 @@ function askDraft() {
 async function postFlow(opts = {}) {
   const m = me();
   if (!m) { location.hash = '#/edit/new'; return; }
-  const st = { mode: 'post', thread: '', items: [], cur: 0, caption: '', kind: opts.kind || 'work', as: opts.as || m.id, place: '', hideLikes: false, commentsOff: false, ai: false };
-  const old = await draftGet();
+  const st = { mode: opts.mode || 'post', thread: '', reply: opts.reply || null, items: [], cur: 0, caption: '', kind: opts.kind || 'work', as: opts.as || m.id, place: '', hideLikes: false, commentsOff: false, ai: false };
+  const old = opts.reply ? null : await draftGet();
   if (old && (old.items?.length || old.caption) && await askDraft()) Object.assign(st, old, { cur: 0 });
   else if (old) draftDrop();
   const layer = h('div', { class: 'pf' });
@@ -1880,35 +1950,57 @@ async function postFlow(opts = {}) {
     if (ed) await addStory(ed.file, ed.overlays);
   };
   const modesRow = () => h('div', { class: 'pf-modes' }, ...[['post', t('Post')], ['story', t('Story')], ['thread', t('Thread')]].map(([k, w]) => h('button', { type: 'button', class: st.mode === k ? 'on' : '', onclick: () => { if (st.mode === k) return; st.mode = k; stepOne(); } }, w)));
-  const THREAD_MAX = 500;
   function stepThread() {
     stopCam();
-    const left = h('small', { class: 'pf-th-left' }, String(THREAD_MAX - st.thread.length));
-    const go = h('button', { type: 'button', class: 'pf-next', disabled: !st.thread.trim() }, t('Share'));
-    const box = area(st.thread, { class: 'pf-th-box', placeholder: t('What is on your mind?'), maxlength: THREAD_MAX, rows: 6, oninput: (e) => { st.thread = e.target.value; left.textContent = String(THREAD_MAX - st.thread.length); go.disabled = !st.thread.trim(); } });
+    const left = h('small', { class: 'pf-th-left' });
+    const warn = h('small', { class: 'pf-th-warn' });
+    const go = h('button', { type: 'button', class: 'pf-next' }, t('Share'));
+    const box = area(st.thread, { class: 'pf-th-box', placeholder: st.reply ? t('Write your reply…') : t('What is on your mind?'), rows: 6 });
     const TH_TAGS = ['#musicvideo', '#shortfilm', '#commercial', '#fashionfilm', '#bts', '#onset', '#dop', '#cinematography', '#casting', '#actor', '#model', '#dancer', '#director', '#editing', '#colorgrading', '#athens', '#greece'];
     const thTags = h('div', { class: 'pf-tags pf-th-tags' });
-    const has = (tg) => new RegExp('(^|\\s)' + tg + '(?=\\s|$)', 'i').test(box.value);
-    const sync = () => { st.thread = box.value; left.textContent = String(THREAD_MAX - st.thread.length); go.disabled = !st.thread.trim(); drawThTags(); };
-    const drawThTags = () => put(thTags, ...TH_TAGS.map((tg) => h('button', { type: 'button', class: 'pf-chip' + (has(tg) ? ' on' : ''), onclick: () => {
-      if (has(tg)) box.value = box.value.replace(new RegExp('(^|\\s)' + tg + '(?=\\s|$)', 'gi'), '').replace(/[ \t]{2,}/g, ' ').trim();
-      else if (box.value.length + tg.length + 1 <= THREAD_MAX) box.value = box.value.replace(/\s+$/, '') + (box.value.trim() ? ' ' : '') + tg;
-      sync();
-    } }, tg)));
-    drawThTags(); box.addEventListener('input', drawThTags);
+    const has = (tg) => tagsOf(box.value).includes(plainTag(tg.slice(1)));
+    // the tag being written where the cursor is, to suggest those that start like it
+    const typing = () => { const before = box.value.slice(0, box.selectionStart || 0); const m0 = /(^|\s)#([\p{L}\p{N}_]*)$/u.exec(before); return m0 ? plainTag(m0[2]) : null; };
+    const sync = () => {
+      st.thread = box.value;
+      const n = thLen(box.value), tags = tagsOf(box.value).length;
+      left.textContent = String(TH_LIMIT - n); left.classList.toggle('over', n > TH_LIMIT);
+      warn.textContent = tags > TH_TAG_MAX ? t('Up to {n} hashtags.', { n: TH_TAG_MAX }) : '';
+      go.disabled = !box.value.trim() || n > TH_LIMIT || tags > TH_TAG_MAX;
+      drawThTags();
+    };
+    const drawThTags = () => {
+      const full = tagsOf(box.value).length >= TH_TAG_MAX, part = typing();
+      let list = TH_TAGS.filter((tg) => has(tg)).concat(TH_TAGS.filter((tg) => !has(tg) && (!part || tg.slice(1).startsWith(part))));
+      if (!isPhone()) list = list.slice(0, 7); // seven suggestions on a computer (Alex, 16 Nov)
+      put(thTags, ...list.map((tg) => h('button', { type: 'button', class: 'pf-chip' + (has(tg) ? ' on' : ''), disabled: !has(tg) && full, onclick: () => {
+        if (has(tg)) box.value = box.value.replace(new RegExp('(^|\\s)' + tg + '(?=\\s|$)', 'giu'), '').replace(/[ \t]{2,}/g, ' ').trim();
+        else if (part !== null && part !== undefined && typing() !== null) { const pos = box.selectionStart; const before = box.value.slice(0, pos).replace(/#[\p{L}\p{N}_]*$/u, tg + ' '); box.value = before + box.value.slice(pos); }
+        else box.value = box.value.replace(/\s+$/, '') + (box.value.trim() ? ' ' : '') + tg;
+        sync(); box.focus();
+      } }, tg)));
+    };
+    box.addEventListener('input', sync); box.addEventListener('keyup', drawThTags); box.addEventListener('click', drawThTags);
+    sync();
     go.onclick = async () => {
       if (go.disabled) return; go.disabled = true; go.textContent = t('Sharing…');
-      const { error } = await sb.from('roardino_posts').insert({ person_id: st.as, body: st.thread.trim(), media: [], kind: 'photo' });
+      const row = { person_id: st.as, body: st.thread.trim(), media: [], kind: 'photo' };
+      const rep = st.reply ? { reply_to: st.reply.id, reply_quote: (st.reply.quote || '').slice(0, 300) || null, reply_name: st.reply.name || null } : {};
+      let { error } = await sb.from('roardino_posts').insert({ ...row, ...rep });
+      // a database without the reply columns yet: the thread still goes up, without the link to the one it answers
+      if (error && st.reply && /reply|column/i.test(error.message || '')) ({ error } = await sb.from('roardino_posts').insert(row));
       if (error) { fail(error); go.disabled = false; go.textContent = t('Share'); return; }
       toast(t('Posted')); leave(); route();
     };
+    const replyCard = st.reply ? h('div', { class: 'th-replying' }, h('small', {}, t('Replying to {name}', { name: st.reply.name || '' })), st.reply.quote ? h('p', {}, st.reply.quote) : null) : null;
     put(layer, h('div', { class: 'pf-one pf-thread' },
       h('div', { class: 'pf-head dark' },
         h('button', { type: 'button', class: 'pf-round', 'aria-label': t('Close'), html: ICON.x, onclick: async () => { if (st.thread.trim() && !(await ask(t('Leave this post?'), t('Leave'), true))) return; leave(); } }),
-        h('b', {}, t('New thread')),
+        h('b', {}, st.reply ? t('Reply') : t('New thread')),
         go),
-      h('div', { class: 'pf-th' }, avatar(mine.find((x) => x.id === st.as) || m, 'pf-th-av'), h('div', { class: 'pf-th-main' }, h('b', {}, (mine.find((x) => x.id === st.as) || m).name || ''), box, left, thTags)),
-      modesRow()));
+      h('div', { class: 'pf-th' }, avatar(mine.find((x) => x.id === st.as) || m, 'pf-th-av'), h('div', { class: 'pf-th-main' }, h('b', {}, (mine.find((x) => x.id === st.as) || m).name || ''), replyCard, box,
+        h('div', { class: 'th-tools' }, fxBar(box, sync), h('span', { class: 'grow' }), warn, left), thTags)),
+      st.reply ? null : modesRow()));
     setTimeout(() => box.focus(), 60);
   }
   // 1: what goes up
@@ -2808,7 +2900,7 @@ function postCard(r, st, refresh) {
       h('span', { class: 'grow' }),
       own ? null : h('button', { type: 'button', class: 'btn sm main', onclick: () => jobOffer({ owner: r.owner, name: p.name }) }, t('Work with me')), saveBtn);
   const time = h('p', { class: 'ig-time' }, ago(r.created_at));
-  if (!media.length) return h('article', { class: 'post ig', 'data-post': r.id }, head, r.body ? h('p', { class: 'post-body big' }, ...tagText(r.body)) : null, bar, cap, time, talk);
+  if (!media.length) { const el = h('article', { class: 'post ig', 'data-post': r.id }, head, replyBit(r), r.body ? h('p', { class: 'post-body big' }, ...tagText(r.body)) : null, bar, cap, time, talk); threadOf.set(el, { r, p }); return el; }
   // a picture or a video only, on a phone (Alex, 5 Nov): one tap slides in who it is (top) and the icons (bottom) over it,
   // with the caption and the comments under it; another tap puts them away; a double tap is still a like
   const art = h('article', { class: 'post ig has-media', 'data-post': r.id });
@@ -3458,8 +3550,7 @@ async function viewPerson(id) {
   // threads (posts of words alone) have a tab of their own (Alex, 16 Nov), so Personal and Portfolio hold only pictures and videos
   const isThread = (g) => !(g.media || []).length;
   const threadPosts = (grid || []).filter(isThread);
-  const threads = h('div', { class: 'th-list' }, threadPosts.length ? threadPosts.map((g) => h('button', { type: 'button', class: 'th-row', onclick: () => openPost(g, p) },
-    avatar(p, 'th-av'), h('span', { class: 'th-main' }, h('b', {}, p.name || '', h('small', {}, ago(g.created_at))), h('span', { class: 'th-text' }, ...tagText(g.body || ''))))) : h('div', { class: 'empty' }, own ? t('No threads yet. Press + and choose Thread.') : t('No threads yet.')));
+  const threads = h('div', { class: 'th-list' }, threadPosts.length ? threadPosts.map((g) => threadRow(g, p)) : h('div', { class: 'empty' }, own ? t('No threads yet. Press + and choose Thread.') : t('No threads yet.')));
   const photoPosts = (grid || []).filter((g) => g.kind === 'photo' && !isThread(g));
   const pics = h('div', { class: 'grid' }, photos.length || photoPosts.length ? [...photoPosts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Photo'), onclick: () => openPost(g, p) }, m0?.type === 'video' ? cellVideo(m0) : null); }), ...photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }))] : own ? firstPost('pic', t('Add your first photo'), t('Photos of you: headshots, portraits, behind the scenes.')) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
   const work = gridBlock(p, (grid || []).filter((g) => g.kind !== 'photo' && !isThread(g)), own);
@@ -3657,6 +3748,67 @@ function sortable(box, done) {
   // while lifted the page does not scroll under the finger, and the phone's own long-press menu stays away
   box.addEventListener('touchmove', (e) => { if (lifted) e.preventDefault(); }, { passive: false });
   box.addEventListener('contextmenu', (e) => { if (cell || lifted) e.preventDefault(); });
+}
+/* ---------- threads in a list, a hashtag's page, replies (Alex, 16 Nov) ---------- */
+const threadOf = new WeakMap(); // a thread's element -> { r, p }
+// the line over a reply: whom it answers and the words it took
+function replyBit(r) {
+  if (!r.reply_to) return null;
+  return h('a', { class: 'th-reply', href: `#/post/${r.reply_to}`, onclick: (e) => e.stopPropagation() },
+    h('span', { class: 'th-reply-ic', html: ICON.talk }), h('small', {}, t('Replying to {name}', { name: r.reply_name || '' })), r.reply_quote ? h('q', {}, r.reply_quote) : null);
+}
+function threadRow(g, p) {
+  const el = h('div', { class: 'th-row', role: 'button', tabindex: '0', 'data-thread': g.id, onclick: (e) => { if (String(getSelection?.() || '').trim()) return; if (e.target.closest('a')) return; openPost(g, p); } },
+    avatar(p, 'th-av'), h('span', { class: 'th-main' }, h('b', {}, h('a', { href: `#/p/${p.id}`, onclick: (e) => e.stopPropagation() }, p.name || ''), h('small', {}, ago(g.created_at))), replyBit(g), h('span', { class: 'th-text' }, ...tagText(g.body || ''))));
+  threadOf.set(el, { r: g, p });
+  return el;
+}
+function replyThread(r, p, quote = '') { postFlow({ mode: 'thread', reply: { id: r.id, name: p?.name || '', quote: quote.trim().slice(0, 300) } }); }
+// a right click on a thread (or a long press, where the phone gives one) offers Reply; words picked in a thread get a
+// small Reply pill over them, and the reply carries them as its quote
+(() => {
+  let menu = null, pill = null, selT = 0;
+  const off = () => { menu?.remove(); menu = null; };
+  const offPill = () => { pill?.remove(); pill = null; };
+  const ofEl = (el) => { const host = el?.closest?.('.th-row, article.post.ig:not(.has-media)'); return host ? threadOf.get(host) : null; };
+  const selIn = () => { const sel = getSelection(); if (!sel || sel.isCollapsed) return null; const q = String(sel).trim(); if (!q) return null; const n = sel.anchorNode?.nodeType === 1 ? sel.anchorNode : sel.anchorNode?.parentElement; const it = ofEl(n); return it ? { it, q, rect: sel.getRangeAt(0).getBoundingClientRect() } : null; };
+  document.addEventListener('contextmenu', (e) => {
+    const it = ofEl(e.target); if (!it || e.target.closest('a')) return;
+    e.preventDefault(); off(); offPill();
+    const s0 = selIn();
+    const row = (label, fn) => h('button', { type: 'button', class: 'th-ctx-row', onclick: () => { off(); fn(); } }, h('span', { html: ICON.talk }), label);
+    menu = h('div', { class: 'th-ctx', style: { left: Math.min(e.clientX, innerWidth - 230) + 'px', top: Math.min(e.clientY, innerHeight - 110) + 'px' } },
+      s0 ? row(t('Reply to the chosen words'), () => replyThread(s0.it.r, s0.it.p, s0.q)) : null,
+      row(t('Reply with a thread'), () => replyThread(it.r, it.p)));
+    document.body.append(menu);
+  });
+  document.addEventListener('pointerdown', (e) => { if (menu && !menu.contains(e.target)) off(); if (pill && !pill.contains(e.target)) setTimeout(offPill, 0); }, true);
+  window.addEventListener('hashchange', () => { off(); offPill(); });
+  document.addEventListener('selectionchange', () => {
+    clearTimeout(selT);
+    selT = setTimeout(() => {
+      const s0 = selIn(); offPill(); if (!s0) return;
+      pill = h('button', { type: 'button', class: 'th-selreply', onmousedown: (e) => e.preventDefault(), onclick: () => { const x = s0; offPill(); getSelection()?.removeAllRanges(); replyThread(x.it.r, x.it.p, x.q); } }, h('span', { html: ICON.talk }), t('Reply'));
+      pill.style.left = Math.max(10, Math.min(s0.rect.left + s0.rect.width / 2 - 45, innerWidth - 110)) + 'px';
+      // on a phone the system's own menu stands over the words, so the pill goes under them
+      pill.style.top = (matchMedia('(pointer:coarse)').matches ? Math.min(innerHeight - 56, s0.rect.bottom + 12) : Math.max(10, s0.rect.top - 46)) + 'px';
+      document.body.append(pill);
+    }, 280);
+  });
+})();
+// a hashtag's page: every thread that carries it, newest first
+async function viewTag(tag) {
+  tag = plainTag(tag.replace(/^#/, ''));
+  document.title = 'Roardino · #' + tag;
+  const list = h('div', { class: 'th-list card' }, h('p', { class: 'wait' }, t('Loading…')));
+  const count = h('small', { class: 'ind-count' });
+  frame('tag', h('div', { class: 'head ind-head' }, h('h1', { class: 'ind-title' }, '#' + tag), h('span', { class: 'grow' }), count), list);
+  const { data, error } = await sb.from('roardino_posts').select('*, person:roardino_people(id,name,avatar,kinds,headline)').ilike('body', `%#${tag}%`).order('created_at', { ascending: false }).limit(300);
+  if (error) return fail(error);
+  const rows = (data || []).filter((r) => !(r.media || []).length && r.person && tagsOf(r.body).includes(tag));
+  await sign(rows.map((r) => r.person.avatar));
+  count.textContent = rows.length === 1 ? t('1 thread') : t('{n} threads', { n: rows.length });
+  put(list, ...(rows.length ? rows.map((r) => threadRow(r, r.person)) : [h('div', { class: 'empty' }, t('No threads with #{tag} yet.', { tag }))]));
 }
 async function openPost(r, p) {
   if ((r.media || []).length) {

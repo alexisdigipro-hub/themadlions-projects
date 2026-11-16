@@ -4187,3 +4187,57 @@ html body .ig-bar .ig-views{gap:5px!important}
 /* Edit post: the caption grows downwards with its words, the window with it (Alex, 16 Nov) */
 html body .form.ep textarea{overflow:hidden;max-height:none!important;height:auto}
 html body .veil .win:has(.form.ep){overflow-y:auto}
+
+/* THREADS (Alex, 16 Nov): hashtags as links, the B I U S buttons, the count, replies, the right-click menu, the Reply
+   pill over chosen words, a hashtag's page */
+a.htag{color:rgb(var(--a,64 120 255));text-decoration:none;font-weight:500}
+html[data-skin=slate] a.htag{color:#3d6fd6}
+html[data-theme=dark] a.htag{color:#8fb4ff}
+a.htag:hover{text-decoration:none;opacity:.8}
+.th-tools{display:flex;align-items:center;gap:10px;margin-top:4px}
+.th-tools .grow{flex:1}
+.th-fx{display:flex;gap:6px}
+.th-fx-b{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;padding:0;border:0;cursor:pointer;font:inherit;font-size:14px;line-height:1;
+  background:rgba(255,255,255,.1);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),inset 0 1px 0 rgba(255,255,255,.18);transition:transform .16s ease,background-color .2s ease}
+.th-fx-b:active{transform:scale(.92)}
+.th-fx-b b{font-weight:800}.th-fx-b i{font-style:italic;font-family:Georgia,serif;font-weight:600}.th-fx-b u{text-decoration:underline;text-underline-offset:2px}.th-fx-b s{text-decoration:line-through}
+.th-fx-b :is(b,i,u,s){color:inherit}
+@media (min-width:861px){
+  .pf-thread .th-fx-b{background:rgba(128,134,148,.12);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line),inset 0 1px 0 rgba(255,255,255,.5)}
+  .pf-thread .th-fx-b:hover{background:rgba(128,134,148,.22)}
+}
+html[data-skin] body .pf-thread .th-fx-b{background-image:none!important}
+.pf-th-left.over{color:#ff6b6b!important;font-weight:600}
+.pf-th-warn{font-size:12px;color:#ff8a8a}
+.pf-th-left{align-self:center!important}
+.pf-th-tags .pf-chip:disabled{opacity:.35;cursor:default}
+.th-replying{border-left:2px solid rgba(255,255,255,.35);padding:2px 0 2px 10px;margin:2px 0 4px;display:flex;flex-direction:column;gap:3px}
+.th-replying small{font-size:12px;color:rgba(255,255,255,.6)}
+.th-replying p{margin:0;font-size:14px;line-height:1.4;color:rgba(255,255,255,.85);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+@media (min-width:861px){.pf-thread .th-replying{border-color:var(--line)}.pf-thread .th-replying small{color:var(--muted)}.pf-thread .th-replying p{color:var(--ink2)}}
+.th-reply{display:flex;flex-direction:column;gap:2px;margin:2px 0 6px;padding:6px 10px;border-radius:12px;background:rgba(128,134,148,.1);color:var(--ink2);text-decoration:none;position:relative}
+.th-reply small{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.th-reply q{font-size:13.5px;line-height:1.4;quotes:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.th-reply-ic{position:absolute;right:10px;top:7px;width:14px;height:14px;opacity:.5}
+.th-reply-ic svg{width:14px;height:14px}
+.post.ig > .th-reply{margin:0 16px 8px}
+.th-row{cursor:pointer}
+.th-row .th-main b a{color:inherit;text-decoration:none}
+.th-text{user-select:text;-webkit-user-select:text}
+.th-ctx{position:fixed;z-index:200;min-width:210px;padding:6px;border-radius:18px;display:flex;flex-direction:column;
+  background:rgba(250,250,252,.96);color:#16181c;box-shadow:0 18px 44px rgba(0,0,0,.22),inset 0 0 0 1px rgba(0,0,0,.06);animation:th-pop .16s ease both}
+html[data-theme=dark] .th-ctx{background:rgba(44,44,49,.97);color:#f2f3f5}
+.th-ctx-row{display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;border:0;border-radius:12px;background:none;color:inherit;font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.th-ctx-row:hover{background:rgba(128,134,148,.14)}
+.th-ctx-row span,.th-selreply span{width:18px;height:18px;display:grid;place-items:center}
+.th-ctx-row svg,.th-selreply svg{width:18px;height:18px}
+.th-selreply{position:fixed;z-index:200;height:36px;padding:0 14px 0 11px;border:0;border-radius:999px;display:flex;align-items:center;gap:6px;cursor:pointer;font:inherit;font-size:13.5px;font-weight:600;
+  background:rgba(22,24,28,.88);color:#fff;box-shadow:0 10px 26px rgba(0,0,0,.25),inset 0 0 0 1px rgba(255,255,255,.18);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);animation:th-pop .16s ease both}
+@keyframes th-pop{from{opacity:0;transform:scale(.94)}}
+.th-list.card{padding:4px 0}
+a.tag.htag{display:inline;padding:0;border-radius:0;background:none;font-size:inherit}
+.ind-count{font-size:13px;color:var(--muted)}
+/* a hashtag or @name inside words is a coloured link, never a grey chip (Slate gave every .tag a pill) */
+html[data-theme][data-theme] body a.tag.htag,html[data-theme][data-theme] body :is(.th-text,.post-body,.ig-cap,.th-reply) a.tag{display:inline!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;background-image:none!important;box-shadow:none!important;height:auto!important;min-height:0!important;font-size:inherit!important;letter-spacing:inherit!important;text-transform:none!important;color:#3d6fd6!important;-webkit-text-fill-color:#3d6fd6!important;font-weight:500!important}
+html[data-theme=dark][data-theme] body a.tag.htag,html[data-theme=dark][data-theme] body :is(.th-text,.post-body,.ig-cap,.th-reply) a.tag{color:#8fb4ff!important;-webkit-text-fill-color:#8fb4ff!important}
+.ig-media a.tag,.rl a.tag{color:#fff!important;-webkit-text-fill-color:#fff!important}
