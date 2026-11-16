@@ -3961,3 +3961,35 @@ html[data-skin=slate][data-theme=light] .pm-tile.on .pm-ic svg{fill:rgba(255,255
 .rl-menu.ico .rl-setwrap>.rl-ico.on{background:rgba(255,255,255,.22)!important}
 .rl-menu.ico .rl-setwrap>.rl-ico{animation-delay:.12s}
 @media (prefers-reduced-motion:reduce){.rl-menu.ico .rl-sub .rl-ico{animation:none}}
+/* ===== Reels in one frosted glass (Alex, 16 Nov, from a picture of a frosted card): a milky, see-through glass with
+   a soft bright rim and a light along its top edge, white words; the same on every round button of Reels, on the
+   gear's row, on the back arrow and the dots, and on the comments, which come up as a floating card near the foot ===== */
+.rl{--rg:linear-gradient(160deg,rgba(255,255,255,.26),rgba(255,255,255,.1) 55%,rgba(255,255,255,.16));
+  --rg-rim:inset 0 0 0 1px rgba(255,255,255,.38),inset 0 1.5px 0 rgba(255,255,255,.5),0 8px 24px rgba(0,0,0,.14);
+  --rg-blur:blur(22px) saturate(1.5)}
+.rl .rl-btn,.rl-menu.ico .rl-ico,.rl-menu.ico .rl-sub .rl-ico{background:var(--rg)!important;box-shadow:var(--rg-rim)!important;-webkit-backdrop-filter:var(--rg-blur)!important;backdrop-filter:var(--rg-blur)!important;color:#fff!important;border:0!important;filter:none!important}
+.rl .rl-btn::before{display:none!important}
+.rl .rl-btn{width:44px;height:44px;border-radius:50%}
+.rl .rl-btn svg{width:22px;height:22px}
+.rl-top .rl-dots.as-av .av{width:44px;height:44px}
+.rl-menu.ico .rl-sub .rl-ico{opacity:.92}
+.rl-menu.ico .rl-sub .rl-ico.on,.rl-menu.ico .rl-setwrap>.rl-ico.on{background:rgba(255,255,255,.88)!important;color:#1b1e22!important;box-shadow:inset 0 1.5px 0 #fff,0 8px 24px rgba(0,0,0,.14)!important}
+.rl-menu.ico .rl-ico.like.on{color:#fff!important}
+/* the comments: a floating frosted card near the foot */
+.rl-sheet-back:has(.rl-sheet-talk){background:rgba(0,0,0,.08)!important;padding:0 10px calc(env(safe-area-inset-bottom) + 10px);box-sizing:border-box}
+.rl-sheet.rl-sheet-talk{border-radius:34px!important;padding:10px 16px 14px!important;background:var(--rg)!important;color:#fff!important;border:0!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),inset 0 2px 0 rgba(255,255,255,.55),0 20px 50px rgba(0,0,0,.22)!important;-webkit-backdrop-filter:blur(30px) saturate(1.6)!important;backdrop-filter:blur(30px) saturate(1.6)!important;max-height:62vh}
+.rl-sheet-talk .rl-grab{background:rgba(255,255,255,.5)!important}
+.rl-sheet-talk .rl-sheet-title{color:#fff;font-weight:500;font-size:15px}
+.rl-sheet-talk .rl-talk{max-height:calc(62vh - 80px)}
+.rl-sheet-talk .cmt,.rl-sheet-talk .cmt b,.rl-sheet-talk .cmt a,.rl-sheet-talk .hint{color:#fff!important;-webkit-text-fill-color:#fff!important}
+.rl-sheet-talk .cmt small{color:rgba(255,255,255,.7)!important;-webkit-text-fill-color:rgba(255,255,255,.7)!important}
+.rl-sheet-talk .cmt b{font-weight:600}
+.rl-sheet-talk .cmt-new{margin-top:6px}
+.rl-sheet-talk .cmt-new .av{display:none}
+.rl-sheet-talk :is(.input,textarea,input){background:rgba(255,255,255,.16)!important;border:0!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;border-radius:999px!important}
+.rl-sheet-talk :is(.input,textarea,input)::placeholder{color:rgba(255,255,255,.7)!important;-webkit-text-fill-color:rgba(255,255,255,.7)!important}
+.rl-sheet-talk .btn{background:rgba(255,255,255,.88)!important;background-image:none!important;color:#1b1e22!important;-webkit-text-fill-color:#1b1e22!important;border:0!important;box-shadow:none!important;border-radius:999px!important;text-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.rl-sheet-talk .cmt-del{background:rgba(255,255,255,.16)!important;border:0!important;color:#fff!important}
+.rl-sheet-talk .mention-list{background:rgba(40,44,50,.92)!important;color:#fff!important}
+.rl:has(.rl-sheet-back) .rl-info{opacity:0;transition:opacity .2s}
+.rl-info{transition:opacity .2s}
