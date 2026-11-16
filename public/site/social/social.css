@@ -3911,3 +3911,14 @@ html.rl-open .toast{z-index:150}
 html[data-skin] body .pf-thread .pf-th-tags .pf-chip{height:30px!important;padding:0 11px!important;border-radius:999px!important;border:0!important;background:rgba(255,255,255,.08)!important;background-image:none!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)!important;color:rgba(255,255,255,.82)!important;-webkit-text-fill-color:rgba(255,255,255,.82)!important;font-size:12.5px!important;font-weight:400!important;letter-spacing:0!important;text-transform:none!important;text-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html[data-skin] body .pf-thread .pf-th-tags .pf-chip.on{background:#fff!important;color:#111!important;-webkit-text-fill-color:#111!important;box-shadow:none!important}
 .pf-th-box{min-height:90px!important}
+/* the feed's icon row in one measure (Alex, 16 Nov: "the icons the same size"): every drawing fills about the same
+   square, the same line and the same strength; the eye a little smaller, the speaker a little bigger, the lens as the rest */
+.ig-bar .ig-ico svg{width:24px!important;height:24px!important;stroke-width:1.75!important;opacity:1!important}
+.ig-bar .ig-ico{opacity:1!important}
+.ig-bar .ig-views .ig-ico svg{transform:scale(.9)}
+.ig-bar .ig-sound svg{transform:scale(1.1)}
+.ig-bar .ig-gem .gem{width:24px!important;height:24px!important;stroke-width:1.75!important;opacity:1!important;transform:none}
+.ig-bar .ig-gem:not(.on) .gem{opacity:1!important}
+.ig-bar .ig-gem .gem g{stroke-width:2.1}
+.ig-bar .ig-pair,.ig-bar .ig-views{gap:3px}
+.ig-bar .ig-n{font-size:14px}
