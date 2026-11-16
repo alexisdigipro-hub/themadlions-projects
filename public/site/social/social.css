@@ -3922,3 +3922,7 @@ html[data-skin] body .pf-thread .pf-th-tags .pf-chip.on{background:#fff!importan
 .ig-bar .ig-gem .gem g{stroke-width:2.1}
 .ig-bar .ig-pair,.ig-bar .ig-views{gap:3px}
 .ig-bar .ig-n{font-size:14px}
+.pm-tiles:has(>.pm-tile:nth-child(4)){grid-template-columns:repeat(4,1fr)}
+.pm-tile.on{box-shadow:inset 0 0 0 1.5px currentColor}
+html[data-skin=slate][data-theme=light] .pm-tile.on{box-shadow:none!important}
+html[data-skin=slate][data-theme=light] .pm-tile.on .pm-ic svg{fill:rgba(255,255,255,.35)}

@@ -2445,7 +2445,7 @@ async function toggleSave(postId, btn) {
   toast(on ? t('Removed from Saved') : t('Saved. Find it on your profile, under Saved.'));
 }
 // the ⋯ menu of a post: Save on top; Follow or Unfollow, About this account; Report account at the bottom, in red
-function postMenu(r, p, { own, media, refresh, saveBtn }) {
+function postMenu(r, p, { own, media, refresh, saveBtn, hq }) {
   let close;
   const row = (ic, label, fn, cls = '') => h('button', { type: 'button', class: 'pm-row ' + cls, onclick: () => { close(); fn(); } }, h('span', { class: 'pm-ic', html: ICON[ic] }), label);
   const isSaved = saved.has(r.id);
@@ -2460,7 +2460,9 @@ function postMenu(r, p, { own, media, refresh, saveBtn }) {
     h('div', { class: 'pm-tiles' },
       h('button', { type: 'button', class: 'pm-tile', onclick: () => { close(); toggleSave(r.id, saveBtn); } }, h('span', { class: 'pm-ic', html: ICON.bookmark }), isSaved ? t('Saved') : t('Save')),
       h('button', { type: 'button', class: 'pm-tile', onclick: async () => { close(); const url = `${location.origin}${location.pathname}#/p/${p.id}`; try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ } } }, h('span', { class: 'pm-ic', html: ICON.send }), t('Share')),
-      h('button', { type: 'button', class: 'pm-tile', onclick: () => { close(); copyLink(); } }, h('span', { class: 'pm-ic', html: ICON.link }), t('Copy link'))),
+      h('button', { type: 'button', class: 'pm-tile', onclick: () => { close(); copyLink(); } }, h('span', { class: 'pm-ic', html: ICON.link }), t('Copy link')),
+      // HQ lives here, not among the post's icons (Alex, 16 Nov: "put HQ in the three dots")
+      hq ? h('button', { type: 'button', class: 'pm-tile' + (hq.classList.contains('on') ? ' on' : ''), onclick: () => { close(); hq.click(); } }, h('span', { class: 'pm-ic', html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m14.1 8.4 5.2 9M9.9 8.4h10.4M7.8 12l5.2-9M9.9 15.6 4.7 6.6M14.1 15.6H3.7M16.2 12l-5.2 9"/></svg>' }), hq.classList.contains('on') ? t('HQ on') : 'HQ') : null),
     own ? h('div', { class: 'pm-group' },
       media[0]?.type === 'video' ? row('pic', t('Change cover'), async () => {
         const f = await coverPicker(urlOf(media[0].path));
@@ -2646,7 +2648,7 @@ function postCard(r, st, refresh) {
       h('div', { class: 'who-line' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name || ''), r.ai ? h('em', { class: 'ai-badge' }, 'AI') : null), h('small', {}, r.place ? [h('span', { class: 'post-place', html: ICON.pin }), r.place] : p.headline || (p.kinds || []).map(kindName).slice(0, 2).join(' · '))),
       // Follow when I don't follow them yet, and the ⋯ menu (Alex, 5 Nov, as Instagram's)
       !own && p.id && !follows.has(p.id) ? h('button', { type: 'button', class: 'btn sm post-follow', onclick: async (e) => { const b = e.currentTarget; const ok = await toggleFollow(p.id); if (ok) b.remove(); } }, t('Follow')) : null,
-      h('button', { type: 'button', class: 'ig-ico sm', title: t('More'), 'aria-label': t('More'), html: ICON.dots, onclick: () => postMenu(r, p, { own, media, refresh, saveBtn }) }));
+      h('button', { type: 'button', class: 'ig-ico sm', title: t('More'), 'aria-label': t('More'), html: ICON.dots, onclick: () => postMenu(r, p, { own, media, refresh, saveBtn, hq: hqEl }) }));
   // a video's views, inside it with the other icons
   let viewsEl = null;
   if (slides && media[0].type === 'video' && r.id) {
@@ -2694,7 +2696,7 @@ function postCard(r, st, refresh) {
         if (loading) return;
         if (hqBtn.classList.contains('on')) { setOn(false); swap(lowSrc); return; }
         if (hqUrl) { setOn(true); swap(hqUrl); return; }
-        loading = true; hqBtn.classList.add('loading'); pct.textContent = '0%';
+        loading = true; hqBtn.classList.add('loading'); pct.textContent = '0%'; toast(t('Loading HQ…'));
         try {
           await sign([media[0].hq]);
           const res = await fetch(urlOf(media[0].hq));
@@ -2718,13 +2720,13 @@ function postCard(r, st, refresh) {
       h('button', { type: 'button', class: 'ig-ico', title: t('Send on RoarMe'), 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: () => sendToRoarMe(r, p) }),
       viewsEl, soundEl,
       h('span', { class: 'grow' }),
-      own ? null : h('button', { type: 'button', class: 'btn sm main', onclick: () => jobOffer({ owner: r.owner, name: p.name }) }, t('Work with me')), hqEl, saveBtn);
+      own ? null : h('button', { type: 'button', class: 'btn sm main', onclick: () => jobOffer({ owner: r.owner, name: p.name }) }, t('Work with me')), saveBtn);
   const time = h('p', { class: 'ig-time' }, ago(r.created_at));
   if (!media.length) return h('article', { class: 'post ig', 'data-post': r.id }, head, r.body ? h('p', { class: 'post-body big' }, ...tagText(r.body)) : null, bar, cap, time, talk);
   // a picture or a video only, on a phone (Alex, 5 Nov): one tap slides in who it is (top) and the icons (bottom) over it,
   // with the caption and the comments under it; another tap puts them away; a double tap is still a like
   const art = h('article', { class: 'post ig has-media', 'data-post': r.id });
-  if (media[0]?.type === 'video') reelOf.set(art, { r, p, st, own, media, likeBtn: bravoBtn, talkN, comments: () => { art.scrollIntoView({ block: 'center' }); setTimeout(() => setOpen(true), 350); }, menu: () => postMenu(r, p, { own, media, refresh, saveBtn }) });
+  if (media[0]?.type === 'video') reelOf.set(art, { r, p, st, own, media, likeBtn: bravoBtn, talkN, comments: () => { art.scrollIntoView({ block: 'center' }); setTimeout(() => setOpen(true), 350); }, menu: () => postMenu(r, p, { own, media, refresh, saveBtn, hq: hqEl }) });
   const wrap = h('div', { class: 'mwrap' }, head, slides, dots, bar);
   let tapT = null;
   const setOpen = (on) => {
