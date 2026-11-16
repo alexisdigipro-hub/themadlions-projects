@@ -1989,3 +1989,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 16 Nov, Roardino (20261118t): in the feed's side column "Made by The Mad Lions Lab" stands under the apps, centred (.fs-apps-foot); Our apps stays as the heading.
 - 16 Nov, Roardino (20261118u): threads hold 421 letters with the hashtags counted too (TH_LIMIT, thLen); still at most 5 hashtags.
 - 16 Nov, Roardino (20261118v): Reply (and New thread) no longer opens the computer's file window: postFlow's first pick is skipped in thread mode.
+- 16 Nov, Roardino (20261118w): in the feed's side column both Our apps and Made by The Mad Lions Lab stand under the apps, centred.

@@ -1606,11 +1606,11 @@ function drawFeedSide(two, calls, seminars) {
   const sep = h('hr', { class: 'fs-sep' });
   // a small title over them (Alex, 9 Nov: "our projects, apps, you decide")
   const appsHead = h('div', { class: 'fs-apps-head' }, h('b', {}, t('Our apps')));
-  // the maker's line stands under the apps (Alex, 16 Nov)
+  // the heading and the maker's line both stand under the apps (Alex, 16 Nov)
   const appsFoot = h('small', { class: 'fs-apps-foot' }, t('Made by The Mad Lions Lab'));
   // a small title over the newest too, the same as over the apps (Alex, 9 Nov: Home fresher)
   const newHead = h('div', { class: 'fs-apps-head' }, h('b', {}, t('Latest')), h('small', {}, t('Calls & seminars')));
-  const side = h('aside', { class: 'feed-side' }, ...(JOBS ? [newHead, ...items, sep] : []), appsHead, ...apps, appsFoot);
+  const side = h('aside', { class: 'feed-side' }, ...(JOBS ? [newHead, ...items, sep] : []), ...apps, appsHead, appsFoot);
   two.append(side);
   // the column never scrolls: the apps always show, and as many of the five as the screen holds above them
   const fit = () => {

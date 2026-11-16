@@ -4254,3 +4254,5 @@ html[data-theme=dark][data-theme] body a.tag.htag,html[data-theme=dark][data-the
 html body :is(.ig-media,.rl) a.tag.htag{color:#fff!important;-webkit-text-fill-color:#fff!important}
 html body .pf-thread .th-fx-b.fx-x{font-size:10.5px!important;letter-spacing:-.02em}
 .fs-apps-foot{display:block;margin:0 6px;font-size:11.5px;color:var(--muted);text-align:center}
+/* Our apps under the apps, centred, with the maker's line right under it */
+html body .feed-side>.fs-apps-head{justify-content:center;margin:4px 6px -6px!important}
