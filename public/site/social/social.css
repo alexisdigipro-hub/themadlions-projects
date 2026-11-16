@@ -4354,3 +4354,22 @@ html[data-theme=dark] .ch-post{background:rgba(255,255,255,.07)}
   html body .pf-one:not(.pf-thread) .pf-stage{flex:1;min-height:0;height:100%;display:grid;place-items:center;position:relative}
   html body .pf-one:not(.pf-thread) .pf-empty{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 }
+
+/* who is tagged, on the picture (Alex, 16 Nov) */
+.mwrap{position:relative}
+.ig-tagged{position:absolute;left:12px;bottom:62px;z-index:4;display:flex;align-items:center;gap:6px;pointer-events:none}
+.ig-tagged-b{pointer-events:auto;width:30px;height:30px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;cursor:pointer;color:#fff;
+  background:rgba(20,22,26,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.ig-tagged-b svg{width:15px;height:15px}
+.ig-tagged-list{display:none;gap:6px;flex-wrap:wrap;pointer-events:auto}
+.ig-tagged.on .ig-tagged-list{display:flex;animation:th-pop .16s ease both}
+.ig-tagged-list a{height:28px;padding:0 11px;border-radius:999px;display:inline-flex;align-items:center;font-size:13px;font-weight:600;color:#fff!important;-webkit-text-fill-color:#fff!important;text-decoration:none;
+  background:rgba(20,22,26,.62);box-shadow:inset 0 0 0 1px rgba(255,255,255,.28);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+
+/* clean round corners on posts and videos (Alex, 16 Nov: "the rounding is a bit odd, not clean"): Safari does not cut a
+   playing video, a zoomed picture or the dark fade at the foot along a rounded edge, so a dark sliver showed past the
+   curve. The frame is cut by a mask on its own layer, so everything inside follows the same smooth curve. */
+.post.ig.has-media .mwrap{isolation:isolate;-webkit-mask-image:-webkit-radial-gradient(white,black);mask-image:radial-gradient(white,black);clip-path:inset(0 round var(--pr,0px));transform:translateZ(0)}
+@media (min-width:861px){.post.ig.clean .mwrap{--pr:22px;border-radius:22px}}
+.post.ig.has-media .mwrap .ig-media,.post.ig.has-media .mwrap .ig-bar,.post.ig.has-media .mwrap .post-head{border-radius:0}
+.post.ig.has-media .ig-media video,.post.ig.has-media .ig-media img{backface-visibility:hidden;-webkit-backface-visibility:hidden}
