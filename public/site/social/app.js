@@ -1110,8 +1110,6 @@ function seg(items, on, pick) {
 // their pages and data stay, and true here brings all of it back
 const JOBS = false;
 const NAV = [['feed', 'Feed', 'home'], ['people', 'Industry', 'people'], ['search', 'Search', 'search'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal'], ['chat', 'Chat', 'talk']].filter(([k]) => JOBS || (k !== 'calls' && k !== 'seminars'));
-// the chat is RoarMe (Alex, 4 Nov): the same Roar Accounts, so it lives here in a frame
-const ROARME = 'https://alexisdigipro-hub.github.io/roarme/';
 let openTabNext = null;
 function topBar(on) {
   const m = me();
@@ -2178,39 +2176,20 @@ async function posts(rows, refresh) {
 }
 // a post as Instagram shows one (Alex, 4 Nov: "more Instagram"): who, the picture edge to edge (swipe when there are
 // several), icons, the bravos, the caption under the name, the comments behind a line, the time
-// the arrow under a post: send it to people on RoarMe (Alex, 5 Nov). Same Roar Account, same database: my recent chats
-// first, then anyone found by name or @username; each gets a message with a link that opens this post
+// the arrow under a post: send it to people on Roardino, in Roardino's own chat (Alex, 16 Nov: no tie to RoarMe at all);
+// the people I follow first, anyone else by name or @username; each gets a message with a link that opens this post
 async function sendToRoarMe(r, p) {
   const meId = session.user.id;
   const url = `${location.origin}${location.pathname}#/post/${r.id}`;
-  const picked = new Map(); // key -> { kind: 'room' | 'user', id, name, avatar }
+  const picked = new Map();
   const list = h('div', { class: 'stm-list' }, h('p', { class: 'wait' }, t('Loading…')));
   const note = h('input', { class: 'input', placeholder: t('Write a message…'), maxlength: 500 });
   const sendBtn = h('button', { type: 'button', class: 'btn main', disabled: true }, icon('send'), t('Send'));
-  const avOf = (x) => (x.avatar && /^https?:/.test(x.avatar) ? { name: x.name, avatar: x.avatar } : { name: x.name });
-  let recent = [], everyone = null;
-  const row = (x) => h('button', { type: 'button', class: 'stm-row' + (picked.has(x.key) ? ' on' : ''), onclick: () => { if (picked.has(x.key)) picked.delete(x.key); else picked.set(x.key, x); sendBtn.disabled = !picked.size; draw(found); } },
-    avatar(avOf(x)), h('span', { class: 'stm-who' }, h('b', {}, x.name, x.rm ? h('em', { class: 'rm-badge' }, 'RoarMe') : null), x.sub ? h('small', {}, x.sub) : null), h('span', { class: 'stm-tick', html: ICON.check }));
-  let found = null;
-  // Roardino's people first, then whoever is only on RoarMe, marked so (Alex, 5 Nov)
-  let rdPeople = [], rdFollow = [];
-  const sec = (label, rows) => (rows.length ? [h('p', { class: 'stm-sec' }, label), ...rows.map(row)] : []);
-  const draw = (res) => {
-    const a = res ? res.rd : rdFollow, b = res ? res.rm : recent;
-    put(list, ...sec(t('On Roardino'), a), ...sec(t('On RoarMe'), b), !a.length && !b.length ? h('p', { class: 'hint' }, res ? t('Nobody by that name.') : t('Search for someone above.')) : null);
-  };
-  const search = h('input', { class: 'input', type: 'search', placeholder: t('Search people'), oninput: async (e) => {
-    const q = e.target.value.trim();
-    if (!q) { found = null; return draw(); }
-    const rd = rdPeople.filter((x) => matches(x._k, q)).slice(0, 15);
-    // RoarMe's people read once, then found the Roardino way: Greek, Greeklish, with or without accents
-    everyone ||= ((await sb.from('roar_people').select('id,username,display_name,avatar_url').neq('id', meId).limit(2000)).data || []).map((u) => ({ ...u, _k: ' ' + fold(`${u.display_name} ${u.username.replace(/_/g, ' ')} ${u.username}`) + ' ' }));
-    if (e.target.value.trim() !== q) return;
-    const onRd = new Set(rdPeople.map((x) => x.id));
-    const data = everyone.filter((u) => !onRd.has(u.id) && matches(u._k, q)).slice(0, 15);
-    found = { rd, rm: data.map((u) => ({ key: 'u:' + u.id, kind: 'user', id: u.id, name: u.display_name || u.username, sub: '@' + u.username, avatar: u.avatar_url, rm: true })) };
-    draw(found);
-  } });
+  let rdPeople = [], rdFollow = [], found = null;
+  const row = (x) => h('button', { type: 'button', class: 'stm-row' + (picked.has(x.key) ? ' on' : ''), onclick: () => { if (picked.has(x.key)) picked.delete(x.key); else picked.set(x.key, x); sendBtn.disabled = !picked.size; draw(); } },
+    avatar({ name: x.name, avatar: x.avatar }), h('span', { class: 'stm-who' }, h('b', {}, x.name), x.sub ? h('small', {}, x.sub) : null), h('span', { class: 'stm-tick', html: ICON.check }));
+  const draw = () => { const rows = found || rdFollow; put(list, ...(rows.length ? rows.map(row) : [h('p', { class: 'hint' }, found ? t('Nobody by that name.') : t('Search for someone above.'))])); };
+  const search = h('input', { class: 'input', type: 'search', placeholder: t('Search people'), oninput: (e) => { const q = e.target.value.trim(); found = q ? rdPeople.filter((x) => matches(x._k, q)).slice(0, 30) : null; draw(); } });
   const close = openWin(t('Send'), h('div', { class: 'stm' }, search, list, note), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Cancel')), sendBtn]);
   sendBtn.onclick = async () => {
     sendBtn.disabled = true;
@@ -2218,38 +2197,23 @@ async function sendToRoarMe(r, p) {
     let ok = 0;
     for (const x of picked.values()) {
       try {
-        let room = x.kind === 'room' ? x.id : null;
-        if (!room) { const { data, error } = await sb.rpc('roar_open_direct', { other: x.id }); if (error) throw error; room = typeof data === 'string' ? data : data?.id || data; }
-        const { error } = await sb.from('roar_messages').insert({ room_id: room, user_id: meId, body: text });
-        if (error) throw error;
+        const { data, error } = await sb.rpc('rdc_open_direct', { other: x.id }); if (error) throw error;
+        const room = typeof data === 'string' ? data : data?.id || data;
+        const { error: e2 } = await sb.from('rdc_messages').insert({ room_id: room, user_id: meId, body: text });
+        if (e2) throw e2;
         ok++;
-      } catch (e) { console.warn('send to RoarMe', e); }
+      } catch (e) { console.warn('send', e); }
     }
-    close();
-    toast(ok ? (ok === 1 ? t('Sent on RoarMe') : t('Sent to {n} chats on RoarMe', { n: ok })) : t('Could not send. Try again.'));
+    close(); chatRooms = null;
+    toast(ok ? (ok === 1 ? t('Sent') : t('Sent to {n} people', { n: ok })) : t('Could not send. Try again.'));
   };
-  // Roardino's people (one row per account, its adult profile), the ones I follow shown before any search
   try {
     const { data: ppl } = await sb.from('roardino_people').select('id,name,handle,avatar,kinds,owner,minor').eq('visible', true).eq('minor', false).neq('owner', meId).order('created_at').limit(1500);
     const seen = new Set();
     await sign((ppl || []).map((x) => x.avatar));
-    rdPeople = (ppl || []).filter((x) => !seen.has(x.owner) && seen.add(x.owner)).map((x) => ({ key: 'u:' + x.owner, kind: 'user', id: x.owner, pid: x.id, name: x.name, sub: x.handle ? '@' + x.handle : (x.kinds || []).map(kindName).slice(0, 2).join(' · '), avatar: urlOf(x.avatar) || '', _k: ' ' + fold(`${x.name} ${x.handle || ''}`) + ' ' }));
-    rdFollow = rdPeople.filter((x) => follows.has(x.pid)).slice(0, 20);
+    rdPeople = (ppl || []).filter((x) => !seen.has(x.owner) && seen.add(x.owner)).map((x) => ({ key: 'u:' + x.owner, id: x.owner, pid: x.id, name: x.name, sub: x.handle ? '@' + x.handle : (x.kinds || []).map(kindName).slice(0, 2).join(' · '), avatar: urlOf(x.avatar) || '', _k: ' ' + fold(`${x.name} ${x.handle || ''}`) + ' ' }));
+    rdFollow = rdPeople.filter((x) => follows.has(x.pid)).slice(0, 30);
   } catch (e) { console.warn('Roardino people', e); }
-  // my chats, newest first: a direct chat shows the other person, a group its name
-  try {
-    const { data: mem } = await sb.from('roar_members').select('room_id, archived, room:roar_rooms(id,kind,title,avatar_url,last_message_at)').eq('user_id', meId).limit(200);
-    const rooms = (mem || []).filter((m) => m.room && !m.archived).sort((a, b) => String(b.room.last_message_at).localeCompare(String(a.room.last_message_at))).slice(0, 30);
-    const directIds = rooms.filter((m) => m.room.kind === 'direct').map((m) => m.room_id);
-    const others = directIds.length ? (await sb.from('roar_members').select('room_id,user_id').in('room_id', directIds).neq('user_id', meId)).data || [] : [];
-    const profIds = [...new Set(others.map((o) => o.user_id))];
-    const profs = profIds.length ? (await sb.from('roar_people').select('id,username,display_name,avatar_url').in('id', profIds)).data || [] : [];
-    recent = rooms.map((m) => {
-      if (m.room.kind === 'group') return { key: 'r:' + m.room_id, kind: 'room', id: m.room_id, name: m.room.title || t('Group'), sub: t('Group'), avatar: m.room.avatar_url };
-      const o = others.find((x) => x.room_id === m.room_id); const pr = profs.find((x) => x.id === o?.user_id);
-      return pr && !rdPeople.some((x) => x.id === pr.id) ? { key: 'r:' + m.room_id, kind: 'room', id: m.room_id, name: pr.display_name || pr.username, sub: '@' + pr.username, avatar: pr.avatar_url, rm: true } : null;
-    }).filter(Boolean);
-  } catch (e) { console.warn('RoarMe chats', e); }
   draw();
 }
 const isPhone = () => window.matchMedia('(max-width:820px)').matches;
@@ -2356,7 +2320,7 @@ function openReels(fromArt, onClose, signedHq) {
         h('div', { class: 'rl-grp' },
           h('div', { class: 'rl-pair' }, likeB, likeN),
           it.r.comments_off ? null : h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Comment'), html: ICON.talk, onclick: (e) => { e.stopPropagation(); talkSheet(it, talkCount); } }), talkCount),
-          h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: (e) => { e.stopPropagation(); v.pause(); sendToRoarMe(it.r, pp); } }))),
+          h('div', { class: 'rl-pair' }, h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Send'), html: ICON.send, onclick: (e) => { e.stopPropagation(); v.pause(); sendToRoarMe(it.r, pp); } }))),
         // the profile's picture in the middle of the bar (Alex, 16 Nov), with a small + while I do not follow them
         h('div', { class: 'rl-me' }, h('a', { href: `#/p/${pp.id}`, class: 'rl-av', 'aria-label': pp.name || '', onclick: () => close(true) }, avatar(pp)), follow),
         h('div', { class: 'rl-grp' },
@@ -2912,7 +2876,7 @@ function postCard(r, st, refresh) {
   const bar =
     h('div', { class: 'ig-bar' }, h('span', { class: 'ig-pair' }, bravoBtn, likeN),
       r.comments_off ? null : h('span', { class: 'ig-pair' }, h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: () => { if (talk.classList.contains('hidden')) { openTalk(); cap?.classList.remove('hidden'); } else { talk.classList.add('hidden'); cap?.classList.add('hidden'); } } }), talkN),
-      h('button', { type: 'button', class: 'ig-ico', title: t('Send on RoarMe'), 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: () => sendToRoarMe(r, p) }),
+      h('button', { type: 'button', class: 'ig-ico', title: t('Send'), 'aria-label': t('Send'), html: ICON.send, onclick: () => sendToRoarMe(r, p) }),
       viewsEl, soundEl,
       h('span', { class: 'grow' }),
       own ? null : h('button', { type: 'button', class: 'btn sm main', onclick: () => jobOffer({ owner: r.owner, name: p.name }) }, t('Work with me')), saveBtn);
@@ -4500,7 +4464,7 @@ const PRIVACY = [
   ['Age', ['Roardino is for people 18 and over. Profiles for anyone under 18 cannot be made.']],
   ['Pictures and files', ['Pictures, videos and CVs are kept in private storage and shown through links that expire within an hour. Pictures are made lighter in your browser before they go up.']],
   ['The camera', ['The camera is used only when you choose Camera for a story, and nothing is recorded until you press the button. Nothing goes up until you press Share.']],
-  ['The chat', ['The chat inside Roardino is RoarMe, with the same account. Its own privacy policy applies to your messages: alexisdigipro-hub.github.io/roarme/?legal=privacy.']],
+  ['The chat', ['Messages in Roardino\'s chat are kept in Roardino\'s own place, read only by the people in the conversation. Photos and videos sent there are kept privately with them.']],
   ['Other services', [
     'Accounts, data and files are stored with Supabase, our database and storage provider, in London, United Kingdom (covered by the EU\'s adequacy decision for the UK). It acts on our behalf and keeps short technical logs.',
     'Fonts load from Google Fonts and code from jsDelivr, so they see your IP address. A showreel from YouTube or Vimeo plays in their player, under their own rules.',
@@ -4601,7 +4565,7 @@ function viewSettings() {
     isAdmin ? h('section', { class: 'sec' }, h('h2', {}, t('Admin')),
       row(t('Site messages'), t('What people send through the contact form on themadlions.com.'), h('a', { class: 'btn sm', href: '#/inbox' }, icon('mail'), t('Open'), siteUnread ? ` (${siteUnread})` : ''))) : null,
     h('section', { class: 'sec' }, h('h2', {}, t('Chat')),
-      row(t('RoarMe'), t('Calls, voice messages and the rest of the chat live in RoarMe, with the same account.'), h('a', { class: 'btn sm', href: ROARME, target: '_blank', rel: 'noopener' }, icon('talk'), t('Open')))),
+      null),
     h('section', { class: 'sec' }, h('h2', {}, t('Feed')),
       JOBS ? row(t('Calls in the feed'), t('Open calls show between the posts.'), toggle('feedCalls')) : null,
       row(t('Videos start muted'), null, toggle('mutedVideos')),
@@ -4623,42 +4587,33 @@ function viewSettings() {
 
 const CHAT_PAGE = 50;
 /* =====================================================================================================================
-   Chat (Alex, 15 Nov: "the chat's code and build are Roardino's own, it only talks with RoarMe; our colours, the right
-   sizes, and RoarMe is not touched"). Roardino and RoarMe share one database and one account, so this reads and writes
-   RoarMe's own conversations (roar_my_rooms, roar_messages, roar_reactions, the bucket roar-files): what is written
-   here shows in RoarMe and the other way round. Minimal on purpose: the list, a conversation with words, photos and
+   Chat: Roardino's own (Alex, 16 Nov: "no contact at all with RoarMe"): rdc_rooms, rdc_members, rdc_messages,
+   rdc_reactions, rdc_hides, rdc_my_rooms(), rdc_open_direct() and the private bucket roardino-chat
+   (supabase/roardino-chat.sql). Nothing is read from or written to RoarMe's conversations. Minimal on purpose: the list, a conversation with words, photos and
    videos, reply, a heart, delete of one's own message. Calls, voice, polls, places and Encrypted Chats stay RoarMe's:
    here they show as a small card, and an Encrypted Chat is not written to from here.
    ===================================================================================================================== */
-const ROARME_ORIGIN = new URL(ROARME).origin;
 const chatPeople = new Map(); // account id -> { id, name, username, avatar }
 const chatSigned = new Map(); // bucket|path -> { url, until }
 let chatRooms = null, chatWatching = null, chatRoomLive = null, chatListDraw = null, chatMine = null, chatFinding = false, chatTab = 'main', chatPaneTop = 0;
-const chatKey = (f) => (f.bucket || 'roar-files') + '|' + f.path;
+const chatKey = (f) => (f.bucket || 'roardino-chat') + '|' + f.path;
 const chatUrl = (f) => (f?.path ? chatSigned.get(chatKey(f))?.url || '' : '');
 async function chatSign(files) {
   const need = {};
-  for (const f of files) { if (!f?.path) continue; const hit = chatSigned.get(chatKey(f)); if (hit && hit.until > Date.now()) continue; (need[f.bucket || 'roar-files'] ||= new Set()).add(f.path); }
+  for (const f of files) { if (!f?.path) continue; const hit = chatSigned.get(chatKey(f)); if (hit && hit.until > Date.now()) continue; (need[f.bucket || 'roardino-chat'] ||= new Set()).add(f.path); }
   await Promise.all(Object.entries(need).map(async ([b, set]) => {
     const { data } = await sb.storage.from(b).createSignedUrls([...set], 3600);
     (data || []).forEach((r) => { if (r?.signedUrl && r.path) chatSigned.set(b + '|' + r.path, { url: r.signedUrl, until: Date.now() + 3300e3 }); });
   }));
 }
-const chatContacts = () => (chatMine ||= sb.from('roar_contacts').select('person,nickname,photo_url').eq('owner', session.user.id).then(({ data }) => new Map((data || []).map((c) => [c.person, c])), () => new Map()));
+// the people in a conversation are their Roardino profiles (Alex, 16 Nov: nothing of RoarMe)
 async function chatLoadPeople(ids) {
   const miss = [...new Set(ids)].filter((x) => x && !chatPeople.has(x));
   if (!miss.length) return;
-  // roar_people is the view RoarMe itself reads (roar_profiles, the table under it, is closed to an account: the names
-  // came back empty, Alex, 15 Nov); roar_contacts holds the name and picture I saved someone under, which win
-  const [{ data }, mineOf, { data: rds }] = await Promise.all([sb.from('roar_people').select('id,username,display_name,avatar_url').in('id', miss), chatContacts(),
-    sb.from('roardino_people').select('id,owner,avatar').in('owner', miss).eq('minor', false).order('created_at')]);
-  // the photo and the details are RoarMe's (Alex, 15 Nov); the Roardino profile of the same account, when there is one,
-  // is where a tap on the name goes and lends its picture only when RoarMe has none; with no Roardino profile the
-  // person wears a small RoarMe mark
+  const { data: rds } = await sb.from('roardino_people').select('id,owner,name,handle,avatar,minor').in('owner', miss).order('minor').order('created_at');
   const rdOf = new Map(); (rds || []).forEach((r) => { if (!rdOf.has(r.owner)) rdOf.set(r.owner, r); });
   await sign([...rdOf.values()].map((r) => r.avatar));
-  (data || []).forEach((u) => { const c = mineOf.get(u.id); const rd = rdOf.get(u.id); const pic = c?.photo_url || u.avatar_url || '';
-    chatPeople.set(u.id, { id: u.id, name: c?.nickname || u.display_name || (u.username ? '@' + u.username : t('Member')), username: u.username, avatar: /^https?:/.test(pic) ? pic : rd?.avatar || null, rd: rd?.id || null }); });
+  miss.forEach((id) => { const rd = rdOf.get(id); chatPeople.set(id, { id, name: rd?.name || t('Member'), username: rd?.handle || '', avatar: rd?.avatar || null, rd: rd?.id || null }); });
 }
 const chatSealed = (body) => typeof body === 'string' && body.startsWith('e2e1.');
 // what a message is, in a few words: for the list, a reply's quote and the cards of what only RoarMe opens
@@ -4680,7 +4635,7 @@ function chatWords(m) {
 }
 const chatTime = (iso) => { if (!iso) return ''; const d = new Date(iso), n = new Date(); return d.toDateString() === n.toDateString() ? d.toLocaleTimeString(LOCALE(), { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }) : d.toLocaleDateString(LOCALE(), n - d < 6 * 864e5 ? { weekday: 'short' } : { day: 'numeric', month: 'short' }); };
 async function chatLoadRooms() {
-  const { data, error } = await sb.rpc('roar_my_rooms');
+  const { data, error } = await sb.rpc('rdc_my_rooms');
   if (error) { fail(error); return chatRooms || []; }
   const meId = session.user.id;
   const rows = (data || []).filter((r) => !r.archived);
@@ -4692,7 +4647,7 @@ async function chatLoadRooms() {
     chatLoadPeople(rows.flatMap((r) => [...(r.kind === 'direct' ? (r.members || []).filter((u) => u !== meId) : []), r.last_user])),
     sb.rpc('roardino_chat_known').then(({ data: d, error: e }) => (e ? null : new Set((d || []).map((x) => (typeof x === 'string' ? x : x.roardino_chat_known || x.room_id)))), () => null),
     sb.from('roardino_chat_jobs').select('id,room_id,from_user,title,details,created_at').order('created_at', { ascending: false }).limit(500).then(({ data: d }) => d || [], () => []),
-    chatContacts()]);
+    Promise.resolve(new Map())]);
   const jobOf = new Map(); jobs.forEach((j) => { if (!jobOf.has(j.room_id)) jobOf.set(j.room_id, j); });
   chatRooms = rows.map((r) => {
     const o = r.kind === 'direct' ? chatPeople.get((r.members || []).find((u) => u !== meId)) : null;
@@ -4708,12 +4663,12 @@ function chatWatch() {
   if (chatWatching) return;
   let tm = null;
   chatWatching = sb.channel('roardino-chat-' + session.user.id)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'roar_messages' }, (p) => {
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'rdc_messages' }, (p) => {
       const m = p.new && p.new.id ? p.new : null;
       if (m && chatRoomLive && chatRoomLive.id === m.room_id) chatRoomLive.take(m, p.eventType);
       clearTimeout(tm); tm = setTimeout(() => { if (chatListDraw && (location.hash || '').startsWith('#/chat')) chatListDraw(); }, 500);
     })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'roar_reactions' }, (p) => { const r = p.new?.room_id || p.old?.room_id; if (chatRoomLive && (!r || r === chatRoomLive.id)) chatRoomLive.hearts(); })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'rdc_reactions' }, (p) => { const r = p.new?.room_id || p.old?.room_id; if (chatRoomLive && (!r || r === chatRoomLive.id)) chatRoomLive.hearts(); })
     .subscribe();
 }
 async function viewChat(roomId) {
@@ -4769,7 +4724,7 @@ async function viewChat(roomId) {
       const by = r.last_user === meId ? t('You') + ': ' : r.kind !== 'direct' && chatPeople.get(r.last_user) ? chatPeople.get(r.last_user).name.split(' ')[0] + ': ' : '';
       return h('a', { class: 'ch-row' + (r.unread > 0 ? ' new' : '') + (r.id === roomId ? ' on' : ''), href: `#/chat/${r.id}` },
         avatar({ name: r.name, avatar: r.avatar }, 'ch-av'),
-        h('span', { class: 'ch-who' }, h('b', {}, h('span', {}, r.name), r.job ? h('em', { class: 'job-badge' }, t('Job')) : null, r.other && !r.other.rd ? h('em', { class: 'rm-badge' }, 'RoarMe') : null), h('small', {}, r.job && (shelf(r) === 'jobs') && !(r.unread > 0) ? r.job.title : words ? by + words : r.kind === 'direct' ? '' : t('Group'))),
+        h('span', { class: 'ch-who' }, h('b', {}, h('span', {}, r.name), r.job ? h('em', { class: 'job-badge' }, t('Job')) : null, null), h('small', {}, r.job && (shelf(r) === 'jobs') && !(r.unread > 0) ? r.job.title : words ? by + words : r.kind === 'direct' ? '' : t('Group'))),
         h('span', { class: 'ch-side' }, h('small', {}, chatTime(r.last_message_at)), r.unread > 0 ? h('em', {}, r.unread > 99 ? '99+' : String(r.unread)) : r.muted ? h('i', { class: 'ch-mute', html: ICON.bell }) : null));
     }));
     if (pane) pane.scrollTop = chatPaneTop;
@@ -4807,11 +4762,11 @@ async function viewChatRoom(roomId, pane) {
   const sub = group ? t('{n} members', { n: (room.members || []).length }) : room.other?.username ? '@' + room.other.username : '';
   const jobBox = h('div', { class: 'ch-jobs' });
   const reqBox = h('div', { class: 'ch-req', hidden: true });
-  const person = !group && room.other ? () => { if (room.other.rd) location.hash = `#/p/${room.other.rd}`; else toast(t('{name} is on RoarMe only, with no Roardino profile yet.', { name: room.name })); } : null;
+  const person = !group && room.other ? () => { if (room.other.rd) location.hash = `#/p/${room.other.rd}`;  } : null;
   const roomEl = h('div', { class: 'ch-room' },
     h('div', { class: 'ch-head' },
       h('a', { class: 'ch-back', href: '#/chat', title: t('Back'), 'aria-label': t('Back'), html: ICON.left }),
-      h(person ? 'button' : 'div', { type: person ? 'button' : null, class: 'ch-name', onclick: person }, avatar({ name: room.name, avatar: room.avatar }, 'ch-av sm'), h('span', {}, h('b', {}, h('span', {}, room.name), !group && room.other && !room.other.rd ? h('em', { class: 'rm-badge' }, 'RoarMe') : null), sub ? h('small', {}, sub) : null)),
+      h(person ? 'button' : 'div', { type: person ? 'button' : null, class: 'ch-name', onclick: person }, avatar({ name: room.name, avatar: room.avatar }, 'ch-av sm'), h('span', {}, h('b', {}, h('span', {}, room.name), null), sub ? h('small', {}, sub) : null)),
     ),
     jobBox, list, reqBox, foot);
   frame('chat', pane ? h('div', { class: 'ch-split' }, pane, roomEl) : roomEl);
@@ -4851,7 +4806,7 @@ async function viewChatRoom(roomId, pane) {
   const atEnd = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 160;
   const toEnd = () => window.scrollTo(0, document.documentElement.scrollHeight);
   const nameOf = (id) => (id === meId ? t('You') : chatPeople.get(id)?.name || t('Member'));
-  const seen = () => room.req ? null : sb.from('roar_members').update({ last_read_at: new Date().toISOString() }).eq('room_id', roomId).eq('user_id', meId).then(() => { if (room.unread) { room.unread = 0; drawBadges?.(); } }, () => {});
+  const seen = () => room.req ? null : sb.from('rdc_members').update({ last_read_at: new Date().toISOString() }).eq('room_id', roomId).eq('user_id', meId).then(() => { if (room.unread) { room.unread = 0; drawBadges?.(); } }, () => {});
   const setReply = (m) => {
     replyTo = m;
     replyBox.hidden = !m;
@@ -4866,13 +4821,13 @@ async function viewChatRoom(roomId, pane) {
     let body;
     const video = m.kind === 'file' && (/^video\//.test(f.type || '') || f.round);
     if (m.deleted_at) body = h('i', { class: 'ch-gone' }, t('Message deleted'));
-    else if (chatSealed(m.body)) body = h('i', { class: 'ch-gone' }, t('Encrypted message. Open it in RoarMe.'));
+    else if (chatSealed(m.body)) body = h('i', { class: 'ch-gone' }, t('Encrypted message'));
     else if ((m.kind === 'image' || video) && f.path) {
       const small = chatUrl(f.thumb ? { path: f.thumb, bucket: f.bucket } : f);
       const open = async (e) => { e.stopPropagation(); await chatSign([f]); if (chatUrl(f)) lightbox([{ type: video ? 'video' : 'image', path: chatUrl(f), poster: video ? small : null }], 0, { bare: true }); };
       body = [h('button', { type: 'button', class: 'ch-pic' + (video ? ' vid' : ''), style: small && (m.kind === 'image' || f.thumb) ? { backgroundImage: `url("${small}")` } : {}, 'aria-label': video ? t('Video') : t('Photo'), onclick: open }, video ? h('span', { class: 'ch-play', html: ICON.play }) : null),
         m.body ? h('span', { class: 'ch-cap' }, ...chatText(m.body)) : null];
-    } else if ((m.kind && m.kind !== 'text') || f.poll || f.location || f.groupcall || f.contact || f.live) body = h('span', { class: 'ch-card' }, h('b', {}, chatWords(m)), h('small', {}, t('Open it in RoarMe')));
+    } else if ((m.kind && m.kind !== 'text') || f.poll || f.location || f.groupcall || f.contact || f.live) body = h('span', { class: 'ch-card' }, h('b', {}, chatWords(m)), null);
     else body = h('span', { class: 'ch-text' }, ...chatText(m.body));
     const q = m.reply_to ? msgs.find((x) => x.id === m.reply_to) : null;
     const hs = hearts[m.id] || [];
@@ -4893,7 +4848,7 @@ async function viewChatRoom(roomId, pane) {
     const lastWords = [...rows].reverse().find((m) => m.kind === 'text' && !m.deleted_at && m.body !== 'e2e:on' && m.body !== 'e2e:off');
     sealedRoom = lastMark ? lastMark.body === 'e2e:on' : !!(lastWords && chatSealed(lastWords.body));
     foot.classList.toggle('locked', sealedRoom);
-    text.disabled = sealedRoom; text.placeholder = sealedRoom ? t('Encrypted Chat: write in RoarMe') : t('Message');
+    text.disabled = sealedRoom; text.placeholder = sealedRoom ? t('Message') : t('Message');
     const before = document.documentElement.scrollHeight - window.scrollY;
     const out = []; let day = '', prev = null;
     if (more && rows.length) out.push(h('button', { type: 'button', class: 'btn sm ch-older', onclick: older }, t('Earlier messages')));
@@ -4909,11 +4864,11 @@ async function viewChatRoom(roomId, pane) {
   const signAll = (rows) => chatSign(rows.filter((m) => !m.deleted_at && m.file?.path && (m.kind === 'image' || m.kind === 'file')).map((m) => (m.file.thumb ? { path: m.file.thumb, bucket: m.file.bucket } : m.kind === 'image' ? m.file : null)).filter(Boolean));
   const loadHearts = async () => {
     const ids = msgs.map((m) => m.id); if (!ids.length) return;
-    const { data } = await sb.from('roar_reactions').select('message_id,user_id,emoji').eq('room_id', roomId).in('message_id', ids.slice(-200));
+    const { data } = await sb.from('rdc_reactions').select('message_id,user_id,emoji').eq('room_id', roomId).in('message_id', ids.slice(-200));
     hearts = {}; (data || []).forEach((r) => { if (String(r.emoji || '').startsWith('❤')) (hearts[r.message_id] ||= []).push(r.user_id); }); // RoarMe's other reactions stay RoarMe's
   };
   async function load(before) {
-    let req = sb.from('roar_messages').select('*').eq('room_id', roomId).order('created_at', { ascending: false }).limit(CHAT_PAGE);
+    let req = sb.from('rdc_messages').select('*').eq('room_id', roomId).order('created_at', { ascending: false }).limit(CHAT_PAGE);
     if (before) req = req.lt('created_at', before);
     const { data, error } = await req;
     if (error) { fail(error); return []; }
@@ -4928,7 +4883,7 @@ async function viewChatRoom(roomId, pane) {
     if (!body || sealedRoom) return;
     sendBtn.disabled = true;
     const reply_to = replyTo?.id || null;
-    const { data, error } = await sb.from('roar_messages').insert({ room_id: roomId, user_id: meId, body, reply_to }).select().single();
+    const { data, error } = await sb.from('rdc_messages').insert({ room_id: roomId, user_id: meId, body, reply_to }).select().single();
     sendBtn.disabled = false;
     if (error) return fail(error);
     text.value = ''; text.style.height = 'auto'; sendBtn.classList.remove('ready'); setReply(null);
@@ -4941,16 +4896,16 @@ async function viewChatRoom(roomId, pane) {
     for (const raw of files) {
       const img = /^image\//.test(raw.type), vid = /^video\//.test(raw.type);
       if (!img && !vid) continue;
-      if (raw.size > 45 * 1024 * 1024) { toast(t('Too big for here (over 45 MB). Send it in RoarMe.')); continue; }
+      if (raw.size > 45 * 1024 * 1024) { toast(t('Too big (over 45 MB).')); continue; }
       const wait = h('div', { class: 'ch-msg mine' }, h('div', { class: 'ch-bub' }, h('span', { class: 'ch-text' }, t('Sending…'))));
       list.append(wait); toEnd();
       try {
         const file = img && !/gif|svg/.test(raw.type) ? await shrink(raw) : raw;
         const safe = (raw.name || 'file').normalize('NFKD').replace(/[^\w.-]+/g, '_').slice(-80) || 'file';
-        const up = async (blob, name) => { const path = `${roomId}/${crypto.randomUUID()}-${name}`; const { error } = await sb.storage.from('roar-files').upload(path, blob, { contentType: blob.type || raw.type }); if (error) throw error; return path; };
+        const up = async (blob, name) => { const path = `${roomId}/${crypto.randomUUID()}-${name}`; const { error } = await sb.storage.from('roardino-chat').upload(path, blob, { contentType: blob.type || raw.type }); if (error) throw error; return path; };
         const meta = { path: await up(file, safe), name: raw.name || safe, size: file.size, type: file.type || raw.type };
         if (vid) { try { const cover = await videoCover(raw); if (cover) meta.thumb = await up(cover, 'cover.jpg'); } catch { /* RoarMe reads the first frame itself */ } }
-        const { data, error } = await sb.from('roar_messages').insert({ room_id: roomId, user_id: meId, kind: img && !/gif|svg/.test(raw.type) ? 'image' : 'file', body: '', file: meta, reply_to: replyTo?.id || null }).select().single();
+        const { data, error } = await sb.from('rdc_messages').insert({ room_id: roomId, user_id: meId, kind: img && !/gif|svg/.test(raw.type) ? 'image' : 'file', body: '', file: meta, reply_to: replyTo?.id || null }).select().single();
         if (error) throw error;
         setReply(null);
         await signAll([data]);
@@ -4969,7 +4924,7 @@ async function viewChatRoom(roomId, pane) {
     close = openWin(nameOf(m.user_id), h('div', { class: 'pm ch-menu' }, h('div', { class: 'pm-group' },
       sealedRoom ? null : row('talk', t('Reply'), () => setReply(m)),
       row('heart', liked ? t('Remove the heart') : t('Like'), async () => {
-        const { error } = liked ? await sb.from('roar_reactions').delete().eq('message_id', m.id).eq('user_id', meId) : await sb.from('roar_reactions').upsert({ message_id: m.id, room_id: roomId, user_id: meId, emoji: '❤️' });
+        const { error } = liked ? await sb.from('rdc_reactions').delete().eq('message_id', m.id).eq('user_id', meId) : await sb.from('rdc_reactions').upsert({ message_id: m.id, room_id: roomId, user_id: meId, emoji: '❤️' });
         if (error) return fail(error);
         await loadHearts(); draw('stay');
         if (!liked) list.querySelector(`.ch-msg[data-id="${m.id}"] .ch-heart`)?.classList.add('pop');
@@ -4977,7 +4932,7 @@ async function viewChatRoom(roomId, pane) {
       words ? row('link', t('Copy'), async () => { try { await navigator.clipboard.writeText(words); toast(t('Copied')); } catch { /* not allowed */ } }) : null,
       mine ? row('trash', t('Delete for everyone'), async () => {
         if (!(await ask(t('Delete this message for everyone?')))) return;
-        const { error } = await sb.from('roar_messages').update({ deleted_at: new Date().toISOString(), body: '' }).eq('id', m.id);
+        const { error } = await sb.from('rdc_messages').update({ deleted_at: new Date().toISOString(), body: '' }).eq('id', m.id);
         if (error) return fail(error);
         m.deleted_at = new Date().toISOString(); m.body = ''; draw('stay');
       }, 'red') : null)), null);
@@ -5005,7 +4960,7 @@ async function viewChatRoom(roomId, pane) {
       h('div', { class: 'ch-req-acts' },
         h('button', { type: 'button', class: 'btn sm red', onclick: async () => {
           if (!(await ask(t('Delete this conversation from your list?')))) return;
-          const { error } = await sb.from('roar_members').update({ archived: true }).eq('room_id', roomId).eq('user_id', meId);
+          const { error } = await sb.from('rdc_members').update({ archived: true }).eq('room_id', roomId).eq('user_id', meId);
           if (error) return fail(error);
           chatRooms = null; location.hash = '#/chat';
         } }, t('Delete')),
@@ -5023,7 +4978,7 @@ async function viewChatRoom(roomId, pane) {
     if (!here()) return;
     put(jobBox, ...(data || []).map((j) => {
       const d = j.details || {}, mine = j.from_user === meId;
-      const say = async (words) => { const { data: made, error } = await sb.from('roar_messages').insert({ room_id: roomId, user_id: meId, body: words }).select().single(); if (error) return fail(error); if (room.req) { room.req = false; drawReq(); } if (!msgs.some((x) => x.id === made.id)) { msgs.push(made); fresh.add(made.id); draw(); } };
+      const say = async (words) => { const { data: made, error } = await sb.from('rdc_messages').insert({ room_id: roomId, user_id: meId, body: words }).select().single(); if (error) return fail(error); if (room.req) { room.req = false; drawReq(); } if (!msgs.some((x) => x.id === made.id)) { msgs.push(made); fresh.add(made.id); draw(); } };
       return h('div', { class: 'ch-job' },
         h('span', { class: 'ch-job-ic', html: ICON.star }),
         h('div', { class: 'ch-job-t' }, h('small', {}, mine ? t('Your job offer') : t('Job offer from {name}', { name: nameOf(j.from_user) })), h('b', {}, j.title),
@@ -5036,8 +4991,8 @@ async function viewChatRoom(roomId, pane) {
   }
   drawJobs();
   const [rows, mem, hid] = await Promise.all([load(),
-    sb.from('roar_members').select('cleared_at').eq('room_id', roomId).eq('user_id', meId).maybeSingle(),
-    sb.from('roar_msg_hides').select('message_id').eq('room_id', roomId).eq('user_id', meId)]);
+    sb.from('rdc_members').select('cleared_at').eq('room_id', roomId).eq('user_id', meId).maybeSingle(),
+    sb.from('rdc_hides').select('message_id').eq('room_id', roomId).eq('user_id', meId)]);
   if (!here()) return;
   msgs = rows; clearedAt = mem.data?.cleared_at || null; (hid.data || []).forEach((x) => hidden.add(x.message_id));
   await loadHearts();
@@ -5045,22 +5000,20 @@ async function viewChatRoom(roomId, pane) {
   draw(); seen();
   requestAnimationFrame(toEnd);
 }
-// New message (Alex, 15 Nov): find someone, on Roardino or on RoarMe, and the conversation with them opens
+// New message (Alex, 15 Nov): find someone on Roardino and the conversation with them opens
 async function chatPick(title, onPick) {
   const meId = session.user.id;
   const list = h('div', { class: 'stm-list' }, h('p', { class: 'wait' }, t('Loading…')));
-  let rd = [], rm = null, close = null;
+  let rd = [], close = null;
   const row = (x) => h('button', { type: 'button', class: 'stm-row', onclick: () => { close(); onPick(x); } },
-    avatar({ name: x.name, avatar: x.avatar }), h('span', { class: 'stm-who' }, h('b', {}, x.name, x.rm ? h('em', { class: 'rm-badge' }, 'RoarMe') : null), x.sub ? h('small', {}, x.sub) : null));
+    avatar({ name: x.name, avatar: x.avatar }), h('span', { class: 'stm-who' }, h('b', {}, x.name, null), x.sub ? h('small', {}, x.sub) : null));
   const sec = (label, rows) => (rows.length ? [h('p', { class: 'stm-sec' }, label), ...rows.map(row)] : []);
-  const draw = (a, b, searching) => put(list, ...sec(searching ? t('On Roardino') : t('People you follow'), a), ...sec(t('On RoarMe'), b), !a.length && !b.length ? h('p', { class: 'hint' }, searching ? t('Nobody by that name.') : t('Search for someone above.')) : null);
+  const draw = (a, b, searching) => put(list, ...sec(searching ? t('On Roardino') : t('People you follow'), a),  !a.length && !b.length ? h('p', { class: 'hint' }, searching ? t('Nobody by that name.') : t('Search for someone above.')) : null);
   const search = h('input', { class: 'input', type: 'search', placeholder: t('Search people'), oninput: async (e) => {
     const q = e.target.value.trim();
     if (!q) return draw(rd.filter((x) => follows.has(x.pid)).slice(0, 30), [], false);
-    rm ||= ((await sb.from('roar_people').select('id,username,display_name,avatar_url').neq('id', meId).limit(2000)).data || []).map((u) => ({ id: u.id, name: u.display_name || u.username, sub: '@' + u.username, avatar: /^https?:/.test(u.avatar_url || '') ? u.avatar_url : null, rm: true, _k: ' ' + fold(`${u.display_name} ${String(u.username || '').replace(/_/g, ' ')} ${u.username}`) + ' ' }));
-    if (e.target.value.trim() !== q) return;
-    const onRd = new Set(rd.map((x) => x.id));
-    draw(rd.filter((x) => matches(x._k, q)).slice(0, 20), rm.filter((u) => !onRd.has(u.id) && matches(u._k, q)).slice(0, 20), true);
+    draw(rd.filter((x) => matches(x._k, q)).slice(0, 30), [], true);
+
   } });
   close = openWin(title, h('div', { class: 'stm' }, search, list), null);
   try {
@@ -5073,8 +5026,8 @@ async function chatPick(title, onPick) {
   if (!isPhone()) search.focus();
 }
 async function chatOpenWith(userId, name) {
-  const { data: room, error } = await sb.rpc('roar_open_direct', { other: userId });
-  if (error || !room) { toast(t('{name} is not on RoarMe yet.', { name: name || t('This person') })); return null; }
+  const { data: room, error } = await sb.rpc('rdc_open_direct', { other: userId });
+  if (error || !room) { toast(t('{name} cannot get messages yet.', { name: name || t('This person') })); return null; }
   chatRooms = null;
   return typeof room === 'string' ? room : room.id || room;
 }
@@ -5106,7 +5059,7 @@ function jobOffer(who) {
       if (error) { e.currentTarget.disabled = false; return fail(error); }
       // the same in words, so it reads well in RoarMe too
       const body = ['💼 ' + tt, [details.when, details.where, details.pay].filter(Boolean).join(' · '), details.note].filter(Boolean).join('\n');
-      await sb.from('roar_messages').insert({ room_id: room, user_id: session.user.id, body }).then(() => {}, () => {});
+      await sb.from('rdc_messages').insert({ room_id: room, user_id: session.user.id, body }).then(() => {}, () => {});
       close(); toast(t('Sent')); location.hash = `#/chat/${room}`;
     } }, icon('send'), t('Send'))]);
 }
@@ -5124,8 +5077,8 @@ function videoCover(file) {
 // Message on a profile (Alex, 5 Nov): the conversation with the profile's account (a child's: the parent's)
 async function messageOnRoarMe(p) {
   if (!p.owner || p.owner === session.user.id) return;
-  const { data: room, error } = await sb.rpc('roar_open_direct', { other: p.owner });
-  if (error || !room) { toast(t('{name} is not on RoarMe yet.', { name: p.name })); return; }
+  const { data: room, error } = await sb.rpc('rdc_open_direct', { other: p.owner });
+  if (error || !room) { toast(t('{name} cannot get messages yet.', { name: p.name })); return; }
   document.querySelectorAll('.veil').forEach((v) => v.remove());
   chatRooms = null;
   location.hash = `#/chat/${typeof room === 'string' ? room : room.id || room}`;

@@ -98,8 +98,7 @@ grant select on public.rdc_rooms, public.rdc_members, public.rdc_messages, publi
 grant update (muted, archived, last_read_at, cleared_at) on public.rdc_members to authenticated;
 grant insert (room_id, user_id, kind, body, file, reply_to) on public.rdc_messages to authenticated;
 grant update (body, edited_at, deleted_at) on public.rdc_messages to authenticated;
-grant insert, delete on public.rdc_reactions to authenticated;
-grant update (emoji) on public.rdc_reactions to authenticated;
+grant insert, update, delete on public.rdc_reactions to authenticated;
 grant insert, delete on public.rdc_hides to authenticated;
 
 -- a new message moves its conversation to the top
