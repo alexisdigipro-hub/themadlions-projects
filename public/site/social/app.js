@@ -125,14 +125,40 @@ if (shell) {
   // is where it was. Going down, the same the other way round.
   const root = document.documentElement;
   let kbH = 0, falling = false, riseT = 0;
+  // What shows behind the keyboard's glass and round corners is the app's own window, which the shell paints in the
+  // page's theme-color (Alex, 16 Nov: "round the keyboard there are lines, the background is missing, things are cut").
+  // So while the keyboard is up theme-color is the colour that is really on screen right over it: the page's, black in
+  // Reels and stories, a window's. It goes back to the theme's own when the keyboard leaves.
+  const tintMeta = document.querySelector('meta[name=theme-color]');
+  let tintBase = null;
+  const rgba = (c) => { const m = /rgba?\(([^)]+)\)/.exec(c || ''); if (!m) return null; const p = m[1].split(/[,\s/]+/).filter(Boolean).map(Number); return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1]; };
+  const hexRgb = (x) => { const v = (x || '').replace('#', ''); const f = v.length === 3 ? v.replace(/./g, '$&$&') : v; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16) || 0); };
+  const kbTint = (lift = 0) => {
+    if (!tintMeta) return;
+    if (tintBase === null) tintBase = tintMeta.getAttribute('content') || '#ededed';
+    let col = hexRgb(tintBase);
+    const chain = []; let el = document.elementFromPoint(Math.round(innerWidth / 2), Math.max(0, innerHeight - lift - 3));
+    for (; el && el.nodeType === 1; el = el.parentElement) chain.unshift(el);
+    let over = -1; chain.forEach((n, i) => { if (getComputedStyle(n).position === 'fixed') over = i; }); // a layer over the page: all of it counts
+    for (let i = 0; i < chain.length; i++) {
+      const n = chain[i];
+      if (i > over && n.matches('.post, article, img, video, canvas')) break; // a post's own picture is not the page's colour
+      const c = rgba(getComputedStyle(n).backgroundColor); if (!c || c[3] < 0.02) continue;
+      col = col.map((v, i) => Math.round(v * (1 - c[3]) + c[i] * c[3]));
+    }
+    tintMeta.setAttribute('content', '#' + col.map((v) => v.toString(16).padStart(2, '0')).join(''));
+  };
+  const kbTintOff = () => { if (tintMeta && tintBase !== null) { tintMeta.setAttribute('content', tintBase); tintBase = null; } };
   shellListen('Keyboard', 'keyboardWillShow', (e) => {
     kbH = Math.round(e?.keyboardHeight || 0); falling = false;
     root.style.setProperty('--kbup', kbH + 'px');
     root.classList.add('kb'); if (kbH) root.classList.add('kb-rise');
     clearTimeout(riseT); riseT = setTimeout(() => root.classList.remove('kb-rise'), 1200); // never left hanging
     window.dispatchEvent(new Event('roardino-kb'));
+    kbTint(kbH); setTimeout(() => root.classList.contains('kb') && kbTint(root.classList.contains('kb-rise') ? kbH : 0), 450);
   });
   shellListen('Keyboard', 'keyboardWillHide', () => {
+    kbTintOff();
     root.classList.remove('kb', 'kb-rise'); falling = !!kbH;
     setTimeout(() => { falling = false; }, 700);
     window.dispatchEvent(new Event('roardino-kb'));
