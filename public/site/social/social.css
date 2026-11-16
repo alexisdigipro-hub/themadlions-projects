@@ -4113,3 +4113,10 @@ html.kb-fall :is(.rl-sheet-back .rl-sheet,.pf-foot),html.kb-fall:is(.rl-open) .v
 html.kb-rise:not(.rl-open) .veil .win{translate:0 calc(-.5 * var(--kbup,0px) + .5 * env(safe-area-inset-bottom,0px));transition:translate .27s cubic-bezier(.17,.59,.4,.99)}
 html.kb-fall-from:not(.rl-open) .veil .win{translate:0 calc(-.5 * var(--kbup,0px) + .5 * env(safe-area-inset-bottom,0px));transition:none}
 html.kb-fall:not(.rl-open) .veil .win{translate:0 0;transition:translate .25s cubic-bezier(.17,.59,.4,.99)}
+
+/* Reels comments: the first picture was cut at the top by the list's own edge, and the rows stood on each other (Alex, 16 Nov) */
+.rl-sheet-talk .rl-talk{padding:6px 6px 4px!important}
+.rl-sheet-talk .rl-talk .cmt-list{display:flex!important;flex-direction:column;gap:12px;padding:4px 2px 8px}
+.rl-sheet-talk .rl-talk .cmt-list:empty{display:none!important}
+.rl-sheet-talk .rl-talk .cmt{align-items:center}
+.rl-sheet-talk .rl-talk .cmt .av{flex:none}
