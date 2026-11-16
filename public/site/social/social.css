@@ -4425,3 +4425,38 @@ html[data-theme][data-theme] body :is(.fs-apps-head b,.stm-sec,.ig-sec,.pf-sec){
 /* a frame inside a frame stays plain: one sheet of glass, not two */
 html[data-theme][data-theme] body :is(.ch-split .ch-pane .ch-list,.card .card,.sec .card,.card .sec){background:none!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-radius:0!important}
 html.rl-open body:has(.veil) .rl .rl-info{opacity:0!important;transition:opacity .2s}
+/* the menus, the bell's list, the right-click menu, the post's ⋯ menu, the wizard boxes, the story editor's panel and
+   the thread window wear the same glass too (Alex, 16 Nov: "and the menus? and everything?") */
+html[data-theme][data-theme] body :is(.menu,.notes-panel,.th-ctx,.wz-box,.ed-panel),
+html:not(.rl-open)[data-theme][data-theme] body:not(:has(.rl)) .veil:has(.pm) .win.win,
+html[data-theme][data-theme] body .pf-one.pf-thread{
+  background:var(--g1-bg)!important;background-color:transparent!important;border:0!important;
+  box-shadow:var(--g1-rim),0 24px 60px rgba(28,35,51,.18)!important;-webkit-backdrop-filter:var(--g1-blur)!important;backdrop-filter:var(--g1-blur)!important;color:var(--ink)}
+html[data-theme=dark][data-theme] body :is(.menu,.notes-panel,.th-ctx,.wz-box,.ed-panel),html[data-theme=dark][data-theme] body .pf-one.pf-thread{box-shadow:var(--g1-rim),0 24px 60px rgba(0,0,0,.5)!important;color:#eef1f6}
+html[data-theme][data-theme] body :is(.menu,.notes-panel,.th-ctx){border-radius:24px!important}
+html[data-theme][data-theme] body :is(.wz-box,.ed-panel){border-radius:24px!important}
+html:not(.rl-open)[data-theme][data-theme] body:not(:has(.rl)) .veil:has(.pm) .win.win,html[data-theme][data-theme] body .pf-one.pf-thread{border-radius:30px!important}
+/* the post's ⋯ menu on the light glass: dark words and signs */
+html:not(.rl-open)[data-theme=light][data-theme] body:not(:has(.rl)) .veil:has(.pm) .win :is(h2,.pm-tile,.pm-row,.pm-ic svg,.win-x svg){color:var(--ink)!important;-webkit-text-fill-color:var(--ink)!important;stroke:currentColor!important}
+html:not(.rl-open)[data-theme=light][data-theme] body:not(:has(.rl)) .veil:has(.pm) .win .pm-tiles{border-bottom-color:rgba(128,134,148,.22)!important}
+html:not(.rl-open)[data-theme=light][data-theme] body:not(:has(.rl)) .veil:has(.pm) .win .win-x{background:rgba(255,255,255,.6)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.8)!important}
+html:not(.rl-open)[data-theme][data-theme] body:not(:has(.rl)) .veil:has(.pm){background:rgba(210,214,220,.28)!important;-webkit-backdrop-filter:blur(26px) saturate(1.3)!important;backdrop-filter:blur(26px) saturate(1.3)!important}
+/* the bars at the top and the foot: the same glass */
+html[data-theme][data-theme] body .bar .bar-in,html[data-theme][data-theme] body .tabbar{background:var(--g1-bg)!important;box-shadow:var(--g1-rim),0 14px 40px rgba(28,35,51,.1)!important;-webkit-backdrop-filter:var(--g1-blur)!important;backdrop-filter:var(--g1-blur)!important;border:0!important}
+html[data-theme][data-theme] body .bar .bar-in{border-radius:24px!important}
+/* menu rows: one size */
+html[data-theme][data-theme] body :is(.menu a,.menu button,.th-ctx-row,.pm-row){font-size:var(--t-text)!important}
+/* the top bar's menu: the same light glass with dark words (Slate's own grey menu let go) */
+html[data-skin][data-theme][data-theme] body .bar .menu.menu,html[data-theme][data-theme] body .bar .menu.menu{background:var(--g1-bg)!important;opacity:1!important;padding:8px!important;border-radius:24px!important}
+html[data-theme=light][data-theme] body .bar .menu.menu :is(a,button){color:var(--ink)!important;-webkit-text-fill-color:var(--ink)!important;font-size:var(--t-text)!important;min-height:44px}
+html[data-theme=light][data-theme] body .bar .menu.menu :is(a,button) svg{color:var(--ink2,#3b3f45)!important;stroke:currentColor!important}
+html[data-theme=light][data-theme] body .bar .menu.menu :is(a,button):hover{background:rgba(255,255,255,.55)!important}
+html[data-theme=light][data-theme] body .bar .menu.menu small{color:var(--muted)!important;font-size:var(--t-sub)!important}
+html[data-theme=light][data-theme] body .bar .menu.menu hr{background:rgba(128,134,148,.2)!important}
+/* menus that drop from the top bar sit inside the bar's own glass, where a browser cannot blur again behind them, so
+   they take denser glass of the same family: the words never mix with what is behind */
+html[data-skin][data-theme][data-theme] body .bar .menu.menu,html[data-theme][data-theme] body .bar .menu.menu,html[data-theme][data-theme] body .notes-panel.notes-panel,html[data-theme][data-theme] body .th-ctx.th-ctx{
+  background:linear-gradient(160deg,rgba(255,255,255,.95),rgba(246,247,250,.9) 55%,rgba(250,251,253,.93))!important}
+html[data-theme=dark][data-theme] body .bar .menu.menu,html[data-theme=dark][data-theme] body .notes-panel.notes-panel,html[data-theme=dark][data-theme] body .th-ctx.th-ctx{
+  background:linear-gradient(160deg,rgba(60,64,72,.96),rgba(38,41,48,.94) 55%,rgba(46,49,56,.95))!important}
+html[data-theme=light][data-theme] body .notes-panel.notes-panel{background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(247,248,250,.97))!important}
