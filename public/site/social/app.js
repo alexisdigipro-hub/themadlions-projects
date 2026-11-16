@@ -2161,7 +2161,10 @@ function openReels(fromArt, onClose, signedHq) {
     h('div', { class: 'rl-top' },
       h('button', { type: 'button', class: 'rl-btn', 'aria-label': t('Back'), html: ICON.left, onclick: () => close() }),
       h('span', {}),
-      h('button', { type: 'button', class: 'rl-btn rl-dots', 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); reelMenu(); } })));
+      h('button', { type: 'button', class: 'rl-btn rl-dots', 'aria-label': t('More'), html: ICON.dots, onclick: (e) => { e.stopPropagation(); const open = veil.querySelector('.rl-menu-back'); if (open) { const pp = slides[cur]?._act?.it.p; menuOff(); if (pp?.id) { location.hash = `#/p/${pp.id}`; close(true); } } else reelMenu(); } })));
+  // the dots turn into the profile's picture while their menu is open (Alex, 16 Nov) and back when it closes
+  const dotsFace = (pp) => { const d = veil.querySelector('.rl-dots'); if (!d) return; d.classList.toggle('as-av', !!pp); if (pp) put(d, avatar(pp)); else d.innerHTML = ICON.dots; };
+  const menuOff = () => { veil.querySelector('.rl-menu-back')?.remove(); dotsFace(null); };
   const vids = [];
   const short = (n) => (n >= 10000 ? Math.round(n / 1000) + 'K' : n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : String(n || ''));
   const slides = list.map((it, i) => {
@@ -2245,7 +2248,7 @@ function openReels(fromArt, onClose, signedHq) {
   const show = (i) => {
     if (i === cur) return;
     cur = i;
-    veil.querySelector('.rl-menu-back')?.remove();
+    menuOff();
     vids.forEach((x, k) => {
       const d = Math.abs(k - i);
       if (d <= 1 && !x.getAttribute('src')) { x.src = x.dataset.src; x.preload = 'auto'; }
@@ -2273,26 +2276,26 @@ function openReels(fromArt, onClose, signedHq) {
   // holds Quality (the two copies a video has: the light one and HQ, each with its real size) and Auto-scroll
   function reelMenu() {
     const a = slides[cur]?._act; if (!a) return;
-    veil.querySelector('.rl-menu-back')?.remove();
+    menuOff();
     const pp = a.it.p;
     const card = h('div', { class: 'rl-menu' });
-    const back = h('div', { class: 'rl-menu-back', onclick: (e) => { if (e.target === back) back.remove(); } }, card);
+    const back = h('div', { class: 'rl-menu-back', onclick: (e) => { if (e.target === back) menuOff(); } }, card);
     const row = (ic, label, fn, right, cls = '') => h('button', { type: 'button', class: 'rl-mrow ' + cls, onclick: (e) => { e.stopPropagation(); fn(); } }, h('span', { class: 'rl-mic', html: ic }), h('b', {}, label), right ? h('small', {}, right) : null);
     const TICK = ICON.check;
     // round icons dropping under the dots, no words (Alex, 16 Nov: "not a menu with letters; the round icons we had,
     // right under the dots, as big as the dots' button")
     const IRIS = '<svg viewBox="0 0 24 24" aria-hidden="true"><g transform="translate(12 12) scale(.88) translate(-12 -12)"><circle class="gem-body" cx="12" cy="12" r="10"/><path d="m14.31 8 5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16 3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"/></g></svg>';
     const ico = (html, label, fn, cls = '') => h('button', { type: 'button', class: 'rl-ico ' + cls, 'aria-label': label, title: label, html, onclick: (e) => { e.stopPropagation(); fn(); } });
+    // the count sits inside its icon, in the middle (Alex, 16 Nov)
+    const withN = (btn, n) => { if (n) { btn.classList.add('has-n'); btn.append(h('em', {}, String(n))); } return btn; };
     const main = () => { card.className = 'rl-menu ico'; put(card,
-      h('div', { class: 'rl-pair' }, ico(ICON.heart, t('Like'), () => { a.like(); main(); }, 'like' + (a.liked() ? ' on' : '')), h('span', {}, a.likes() ? String(a.likes()) : '')),
-      a.it.r.comments_off ? null : h('div', { class: 'rl-pair' }, ico(ICON.talk, t('Comments'), () => { back.remove(); a.comments(); }), h('span', {}, a.talkN() || '')),
-      ico(ICON.send, t('Send'), () => { back.remove(); a.send(); }),
-      a.hasHq ? ico(IRIS, 'HQ', () => { a.setHq(!a.hqOn()); main(); }, 'rl-gem' + (a.hqOn() ? ' on' : '')) : null,
+      withN(ico(ICON.heart, t('Like'), () => { a.like(); main(); }, 'like' + (a.liked() ? ' on' : '')), a.likes()),
+      a.it.r.comments_off ? null : withN(ico(ICON.talk, t('Comments'), () => { menuOff(); a.comments(); }), a.talkN()),
+      ico(ICON.send, t('Send'), () => { menuOff(); a.send(); }),
       ico(feedSound ? ICON.vol : ICON.mute, t('Sound'), () => { soundBtn.onclick(); main(); }),
-      ico(ICON.gear || ICON.dots, t('Settings'), () => settings()),
-      h('a', { class: 'rl-ico rl-dav', href: `#/p/${pp.id}`, 'aria-label': pp.name || t('Profile'), onclick: () => close(true) }, avatar(pp))); };
+      ico(ICON.gear || ICON.dots, t('Settings'), () => settings())); };
     const settings = () => {
-      card.className = 'rl-menu';
+      card.className = 'rl-menu set';
       const tog = h('span', { class: 'rl-switch' + (auto ? ' on' : '') }, h('i'));
       put(card,
         row(ICON.left, t('Settings'), () => main(), '', 'head'),
@@ -2302,11 +2305,11 @@ function openReels(fromArt, onClose, signedHq) {
         a.hasHq ? row(a.hqOn() ? TICK : '', 'HQ', () => { a.setHq(true); settings(); }, a.hqP ? `${a.hqP}p` : '') : h('small', { class: 'rl-mnote' }, t('This video has no HQ copy.')),
         h('i', { class: 'rl-mline' }),
         h('button', { type: 'button', class: 'rl-mrow', onclick: (e) => { e.stopPropagation(); auto = !auto; vids.forEach((x) => { x.loop = !auto; }); try { localStorage.setItem('roardino-autoscroll', auto ? '1' : '0'); } catch { /* private */ } settings(); } }, h('span', { class: 'rl-mic', html: ICON.play }), h('b', {}, t('Auto-scroll')), tog),
-        row(ICON.link, t('Copy link'), async () => { const url = `${location.origin}${location.pathname}#/p/${pp.id}`; try { await navigator.clipboard.writeText(url); toast(t('Link copied')); } catch { /* no */ } back.remove(); }),
-        row(ICON.dots, t('More options'), () => { back.remove(); close(); a.it.menu(); }));
+        row(ICON.link, t('Copy link'), async () => { const url = `${location.origin}${location.pathname}#/p/${pp.id}`; try { await navigator.clipboard.writeText(url); toast(t('Link copied')); } catch { /* no */ } menuOff(); }),
+        row(ICON.dots, t('More options'), () => { menuOff(); close(); a.it.menu(); }));
     };
     main();
-    veil.append(back);
+    veil.append(back); dotsFace(pp);
   }
   // ⋯: Auto-scroll and what can be done with the post
   function sheet(it) {

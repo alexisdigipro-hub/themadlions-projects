@@ -3926,3 +3926,23 @@ html[data-skin] body .pf-thread .pf-th-tags .pf-chip.on{background:#fff!importan
 .pm-tile.on{box-shadow:inset 0 0 0 1.5px currentColor}
 html[data-skin=slate][data-theme=light] .pm-tile.on{box-shadow:none!important}
 html[data-skin=slate][data-theme=light] .pm-tile.on .pm-ic svg{fill:rgba(255,255,255,.35)}
+/* Reels column: the count in the middle of its icon; the dots wear the profile's picture while open; Settings a small
+   card in the same glass and measure as the icons (Alex, 16 Nov) */
+.rl-menu.ico .rl-ico{position:relative}
+.rl-menu.ico .rl-ico.has-n svg{width:30px!important;height:30px!important;stroke-width:1.4}
+.rl-menu.ico .rl-ico em{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-size:10.5px;font-weight:700;color:#fff;pointer-events:none;padding-bottom:1px}
+.rl-menu.ico .rl-ico.like.on em{color:#16181c}
+.rl-top .rl-dots.as-av{padding:0;overflow:hidden;background:none}
+.rl-top .rl-dots.as-av::before{display:none}
+.rl-top .rl-dots.as-av .av{width:40px;height:40px;font-size:13px;box-shadow:inset 0 0 0 1.5px #fff;animation:rl-ico-in .3s cubic-bezier(.25,1.3,.45,1) backwards}
+.rl-menu.set{width:186px!important;right:8px!important;padding:5px!important;border-radius:22px!important;background:rgba(20,22,26,.4)!important;border:0!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3),inset 0 1px 0 rgba(255,255,255,.2)!important;-webkit-backdrop-filter:blur(14px) saturate(1.3)!important;backdrop-filter:blur(14px) saturate(1.3)!important}
+.rl-menu.set .rl-mrow{min-height:34px;padding:0 9px;gap:9px;font-size:13px;border-radius:12px}
+.rl-menu.set .rl-mrow small{font-size:11.5px}
+.rl-menu.set .rl-mic{width:18px;height:18px}
+.rl-menu.set .rl-mic svg{width:17px;height:17px}
+.rl-menu.set .rl-mline{margin:3px 9px}
+.rl-menu.set .rl-mcap{padding:4px 9px 1px;font-size:10px}
+.rl-menu.set .rl-mnote{padding:2px 9px 6px;font-size:11.5px}
+.rl-menu.set .rl-switch{width:34px;height:20px}
+.rl-menu.set .rl-switch i{width:14px;height:14px}
+.rl-menu.set .rl-switch.on i{transform:translateX(14px)}
