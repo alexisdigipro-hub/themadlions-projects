@@ -3993,3 +3993,26 @@ html[data-skin=slate][data-theme=light] .pm-tile.on .pm-ic svg{fill:rgba(255,255
 .rl-sheet-talk .mention-list{background:rgba(40,44,50,.92)!important;color:#fff!important}
 .rl:has(.rl-sheet-back) .rl-info{opacity:0;transition:opacity .2s}
 .rl-info{transition:opacity .2s}
+/* the post's ⋯ menu small and gathered, in the Reels' frosted glass (Alex, 16 Nov) */
+html[data-theme][data-theme] body .veil .win.win:has(.pm){width:min(292px,calc(100vw - 48px))!important;padding:8px!important;gap:4px!important;border-radius:26px!important;
+  background:linear-gradient(160deg,rgba(255,255,255,.3),rgba(255,255,255,.12) 55%,rgba(255,255,255,.18))!important;background-color:rgba(60,64,70,.38)!important;border:0!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.38),inset 0 1.5px 0 rgba(255,255,255,.5),0 20px 50px rgba(0,0,0,.25)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(1.5)!important;backdrop-filter:blur(28px) saturate(1.5)!important;color:#fff!important}
+html[data-theme][data-theme] body .veil:has(.pm){background:rgba(0,0,0,.18)!important;-webkit-backdrop-filter:blur(6px)!important;backdrop-filter:blur(6px)!important}
+html[data-theme][data-theme] body .veil .win:has(.pm) .win-head{padding:4px 4px 0 10px;min-height:0}
+html[data-theme][data-theme] body .veil .win:has(.pm) .win-head h2{font-size:14px!important;font-weight:600!important;color:#fff!important;-webkit-text-fill-color:#fff!important;text-shadow:none!important}
+html[data-theme][data-theme] body .veil .win:has(.pm) .win-x.win-x{width:28px!important;height:28px!important;background:rgba(255,255,255,.18)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)!important}
+html[data-theme][data-theme] body .veil .win:has(.pm) .win-x svg{width:13px!important;height:13px!important;stroke:#fff!important;color:#fff!important}
+html[data-theme][data-theme] body .veil .pm.pm{gap:2px!important;background:none!important}
+html[data-theme][data-theme] body .veil .pm .pm-tiles{display:flex!important;justify-content:space-around;gap:0!important;padding:4px 0 8px!important;margin:0 6px 2px!important;border-bottom:1px solid rgba(255,255,255,.28)!important}
+html[data-theme][data-theme] body .veil .pm .pm-tile{background:none!important;border:0!important;box-shadow:none!important;padding:6px 4px!important;gap:4px!important;font-size:10.5px!important;color:#fff!important;-webkit-text-fill-color:#fff!important;text-shadow:none!important;min-width:0}
+html[data-theme][data-theme] body .veil .pm .pm-tile .pm-ic{width:22px;height:22px}
+html[data-theme][data-theme] body .veil .pm .pm-tile .pm-ic svg{width:21px!important;height:21px!important;stroke:#fff!important;color:#fff!important}
+html[data-theme][data-theme] body .veil .pm .pm-group{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;margin:0!important;padding:0!important}
+html[data-theme][data-theme] body .veil .pm .pm-group+.pm-group{border-top:1px solid rgba(255,255,255,.28)!important;margin:2px 6px 0!important;padding-top:2px!important}
+html[data-theme][data-theme] body .veil .pm .pm-row{flex-direction:row-reverse;justify-content:space-between;min-height:38px!important;padding:0 10px!important;border:0!important;border-radius:12px!important;font-size:14px!important;font-weight:400!important;color:#fff!important;-webkit-text-fill-color:#fff!important;background:none!important;text-shadow:none!important}
+html[data-theme][data-theme] body .veil .pm .pm-row:active{background:rgba(255,255,255,.16)!important}
+html[data-theme][data-theme] body .veil .pm .pm-row .pm-ic{width:20px;height:20px}
+html[data-theme][data-theme] body .veil .pm .pm-row .pm-ic svg{width:18px!important;height:18px!important;stroke:#fff!important;color:#fff!important}
+html[data-theme][data-theme] body .veil .pm .pm-row.static small{color:rgba(255,255,255,.7)!important}
+html[data-theme][data-theme] body .veil .pm .hint{color:rgba(255,255,255,.8)!important}
