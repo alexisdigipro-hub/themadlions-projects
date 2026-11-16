@@ -1975,3 +1975,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 16 Nov, Roardino (20261118f): the Reels comments field is light glass with dark words (white on light grey did not read on the iPhone).
 - 16 Nov, Roardino (20261118g): Alex wanted only the letters changed in the Reels comments field: the field keeps its own glass, the words and the placeholder are dark.
 - 16 Nov, Roardino (20261118h): a window opened inside Reels (Send…) sits where the comments sit, low and across the screen, in the same glass; the rules also hold by body:has(.rl), not only html.rl-open.
+- 16 Nov, Roardino (20261118i): windows inside Reels also carry the comments window's head (the small bar on top, the title small and centred, capsule fields with dark words, small pill buttons). Alex's reference is the Reels comments window: anything new that opens inside Reels is made to match it, compared side by side before shipping.
