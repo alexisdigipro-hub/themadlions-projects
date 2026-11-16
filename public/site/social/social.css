@@ -3829,3 +3829,30 @@ html.rl-open .toast{z-index:150}
 .pf-one>.pf-pickrow,.pf-one>.pf-modes,.pf-one>.pf-strip,.pf-one>.pf-head{flex:none!important}
 .pf-one.with-lib>.pf-stagebox{flex:0 0 44%!important}
 .pf-one.with-lib>.pf-lib{flex:1 1 0!important;min-height:120px}
+/* Reels: no bar at the foot; ⋯ at the top right drops a menu of glass with everything, Settings last (Alex, 16 Nov) */
+.rl>.rl-side{display:none!important}
+.rl-top{grid-template-columns:44px 1fr 44px!important}
+.rl-top .rl-dots{justify-self:end}
+.rl-menu-back{position:absolute;inset:0;z-index:7}
+.rl-menu{position:absolute;right:10px;top:calc(env(safe-area-inset-top) + 58px);width:min(250px,70vw);padding:6px;border-radius:22px;display:flex;flex-direction:column;
+  background:linear-gradient(170deg,rgba(60,62,68,.72),rgba(34,36,40,.78));border:1px solid rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 18px 44px rgba(0,0,0,.4);
+  -webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);color:#fff;transform-origin:top right;animation:rl-drop .28s cubic-bezier(.25,1.2,.45,1) both}
+@keyframes rl-drop{from{opacity:0;transform:scale(.9) translateY(-8px)}}
+.rl-mrow{display:flex;align-items:center;gap:12px;min-height:42px;padding:0 12px;border:0;border-radius:14px;background:none;color:#fff;font:inherit;font-size:14.5px;text-align:left;text-decoration:none;cursor:pointer;width:100%}
+.rl-mrow:active{background:rgba(255,255,255,.14)}
+.rl-mrow b{flex:1;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rl-mrow small{font-size:12.5px;color:rgba(255,255,255,.65)}
+.rl-mic{width:22px;height:22px;flex:none;display:grid;place-items:center}
+.rl-mic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6}
+.rl-mic .av{width:22px;height:22px;font-size:8px}
+.rl-mrow.on .rl-mic svg{fill:currentColor}
+.rl-mrow.head b{font-weight:600}
+.rl-mline{height:1px;margin:4px 12px;background:rgba(255,255,255,.18)}
+.rl-mcap{padding:6px 12px 2px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.rl-mnote{padding:4px 12px 8px;font-size:12.5px;color:rgba(255,255,255,.6)}
+.rl-menu .rl-switch{width:40px;height:24px;border-radius:12px;flex:none}
+.rl-menu .rl-switch i{width:18px;height:18px;left:3px;top:3px}
+.rl-menu .rl-switch.on i{transform:translateX(16px)}
+.rl-info{bottom:calc(env(safe-area-inset-bottom) + 22px)!important;right:14px!important}
+@media (min-width:821px){.rl-menu{right:calc(50% - 230px)}}
+@media (prefers-reduced-motion:reduce){.rl-menu{animation:none}}

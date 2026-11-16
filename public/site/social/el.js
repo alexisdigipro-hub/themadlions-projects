@@ -964,5 +964,9 @@ window.RD_EL = {
 "New thread": "Νέο thread",
 "New story": "Νέο story",
 "What is on your mind?": "Τι σκέφτεσαι;",
-"Record a video": "Εγγραφή βίντεο"
+"Record a video": "Εγγραφή βίντεο",
+"Liked": "Σου αρέσει",
+"Standard": "Κανονική",
+"Quality": "Ποιότητα",
+"This video has no HQ copy.": "Αυτό το βίντεο δεν έχει HQ έκδοση."
 };
