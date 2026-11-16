@@ -2671,7 +2671,8 @@ html.in-room .foot{display:none}
 }
 /* the chat's fine points: readable names and times on the dark theme, and a column of its own on a computer */
 html[data-theme=dark] .ch-by,html[data-theme=dark] .ch-row.new .ch-side small,html[data-theme=dark] .ch-reply b,html[data-theme=dark] .ch-msg:not(.mine) .ch-heart{color:#ff9d93}
-@media (min-width:861px){ .ch-room,.ch-list{max-width:780px;margin-left:auto;margin-right:auto;width:100%} }
+/* the list of conversations is as wide as the bar on a computer (Alex, 16 Nov); an open conversation stays a 780px column */
+@media (min-width:861px){ .ch-room{max-width:780px;margin-left:auto;margin-right:auto;width:100%} .ch-list{width:100%} }
 
 /* ===== The chat in liquid glass (Alex, 15 Nov: "all the liquid glass animation effects we have, here too") =====
    The same family and the same timings as RoarMe's: GLASS DROP (what arrives rises in and settles), GLASS PRESS (the
