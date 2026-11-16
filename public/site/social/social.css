@@ -3777,3 +3777,6 @@ html.rl-open .toast{z-index:150}
 /* no "2 h ago" line under a picture or video in the feed (Alex, 16 Nov): it made the gap between posts grow when the
    icons showed; the time still rides at the end of the caption when the comments are open */
 .post.ig.has-media > .ig-time,.post.ig.has-media.open > .ig-time{display:none!important}
+/* HQ as a lens iris (Alex, 16 Nov: "HQ differently"): a round aperture with its six blades; on, the lens fills softly */
+.ig-gem.on .gem-body,.rl-side .rl-gem.on .gem-body{fill:currentColor!important;fill-opacity:.38}
+.ig-gem.on .gem,.rl-side .rl-gem.on svg{stroke-width:1.9!important}
