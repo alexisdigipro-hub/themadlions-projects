@@ -2333,7 +2333,7 @@ function openReels(fromArt, onClose, signedHq) {
           a.hasHq ? h('button', { type: 'button', class: 'rl-ico rl-q' + (a.hqOn() ? ' on' : ''), 'aria-label': t('Quality'), title: a.hqOn() ? `HQ ${a.hqP ? a.hqP + 'p' : ''}` : `${t('Standard')} ${a.stdP ? a.stdP + 'p' : ''}`, onclick: (e) => { e.stopPropagation(); a.setHq(!a.hqOn()); toast(a.hqOn() ? `HQ${a.hqP ? ' · ' + a.hqP + 'p' : ''}` : `${t('Standard')}${a.stdP ? ' · ' + a.stdP + 'p' : ''}`); main(); } }, h('b', {}, a.hqOn() ? 'HQ' : 'SD')) : null,
           ico(ICON.play, t('Auto-scroll'), () => { auto = !auto; vids.forEach((x) => { x.loop = !auto; }); try { localStorage.setItem('roardino-autoscroll', auto ? '1' : '0'); } catch { /* private */ } toast(auto ? t('Auto-scroll on') : t('Auto-scroll off')); main(); }, auto ? 'on' : ''),
           ico(ICON.link, t('Copy link'), async () => { const url = `${location.origin}${location.pathname}#/p/${pp.id}`; try { await navigator.clipboard.writeText(url); toast(t('Link copied')); } catch { /* no */ } }),
-          ico(ICON.dots, t('More options'), () => { menuOff(); close(); a.it.menu(); })) : null,
+          ico(ICON.dots, t('More options'), () => { menuOff(); a.it.menu(); })) : null,
         ico(ICON.gear || ICON.dots, t('Settings'), () => { setOpen = !setOpen; main(); }, setOpen ? 'on' : ''))); };
     let setOpen = false;
     const settings = () => {
@@ -2371,10 +2371,14 @@ function openReels(fromArt, onClose, signedHq) {
   }
   const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'ArrowDown') slides[cur + 1]?.scrollIntoView({ behavior: 'smooth' }); if (e.key === 'ArrowUp') slides[cur - 1]?.scrollIntoView({ behavior: 'smooth' }); };
   let closed = false;
+  // More options opens over Reels now (Alex, 16 Nov: "it throws me back to the feed"); Reels goes only when one of its
+  // rows really leads to another page
+  const onGo = () => close(true, true);
+  window.addEventListener('hashchange', onGo);
   function close(leaving, gone) {
     if (closed) return; closed = true;
     io.disconnect(); vids.forEach((x) => { x.pause(); x.removeAttribute('src'); x.load(); });
-    document.removeEventListener('keydown', onKey);
+    document.removeEventListener('keydown', onKey); window.removeEventListener('hashchange', onGo);
     document.documentElement.classList.remove('rl-open');
     // slid away already: it just goes, with no second animation that would bring it back for a moment
     if (gone) veil.remove(); else { veil.classList.add('out'); setTimeout(() => veil.remove(), 260); }
