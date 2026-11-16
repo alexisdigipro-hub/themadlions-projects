@@ -4016,3 +4016,9 @@ html[data-theme][data-theme] body .veil .pm .pm-row .pm-ic{width:20px;height:20p
 html[data-theme][data-theme] body .veil .pm .pm-row .pm-ic svg{width:18px!important;height:18px!important;stroke:#fff!important;color:#fff!important}
 html[data-theme][data-theme] body .veil .pm .pm-row.static small{color:rgba(255,255,255,.7)!important}
 html[data-theme][data-theme] body .veil .pm .hint{color:rgba(255,255,255,.8)!important}
+/* words typed are always readable (Alex, 16 Nov: "where you write, the letters are a little white"): in Reels' comments
+   the field is a darker glass under white words; on Slate's light pages every field has dark words and a dark caret */
+.rl-sheet-talk :is(.input,textarea,input){background:rgba(0,0,0,.3)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;caret-color:#fff}
+.rl-sheet-talk :is(.input,textarea,input)::placeholder{color:rgba(255,255,255,.75)!important;-webkit-text-fill-color:rgba(255,255,255,.75)!important}
+html[data-skin=slate][data-theme=light] body :is(input,textarea,select):not(.rl *):not(.pf-one *):not(.st-veil *):not([type=range]):not([type=checkbox]){color:#2f3134!important;-webkit-text-fill-color:#2f3134!important;caret-color:#2f3134}
+html[data-skin=slate][data-theme=light] body :is(input,textarea):not(.rl *):not(.pf-one *):not(.st-veil *)::placeholder{color:#8b8e92!important;-webkit-text-fill-color:#8b8e92!important}
