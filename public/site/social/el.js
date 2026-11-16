@@ -970,5 +970,8 @@ window.RD_EL = {
 "Quality": "Ποιότητα",
 "This video has no HQ copy.": "Αυτό το βίντεο δεν έχει HQ έκδοση.",
 "No photos to show. In the iPhone's Settings > Roardino > Photos choose Full Access, then open this again.": "Δεν υπάρχουν φωτογραφίες να δείξω. Στις Ρυθμίσεις του iPhone > Roardino > Φωτογραφίες διάλεξε «Πλήρης πρόσβαση» και ξανάνοιξε αυτό.",
-"Open Gallery": "Άνοιγμα Gallery"
+"Open Gallery": "Άνοιγμα Gallery",
+"Threads": "Threads",
+"No threads yet. Press + and choose Thread.": "Δεν υπάρχουν threads ακόμα. Πάτα + και διάλεξε Thread.",
+"No threads yet.": "Δεν υπάρχουν threads ακόμα."
 };
