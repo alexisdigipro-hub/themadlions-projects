@@ -2139,6 +2139,7 @@ async function peopleList(p, what) {
    ⋯ has Auto-scroll (the next video comes by itself when one ends). Only the video on screen plays; its neighbours
    load ahead, the far ones let go of their file. */
 const reelOf = new WeakMap();
+const fullFrames = new Map(); // a video's own whole frame, taken once it has played, by its path
 function openReels(fromArt, onClose, signedHq) {
   const arts = [...document.querySelectorAll('article.post.ig')].filter((a) => reelOf.has(a));
   const list = arts.map((a) => reelOf.get(a));
@@ -2620,14 +2621,37 @@ function postCard(r, st, refresh) {
       // a cover cut to another shape than a wide video (the 4:5 cut of the profile's grid, on posts made before the
       // whole frame was kept): the feed shows the video's own first frame instead of a cropped, blown-up cover
       const m0 = media[0], vr = m0.w && m0.h ? m0.w / m0.h : 0;
-      if (vr > 4 / 5 + 0.02 && !m0.posterFull) { const im = new Image(); im.onload = () => {
-        if (Math.abs(im.naturalWidth / im.naturalHeight - vr) < 0.06) return;
-        slides.classList.remove('has-cover'); slides.style.removeProperty('--cover');
-        const v = slides.querySelector('video.fv'); if (!v) return;
-        v.removeAttribute('poster'); v.classList.add('live');
-        if (v.dataset.src && !v.dataset.src.includes('#')) v.dataset.src += '#t=0.1';
-        if (v.getAttribute('src') && v.paused && !v.currentTime) { v.src = v.dataset.src; v.preload = 'metadata'; }
-      }; im.src = cov; }
+      if (vr > 4 / 5 + 0.02 && !m0.posterFull) {
+        // (Alex, 16 Nov: "still black covers in the feed": dropping the cover left nothing to show on an iPhone, which
+        // draws no frame of a video that is not playing.) The cover stays until the video has played a moment; then
+        // its own whole frame is taken as the cover, for this visit, and, on one's own post, kept with the post so
+        // from then on everyone gets the whole frame at once
+        const kept = fullFrames.get(m0.path);
+        if (kept) slides.style.setProperty('--cover', `url("${kept}")`);
+        else {
+          const v = slides.querySelector('video.fv');
+          if (v && !v.dataset.cant) {
+            const had = v.getAttribute('src'); if (had) v.removeAttribute('src');
+            v.crossOrigin = 'anonymous'; if (had) v.src = had;
+            let done = false;
+            v.addEventListener('timeupdate', function grab() {
+              if (done || v.currentTime < 0.3 || !v.videoWidth) return;
+              done = true; v.removeEventListener('timeupdate', grab);
+              try {
+                const q = Math.min(1, 1920 / Math.max(v.videoWidth, v.videoHeight)), c = document.createElement('canvas');
+                c.width = Math.round(v.videoWidth * q); c.height = Math.round(v.videoHeight * q);
+                c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+                c.toBlob(async (bl) => {
+                  if (!bl) return;
+                  const u = URL.createObjectURL(bl); fullFrames.set(m0.path, u);
+                  slides.style.setProperty('--cover', `url("${u}")`); v.poster = u;
+                  if (own && r.id) { try { const pf = await upload(r.person_id || p.id, new File([bl], 'cover-full.jpg', { type: 'image/jpeg' }), 'posts/'); r.media = (r.media || []).map((x, k) => (k ? x : { ...x, posterFull: pf })); await sb.from('roardino_posts').update({ media: r.media }).eq('id', r.id); } catch { /* next time */ } }
+                }, 'image/jpeg', 0.86);
+              } catch { /* the frame cannot be read here: the cover stays */ }
+            });
+          }
+        }
+      }
     }
     // as Instagram (Alex, 15 Nov): a video taller than 4:5 (a 9:16) shows in the feed cut to 4:5, top and bottom off,
     // and opens whole with a tap; a wider one keeps its own shape
