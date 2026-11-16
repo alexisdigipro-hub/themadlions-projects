@@ -4022,3 +4022,26 @@ html[data-theme][data-theme] body .veil .pm .hint{color:rgba(255,255,255,.8)!imp
 .rl-sheet-talk :is(.input,textarea,input)::placeholder{color:rgba(255,255,255,.75)!important;-webkit-text-fill-color:rgba(255,255,255,.75)!important}
 html[data-skin=slate][data-theme=light] body :is(input,textarea,select):not(.rl *):not(.pf-one *):not(.st-veil *):not([type=range]):not([type=checkbox]){color:#2f3134!important;-webkit-text-fill-color:#2f3134!important;caret-color:#2f3134}
 html[data-skin=slate][data-theme=light] body :is(input,textarea):not(.rl *):not(.pf-one *):not(.st-veil *)::placeholder{color:#8b8e92!important;-webkit-text-fill-color:#8b8e92!important}
+
+/* windows opened inside Reels (Send, Report, More options…) wear the Reels glass, as the menu and the comments do (Alex, 16 Nov) */
+html.rl-open[data-theme][data-theme] body .veil{background:rgba(0,0,0,.14)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.rl-open[data-theme][data-theme] body .veil .win{background:linear-gradient(160deg,rgba(255,255,255,.26),rgba(255,255,255,.1) 55%,rgba(255,255,255,.16))!important;color:#fff!important;border:0!important;border-radius:34px!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),inset 0 2px 0 rgba(255,255,255,.55),0 20px 50px rgba(0,0,0,.22)!important;-webkit-backdrop-filter:blur(30px) saturate(1.6)!important;backdrop-filter:blur(30px) saturate(1.6)!important}
+html.rl-open[data-theme][data-theme] body .veil .win :is(h1,h2,h3,h4,b,strong,p,span,label,a,li,div,legend){color:#fff!important;-webkit-text-fill-color:#fff!important;text-shadow:none!important}
+html.rl-open[data-theme][data-theme] body .veil .win :is(small,.hint,.muted,.sub,.sec-t,.lbl){color:rgba(255,255,255,.72)!important;-webkit-text-fill-color:rgba(255,255,255,.72)!important}
+html.rl-open[data-theme][data-theme] body .veil .win :is(.input,.textarea,textarea,input:not([type=checkbox]):not([type=radio]):not([type=range]),select){background:rgba(255,255,255,.16)!important;background-image:none!important;border:0!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;caret-color:#fff!important}
+html.rl-open[data-theme][data-theme] body .veil .win :is(.input,textarea,input)::placeholder{color:rgba(255,255,255,.7)!important;-webkit-text-fill-color:rgba(255,255,255,.7)!important}
+html.rl-open[data-theme][data-theme] body .veil .win :is(.btn,button.x,.win-x,.icon-btn){background:rgba(255,255,255,.16)!important;background-image:none!important;border:0!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.32)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;filter:none!important}
+html.rl-open[data-theme][data-theme] body .veil .win .btn:is(.main,.go,.primary):not(:disabled){background:rgba(255,255,255,.9)!important;color:#1b1e22!important;-webkit-text-fill-color:#1b1e22!important}
+html.rl-open[data-theme][data-theme] body .veil .win .btn:is(.main,.go,.primary):not(:disabled) *{color:#1b1e22!important;-webkit-text-fill-color:#1b1e22!important}
+html.rl-open[data-theme][data-theme] body .veil .win .btn:disabled{opacity:.55}
+html.rl-open[data-theme][data-theme] body .veil .win svg{color:inherit}
+html.rl-open[data-theme][data-theme] body .veil .win .stm-row{background:transparent!important;box-shadow:none!important}
+html.rl-open[data-theme][data-theme] body .veil .win .stm-row:is(:hover,:active){background:rgba(255,255,255,.1)!important}
+html.rl-open[data-theme][data-theme] body .veil .win .stm-tick{border-color:rgba(255,255,255,.6)!important;color:transparent!important;-webkit-text-fill-color:transparent!important;background:transparent!important}
+html.rl-open[data-theme][data-theme] body .veil .win .stm-row.on .stm-tick{background:rgba(255,255,255,.92)!important;border-color:transparent!important;color:#1b1e22!important}
+html.rl-open[data-theme][data-theme] body .veil .win .stm-row.on .stm-tick svg{color:#1b1e22!important;stroke:#1b1e22}
+html.rl-open[data-theme][data-theme] body .veil .win .rm-badge{background:rgba(255,255,255,.14)!important;border:0!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)!important;color:rgba(255,255,255,.85)!important;-webkit-text-fill-color:rgba(255,255,255,.85)!important}
+html.rl-open[data-theme][data-theme] body .veil .win .av{box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)!important;border:0!important}
+html.rl-open[data-theme][data-theme] body .veil .win .win-x{opacity:1!important}
+html.rl-open[data-theme][data-theme] body .veil .win .win-x svg{opacity:1!important;stroke:#fff!important}
