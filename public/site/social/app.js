@@ -2300,7 +2300,16 @@ function openReels(fromArt, onClose, signedHq) {
       a.it.r.comments_off ? null : withN(ico(ICON.talk, t('Comments'), () => { menuOff(); a.comments(); }), a.talkN()),
       ico(ICON.send, t('Send'), () => { menuOff(); a.send(); }),
       ico(feedSound ? ICON.vol : ICON.mute, t('Sound'), () => { soundBtn.onclick(); main(); }),
-      ico(ICON.gear || ICON.dots, t('Settings'), () => settings())); };
+      // the gear opens a second, smaller and fainter row of round icons beside it (Alex, 16 Nov: "another menu like
+      // this one, with round icons, maybe fainter or smaller"), no card of words
+      h('div', { class: 'rl-setwrap' },
+        setOpen ? h('div', { class: 'rl-sub' },
+          a.hasHq ? h('button', { type: 'button', class: 'rl-ico rl-q' + (a.hqOn() ? ' on' : ''), 'aria-label': t('Quality'), title: a.hqOn() ? `HQ ${a.hqP ? a.hqP + 'p' : ''}` : `${t('Standard')} ${a.stdP ? a.stdP + 'p' : ''}`, onclick: (e) => { e.stopPropagation(); a.setHq(!a.hqOn()); toast(a.hqOn() ? `HQ${a.hqP ? ' · ' + a.hqP + 'p' : ''}` : `${t('Standard')}${a.stdP ? ' · ' + a.stdP + 'p' : ''}`); main(); } }, h('b', {}, a.hqOn() ? 'HQ' : 'SD')) : null,
+          ico(ICON.play, t('Auto-scroll'), () => { auto = !auto; vids.forEach((x) => { x.loop = !auto; }); try { localStorage.setItem('roardino-autoscroll', auto ? '1' : '0'); } catch { /* private */ } toast(auto ? t('Auto-scroll on') : t('Auto-scroll off')); main(); }, auto ? 'on' : ''),
+          ico(ICON.link, t('Copy link'), async () => { const url = `${location.origin}${location.pathname}#/p/${pp.id}`; try { await navigator.clipboard.writeText(url); toast(t('Link copied')); } catch { /* no */ } }),
+          ico(ICON.dots, t('More options'), () => { menuOff(); close(); a.it.menu(); })) : null,
+        ico(ICON.gear || ICON.dots, t('Settings'), () => { setOpen = !setOpen; main(); }, setOpen ? 'on' : ''))); };
+    let setOpen = false;
     const settings = () => {
       card.className = 'rl-menu set';
       const tog = h('span', { class: 'rl-switch' + (auto ? ' on' : '') }, h('i'));
