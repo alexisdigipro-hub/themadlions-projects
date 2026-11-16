@@ -996,5 +996,7 @@ window.RD_EL = {
 "This post is no longer here.": "Αυτό το post δεν υπάρχει πια.",
 "Shared a post": "Μοιράστηκε ένα post",
 "Choose a photo or a video": "Διάλεξε μια φωτογραφία ή ένα βίντεο",
-"One per post": "Ένα σε κάθε post"
+"One per post": "Ένα σε κάθε post",
+"Tagged people": "Άτομα στο post",
+"Already tagged": "Υπάρχει ήδη"
 };

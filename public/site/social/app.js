@@ -2064,7 +2064,7 @@ async function postFlow(opts = {}) {
     stopCam();
     const it0 = st.items[0];
     const caption = area(st.caption, { class: 'textarea pf-cap', placeholder: t('Add a caption… Tag people with @'), rows: 3, maxlength: 2200, oninput: (e) => { st.caption = e.target.value; } });
-    const addToCaption = (s) => { caption.value = (caption.value.replace(/\s+$/, '') + (caption.value.trim() ? ' ' : '') + s); st.caption = caption.value; caption.focus(); caption.setSelectionRange(caption.value.length, caption.value.length); };
+    const addToCaption = (s) => { if (s.startsWith('@') && new RegExp('(^|\\s)' + s.replace(/[.]/g, '\\.') + '(?=\\s|$)', 'i').test(caption.value)) { toast(t('Already tagged')); return; } caption.value = (caption.value.replace(/\s+$/, '') + (caption.value.trim() ? ' ' : '') + s); st.caption = caption.value; caption.focus(); caption.setSelectionRange(caption.value.length, caption.value.length); };
     // Hashtags (Alex, 15 Nov: "it does nothing"): the tags of our world, a tap puts one in the caption or takes it out
     const TAGS = ['#musicvideo', '#shortfilm', '#commercial', '#fashionfilm', '#bts', '#onset', '#dop', '#cinematography', '#casting', '#actor', '#model', '#dancer', '#director', '#editing', '#colorgrading', '#athens', '#greece'];
     const tagsRow = h('div', { class: 'pf-tags', hidden: true });
@@ -2887,7 +2887,13 @@ function postCard(r, st, refresh) {
   // with the caption and the comments under it; another tap puts them away; a double tap is still a like
   const art = h('article', { class: 'post ig has-media', 'data-post': r.id });
   if (media[0]?.type === 'video') reelOf.set(art, { r, p, st, own, media, likeBtn: bravoBtn, talkN, comments: () => { art.scrollIntoView({ block: 'center' }); setTimeout(() => setOpen(true), 350); }, menu: () => postMenu(r, p, { own, media, refresh, saveBtn, hq: hqEl }) });
-  const wrap = h('div', { class: 'mwrap' }, head, slides, dots, bar);
+  // the people tagged in the caption show on the picture, as Instagram's: a round person sign at its corner; a tap shows
+  // their @names, each opening that profile (Alex, 16 Nov: "it does not tag the user I put")
+  const taggedH = [...new Set([...String(r.body || '').matchAll(/(^|[^\w.])@([A-Za-z0-9._]{3,30})/g)].map((x) => x[2].toLowerCase().replace(/[._]+$/, '')))];
+  const tagged = taggedH.length ? h('div', { class: 'ig-tagged' },
+    h('button', { type: 'button', class: 'ig-tagged-b', title: t('Tagged people'), 'aria-label': t('Tagged people'), html: ICON.user, onclick: (e) => { e.stopPropagation(); tagged.classList.toggle('on'); } }),
+    h('span', { class: 'ig-tagged-list' }, ...taggedH.map((hd) => h('a', { href: `#/u/${hd}`, onclick: (e) => e.stopPropagation() }, '@' + hd)))) : null;
+  const wrap = h('div', { class: 'mwrap' }, head, slides, dots, tagged, bar);
   let tapT = null;
   const setOpen = (on) => {
     art.classList.toggle('open', on);
