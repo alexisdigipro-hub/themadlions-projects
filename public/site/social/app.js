@@ -1750,7 +1750,7 @@ async function postFlow(opts = {}) {
   const layer = h('div', { class: 'pf' });
   document.body.append(layer);
   document.documentElement.classList.add('pf-open');
-  const leave = () => { layer.classList.add('out'); document.documentElement.classList.remove('pf-open'); setTimeout(() => layer.remove(), 260); st.items.forEach((x) => x.url && URL.revokeObjectURL(x.url)); };
+  const leave = () => { stopCam(); layer.classList.add('out'); document.documentElement.classList.remove('pf-open'); setTimeout(() => layer.remove(), 260); st.items.forEach((x) => x.url && URL.revokeObjectURL(x.url)); };
   const urlOf2 = (it) => (it.url ||= URL.createObjectURL(it.cover || it.file));
   const vidUrl = (it) => (it.vurl ||= URL.createObjectURL(it.file));
   const vidFace = (it, cls) => (it.cover ? null : h('video', { class: cls, src: vidUrl(it) + '#t=0.1', muted: true, playsInline: true, preload: 'metadata' }));
@@ -1764,12 +1764,88 @@ async function postFlow(opts = {}) {
     st.cur = Math.max(0, st.items.length - 1);
     stepOne();
   } });
+  // the camera on top and the phone's photos under it (Alex, 16 Nov): on a phone the first screen shows what the camera
+  // sees, with a shutter and a flip; under it, inside the iPhone app, the photo library itself (the native Media
+  // plugin over Capacitor's bridge; a web page cannot read the library, so the web keeps the Gallery button)
+  let cam = null, camFacing = 'environment', camBusy = false;
+  const camV = h('video', { class: 'pf-cam', autoplay: true, muted: true, playsInline: true });
+  const camOk = () => isPhone() && !!navigator.mediaDevices?.getUserMedia;
+  function stopCam() { try { cam?.getTracks().forEach((tr) => tr.stop()); } catch { /* gone */ } cam = null; camV.srcObject = null; }
+  async function startCam() {
+    if (cam || camBusy) return; camBusy = true;
+    try { cam = await navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false }); camV.srcObject = cam; camV.classList.toggle('front', camFacing === 'user'); await camV.play().catch(() => {}); layer.classList.add('cam-on'); }
+    catch { layer.classList.add('cam-no'); }
+    camBusy = false;
+    if (!layer.isConnected || st.items.length) stopCam();
+  }
+  const shoot = () => {
+    if (!cam || !camV.videoWidth) return;
+    const c = document.createElement('canvas'); c.width = camV.videoWidth; c.height = camV.videoHeight;
+    const g = c.getContext('2d'); if (camFacing === 'user') { g.translate(c.width, 0); g.scale(-1, 1); }
+    g.drawImage(camV, 0, 0, c.width, c.height);
+    c.toBlob((b) => { if (!b) return; st.items.push({ file: new File([b], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' }), cover: null }); st.cur = st.items.length - 1; stepOne(); }, 'image/jpeg', 0.92);
+  };
+  const libCall = () => (typeof shell !== 'undefined' && shell?.nativePromise ? (mth, o = {}) => shell.nativePromise('Media', mth, o) : null);
+  const lib = { items: null, want: 60, off: !libCall(), busy: new Set() };
+  const LIB_EXT = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', heic: 'image/heic', heif: 'image/heif', gif: 'image/gif', webp: 'image/webp', mov: 'video/quicktime', mp4: 'video/mp4', m4v: 'video/x-m4v' };
+  // the whole photo or video of the library as a File: read through the shell's own file address, or, if the page may
+  // not fetch that, through the Filesystem plugin
+  async function libFile(a) {
+    const r = await libCall()('getMediaByIdentifier', { identifier: a.identifier });
+    const ext = (/\.([a-z0-9]+)(?:\?|$)/i.exec(r.path || '')?.[1] || (a.duration ? 'mov' : 'jpg')).toLowerCase();
+    const type = LIB_EXT[ext] || (a.duration ? 'video/quicktime' : 'image/jpeg');
+    let blob = null;
+    try { const src = shell.convertFileSrc ? shell.convertFileSrc(r.path) : r.path; const res = await fetch(src); if (res.ok) blob = await res.blob(); } catch { /* next way */ }
+    if (!blob || !blob.size) { const d = await shell.nativePromise('Filesystem', 'readFile', { path: r.path }); const bin = atob(d.data); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); blob = new Blob([u], { type }); }
+    let file = new File([blob], `${a.duration ? 'VID' : 'IMG'}_${Date.now()}.${ext}`, { type });
+    if (/^image\/hei[cf]$/.test(type)) { try { file = await shrink(file); } catch { /* as it is */ } }
+    return file;
+  }
+  async function libLoad() {
+    if (lib.off) return;
+    try { const r = await libCall()('getMedias', { quantity: lib.want, thumbnailWidth: 300, thumbnailHeight: 300, thumbnailQuality: 65, types: 'all' }); lib.items = r?.medias || []; }
+    catch { lib.off = true; }
+    if (layer.isConnected && layer.querySelector('.pf-one')) stepOne();
+  }
+  async function libTap(a) {
+    const at = st.items.findIndex((x) => x.lib === a.identifier);
+    if (at >= 0) { const [gone] = st.items.splice(at, 1); if (gone?.url) URL.revokeObjectURL(gone.url); st.cur = Math.min(st.cur, Math.max(0, st.items.length - 1)); return stepOne(); }
+    if (st.items.length >= 6 || lib.busy.has(a.identifier)) return;
+    lib.busy.add(a.identifier); stepOne();
+    try { const f = await libFile(a); st.items.push({ file: f, cover: null, lib: a.identifier }); st.cur = st.items.length - 1; }
+    catch { toast(t('This one could not be opened. Try the Gallery button.')); }
+    lib.busy.delete(a.identifier); stepOne();
+  }
+  const libGrid = () => {
+    const mmss = (sec) => `${Math.floor((sec || 0) / 60)}:${String(Math.round(sec || 0) % 60).padStart(2, '0')}`;
+    const end = h('i', { class: 'pf-lib-end' });
+    const grid = h('div', { class: 'pf-lib' }, ...(lib.items || []).map((a) => {
+      const n = st.items.findIndex((x) => x.lib === a.identifier);
+      return h('button', { type: 'button', class: 'pf-lib-cell' + (n >= 0 ? ' on' : '') + (lib.busy.has(a.identifier) ? ' busy' : ''), onclick: () => libTap(a) },
+        h('img', { src: `data:image/jpeg;base64,${a.data}`, alt: '', loading: 'lazy', decoding: 'async', draggable: false }),
+        a.duration ? h('small', {}, mmss(a.duration)) : null,
+        h('em', {}, n >= 0 ? String(n + 1) : ''));
+    }), end);
+    if (lib.items && lib.items.length >= lib.want && 'IntersectionObserver' in window) { const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { io.disconnect(); lib.want += 60; libLoad(); } }, { root: grid, rootMargin: '300px' }); io.observe(end); }
+    return grid;
+  };
   // 1: what goes up
   function stepOne() {
     const it = st.items[st.cur];
     const stage = h('div', { class: 'pf-stage' });
     if (it) stage.append(isVid(it) ? h('video', { src: vidUrl(it), poster: it.cover ? urlOf2(it) : null, muted: true, autoplay: true, loop: true, playsInline: true, controls: false }) : h('img', { src: urlOf2(it), alt: '' }));
+    else if (camOk() && !layer.classList.contains('cam-no')) {
+      stage.append(camV,
+        h('div', { class: 'pf-cam-bar' },
+          h('span', {}),
+          h('button', { type: 'button', class: 'pf-shutter', 'aria-label': t('Take a photo'), onclick: shoot }, h('i')),
+          h('button', { type: 'button', class: 'pf-flip', 'aria-label': t('Flip camera'), html: ICON.flip || ICON.cam, onclick: () => { camFacing = camFacing === 'user' ? 'environment' : 'user'; stopCam(); startCam(); } })));
+      startCam();
+    }
     else stage.append(h('button', { type: 'button', class: 'pf-empty', onclick: () => pick.click() }, h('span', { html: ICON.pic }), h('b', {}, t('Choose photos or videos')), h('small', {}, t('Up to six in one post'))));
+    if (it) stopCam();
+    const withLib = !lib.off;
+    if (withLib && lib.items === null) { lib.items = []; libLoad(); }
     const tools = it ? h('div', { class: 'pf-tools' },
       isVid(it) ? null : h('button', { type: 'button', class: 'pf-tool', onclick: async () => { const c = await cropImage(it.file, SHAPES.post); if (c) { it.file = c; if (it.url) URL.revokeObjectURL(it.url); it.url = null; stepOne(); } } }, h('span', { html: ICON.crop || ICON.edit }), t('Crop'))) : null;
     const strip = h('div', { class: 'pf-strip' },
@@ -1779,20 +1855,21 @@ async function postFlow(opts = {}) {
         st.items.length > 1 ? h('em', {}, String(i + 1)) : null,
         h('button', { type: 'button', class: 'x', 'aria-label': t('Remove'), html: ICON.x, onclick: () => { const [gone] = st.items.splice(i, 1); if (gone?.url) URL.revokeObjectURL(gone.url); st.cur = Math.min(st.cur, Math.max(0, st.items.length - 1)); stepOne(); } }))),
       st.items.length < 6 ? h('button', { type: 'button', class: 'pf-add', 'aria-label': t('Add more'), html: ICON.plus, onclick: () => pick.click() }) : null);
-    put(layer, h('div', { class: 'pf-one' },
+    put(layer, h('div', { class: 'pf-one' + (withLib ? ' with-lib' : '') },
       h('div', { class: 'pf-head dark' },
         h('button', { type: 'button', class: 'pf-round', 'aria-label': t('Close'), html: ICON.x, onclick: async () => { if (st.items.length || st.caption) { if (!(await ask(t('Leave this post?'), t('Leave'), true))) return; } leave(); } }),
         h('b', {}, t('New post')),
         h('button', { type: 'button', class: 'pf-next', disabled: !st.items.length, onclick: stepTwo }, t('Next'))),
       h('div', { class: 'pf-stagebox' }, stage, tools),
       h('div', { class: 'pf-pickrow' }, h('button', { type: 'button', class: 'pf-gal', onclick: () => pick.click() }, h('span', { html: ICON.pic }), t('Gallery'), h('i', { html: ICON.right })), h('small', {}, st.items.length ? t('{n} of 6', { n: st.items.length }) : '')),
-      strip,
+      withLib ? [st.items.length ? strip : null, libGrid()] : strip,
       h('div', { class: 'pf-modes' }, h('button', { type: 'button', class: 'on' }, t('Post')), opts.story ? h('button', { type: 'button', onclick: () => { leave(); opts.story(); } }, t('Story')) : null),
       pick));
   }
   // 2: the details
   let busy = false;
   function stepTwo() {
+    stopCam();
     const it0 = st.items[0];
     const caption = area(st.caption, { class: 'textarea pf-cap', placeholder: t('Add a caption… Tag people with @'), rows: 3, maxlength: 2200, oninput: (e) => { st.caption = e.target.value; } });
     const addToCaption = (s) => { caption.value = (caption.value.replace(/\s+$/, '') + (caption.value.trim() ? ' ' : '') + s); st.caption = caption.value; caption.focus(); caption.setSelectionRange(caption.value.length, caption.value.length); };
@@ -1870,7 +1947,7 @@ async function postFlow(opts = {}) {
       } catch (e) { fail(e); busy = false; shareBtn.disabled = false; layer.classList.remove('busy'); fill.style.transform = ''; word.textContent = t('Share'); }
     }
   }
-  if (st.items.length) stepOne(); else { stepOne(); if (!opts.noPick) pick.click(); }
+  if (st.items.length) stepOne(); else { stepOne(); if (!opts.noPick && !camOk() && lib.off) pick.click(); }
 }
 // Tag people: Roardino's people with a username; the chosen one goes into the caption as @username, which is how
 // tagging already works (the tagged person is told)
