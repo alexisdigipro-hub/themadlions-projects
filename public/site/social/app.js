@@ -2169,7 +2169,8 @@ function openReels(fromArt, onClose, signedHq) {
     const tall = m.w && m.h ? m.h > m.w : true;
     const v = h('video', { class: 'rl-v' + (tall ? ' tall' : ''), playsInline: true, loop: !auto, preload: 'none', poster: urlOf(m.posterFull || m.poster) || null, muted: !feedSound });
     const hqSrc = m.hq ? urlOf(m.hq) : '';
-    v.dataset.src = hqSrc || urlOf(m.path);
+    // the light copy plays unless HQ is chosen (Alex, 16 Nov); once chosen it holds for the videos that follow
+    v.dataset.src = urlOf(m.path);
     // if the HQ copy cannot play here, the light one takes over
     if (hqSrc) v.addEventListener('error', () => { if (v.dataset.src !== urlOf(m.path)) { v.dataset.src = urlOf(m.path); v.src = v.dataset.src; v.play().catch(() => {}); } });
     v.addEventListener('loadedmetadata', () => { v.classList.toggle('tall', v.videoHeight > v.videoWidth); }, { once: true });
@@ -2180,7 +2181,7 @@ function openReels(fromArt, onClose, signedHq) {
     const sb1 = h('button', { type: 'button', class: 'rl-ico', 'aria-label': t('Sound'), onclick: (e) => { e.stopPropagation(); soundBtn.onclick(); } });
     soundBtns.push(sb1);
     // HQ in the column (Alex, 15 Nov): the diamond, gold while the HQ copy plays; a tap goes to the light copy and back
-    const gem = hqSrc ? h('button', { type: 'button', class: 'rl-ico rl-gem on', 'aria-label': t('Play in high quality'), html: GEM, onclick: (e) => {
+    const gem = hqSrc ? h('button', { type: 'button', class: 'rl-ico rl-gem', 'aria-label': t('Play in high quality'), html: GEM, onclick: (e) => {
       e.stopPropagation(); const on = !gem.classList.contains('on'); gem.classList.toggle('on', on);
       const at = v.currentTime || 0; v.dataset.src = on ? hqSrc : urlOf(m.path); v.src = v.dataset.src;
       v.addEventListener('loadedmetadata', () => { try { v.currentTime = at; } catch { /* start */ } v.play().catch(() => {}); }, { once: true });
@@ -2217,11 +2218,11 @@ function openReels(fromArt, onClose, signedHq) {
     // laid over the whole view for the video on screen
     const side = slide.querySelector('.rl-side'); side.remove(); slide._side = side;
     // what the ⋯ menu at the top does for this video
-    let hqOn = !!hqSrc;
+    let hqOn = false;
     const shortSide = (cap) => (m.w && m.h ? Math.round(Math.min(m.w, m.h) * Math.min(1, cap / Math.max(m.w, m.h))) : 0);
     slide._act = { it, like, liked: () => !!it.st.mine, likes: () => (!it.r.hide_likes || it.own ? it.st.bravos || 0 : 0), comments: () => talkSheet(it, talkCount), talkN: () => talkCount.textContent,
       send: () => { v.pause(); sendToRoarMe(it.r, pp); }, hasHq: !!hqSrc, hqOn: () => hqOn, stdP: shortSide(1080), hqP: shortSide(1920),
-      setHq: (on) => { if (!hqSrc || on === hqOn) return; hqOn = on; if (gem) gem.classList.toggle('on', on); const at = v.currentTime || 0; v.dataset.src = on ? hqSrc : urlOf(m.path); v.src = v.dataset.src; v.addEventListener('loadedmetadata', () => { try { v.currentTime = at; } catch { /* start */ } v.play().catch(() => {}); }, { once: true }); } };
+      setHq: (on, quiet) => { if (!quiet) wantHq = on; if (!hqSrc || on === hqOn) return; hqOn = on; if (gem) gem.classList.toggle('on', on); const at = v.currentTime || 0; v.dataset.src = on ? hqSrc : urlOf(m.path); v.src = v.dataset.src; v.addEventListener('loadedmetadata', () => { try { v.currentTime = at; } catch { /* start */ } v.play().catch(() => {}); }, { once: true }); } };
     // one tap pauses or plays, two taps like with the big heart
     let last = 0, tt = 0;
     slide.addEventListener('click', (e) => {
@@ -2240,7 +2241,7 @@ function openReels(fromArt, onClose, signedHq) {
   let toggled = false;
   soundBtn.onclick = () => { toggled = true; setFeedSound(!feedSound); faceSound(); vids.forEach((x) => { x.muted = !feedSound; }); };
   // the one on screen plays; the ones next to it load; the far ones drop their file
-  let cur = -1;
+  let cur = -1, wantHq = false;
   const show = (i) => {
     if (i === cur) return;
     cur = i;
@@ -2252,6 +2253,7 @@ function openReels(fromArt, onClose, signedHq) {
       if (k !== i && !x.paused) x.pause();
     });
     const v = vids[i];
+    const act = slides[i]._act; if (act?.hasHq && act.hqOn() !== wantHq) { act.setHq(wantHq, true); return; }
     v.muted = !feedSound; v.currentTime = 0;
     v.play().catch(() => { v.muted = true; faceSound(); v.play().catch(() => {}); });
   };
