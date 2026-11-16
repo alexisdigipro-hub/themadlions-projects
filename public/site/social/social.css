@@ -3946,3 +3946,6 @@ html[data-skin=slate][data-theme=light] .pm-tile.on .pm-ic svg{fill:rgba(255,255
 .rl-menu.set .rl-switch{width:34px;height:20px}
 .rl-menu.set .rl-switch i{width:14px;height:14px}
 .rl-menu.set .rl-switch.on i{transform:translateX(14px)}
+/* a feed video is never a black box: under it there is always its cover, or, with none, a soft grey */
+.ig-media>video.fv:not(.live){background:transparent!important}
+.ig-media:not(.has-cover)>video.fv{background:#2a2d33!important}
