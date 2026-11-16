@@ -968,5 +968,7 @@ window.RD_EL = {
 "Liked": "Σου αρέσει",
 "Standard": "Κανονική",
 "Quality": "Ποιότητα",
-"This video has no HQ copy.": "Αυτό το βίντεο δεν έχει HQ έκδοση."
+"This video has no HQ copy.": "Αυτό το βίντεο δεν έχει HQ έκδοση.",
+"No photos to show. In the iPhone's Settings > Roardino > Photos choose Full Access, then open this again.": "Δεν υπάρχουν φωτογραφίες να δείξω. Στις Ρυθμίσεις του iPhone > Roardino > Φωτογραφίες διάλεξε «Πλήρης πρόσβαση» και ξανάνοιξε αυτό.",
+"Open Gallery": "Άνοιγμα Gallery"
 };

@@ -3856,3 +3856,5 @@ html.rl-open .toast{z-index:150}
 .rl-info{bottom:calc(env(safe-area-inset-bottom) + 22px)!important;right:14px!important}
 @media (min-width:821px){.rl-menu{right:calc(50% - 230px)}}
 @media (prefers-reduced-motion:reduce){.rl-menu{animation:none}}
+.pf-lib.pf-lib-note{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px 28px;text-align:center;color:rgba(255,255,255,.7);font-size:13.5px;line-height:1.4}
+.pf-lib-note p{margin:0}
