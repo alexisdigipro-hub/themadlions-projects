@@ -3858,3 +3858,16 @@ html.rl-open .toast{z-index:150}
 @media (prefers-reduced-motion:reduce){.rl-menu{animation:none}}
 .pf-lib.pf-lib-note{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px 28px;text-align:center;color:rgba(255,255,255,.7);font-size:13.5px;line-height:1.4}
 .pf-lib-note p{margin:0}
+/* Edit post made right (Alex, 16 Nov, iPhone: a narrow caption box in the middle of a tall empty window): the window is
+   as tall as what it holds, the caption fills its width, Cancel and Save are two equal buttons */
+.win:has(>.form.ep){height:auto!important;min-height:0!important;align-content:start}
+.win>.form.ep{display:flex!important;flex-direction:column;align-items:stretch;gap:10px;width:100%;flex:none}
+.form.ep>label{display:flex!important;flex-direction:column;align-items:stretch;gap:6px;width:100%;margin:0}
+.form.ep>label>span{font-size:13px;color:var(--muted)}
+.form.ep .mention-wrap{width:100%;display:block}
+.form.ep textarea{width:100%!important;max-width:none!important;min-height:130px;box-sizing:border-box;font-size:15.5px;line-height:1.45;resize:none}
+.win:has(>.form.ep)>.foot{display:grid!important;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.win:has(>.form.ep)>.foot .btn{width:100%;justify-content:center;margin:0}
+/* a window's row of buttons is not the page's footer (both are .foot): on a phone it carried the footer's 100px of
+   room for the menu, which left every window with an empty band under its buttons */
+.win>.foot,.veil .win .foot{padding:0!important;background:none!important;border:0!important;box-shadow:none!important;position:static!important}
