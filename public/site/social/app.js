@@ -515,6 +515,12 @@ function feedVideo(src, poster, codec) {
   if (codec === 'hevc' && !playsHevc()) { v.dataset.cant = '1'; return v; }
   // out of sight it goes quiet again, so the next time it starts by itself it may (a phone lets only silent videos start)
   v.addEventListener('pause', () => { if (!v.muted && prefs.mutedVideos && !feedSound) { v.muted = true; v.dispatchEvent(new Event('volumechange')); } });
+  // a video that stops by itself (another one started, it left the middle of the screen) shows its cover again: an
+  // iPhone blanks a stopped video's picture to save memory, which showed as a black post (Alex, 16 Nov). One stopped
+  // by a tap keeps its frame.
+  v.addEventListener('pause', () => { if (v.poster && !v.dataset.held) v.classList.remove('live'); });
+  v.addEventListener('emptied', () => { if (v.poster) v.classList.remove('live'); });
+  v.addEventListener('error', () => { if (v.poster) v.classList.remove('live'); });
   if (vidNear && vidPlay) { v.dataset.src = src; vidNear.observe(v); vidPlay.observe(v); vidFar?.observe(v); } else v.src = src;
   return v;
 }
@@ -2633,6 +2639,8 @@ function postCard(r, st, refresh) {
           if (v && !v.dataset.cant) {
             const had = v.getAttribute('src'); if (had) v.removeAttribute('src');
             v.crossOrigin = 'anonymous'; if (had) v.src = had;
+            // if the file will not come this way, it comes the plain way (only the frame cannot be taken then)
+            v.addEventListener('error', () => { if (!v.crossOrigin) return; const s0 = v.getAttribute('src') || v.dataset.src; v.removeAttribute('crossorigin'); if (s0) { v.src = s0; v.load(); } }, { once: true });
             let done = false;
             v.addEventListener('timeupdate', function grab() {
               if (done || v.currentTime < 0.3 || !v.videoWidth) return;
