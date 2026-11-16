@@ -2005,3 +2005,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 16 Nov, Roardino (20261119l): the thread's tools are B, I, BI and U only; strike, typewriter, list and clear were taken out (Alex: "they do not work").
 - 16 Nov, Roardino (20261119m): the page's background has seven soft pools of light and shade (white, a cool blue-grey, a faint lilac, a faint warm sand, greys) over the light grey, fixed behind the page, so the glass has something to bend; a darker set for the dark theme (end of social.css).
 - 16 Nov, Roardino (20261119n): the background's pools stronger (eight: white, blue, lilac, steel grey, warm sand, a touch of sea green), as Alex asked.
+- 16 Nov, Roardino (20261119o): THREADS IN GLASS: every thread (a profile's Threads tab, a hashtag's page, a text post in the feed) is a pane of the site's glass (--g1-*), 24px corners, 12px between panes so the background shows through; the reply quote inside is a lighter glass.
