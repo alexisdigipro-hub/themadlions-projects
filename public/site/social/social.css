@@ -4256,3 +4256,32 @@ html body .pf-thread .th-fx-b.fx-x{font-size:10.5px!important;letter-spacing:-.0
 .fs-apps-foot{display:block;margin:0 6px;font-size:11.5px;color:var(--muted);text-align:center}
 /* Our apps under the apps, centred, with the maker's line right under it */
 html body .feed-side>.fs-apps-head{justify-content:space-between;margin:2px 6px 0!important}
+
+/* CHAT ON A COMPUTER, MADE TIDY (Alex, 16 Nov: "balance, coherence, every letter readable"): two panels of the same
+   glass and the same height side by side, the list at the left and the conversation at the right; the conversation's
+   head is its top edge, its messages scroll inside it, the writing box is its foot. Names whole, previews and times dark
+   enough to read. A phone is untouched. */
+@media (min-width:861px){
+  html body .page>.ch-split{display:grid;grid-template-columns:360px minmax(0,1fr);gap:16px;align-items:stretch;height:calc(100dvh - 118px);min-height:460px}
+  html body .ch-split .ch-pane{position:static;max-height:none;height:100%;min-height:0;overflow:hidden;gap:10px}
+  html body .ch-split .ch-pane .ch-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;margin:0}
+  html body .ch-split .ch-room,html body .ch-split .ch-blank{height:100%;min-height:0;padding:0!important;display:flex;flex-direction:column;border-radius:22px;overflow:hidden;
+    background:rgba(255,255,255,.5);border:1px solid var(--rim,rgba(255,255,255,.7));box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 10px 30px rgba(28,35,51,.07);box-sizing:border-box}
+  html[data-theme=dark] body .ch-split .ch-room,html[data-theme=dark] body .ch-split .ch-blank{background:rgba(40,44,52,.5);border-color:rgba(255,255,255,.08);box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  html body .ch-split .ch-head{position:relative!important;top:auto!important;flex:none;margin:0!important;border-radius:0!important;border:0!important;border-bottom:1px solid var(--line,rgba(128,134,148,.18))!important;box-shadow:none!important;background:rgba(255,255,255,.35)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:12px 18px!important;min-height:64px;box-sizing:border-box}
+  html[data-theme=dark] body .ch-split .ch-head{background:rgba(255,255,255,.04)!important}
+  html body .ch-split .ch-head .ch-name{padding-left:0}
+  html body .ch-split .ch-head .ch-name b{font-size:16px}
+  html body .ch-split .ch-msgs{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;justify-content:flex-start!important;padding:18px 22px 12px!important;scrollbar-width:thin;transform:none!important}
+  html body .ch-split .ch-msgs>:first-child{margin-top:auto}
+  html body .ch-split .ch-jobs:empty,html body .ch-split .ch-req[hidden]{display:none}
+  html body .ch-split .ch-foot{position:relative!important;bottom:auto!important;flex:none;margin:0 14px 14px!important;transform:none!important}
+  /* the list: whole names, readable lines */
+  html body .ch-split .ch-row{padding:11px 12px!important;gap:12px}
+  html body .ch-split .ch-who{min-width:0;flex:1}
+  html body .ch-split .ch-who b{font-size:15px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  html body .ch-split .ch-who small{font-size:13.5px!important;color:var(--ink2,#3b3f45)!important;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  html body .ch-split .ch-side small{font-size:12px!important;color:var(--ink2,#3b3f45)!important;opacity:.7}
+  /* messages: one width, readable */
+  html body .ch-split .ch-bub{max-width:min(560px,72%)}
+}
