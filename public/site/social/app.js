@@ -369,7 +369,7 @@ function fxBar(box, after) {
   };
   const LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg>';
   const CLEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12M12 5 9 19M4 21 20 5"/></svg>';
-  const tools = [['b', t('Bold'), h('b', {}, 'B')], ['i', t('Italic'), h('i', {}, 'I')], ['x', t('Bold italic'), h('b', {}, h('i', {}, 'BI'))], ['u', t('Underline'), h('u', {}, 'U')], ['s', t('Strikethrough'), h('s', {}, 'S')], ['m', t('Typewriter'), h('code', {}, 'M')], ['l', t('List'), h('span', { html: LIST })], ['c', t('Clear formatting'), h('span', { html: CLEAR })]];
+  const tools = [['b', t('Bold'), h('b', {}, 'B')], ['i', t('Italic'), h('i', {}, 'I')], ['x', t('Bold italic'), h('b', {}, h('i', {}, 'BI'))], ['u', t('Underline'), h('u', {}, 'U')]]; // strike, typewriter, list and clear taken out (Alex, 16 Nov: "these do not work, take them out")
   return h('div', { class: 'th-fx' }, ...tools.map(([k, label, face]) =>
     h('button', { type: 'button', class: 'th-fx-b fx-' + k, title: label, 'aria-label': label, onmousedown: (e) => e.preventDefault(), onclick: () => doIt(k) }, face)));
 }
