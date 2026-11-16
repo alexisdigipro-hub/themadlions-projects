@@ -1988,3 +1988,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 16 Nov, Roardino (20261118s): threads 340 letters (TH_LIMIT); hashtags black (white by Night) at weight 500, not blue; the tools are a row of smaller buttons over the box: B, I, BI (bold italic), U, S, M (typewriter letters), a list (• at the start of the chosen lines) and Clear formatting (fxMark styles b / i / x / m, one at a time).
 - 16 Nov, Roardino (20261118t): in the feed's side column "Made by The Mad Lions Lab" stands under the apps, centred (.fs-apps-foot); Our apps stays as the heading.
 - 16 Nov, Roardino (20261118u): threads hold 421 letters with the hashtags counted too (TH_LIMIT, thLen); still at most 5 hashtags.
+- 16 Nov, Roardino (20261118v): Reply (and New thread) no longer opens the computer's file window: postFlow's first pick is skipped in thread mode.

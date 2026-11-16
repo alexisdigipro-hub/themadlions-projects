@@ -2139,7 +2139,7 @@ async function postFlow(opts = {}) {
       } catch (e) { fail(e); busy = false; shareBtn.disabled = false; layer.classList.remove('busy'); fill.style.transform = ''; word.textContent = t('Share'); }
     }
   }
-  if (st.items.length) stepOne(); else { stepOne(); if (!opts.noPick && !camOk() && lib.off) pick.click(); }
+  if (st.items.length) stepOne(); else { stepOne(); if (!opts.noPick && st.mode !== 'thread' && !camOk() && lib.off) pick.click(); }
 }
 // Tag people: Roardino's people with a username; the chosen one goes into the caption as @username, which is how
 // tagging already works (the tagged person is told)
