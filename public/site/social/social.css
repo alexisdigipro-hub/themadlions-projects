@@ -3820,3 +3820,12 @@ html.rl-open .toast{z-index:150}
 .pf-th-left{align-self:flex-end;font-size:12px;color:rgba(255,255,255,.5)}
 .pf-modes button{padding:0 16px}
 @media (min-width:861px){.pf-thread{display:flex!important}.pf-thread .pf-th-main b,.pf-thread .pf-th-box{color:var(--ink)}.pf-thread .pf-th-box::placeholder{color:var(--faint)}.pf-thread .pf-th-left{color:var(--muted)}.pf-thread .pf-modes{align-self:center;margin-bottom:18px}}
+/* New post: the camera never pushes the rest off the screen (Alex, 16 Nov, iPhone: only the camera showed): the live
+   picture is laid inside the stage, it does not size it; the Gallery row, the library and Post · Story · Thread stay */
+.pf-stagebox{overflow:hidden}
+.pf-stage{position:relative;min-height:0;overflow:hidden}
+.pf-stage .pf-cam{position:absolute!important;inset:0!important}
+.pf-one>.pf-stagebox{min-height:0!important}
+.pf-one>.pf-pickrow,.pf-one>.pf-modes,.pf-one>.pf-strip,.pf-one>.pf-head{flex:none!important}
+.pf-one.with-lib>.pf-stagebox{flex:0 0 44%!important}
+.pf-one.with-lib>.pf-lib{flex:1 1 0!important;min-height:120px}
