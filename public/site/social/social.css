@@ -3892,3 +3892,13 @@ html.rl-open .toast{z-index:150}
 .rl-menu.ico .rl-ico{flex:none!important;min-height:44px}
 .rl-menu.ico .rl-dav{display:grid!important}
 .rl-menu.ico{max-height:none}
+/* Threads on a profile (Alex, 16 Nov): a list of words, each with the picture, the name and when */
+.th-list{display:flex;flex-direction:column}
+.th-row{display:flex;gap:12px;align-items:flex-start;width:100%;padding:14px 16px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.th-av{width:38px!important;height:38px!important;flex:none;font-size:12px}
+.th-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.th-main b{font-size:14.5px;font-weight:var(--w-strong,600);display:flex;align-items:baseline;gap:8px}
+.th-main b small{font-size:12px;font-weight:var(--w-text,400);color:var(--muted)}
+.th-text{font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+/* a post of words alone in a grid shows its words (it showed an empty tile) */
+.cell-text{display:-webkit-box!important;-webkit-line-clamp:7;-webkit-box-orient:vertical;overflow:hidden;padding:10px!important;font-size:12.5px!important;line-height:1.35;color:var(--ink)!important;text-align:left;align-self:start;white-space:normal}

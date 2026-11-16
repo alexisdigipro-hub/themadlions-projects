@@ -367,6 +367,7 @@ const ICON = {
   down: SVG('<path d="m6.5 9.5 5.5 5.5 5.5-5.5"/>'),
   plus: SVG('<path d="M12 5v14M5 12h14"/>'),
   x: SVG('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>'),
+  hash: SVG('<path d="M9.5 4 7.5 20M16.5 4l-2 16M4.5 9h16M3.5 15h16"/>'),
   vol: SVG('<path d="M4.6 9.6h2.3a1 1 0 0 0 .6-.2l3-2.4a.8.8 0 0 1 1.3.6v8.8a.8.8 0 0 1-1.3.6l-3-2.4a1 1 0 0 0-.6-.2H4.6a1 1 0 0 1-1-1v-2.8a1 1 0 0 1 1-1z"/><path d="M15.4 9.2a4 4 0 0 1 0 5.6"/><path d="M17.9 6.6a7.6 7.6 0 0 1 0 10.8"/>'),
   mute: SVG('<path d="M4.6 9.6h2.3a1 1 0 0 0 .6-.2l3-2.4a.8.8 0 0 1 1.3.6v8.8a.8.8 0 0 1-1.3.6l-3-2.4a1 1 0 0 0-.6-.2H4.6a1 1 0 0 1-1-1v-2.8a1 1 0 0 1 1-1z"/><path d="m15.6 9.6 4.8 4.8"/><path d="m20.4 9.6-4.8 4.8"/>'),
   heart: SVG('<path d="M12 19.6c-.4 0-.8-.2-1.1-.4C8 17 4 13.6 4 9.5a4.4 4.4 0 0 1 8-2.6 4.4 4.4 0 0 1 8 2.6c0 4.1-4 7.5-6.9 9.7-.3.2-.7.4-1.1.4z"/>'),
@@ -3356,9 +3357,14 @@ async function viewPerson(id) {
     d.studies ? h('div', { class: 'block' }, h('h2', {}, t('Studies')), h('p', {}, d.studies)) : null,
     p.cv ? h('div', { class: 'acts' }, h('a', { class: 'btn', href: urlOf(p.cv), target: '_blank', rel: 'noopener' }, t('Open the CV'))) : null,
     !p.bio && !facts.length && !reel && !skillRows.length && !(d.credits || []).length && !d.studies ? h('div', { class: 'empty' }, t('No details yet.')) : null);
-  const photoPosts = (grid || []).filter((g) => g.kind === 'photo');
+  // threads (posts of words alone) have a tab of their own (Alex, 16 Nov), so Personal and Portfolio hold only pictures and videos
+  const isThread = (g) => !(g.media || []).length;
+  const threadPosts = (grid || []).filter(isThread);
+  const threads = h('div', { class: 'th-list' }, threadPosts.length ? threadPosts.map((g) => h('button', { type: 'button', class: 'th-row', onclick: () => openPost(g, p) },
+    avatar(p, 'th-av'), h('span', { class: 'th-main' }, h('b', {}, p.name || '', h('small', {}, ago(g.created_at))), h('span', { class: 'th-text' }, ...tagText(g.body || ''))))) : h('div', { class: 'empty' }, own ? t('No threads yet. Press + and choose Thread.') : t('No threads yet.')));
+  const photoPosts = (grid || []).filter((g) => g.kind === 'photo' && !isThread(g));
   const pics = h('div', { class: 'grid' }, photos.length || photoPosts.length ? [...photoPosts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Photo'), onclick: () => openPost(g, p) }, m0?.type === 'video' ? cellVideo(m0) : null); }), ...photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }))] : own ? firstPost('pic', t('Add your first photo'), t('Photos of you: headshots, portraits, behind the scenes.')) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
-  const work = gridBlock(p, (grid || []).filter((g) => g.kind !== 'photo'), own);
+  const work = gridBlock(p, (grid || []).filter((g) => g.kind !== 'photo' && !isThread(g)), own);
   const body = h('div');
   const tabRow = h('div', { class: 'ig-tabs' });
   let tab = (own && openTabNext) || 'work'; openTabNext = null; // the ≡ menu's Saved opens straight on Saved
@@ -3366,20 +3372,20 @@ async function viewPerson(id) {
     // My Work, My Photos, My Bio on my own profile; Work, Photos, Bio on someone else's (Alex, 5 Nov)
     // Portfolio, Personal, Bio, Saved (Alex, 5 Nov); a Personal kept private does not show on someone else's profile
     const hidePersonal = !own && !!p.data?.personal_private;
-    put(tabRow, [['work', t('Portfolio'), 'grid'], ...(hidePersonal ? [] : [['photos', t('Personal'), 'pic']]), ['details', t('Bio'), 'user'], ...(own || (p.data?.saved_public && !p.minor) ? [['saved', t('Saved'), 'bookmark']] : [])].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
+    put(tabRow, [['work', t('Portfolio'), 'grid'], ...(hidePersonal ? [] : [['photos', t('Personal'), 'pic']]), ['details', t('Bio'), 'user'], ...(threadPosts.length || own ? [['threads', t('Threads'), 'hash']] : []), ...(own || (p.data?.saved_public && !p.minor) ? [['saved', t('Saved'), 'bookmark']] : [])].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
     // on my own profile each tab adds or edits in place (Alex, 5 Nov)
     // as a round glass plus at the left of the tabs, its words only on hover (Alex, 5 Nov: "a plus on the left, the plus alone says Add work")
     const plus = (label, ic, extra) => h(extra.href ? 'a' : 'button', { type: extra.href ? null : 'button', class: 'btn main tab-plus', title: label, 'aria-label': label, ...extra }, icon(ic), h('span', { class: 'lbl' }, label));
     const act = !own ? null
       : tab === 'work' ? plus(t('Add work'), 'plus', { onclick: () => composeWin('work', p.id, () => route()) })
         : tab === 'photos' ? plus(t('Add photo'), 'plus', { onclick: () => composeWin('photo', p.id, () => route()) })
-          : tab === 'saved' ? null : plus(t('Edit bio'), 'edit', { href: `#/edit/${p.id}` });
+          : tab === 'saved' || tab === 'threads' ? null : plus(t('Edit bio'), 'edit', { href: `#/edit/${p.id}` });
     if (act) tabRow.append(act);
     // Personal can be closed to the public (its lock sits left of Edit profile); Saved is only ever mine
     const priv = !!p.data?.personal_private;
     const note = own && tab === 'saved' ? h('p', { class: 'tab-note' }, icon(p.data?.saved_public ? 'unlock' : 'lock'), p.data?.saved_public ? t('Everyone sees what you saved. Change it in Edit profile, Privacy.') : t('Only you see what you saved.'))
       : own && tab === 'photos' && priv ? h('p', { class: 'tab-note' }, icon('lock'), t('Personal is private: only you see these.')) : null;
-    put(body, note, tab === 'work' ? work : tab === 'photos' ? pics : tab === 'saved' ? savedGrid(own ? session.user.id : p.owner) : details);
+    put(body, note, tab === 'work' ? work : tab === 'photos' ? pics : tab === 'threads' ? threads : tab === 'saved' ? savedGrid(own ? session.user.id : p.owner) : details);
   };
   drawTab();
   frame(mineTab,
