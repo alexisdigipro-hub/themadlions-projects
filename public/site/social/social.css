@@ -3774,3 +3774,6 @@ html.rl-open .toast{z-index:150}
 .rl-sheet-title{text-align:center;font-size:15px;font-weight:600}
 .rl-talk{display:flex!important;flex-direction:column;min-height:120px;max-height:calc(70vh - 90px);overflow-y:auto;padding:0 4px 4px;background:none!important;border:0!important;box-shadow:none!important}
 .rl-talk .cmt-list{flex:1}
+/* no "2 h ago" line under a picture or video in the feed (Alex, 16 Nov): it made the gap between posts grow when the
+   icons showed; the time still rides at the end of the caption when the comments are open */
+.post.ig.has-media > .ig-time,.post.ig.has-media.open > .ig-time{display:none!important}
