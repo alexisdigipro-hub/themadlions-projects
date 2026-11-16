@@ -4094,3 +4094,22 @@ html[data-theme][data-theme] body:has(> .rl, .rl) .veil .win .win-x svg{opacity:
   html[data-theme][data-theme] body:is(html.rl-open body, :has(.rl)) .veil .win :is(.input,input)::placeholder{color:rgba(22,24,28,.55)!important;-webkit-text-fill-color:rgba(22,24,28,.55)!important}
   html[data-theme][data-theme] body:is(html.rl-open body, :has(.rl)) .veil .win .foot .btn{border-radius:999px!important;min-height:34px!important;height:34px!important;padding:0 16px!important;font-size:12px!important}
 }
+
+/* Reels comments: 15px higher, and only as tall as its comments (Alex, 16 Nov) */
+.rl-sheet-back:has(.rl-sheet-talk){padding-bottom:calc(env(safe-area-inset-bottom) + 25px)!important}
+.rl-sheet-talk .rl-talk{min-height:0!important}
+.rl-sheet-talk .rl-talk .cmt-list{flex:none!important}
+.rl-sheet-talk .rl-talk .cmt-list:empty{display:none}
+
+/* THE KEYBOARD RULE (Alex, 16 Nov: "I tap to write, the keyboard comes up and a while later the box comes up too"):
+   inside the iPhone app the page gets shorter only when the keyboard has finished rising, so anything that stands at the
+   foot, or in the middle of the screen, and holds a field must ride up WITH the keyboard (html.kb-rise, --kbup) and come
+   down with it (kb-fall-from / kb-fall), as the chat's writing box does. `translate`, not transform, so the thing's own
+   opening animation is left alone. Every new sheet, window or bar with a field goes into these lists. */
+html.kb-rise :is(.rl-sheet-back .rl-sheet,.pf-foot),html.kb-rise:is(.rl-open) .veil .win{translate:0 calc(-1 * var(--kbup,0px) + env(safe-area-inset-bottom,0px));transition:translate .27s cubic-bezier(.17,.59,.4,.99)}
+html.kb-fall-from :is(.rl-sheet-back .rl-sheet,.pf-foot),html.kb-fall-from:is(.rl-open) .veil .win{translate:0 calc(-1 * var(--kbup,0px) + env(safe-area-inset-bottom,0px));transition:none}
+html.kb-fall :is(.rl-sheet-back .rl-sheet,.pf-foot),html.kb-fall:is(.rl-open) .veil .win{translate:0 0;transition:translate .25s cubic-bezier(.17,.59,.4,.99)}
+/* a window in the middle of the screen moves half the keyboard's height, which is where it lands */
+html.kb-rise:not(.rl-open) .veil .win{translate:0 calc(-.5 * var(--kbup,0px) + .5 * env(safe-area-inset-bottom,0px));transition:translate .27s cubic-bezier(.17,.59,.4,.99)}
+html.kb-fall-from:not(.rl-open) .veil .win{translate:0 calc(-.5 * var(--kbup,0px) + .5 * env(safe-area-inset-bottom,0px));transition:none}
+html.kb-fall:not(.rl-open) .veil .win{translate:0 0;transition:translate .25s cubic-bezier(.17,.59,.4,.99)}
