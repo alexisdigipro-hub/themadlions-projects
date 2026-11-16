@@ -4464,7 +4464,7 @@ const CHAT_PAGE = 50;
 const ROARME_ORIGIN = new URL(ROARME).origin;
 const chatPeople = new Map(); // account id -> { id, name, username, avatar }
 const chatSigned = new Map(); // bucket|path -> { url, until }
-let chatRooms = null, chatWatching = null, chatRoomLive = null, chatListDraw = null, chatMine = null, chatFinding = false, chatTab = 'main';
+let chatRooms = null, chatWatching = null, chatRoomLive = null, chatListDraw = null, chatMine = null, chatFinding = false, chatTab = 'main', chatPaneTop = 0;
 const chatKey = (f) => (f.bucket || 'roar-files') + '|' + f.path;
 const chatUrl = (f) => (f?.path ? chatSigned.get(chatKey(f))?.url || '' : '');
 async function chatSign(files) {
@@ -4542,7 +4542,7 @@ function chatWatch() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'roar_messages' }, (p) => {
       const m = p.new && p.new.id ? p.new : null;
       if (m && chatRoomLive && chatRoomLive.id === m.room_id) chatRoomLive.take(m, p.eventType);
-      clearTimeout(tm); tm = setTimeout(() => { if (chatListDraw && (location.hash || '') === '#/chat') chatListDraw(); }, 500);
+      clearTimeout(tm); tm = setTimeout(() => { if (chatListDraw && (location.hash || '').startsWith('#/chat')) chatListDraw(); }, 500);
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'roar_reactions' }, (p) => { const r = p.new?.room_id || p.old?.room_id; if (chatRoomLive && (!r || r === chatRoomLive.id)) chatRoomLive.hearts(); })
     .subscribe();
@@ -4551,8 +4551,11 @@ async function viewChat(roomId) {
   document.title = 'Roardino · ' + t('Chat');
   chatWatch();
   document.documentElement.classList.toggle('in-room', !!roomId);
-  if (roomId) return viewChatRoom(roomId);
-  chatRoomLive = null;
+  // on a computer the conversations stand at the left and the open one at the right, as in RoarMe (Alex, 16 Nov);
+  // a phone keeps one page at a time
+  const wide = window.matchMedia('(min-width:861px)').matches;
+  if (roomId && !wide) return viewChatRoom(roomId);
+  if (!roomId) chatRoomLive = null;
   const box = h('div', { class: 'card ch-list' }, h('p', { class: 'wait' }, t('Loading…')));
   let q = '';
   const find = input('', { type: 'search', class: 'input search ind-search', placeholder: t('Search conversations'), 'aria-label': t('Search conversations'), oninput: (e) => { q = fold(e.target.value.trim()); draw(); } });
@@ -4561,7 +4564,18 @@ async function viewChat(roomId) {
   find.hidden = !chatFinding;
   const tabsBox = h('div', { class: 'ch-tabs' });
   const newBtn = h('button', { type: 'button', class: 'ch-new', title: t('New message'), 'aria-label': t('New message'), html: ICON.edit, onclick: () => chatNew() });
-  frame('chat', h('div', { class: 'head ind-head ch-top' }, h('h1', { class: 'ind-title' }, t('Chat')), h('span', { class: 'grow' }), newBtn, find), tabsBox, box);
+  const headEl = h('div', { class: 'head ind-head ch-top' }, h('h1', { class: 'ind-title' }, t('Chat')), h('span', { class: 'grow' }), newBtn, find);
+  const pane = wide ? h('aside', { class: 'ch-pane', onscroll: () => { chatPaneTop = pane.scrollTop; } }, headEl, tabsBox, box) : null;
+  const inList = () => { const hh = location.hash || ''; return hh === '#/chat' || (wide && hh.startsWith('#/chat/')); };
+  if (wide && roomId) {
+    // the conversation draws the page with the list beside it; it says when the page is up
+    let up; const framed = new Promise((ok) => { up = ok; });
+    pane.ready = up;
+    viewChatRoom(roomId, pane);
+    await framed;
+  } else if (wide) {
+    frame('chat', h('div', { class: 'ch-split' }, pane, h('div', { class: 'card ch-blank' }, h('span', { class: 'fp-ic', html: ICON.talk }), h('b', {}, t('Chat')), h('p', {}, t('Press the pencil to write to someone.')))));
+  } else frame('chat', headEl, tabsBox, box);
   document.querySelectorAll('.bar a[href="#/search"], .bar .find-btn').forEach((el) => el.addEventListener('click', (e) => {
     e.preventDefault(); e.stopImmediatePropagation();
     chatFinding = find.hidden; find.hidden = !chatFinding;
@@ -4584,13 +4598,14 @@ async function viewChat(roomId) {
       const last = { kind: r.last_kind, body: r.last_body, deleted_at: r.last_deleted ? 1 : null, file: {} };
       const words = r.last_kind || r.last_body ? chatWords(last) : '';
       const by = r.last_user === meId ? t('You') + ': ' : r.kind !== 'direct' && chatPeople.get(r.last_user) ? chatPeople.get(r.last_user).name.split(' ')[0] + ': ' : '';
-      return h('a', { class: 'ch-row' + (r.unread > 0 ? ' new' : ''), href: `#/chat/${r.id}` },
+      return h('a', { class: 'ch-row' + (r.unread > 0 ? ' new' : '') + (r.id === roomId ? ' on' : ''), href: `#/chat/${r.id}` },
         avatar({ name: r.name, avatar: r.avatar }, 'ch-av'),
         h('span', { class: 'ch-who' }, h('b', {}, h('span', {}, r.name), r.job ? h('em', { class: 'job-badge' }, t('Job')) : null, r.other && !r.other.rd ? h('em', { class: 'rm-badge' }, 'RoarMe') : null), h('small', {}, r.job && (shelf(r) === 'jobs') && !(r.unread > 0) ? r.job.title : words ? by + words : r.kind === 'direct' ? '' : t('Group'))),
         h('span', { class: 'ch-side' }, h('small', {}, chatTime(r.last_message_at)), r.unread > 0 ? h('em', {}, r.unread > 99 ? '99+' : String(r.unread)) : r.muted ? h('i', { class: 'ch-mute', html: ICON.bell }) : null));
     }));
+    if (pane) pane.scrollTop = chatPaneTop;
   };
-  chatListDraw = async () => { await chatLoadRooms(); if ((location.hash || '') === '#/chat') draw(); };
+  chatListDraw = async () => { await chatLoadRooms(); if (inList()) draw(); };
   if (chatRooms) draw();
   await chatListDraw();
 }
@@ -4601,12 +4616,12 @@ function chatText(body) {
   if (i < String(body || '').length) out.push(String(body).slice(i));
   return out;
 }
-async function viewChatRoom(roomId) {
+async function viewChatRoom(roomId, pane) {
   const meId = session.user.id;
   if (!chatRooms) await chatLoadRooms();
   let room = (chatRooms || []).find((r) => r.id === roomId);
   if (!room) { await chatLoadRooms(); room = (chatRooms || []).find((r) => r.id === roomId); }
-  if (!room) { toast(t('This conversation is not here.')); location.hash = '#/chat'; return; }
+  if (!room) { toast(t('This conversation is not here.')); location.hash = '#/chat'; pane?.ready?.(); return; }
   const group = room.kind !== 'direct';
   let msgs = [], hearts = {}, replyTo = null, more = true, sealedRoom = false, clearedAt = null;
   const fresh = new Set(); // messages that arrived while the conversation is open: they drop in (GLASS DROP)
@@ -4624,12 +4639,14 @@ async function viewChatRoom(roomId) {
   const jobBox = h('div', { class: 'ch-jobs' });
   const reqBox = h('div', { class: 'ch-req', hidden: true });
   const person = !group && room.other ? () => { if (room.other.rd) location.hash = `#/p/${room.other.rd}`; else toast(t('{name} is on RoarMe only, with no Roardino profile yet.', { name: room.name })); } : null;
-  frame('chat', h('div', { class: 'ch-room' },
+  const roomEl = h('div', { class: 'ch-room' },
     h('div', { class: 'ch-head' },
       h('a', { class: 'ch-back', href: '#/chat', title: t('Back'), 'aria-label': t('Back'), html: ICON.left }),
       h(person ? 'button' : 'div', { type: person ? 'button' : null, class: 'ch-name', onclick: person }, avatar({ name: room.name, avatar: room.avatar }, 'ch-av sm'), h('span', {}, h('b', {}, h('span', {}, room.name), !group && room.other && !room.other.rd ? h('em', { class: 'rm-badge' }, 'RoarMe') : null), sub ? h('small', {}, sub) : null)),
     ),
-    jobBox, list, reqBox, foot));
+    jobBox, list, reqBox, foot);
+  frame('chat', pane ? h('div', { class: 'ch-split' }, pane, roomEl) : roomEl);
+  pane?.ready?.();
   const here = () => (location.hash || '') === `#/chat/${roomId}`;
   // a finger slid to the right takes the conversation away and goes back to the list; slid to the left on a message it
   // pulls that message aside and replies to it (Alex, 15 Nov: "swipe left and right, to go back and the like")

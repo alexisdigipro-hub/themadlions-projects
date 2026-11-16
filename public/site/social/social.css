@@ -2672,7 +2672,25 @@ html.in-room .foot{display:none}
 /* the chat's fine points: readable names and times on the dark theme, and a column of its own on a computer */
 html[data-theme=dark] .ch-by,html[data-theme=dark] .ch-row.new .ch-side small,html[data-theme=dark] .ch-reply b,html[data-theme=dark] .ch-msg:not(.mine) .ch-heart{color:#ff9d93}
 /* the list of conversations is as wide as the bar on a computer (Alex, 16 Nov); an open conversation stays a 780px column */
-@media (min-width:861px){ .ch-room{max-width:780px;margin-left:auto;margin-right:auto;width:100%} .ch-list{width:100%} }
+@media (min-width:861px){ .ch-room{width:100%} .ch-list{width:100%} }
+/* Chat on a computer (Alex, 16 Nov, from RoarMe's own window): the conversations in a column at the left, which stays
+   in place and scrolls on its own, and the open conversation at the right, filling the rest. Nothing fades in again when
+   another conversation is picked; only the conversation itself comes in. A phone keeps one page at a time. */
+@media (min-width:861px){
+  .ch-split{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:18px;align-items:start}
+  .page>.ch-split{animation:none}
+  .ch-pane{position:sticky;top:90px;max-height:calc(100dvh - 180px);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:12px;scrollbar-width:thin;min-width:0}
+  .ch-pane .ch-list{animation:none}
+  .ch-pane .ch-top{margin:0;gap:10px}
+  .ch-pane .ch-tabs{margin:0}
+  .ch-row.on{background:rgba(var(--a),.1)}
+  .ch-split .ch-room{min-width:0}
+  .ch-split .ch-back{display:none}
+  .ch-split .ch-name{padding-left:8px}
+  .ch-blank{min-height:calc(100dvh - 190px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;color:var(--muted)}
+  .ch-blank b{color:var(--ink);font-size:17px}
+  .ch-blank p{margin:0;font-size:14px}
+}
 
 /* ===== The chat in liquid glass (Alex, 15 Nov: "all the liquid glass animation effects we have, here too") =====
    The same family and the same timings as RoarMe's: GLASS DROP (what arrives rises in and settles), GLASS PRESS (the
