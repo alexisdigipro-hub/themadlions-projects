@@ -2448,13 +2448,13 @@ async function deleteSheet(id){
   if(sheets.cur === id) await openSheet(sheets.list[0].id);
 }
 /* the window with every sheet: open one, rename, duplicate, delete (asks first), new; who is signed in, and Sign out */
+// the pictures of the projects page stay between visits, so Home opens at once with what it showed last
+let homeUrls = [], homeRows = new Map();
 async function openSheets(first){
   if(document.querySelector('.spage')) return;
-  clearTimeout(st); if(!first){ await save(); await saveThumb(); }
-  if(!first){ try{ sheets.list = await listSheets(); }catch{} }
+  clearTimeout(st);
   // a page of its own, not a window (Alex, 11 Nov: "an extra page with all the projects, not a pop-up")
   const m = document.createElement('div'); m.className='spage';
-  const urls = [];
   /* the page's own choices (Alex, 14 Nov: "smaller projects, also as a list, make it more of a program"): tiles or a list,
      the order, and a search by name; kept on this computer */
   let pv = {view:'grid', sort:'recent'}; try{ pv = Object.assign(pv, JSON.parse(localStorage.getItem('roarref-projects') || '{}')); }catch{}
@@ -2508,7 +2508,7 @@ async function openSheets(first){
     paintList();
   };
   const draw = async () => {
-    urls.forEach(u => URL.revokeObjectURL(u)); urls.length = 0;
+    const urls = [], old = homeUrls;
     const next = [];
     for(const x of sheets.list){ let u = '';
       if(x.thumb){ try{ const data = await store.get(x.thumb, x.thumbAt || x.updated_at); if(data){ u = URL.createObjectURL(data); urls.push(u); } }catch{} }
@@ -2516,14 +2516,17 @@ async function openSheets(first){
     // a card without a thumbnail shows its first photos side by side
     for(const r of next){ if(r.u || !r.x.paths.length) continue; r.strip = [];
       for(const pa of r.x.paths){ try{ const u2 = URL.createObjectURL(await getBlob(pa)); urls.push(u2); r.strip.push(u2); }catch{} } }
-    rows = next; paint();
+    rows = next; homeUrls = urls; homeRows = new Map(next.map(r => [r.x.id, r])); paint();
+    setTimeout(() => old.forEach(u => URL.revokeObjectURL(u)), 500);
   };
-  const close = () => { urls.forEach(u => URL.revokeObjectURL(u)); m.remove(); syncPanel(); };
+  const close = () => { m.remove(); syncPanel(); };
   const busy = on => m.classList.toggle('busy', on);
   m.onclick = async e => {
-    const t = e.target.closest('button');
-
+    let t = e.target.closest('button');
     if(!t || m.classList.contains('busy')) return;
+    if(m._sync){ // the page is still being brought up to date: wait, then find the same button on the fresh page
+      const pick = t.id ? '#' + t.id : ['open','ren','dup','del','pv','keep','sure'].map(k => t.dataset[k] != null ? `[data-${k}="${t.dataset[k]}"]` : '').find(Boolean);
+      await m._sync; t = pick && m.querySelector(pick); if(!t || !document.body.contains(m)) return; }
     if(t.id === 'shOut'){ close(); await save(); await sb.auth.signOut(); return; }
     if(t.dataset.pv){ const [k, v] = t.dataset.pv.split(':'); pv[k] = v; keep(); m.querySelectorAll(`[data-pv^="${k}:"]`).forEach(x => x.setAttribute('aria-pressed', x === t)); paintList(); return; }
     if(t.id === 'shNew' || t.id === 'shNew2'){ if(sheets.list.length >= MAX_SHEETS) return; busy(true); await newSheet(false); busy(false); return close(); }
@@ -2542,7 +2545,13 @@ async function openSheets(first){
   };
   const esc2 = e => { if(e.key === 'Escape' && sheets.cur && document.body.contains(m) && !m.querySelector('input')){ document.removeEventListener('keydown', esc2); close(); } };
   document.addEventListener('keydown', esc2);
-  await draw(); document.body.appendChild(m); m.scrollTop = 0;
+  if(first){ await draw(); document.body.appendChild(m); m.scrollTop = 0; return; }
+  // Home opens at once (Alex, 14 Nov: "a little smoother"): the page shows with the pictures it had, while the sheet is saved,
+  // its picture made and the list read again behind it; then it is drawn afresh
+  rows = sheets.list.map(x => Object.assign({}, homeRows.get(x.id) || {u:''}, {x})); paint(); document.body.appendChild(m); m.scrollTop = 0;
+  // a click made in that moment waits for it to end, then does its work (m._sync)
+  m._sync = (async () => { try{ await save(); await saveThumb(); try{ sheets.list = await listSheets(); }catch{} if(document.body.contains(m)) await draw(); }catch{} })();
+  await m._sync; m._sync = null;
 }
 
 /* the door: RoarRef opens only with a Roar Account (sign in, create one, or the 6-digit code of two-step verification) */
