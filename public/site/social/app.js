@@ -4615,6 +4615,26 @@ async function chatLoadPeople(ids) {
   await sign([...rdOf.values()].map((r) => r.avatar));
   miss.forEach((id) => { const rd = rdOf.get(id); chatPeople.set(id, { id, name: rd?.name || t('Member'), username: rd?.handle || '', avatar: rd?.avatar || null, rd: rd?.id || null }); });
 }
+// a shared post inside a message: its picture (or a thread's words), who made it; a tap opens it
+const chatPosts = new Map(); // id -> Promise of the row
+function chatPostCard(id) {
+  const card = h('a', { class: 'ch-post', href: `#/post/${id}`, onclick: (e) => e.stopPropagation() }, h('span', { class: 'ch-post-wait' }));
+  if (!chatPosts.has(id)) chatPosts.set(id, sb.from('roardino_posts').select('id,body,media,person:roardino_people(id,name,avatar)').eq('id', id).maybeSingle().then(async ({ data }) => {
+    if (data) { const m0 = (data.media || [])[0]; await sign([data.person?.avatar, m0 && (m0.type === 'video' ? m0.posterFull || m0.poster : m0.path)].filter(Boolean)); }
+    return data;
+  }, () => null));
+  chatPosts.get(id).then((r) => {
+    if (!r) { put(card, h('span', { class: 'ch-post-gone' }, t('This post is no longer here.'))); card.removeAttribute('href'); return; }
+    const m0 = (r.media || [])[0];
+    const pic = m0 ? urlOf(m0.type === 'video' ? m0.posterFull || m0.poster : m0.path) : '';
+    const p = r.person || {};
+    put(card,
+      h('span', { class: 'ch-post-who' }, avatar(p, 'ch-av xs'), h('b', {}, p.name || '')),
+      m0 ? h('span', { class: 'ch-post-pic', style: pic ? { backgroundImage: `url("${pic}")` } : {} }, m0.type === 'video' ? h('span', { class: 'ch-play', html: ICON.play }) : null) : null,
+      r.body ? h('span', { class: 'ch-post-text' + (m0 ? ' cap' : '') }, r.body) : null);
+  });
+  return card;
+}
 const chatSealed = (body) => typeof body === 'string' && body.startsWith('e2e1.');
 // what a message is, in a few words: for the list, a reply's quote and the cards of what only RoarMe opens
 function chatWords(m) {
@@ -4628,6 +4648,7 @@ function chatWords(m) {
   if (f.location) return t('Location');
   if (f.groupcall) return LANG === 'el' ? 'Κλήση' : t('Call');
   if (f.contact) return t('Contact') + (f.contact.name ? ': ' + f.contact.name : '');
+  if (/#\/post\/[0-9a-f-]{36}/i.test(m.body || '')) return t('Shared a post');
   if (m.kind === 'image') return m.body || t('Photo');
   if (m.kind === 'voice') return t('Voice message');
   if (m.kind === 'file') return m.body || (f.round ? t('Video message') : /^video\//.test(f.type || '') ? t('Video') : /^audio\//.test(f.type || '') ? t('Audio') : f.name || t('File'));
@@ -4834,7 +4855,14 @@ async function viewChatRoom(roomId, pane) {
       body = [h('button', { type: 'button', class: 'ch-pic' + (video ? ' vid' : ''), style: small && (m.kind === 'image' || f.thumb) ? { backgroundImage: `url("${small}")` } : {}, 'aria-label': video ? t('Video') : t('Photo'), onclick: open }, video ? h('span', { class: 'ch-play', html: ICON.play }) : null),
         m.body ? h('span', { class: 'ch-cap' }, ...chatText(m.body)) : null];
     } else if ((m.kind && m.kind !== 'text') || f.poll || f.location || f.groupcall || f.contact || f.live) body = h('span', { class: 'ch-card' }, h('b', {}, chatWords(m)), null);
-    else body = h('span', { class: 'ch-text' }, ...chatText(m.body));
+    else {
+      // a post sent from Roardino shows as the post itself, not as its link (Alex, 16 Nov)
+      const pm = /(?:https?:\/\/[^\s]*)?#\/post\/([0-9a-f-]{36})/i.exec(m.body || '');
+      if (pm) {
+        const words = (m.body || '').replace(pm[0], '').replace(/[^\n]*·\s*$/m, (x) => (x.trim().endsWith('·') ? '' : x)).trim();
+        body = [words ? h('span', { class: 'ch-text' }, ...chatText(words)) : null, chatPostCard(pm[1])];
+      } else body = h('span', { class: 'ch-text' }, ...chatText(m.body));
+    }
     const q = m.reply_to ? msgs.find((x) => x.id === m.reply_to) : null;
     const hs = hearts[m.id] || [];
     const drop = fresh.delete(m.id);

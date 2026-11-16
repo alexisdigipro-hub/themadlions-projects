@@ -992,5 +992,7 @@ window.RD_EL = {
 "Typewriter": "Γραφομηχανή",
 "List": "Λίστα",
 "Clear formatting": "Καθαρισμός μορφής",
-"Graphite": "Γραφίτης"
+"Graphite": "Γραφίτης",
+"This post is no longer here.": "Αυτό το post δεν υπάρχει πια.",
+"Shared a post": "Μοιράστηκε ένα post"
 };
