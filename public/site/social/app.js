@@ -1743,7 +1743,7 @@ function askDraft() {
 async function postFlow(opts = {}) {
   const m = me();
   if (!m) { location.hash = '#/edit/new'; return; }
-  const st = { items: [], cur: 0, caption: '', kind: opts.kind || 'work', as: opts.as || m.id, place: '', hideLikes: false, commentsOff: false, ai: false };
+  const st = { mode: 'post', thread: '', items: [], cur: 0, caption: '', kind: opts.kind || 'work', as: opts.as || m.id, place: '', hideLikes: false, commentsOff: false, ai: false };
   const old = await draftGet();
   if (old && (old.items?.length || old.caption) && await askDraft()) Object.assign(st, old, { cur: 0 });
   else if (old) draftDrop();
@@ -1757,6 +1757,7 @@ async function postFlow(opts = {}) {
   const isVid = (it) => /^video\//.test(it.file.type);
   const pick = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: async (e) => {
     const list = [...e.target.files].slice(0, 6 - st.items.length); e.target.value = '';
+    if (st.mode === 'story') { if (list[0]) toStory(list[0]); return; }
     for (const f of list) {
       if (!/^(image|video)\//.test(f.type)) continue;
       st.items.push({ file: f, cover: null });
@@ -1776,14 +1777,14 @@ async function postFlow(opts = {}) {
     try { cam = await navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false }); camV.srcObject = cam; camV.classList.toggle('front', camFacing === 'user'); await camV.play().catch(() => {}); layer.classList.add('cam-on'); }
     catch { layer.classList.add('cam-no'); }
     camBusy = false;
-    if (!layer.isConnected || st.items.length) stopCam();
+    if (!layer.isConnected || st.mode === 'thread' || (st.mode === 'post' && st.items.length)) stopCam();
   }
   const shoot = () => {
     if (!cam || !camV.videoWidth) return;
     const c = document.createElement('canvas'); c.width = camV.videoWidth; c.height = camV.videoHeight;
     const g = c.getContext('2d'); if (camFacing === 'user') { g.translate(c.width, 0); g.scale(-1, 1); }
     g.drawImage(camV, 0, 0, c.width, c.height);
-    c.toBlob((b) => { if (!b) return; st.items.push({ file: new File([b], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' }), cover: null }); st.cur = st.items.length - 1; stepOne(); }, 'image/jpeg', 0.92);
+    c.toBlob((b) => { if (!b) return; const f = new File([b], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' }); if (st.mode === 'story') return toStory(f); st.items.push({ file: f, cover: null }); st.cur = st.items.length - 1; stepOne(); }, 'image/jpeg', 0.92);
   };
   const libCall = () => (typeof shell !== 'undefined' && shell?.nativePromise ? (mth, o = {}) => shell.nativePromise('Media', mth, o) : null);
   const lib = { items: null, want: 60, off: !libCall(), busy: new Set() };
@@ -1808,6 +1809,7 @@ async function postFlow(opts = {}) {
     if (layer.isConnected && layer.querySelector('.pf-one')) stepOne();
   }
   async function libTap(a) {
+    if (st.mode === 'story') { if (lib.busy.size) return; lib.busy.add(a.identifier); stepOne(); try { const f = await libFile(a); lib.busy.delete(a.identifier); return toStory(f); } catch { lib.busy.delete(a.identifier); toast(t('This one could not be opened. Try the Gallery button.')); return stepOne(); } }
     const at = st.items.findIndex((x) => x.lib === a.identifier);
     if (at >= 0) { const [gone] = st.items.splice(at, 1); if (gone?.url) URL.revokeObjectURL(gone.url); st.cur = Math.min(st.cur, Math.max(0, st.items.length - 1)); return stepOne(); }
     if (st.items.length >= 6 || lib.busy.has(a.identifier)) return;
@@ -1820,7 +1822,7 @@ async function postFlow(opts = {}) {
     const mmss = (sec) => `${Math.floor((sec || 0) / 60)}:${String(Math.round(sec || 0) % 60).padStart(2, '0')}`;
     const end = h('i', { class: 'pf-lib-end' });
     const grid = h('div', { class: 'pf-lib' }, ...(lib.items || []).map((a) => {
-      const n = st.items.findIndex((x) => x.lib === a.identifier);
+      const n = st.mode === 'story' ? -1 : st.items.findIndex((x) => x.lib === a.identifier);
       return h('button', { type: 'button', class: 'pf-lib-cell' + (n >= 0 ? ' on' : '') + (lib.busy.has(a.identifier) ? ' busy' : ''), onclick: () => libTap(a) },
         h('img', { src: `data:image/jpeg;base64,${a.data}`, alt: '', loading: 'lazy', decoding: 'async', draggable: false }),
         a.duration ? h('small', {}, mmss(a.duration)) : null,
@@ -1829,15 +1831,48 @@ async function postFlow(opts = {}) {
     if (lib.items && lib.items.length >= lib.want && 'IntersectionObserver' in window) { const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { io.disconnect(); lib.want += 60; libLoad(); } }, { root: grid, rootMargin: '300px' }); io.observe(end); }
     return grid;
   };
+  // Post · Story · Thread at the foot of the first screen (Alex, 16 Nov: "the same for stories, and beside Story a
+  // thread / tweet kind"): Story uses the same camera and library and goes straight to the story's own editor;
+  // Thread is words alone
+  const toStory = async (f0) => {
+    leave();
+    const f = /^video/.test(f0.type) ? f0 : await cropImage(f0, SHAPES.story);
+    const ed = f && await storyEditor(f);
+    if (ed) await addStory(ed.file, ed.overlays);
+  };
+  const modesRow = () => h('div', { class: 'pf-modes' }, ...[['post', t('Post')], ['story', t('Story')], ['thread', t('Thread')]].map(([k, w]) => h('button', { type: 'button', class: st.mode === k ? 'on' : '', onclick: () => { if (st.mode === k) return; st.mode = k; stepOne(); } }, w)));
+  const THREAD_MAX = 500;
+  function stepThread() {
+    stopCam();
+    const left = h('small', { class: 'pf-th-left' }, String(THREAD_MAX - st.thread.length));
+    const go = h('button', { type: 'button', class: 'pf-next', disabled: !st.thread.trim() }, t('Share'));
+    const box = area(st.thread, { class: 'pf-th-box', placeholder: t('What is on your mind?'), maxlength: THREAD_MAX, rows: 6, oninput: (e) => { st.thread = e.target.value; left.textContent = String(THREAD_MAX - st.thread.length); go.disabled = !st.thread.trim(); } });
+    go.onclick = async () => {
+      if (go.disabled) return; go.disabled = true; go.textContent = t('Sharing…');
+      const { error } = await sb.from('roardino_posts').insert({ person_id: st.as, body: st.thread.trim(), media: [], kind: 'photo' });
+      if (error) { fail(error); go.disabled = false; go.textContent = t('Share'); return; }
+      toast(t('Posted')); leave(); route();
+    };
+    put(layer, h('div', { class: 'pf-one pf-thread' },
+      h('div', { class: 'pf-head dark' },
+        h('button', { type: 'button', class: 'pf-round', 'aria-label': t('Close'), html: ICON.x, onclick: async () => { if (st.thread.trim() && !(await ask(t('Leave this post?'), t('Leave'), true))) return; leave(); } }),
+        h('b', {}, t('New thread')),
+        go),
+      h('div', { class: 'pf-th' }, avatar(mine.find((x) => x.id === st.as) || m, 'pf-th-av'), h('div', { class: 'pf-th-main' }, h('b', {}, (mine.find((x) => x.id === st.as) || m).name || ''), box, left)),
+      modesRow()));
+    setTimeout(() => box.focus(), 60);
+  }
   // 1: what goes up
   function stepOne() {
-    const it = st.items[st.cur];
+    if (st.mode === 'thread') return stepThread();
+    const story = st.mode === 'story';
+    const it = story ? null : st.items[st.cur];
     const stage = h('div', { class: 'pf-stage' });
     if (it) stage.append(isVid(it) ? h('video', { src: vidUrl(it), poster: it.cover ? urlOf2(it) : null, muted: true, autoplay: true, loop: true, playsInline: true, controls: false }) : h('img', { src: urlOf2(it), alt: '' }));
     else if (camOk() && !layer.classList.contains('cam-no')) {
       stage.append(camV,
         h('div', { class: 'pf-cam-bar' },
-          h('span', {}),
+          story && typeof storyCamera === 'function' ? h('button', { type: 'button', class: 'pf-flip', 'aria-label': t('Record a video'), title: t('Record a video'), html: ICON.play, onclick: () => { leave(); storyCamera(); } }) : h('span', {}),
           h('button', { type: 'button', class: 'pf-shutter', 'aria-label': t('Take a photo'), onclick: shoot }, h('i')),
           h('button', { type: 'button', class: 'pf-flip', 'aria-label': t('Flip camera'), html: ICON.flip || ICON.cam, onclick: () => { camFacing = camFacing === 'user' ? 'environment' : 'user'; stopCam(); startCam(); } })));
       startCam();
@@ -1858,12 +1893,12 @@ async function postFlow(opts = {}) {
     put(layer, h('div', { class: 'pf-one' + (withLib ? ' with-lib' : '') },
       h('div', { class: 'pf-head dark' },
         h('button', { type: 'button', class: 'pf-round', 'aria-label': t('Close'), html: ICON.x, onclick: async () => { if (st.items.length || st.caption) { if (!(await ask(t('Leave this post?'), t('Leave'), true))) return; } leave(); } }),
-        h('b', {}, t('New post')),
-        h('button', { type: 'button', class: 'pf-next', disabled: !st.items.length, onclick: stepTwo }, t('Next'))),
+        h('b', {}, story ? t('New story') : t('New post')),
+        story ? h('span', { style: { width: '44px' } }) : h('button', { type: 'button', class: 'pf-next', disabled: !st.items.length, onclick: stepTwo }, t('Next'))),
       h('div', { class: 'pf-stagebox' }, stage, tools),
-      h('div', { class: 'pf-pickrow' }, h('button', { type: 'button', class: 'pf-gal', onclick: () => pick.click() }, h('span', { html: ICON.pic }), t('Gallery'), h('i', { html: ICON.right })), h('small', {}, st.items.length ? t('{n} of 6', { n: st.items.length }) : '')),
-      withLib ? [st.items.length ? strip : null, libGrid()] : strip,
-      h('div', { class: 'pf-modes' }, h('button', { type: 'button', class: 'on' }, t('Post')), opts.story ? h('button', { type: 'button', onclick: () => { leave(); opts.story(); } }, t('Story')) : null),
+      h('div', { class: 'pf-pickrow' }, h('button', { type: 'button', class: 'pf-gal', onclick: () => pick.click() }, h('span', { html: ICON.pic }), t('Gallery'), h('i', { html: ICON.right })), h('small', {}, !story && st.items.length ? t('{n} of 6', { n: st.items.length }) : '')),
+      withLib ? [!story && st.items.length ? strip : null, libGrid()] : (story ? h('div', { class: 'pf-strip' }) : strip),
+      modesRow(),
       pick));
   }
   // 2: the details

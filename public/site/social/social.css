@@ -3809,3 +3809,14 @@ html.rl-open .toast{z-index:150}
 .pf-stage .pf-cam{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important}
 .pf-lib{grid-auto-rows:calc((100vw - 6px) / 4)}
 .pf-lib-cell{aspect-ratio:auto;height:100%;width:100%}
+/* Thread: words alone, as a tweet (Alex, 16 Nov) */
+.pf-thread{display:flex;flex-direction:column}
+.pf-th{flex:1;min-height:0;display:flex;gap:12px;padding:18px 16px;overflow-y:auto}
+.pf-th-av{width:42px!important;height:42px!important;flex:none}
+.pf-th-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.pf-th-main b{font-size:15px;font-weight:600;color:#fff}
+.pf-th-box{width:100%;min-height:160px;border:0;outline:0;background:none;color:#fff;font:inherit;font-size:17px;line-height:1.45;resize:none;padding:0}
+.pf-th-box::placeholder{color:rgba(255,255,255,.45)}
+.pf-th-left{align-self:flex-end;font-size:12px;color:rgba(255,255,255,.5)}
+.pf-modes button{padding:0 16px}
+@media (min-width:861px){.pf-thread{display:flex!important}.pf-thread .pf-th-main b,.pf-thread .pf-th-box{color:var(--ink)}.pf-thread .pf-th-box::placeholder{color:var(--faint)}.pf-thread .pf-th-left{color:var(--muted)}.pf-thread .pf-modes{align-self:center;margin-bottom:18px}}
