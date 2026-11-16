@@ -1377,9 +1377,9 @@ async function viewFront() {
       say(t('Creating…'));
       const { data, error } = await sb.auth.signUp({ email, password: f.password, options: { emailRedirectTo: location.origin + location.pathname, data: { name: f.name.trim() } } });
       if (error) return say(errText(error), 'err');
-      // an email that already has an account (a RoarMe account too): Supabase sends no email then and says nothing
+      // an email that already has an account: Supabase sends no email then and says nothing
       // (Alex, 15 Nov: a member signed up and no email came), so we say it and point to Forgot password
-      if (data.user && Array.isArray(data.user.identities) && !data.user.identities.length) { mode = 'in'; draw(); say(t('This email already has an account (Roardino and RoarMe share it). Sign in with its password, or press Forgot password? and we will send a link to set a new one.'), 'err'); return; }
+      if (data.user && Array.isArray(data.user.identities) && !data.user.identities.length) { mode = 'in'; draw(); say(t('This email already has an account. Sign in with its password, or press Forgot password? and we will send a link to set a new one.'), 'err'); return; }
       if (!data.session) { mode = 'in'; draw(); say(t('Almost there: open the link we sent to {email}, then sign in.', { email }), 'ok'); }
     } else {
       say(t('Signing in…'));
