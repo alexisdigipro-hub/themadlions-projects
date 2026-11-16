@@ -3783,3 +3783,29 @@ html.rl-open .toast{z-index:150}
 /* Reels sliding away with the finger: nothing but the slide; the bar's blur rests meanwhile */
 .rl.rl-drag .rl-side{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 .rl{will-change:transform}
+/* New post on a phone: the camera on top, the photo library under it (Alex, 16 Nov) */
+.pf-cam{width:100%;height:100%;object-fit:cover;background:#000;display:block}
+.pf-cam.front{transform:scaleX(-1)}
+.pf-stage{position:relative}
+.pf-cam-bar{position:absolute;left:0;right:0;bottom:14px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;pointer-events:none}
+.pf-cam-bar>*{pointer-events:auto}
+.pf-shutter{width:68px;height:68px;border-radius:50%;border:3px solid #fff;background:rgba(255,255,255,.12);padding:0;display:grid;place-items:center;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);cursor:pointer}
+.pf-shutter i{width:52px;height:52px;border-radius:50%;background:#fff;transition:transform .15s}
+.pf-shutter:active i{transform:scale(.86)}
+.pf-flip{width:42px;height:42px;border-radius:50%;border:0;background:rgba(20,22,26,.4);color:#fff;display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);cursor:pointer}
+.pf-flip svg{width:21px;height:21px}
+.pf-one.with-lib .pf-stagebox{flex:0 0 46%}
+.pf-lib{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;align-content:start;padding:0 0 4px;-webkit-overflow-scrolling:touch}
+.pf-lib-cell{position:relative;aspect-ratio:1;padding:0;border:0;background:#1a1d22;overflow:hidden;cursor:pointer}
+.pf-lib-cell img{width:100%;height:100%;object-fit:cover;display:block}
+.pf-lib-cell small{position:absolute;right:5px;bottom:4px;font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.pf-lib-cell em{position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:50%;border:1.5px solid #fff;background:rgba(0,0,0,.25);display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700;color:#111}
+.pf-lib-cell.on em{background:#fff}
+.pf-lib-cell.on img{opacity:.6}
+.pf-lib-cell.busy img{opacity:.4}
+.pf-lib-cell.busy::after{content:"";position:absolute;inset:50% auto auto 50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:pf-spin .8s linear infinite}
+@keyframes pf-spin{to{transform:rotate(360deg)}}
+.pf-lib-end{grid-column:1/-1;height:1px}
+.pf-stage .pf-cam{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important}
+.pf-lib{grid-auto-rows:calc((100vw - 6px) / 4)}
+.pf-lib-cell{aspect-ratio:auto;height:100%;width:100%}
