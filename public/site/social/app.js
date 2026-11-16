@@ -1873,14 +1873,14 @@ async function postFlow(opts = {}) {
   const vidUrl = (it) => (it.vurl ||= URL.createObjectURL(it.file));
   const vidFace = (it, cls) => (it.cover ? null : h('video', { class: cls, src: vidUrl(it) + '#t=0.1', muted: true, playsInline: true, preload: 'metadata' }));
   const isVid = (it) => /^video\//.test(it.file.type);
-  const pick = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: async (e) => {
-    const list = [...e.target.files].slice(0, 6 - st.items.length); e.target.value = '';
-    if (st.mode === 'story') { if (list[0]) toStory(list[0]); return; }
-    for (const f of list) {
-      if (!/^(image|video)\//.test(f.type)) continue;
-      st.items.push({ file: f, cover: null });
-    }
-    st.cur = Math.max(0, st.items.length - 1);
+  // one photo or one video in a post (Alex, 16 Nov: "not several"): a new pick takes the place of the one there
+  const pick = h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    if (st.mode === 'story') { toStory(f); return; }
+    if (!/^(image|video)\//.test(f.type)) return;
+    st.items.forEach((x) => x.url && URL.revokeObjectURL(x.url));
+    st.items = [{ file: f, cover: null }]; st.cur = 0;
     stepOne();
   } });
   // the camera on top and the phone's photos under it (Alex, 16 Nov): on a phone the first screen shows what the camera
@@ -1933,9 +1933,9 @@ async function postFlow(opts = {}) {
     if (st.mode === 'story') { if (lib.busy.size) return; lib.busy.add(a.identifier); stepOne(); try { const f = await libFile(a); lib.busy.delete(a.identifier); return toStory(f); } catch { lib.busy.delete(a.identifier); toast(t('This one could not be opened. Try the Gallery button.')); return stepOne(); } }
     const at = st.items.findIndex((x) => x.lib === a.identifier);
     if (at >= 0) { const [gone] = st.items.splice(at, 1); if (gone?.url) URL.revokeObjectURL(gone.url); st.cur = Math.min(st.cur, Math.max(0, st.items.length - 1)); return stepOne(); }
-    if (st.items.length >= 6 || lib.busy.has(a.identifier)) return;
+    if (lib.busy.has(a.identifier)) return;
     lib.busy.add(a.identifier); stepOne();
-    try { const f = await libFile(a); st.items.push({ file: f, cover: null, lib: a.identifier }); st.cur = st.items.length - 1; }
+    try { const f = await libFile(a); st.items.forEach((x) => x.url && URL.revokeObjectURL(x.url)); st.items = [{ file: f, cover: null, lib: a.identifier }]; st.cur = 0; }
     catch { toast(t('This one could not be opened. Try the Gallery button.')); }
     lib.busy.delete(a.identifier); stepOne();
   }
@@ -2021,6 +2021,7 @@ async function postFlow(opts = {}) {
   // 1: what goes up
   function stepOne() {
     if (st.mode === 'thread') return stepThread();
+    if (st.items.length > 1) { st.items = st.items.slice(-1); st.cur = 0; } // one per post (a draft or the camera may bring more)
     const story = st.mode === 'story';
     const it = story ? null : st.items[st.cur];
     const stage = h('div', { class: 'pf-stage' });
@@ -2033,7 +2034,7 @@ async function postFlow(opts = {}) {
           h('button', { type: 'button', class: 'pf-flip', 'aria-label': t('Flip camera'), html: ICON.flip || ICON.cam, onclick: () => { camFacing = camFacing === 'user' ? 'environment' : 'user'; stopCam(); startCam(); } })));
       startCam(); if (cam) camV.play().catch(() => {});
     }
-    else stage.append(h('button', { type: 'button', class: 'pf-empty', onclick: () => pick.click() }, h('span', { html: ICON.pic }), h('b', {}, t('Choose photos or videos')), h('small', {}, t('Up to six in one post'))));
+    else stage.append(h('button', { type: 'button', class: 'pf-empty', onclick: () => pick.click() }, h('span', { html: ICON.pic }), h('b', {}, t('Choose a photo or a video')), h('small', {}, t('One per post'))));
     if (it) stopCam();
     const withLib = !lib.off;
     if (withLib && lib.items === null) { lib.items = []; libLoad(); }
@@ -2045,14 +2046,14 @@ async function postFlow(opts = {}) {
         isVid(x) ? h('span', { class: 'pf-play', html: ICON.play }) : null,
         st.items.length > 1 ? h('em', {}, String(i + 1)) : null,
         h('button', { type: 'button', class: 'x', 'aria-label': t('Remove'), html: ICON.x, onclick: () => { const [gone] = st.items.splice(i, 1); if (gone?.url) URL.revokeObjectURL(gone.url); st.cur = Math.min(st.cur, Math.max(0, st.items.length - 1)); stepOne(); } }))),
-      st.items.length < 6 ? h('button', { type: 'button', class: 'pf-add', 'aria-label': t('Add more'), html: ICON.plus, onclick: () => pick.click() }) : null);
+      null);
     put(layer, h('div', { class: 'pf-one' + (withLib ? ' with-lib' : '') },
       h('div', { class: 'pf-head dark' },
         h('button', { type: 'button', class: 'pf-round', 'aria-label': t('Close'), html: ICON.x, onclick: async () => { if (st.items.length || st.caption) { if (!(await ask(t('Leave this post?'), t('Leave'), true))) return; } leave(); } }),
         h('b', {}, story ? t('New story') : t('New post')),
         story ? h('span', { style: { width: '44px' } }) : h('button', { type: 'button', class: 'pf-next', disabled: !st.items.length, onclick: stepTwo }, t('Next'))),
       h('div', { class: 'pf-stagebox' }, stage, tools),
-      h('div', { class: 'pf-pickrow' }, h('button', { type: 'button', class: 'pf-gal', onclick: () => pick.click() }, h('span', { html: ICON.pic }), t('Gallery'), h('i', { html: ICON.right })), h('small', {}, !story && st.items.length ? t('{n} of 6', { n: st.items.length }) : lib.why ? `Photos: ${lib.why}` : '')),
+      h('div', { class: 'pf-pickrow' }, h('button', { type: 'button', class: 'pf-gal', onclick: () => pick.click() }, h('span', { html: ICON.pic }), t('Gallery'), h('i', { html: ICON.right })), h('small', {}, lib.why ? `Photos: ${lib.why}` : '')),
       withLib ? [!story && st.items.length ? strip : null, libGrid()] : (story ? h('div', { class: 'pf-strip' }) : strip),
       modesRow(),
       pick));
