@@ -3949,3 +3949,15 @@ html[data-skin=slate][data-theme=light] .pm-tile.on .pm-ic svg{fill:rgba(255,255
 /* a feed video is never a black box: under it there is always its cover, or, with none, a soft grey */
 .ig-media>video.fv:not(.live){background:transparent!important}
 .ig-media:not(.has-cover)>video.fv{background:#2a2d33!important}
+/* Reels: the gear's own small row of round icons, to its left, smaller and fainter (Alex, 16 Nov) */
+.rl-setwrap{position:relative;display:flex}
+.rl-sub{position:absolute;right:52px;top:50%;transform:translateY(-50%);display:flex;gap:7px;align-items:center}
+.rl-menu.ico .rl-sub .rl-ico{width:36px!important;height:36px!important;min-height:36px;background:rgba(20,22,26,.24)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.24)!important;color:rgba(255,255,255,.85)!important;animation:rl-sub-in .28s cubic-bezier(.25,1.3,.45,1) backwards}
+.rl-menu.ico .rl-sub .rl-ico:nth-last-child(2){animation-delay:.03s}.rl-menu.ico .rl-sub .rl-ico:nth-last-child(3){animation-delay:.06s}.rl-menu.ico .rl-sub .rl-ico:nth-last-child(4){animation-delay:.09s}
+@keyframes rl-sub-in{from{opacity:0;transform:translateX(16px) scale(.7)}}
+.rl-menu.ico .rl-sub .rl-ico svg{width:18px!important;height:18px!important}
+.rl-menu.ico .rl-sub .rl-ico b{font-size:10.5px;font-weight:700;letter-spacing:.04em;font-family:'Geist Mono',ui-monospace,Menlo,monospace}
+.rl-menu.ico .rl-sub .rl-ico.on{background:rgba(255,255,255,.9)!important;color:#16181c!important;box-shadow:none!important}
+.rl-menu.ico .rl-setwrap>.rl-ico.on{background:rgba(255,255,255,.22)!important}
+.rl-menu.ico .rl-setwrap>.rl-ico{animation-delay:.12s}
+@media (prefers-reduced-motion:reduce){.rl-menu.ico .rl-sub .rl-ico{animation:none}}
