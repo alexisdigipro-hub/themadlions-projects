@@ -250,8 +250,23 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .frame .tools{display:none}
 #sheetsBtn{gap:8px}
 .bar .mark{margin:0 2px 0 6px}
-.bname{font:600 14px var(--body);color:var(--muted);max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:12px;border-left:1px solid var(--line);line-height:22px}
-.bname:empty{display:none}
+.bname{gap:8px;max-width:300px;min-width:0;padding:0 12px 0 16px;font-weight:600}
+.bname .pnm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.bname svg{width:14px;height:14px;opacity:.6;flex:none}
+.bname:hover svg{opacity:1}
+.bname[hidden]{display:none}
+.pinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.pinfo div{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:14px;padding:10px 12px;min-width:0}
+.pinfo b{display:block;font:700 17px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pinfo small{color:var(--muted);font-size:11.5px}
+.pcardm{max-width:520px;display:flex;flex-direction:column;gap:14px}
+.pcardm .field{width:100%;box-sizing:border-box}
+.pcardm .plabel{margin:0 0 -8px;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.pcardm .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pcardm .pill.danger{color:#ff6b6b}
+.pcardm .pill.off{opacity:.4;pointer-events:none}
+.pcardm .pill svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+@media (max-width:820px){.pinfo{grid-template-columns:repeat(2,minmax(0,1fr))} .pcardm .row > span{flex:0 0 100% !important;height:0} .pcardm #pmNo,.pcardm #pmSave,.pcardm #pmDup,.pcardm #pmDel{flex:1;justify-content:center}}
 .bsep{width:1px;height:22px;background:var(--line);margin:0 4px;flex:none}
 .panel .ctl input[type=range]{width:80px}
 .panel .ctl.big input[type=range]{width:96px}
@@ -400,8 +415,10 @@ a.pill{text-decoration:none}
   .bar .pill.round{width:38px;height:38px}
   .bar .pill.main{width:42px;height:42px;padding:0;justify-content:center}
   .bar .pill .w,.bar .shn{display:none}
-  .bname,.bsep{display:none}
-  .bar .mark{margin:0 0 0 2px}
+  .bsep{display:none}
+  .bar .mark{display:none}
+  .bar .spacer{display:none}
+  .bar .bname{flex:1;max-width:none;height:38px;padding:0 10px 0 14px;justify-content:space-between}
   .work{display:block;flex:none}
   .side,.rail{display:none}
   .stagewrap{flex:none;display:block}
@@ -822,8 +839,33 @@ async function mpTaskGet(kind){
   })();
   return mpTask[kind];
 }
+/* Previews inside a project (Alex, 16 Nov: "it is very slow, inside and outside; what matters is that what goes up and what
+   is exported is very good, while we build it previews will do"). A photo is kept whole in the account, untouched (p.path),
+   and beside it a small copy of itself, 2048 px on its long side (p.ppath, "<id>.p.jpg"). Inside a project only the small
+   copy is fetched and worked on (p.view): the windows, the settings, the face reader. The whole photo (p.blob) is fetched
+   only when it is needed: Export above 800 px, Liquify, a copy of the project, a download. p.w / p.h are always the whole
+   photo's size. A photo no larger than about 2350 px has no small copy: it is its own. */
+const VIEW_MAX = 2048;
+const srcOf = p => p.view || p.blob;
+async function needFull(p){ if(!p.blob){ if(!p.path) throw new Error('no photo'); p.blob = await getBlob(p.path); } return p.blob; }
+async function viewBlobOf(blob){
+  const bm = await createImageBitmap(blob), m = Math.max(bm.width, bm.height); if(m <= VIEW_MAX*1.15) return null;
+  const k = VIEW_MAX/m, c = document.createElement('canvas'); c.width = Math.round(bm.width*k); c.height = Math.round(bm.height*k);
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.imageSmoothingQuality = 'high'; g.drawImage(bm, 0, 0, c.width, c.height);
+  return await new Promise(r => c.toBlob(r, 'image/jpeg', 0.9));
+}
+// gives a photo its small copy and shows that from now on
+async function makeView(p){ try{ const v = await viewBlobOf(p.blob); if(!v) return false; p.view = v; const old = p.url; p.url = URL.createObjectURL(v); if(p.base === old) p.base = p.url; if(old) setTimeout(() => URL.revokeObjectURL(old), 3000); return true; }catch{ return false; } }
+// an older photo, saved before the small copies: gets one now, in the background, so the project opens fast next time
+async function ensureView(p, sheetId){
+  if(p.ppath || p._viewing || !p.path || !p.blob) return; p._viewing = true;
+  try{ const had = !!p.view; if(!had && !(await makeView(p))) return;
+    const rel = p.path.replace(/^r2:/, '').replace(/\.jpg$/, '') + '.p.jpg', r = await store.put(rel, p.view, 'image/jpeg', true);
+    if(r.path && sheets.cur === sheetId){ p.ppath = r.path; dbPut('blob:' + r.path, p.view).catch(() => {}); const i = photos.indexOf(p); if(i >= 0 && !had){ render(); } saveSoon(); }
+  }catch{} finally{ p._viewing = false; }
+}
 async function photoCanvas(p, max){
-  const bm = await createImageBitmap(p.blob), k = Math.min(1, max / Math.max(bm.width, bm.height));
+  const bm = await createImageBitmap(srcOf(p)), k = Math.min(1, max / Math.max(bm.width, bm.height));
   const c = document.createElement('canvas'); c.width = Math.round(bm.width*k); c.height = Math.round(bm.height*k); c.getContext('2d').drawImage(bm, 0, 0, c.width, c.height); return c;
 }
 const r4 = n => Math.round(n*10000)/10000;
@@ -980,7 +1022,7 @@ async function renderAdj(p, full){
   if(FACE_KEYS.some(k => a[k]) || a.lips || a.eyeB || a.teeth || a.contour || a.under) await ensureLM(p, 'face').catch(() => {});
   if(BODY_KEYS.some(k => a[k])) await ensureLM(p, 'pose').catch(() => {});
   if(a.hairAmt) await ensureHair(p).catch(() => {});
-  const bm = await createImageBitmap(p.blob);
+  const bm = await createImageBitmap(full ? await needFull(p) : srcOf(p));
   const k0 = full ? 1 : Math.min(1, 1200 / Math.max(bm.width, bm.height));
   const W = Math.max(1, Math.round(bm.width*k0)), H = Math.max(1, Math.round(bm.height*k0)), S0 = Math.min(W, H);
   const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d', {willReadFrequently:true});
@@ -1223,22 +1265,23 @@ void main(){
   return {gl, c, P, U, upload, bind, draw, target, blur, MAX};
 })();
 // the photo's texture (and its hair mask), kept on the card while the photo is the same
-async function gpuSource(p){
-  if(p._gt && p._gtBlob === p.blob) return p._gt;
+async function gpuSource(p, full){
+  const use = full ? await needFull(p) : srcOf(p);
+  if(p._gt && p._gtBlob === use) return p._gt;
   if(p._gt) G.gl.deleteTexture(p._gt);
-  let bm = await createImageBitmap(p.blob);
+  let bm = await createImageBitmap(use);
   if(Math.max(bm.width, bm.height) > G.MAX){ const k = G.MAX/Math.max(bm.width, bm.height); bm = await createImageBitmap(bm, {resizeWidth:Math.floor(bm.width*k), resizeHeight:Math.floor(bm.height*k), resizeQuality:'high'}); }
   // through a 2D canvas: the browsers ignore the upside-down flag for an ImageBitmap, not for a canvas
   const cc = document.createElement('canvas'); cc.width = bm.width; cc.height = bm.height; cc.getContext('2d').drawImage(bm, 0, 0); // every pixel of the photo, as it came
-  p._gt = G.upload(cc, true); p._gtBlob = p.blob; p._gw = bm.width; p._gh = bm.height; return p._gt;
+  p._gt = G.upload(cc, true); p._gtBlob = use; p._gw = bm.width; p._gh = bm.height; return p._gt;
 }
 // draws photo p with all its settings at W x H on the shared WebGL canvas, and gives that canvas back
-async function gpuRender(p, W, H){
+async function gpuRender(p, W, H, full){
   const a = p._cmp ? {} : adjOf(p), gl = G.gl;
   if(FACE_KEYS.some(k => a[k]) || a.lips || a.eyeB || a.teeth || a.contour || a.under) await ensureLM(p, 'face').catch(() => {});
   if(BODY_KEYS.some(k => a[k])) await ensureLM(p, 'pose').catch(() => {});
   if(a.hairAmt) await ensureHair(p).catch(() => {});
-  const src = await gpuSource(p);
+  const src = await gpuSource(p, full);
   if(G.c.width !== W || G.c.height !== H){ G.c.width = W; G.c.height = H; }
   const v = k => (+a[k] || 0), S0 = Math.min(W, H);
   // 1. shape (face / body) and hair colour
@@ -1308,7 +1351,7 @@ async function gpuRender(p, W, H){
 // the size a photo is shown at, in screen pixels (never more than the photo)
 function showSize(i){
   const p = photos[i], r = rects(lay(), S.gap, pad())[i]; if(!p || !r) return [1, 1];
-  const b = imgBox(p, r), k = (window.devicePixelRatio || 1) / unit(), full = Math.max(p.w, p.h);
+  const b = imgBox(p, r), k = (window.devicePixelRatio || 1) / unit(), full = p.view ? Math.min(VIEW_MAX, Math.max(p.w, p.h)) : Math.max(p.w, p.h);
   let w = Math.ceil(b.w*k), h = Math.ceil(b.h*k); const m = Math.max(w, h);
   if(m > full){ w = Math.round(w*full/m); h = Math.round(h*full/m); }
   const cap = Math.min(G ? G.MAX : 4096, 8192); if(Math.max(w, h) > cap){ const q = cap/Math.max(w, h); w = Math.round(w*q); h = Math.round(h*q); }
@@ -1333,7 +1376,8 @@ async function paintNow(i){
    uploads it as the photo (the photo before Liquify stays as p.orig, so Original photo can bring it back). ---------- */
 async function openLiquify(i){
   const p = photos[i]; if(!p) return;
-  const bm = await createImageBitmap(p.blob);
+  let whole; try{ whole = await needFull(p); }catch{ toast('The photo could not be fetched. Check the connection.'); return; }
+  const bm = await createImageBitmap(whole);
   const k = Math.min(1, 1600 / Math.max(bm.width, bm.height)), W = Math.round(bm.width*k), H = Math.round(bm.height*k);
   const srcC = document.createElement('canvas'); srcC.width = W; srcC.height = H; srcC.getContext('2d').drawImage(bm, 0, 0, W, H);
   const src = srcC.getContext('2d').getImageData(0, 0, W, H).data;
@@ -1426,7 +1470,7 @@ async function openLiquify(i){
       const blob = await bestBlob(fc);
       if(!p.orig) p.orig = {path:p.path, blob:p.blob};
       if(p.base && p.base !== p.url) URL.revokeObjectURL(p.base);
-      p.blob = blob; p.base = URL.createObjectURL(blob); p.url = p.base; p.path = null; p.lm = null; p.hairMask = null;
+      p.blob = blob; p.view = null; p.ppath = null; p.base = URL.createObjectURL(blob); p.url = p.base; p.path = null; p.lm = null; p.hairMask = null; await makeView(p);
       upload(p, sheets.cur);
       await applyFx(p); render(); close(); toast('Liquify applied');
     }catch{ ok.disabled = false; ok.textContent = 'Done'; toast('Liquify could not be applied. Try a smaller photo.'); }
@@ -1435,8 +1479,8 @@ async function openLiquify(i){
 async function restoreOriginalPhoto(i){
   const p = photos[i]; if(!p || !p.orig) return;
   if(p.base) URL.revokeObjectURL(p.base);
-  p.blob = p.orig.blob || await getBlob(p.orig.path); p.path = p.orig.path; p.orig = null; p.lm = null; p.hairMask = null;
-  p.base = URL.createObjectURL(p.blob); p.url = p.base; await applyFx(p); render(); save(); toast('Back to the photo before Liquify');
+  p.blob = p.orig.blob || await getBlob(p.orig.path); p.path = p.orig.path; p.orig = null; p.lm = null; p.hairMask = null; p.view = null; p.ppath = null;
+  p.base = URL.createObjectURL(p.blob); p.url = p.base; await makeView(p); ensureView(p, sheets.cur); await applyFx(p); render(); save(); toast('Back to the photo before Liquify');
 }
 /* the Adjust panel: one block (data-k="adjust") with folding groups, a slider per setting (double-click: back to 0),
    the colour-grading wheels, Hollywood / Original, Copy to every photo */
@@ -1517,7 +1561,7 @@ function buildAdjust(){
   pane.edit.appendChild(ab);
   ab.querySelector('#bwBtn').onclick = () => { const p = photos[sel]; if(!p) return; const a = adjOf(p); if(a.bw) delete a.bw; else a.bw = 1; applyFx(p); syncAdj(); };
   ab.querySelector('#autoTone').onclick = async () => { const p = photos[sel]; if(!p) return;
-    try{ const bm = await createImageBitmap(p.blob), t = document.createElement('canvas'); t.width = t.height = 96; const tg = t.getContext('2d', {willReadFrequently:true}); tg.drawImage(bm, 0, 0, 96, 96);
+    try{ const bm = await createImageBitmap(srcOf(p)), t = document.createElement('canvas'); t.width = t.height = 96; const tg = t.getContext('2d', {willReadFrequently:true}); tg.drawImage(bm, 0, 0, 96, 96);
       const d = tg.getImageData(0, 0, 96, 96).data, Ls = []; for(let i = 0; i < d.length; i += 4) Ls.push((d[i]*0.2126 + d[i+1]*0.7152 + d[i+2]*0.0722)/255);
       Ls.sort((x, y) => x - y); const q = f => Ls[Math.min(Ls.length - 1, Math.floor(f*Ls.length))], lin = x => x <= 0.04045 ? x/12.92 : Math.pow((x + 0.055)/1.055, 2.4), srgb = x => x <= 0.0031308 ? x*12.92 : 1.055*Math.pow(x, 1/2.4) - 0.055;
       const cl = (x, lo, hi) => Math.max(lo, Math.min(hi, x)), r5 = x => Math.round(x/5)*5;
@@ -1827,7 +1871,7 @@ function toolbar(i){
 }
 function syncPanel(light){
   const p = sel>=0 ? photos[sel] : null, on = !!p;
-  { const c = curSheet(); const n = $('projName'); if(n){ n.textContent = c ? c.name : ''; n.title = c ? c.name : ''; } }
+  { const c = curSheet(); const n = $('projName'); if(n){ n.querySelector('.pnm').textContent = c ? c.name : ''; n.hidden = !c; } }
   const g = $('gap'), rd = $('rad');
   if(g){ g.value = S.gap; g.nextElementSibling.textContent = S.gap; rd.value = S.rad; rd.nextElementSibling.textContent = S.rad; }
   $('even').classList.toggle('off', !(S.layout==='custom' || (S.sizes && S.sizes[lay().id])));
@@ -1937,7 +1981,7 @@ async function addFiles(files, target){
   for(let i=0;i<n && slots.length<files.length;i++) if(!photos[i] && !slots.includes(i)) slots.push(i);
   let bad = 0;
   for(let k=0;k<files.length && k<slots.length;k++){
-    try{ const p = await loadImage(await shrink(files[k])); photos[slots[k]] = p; upload(p, sheets.cur); }catch{ bad++; }
+    try{ const p = await loadImage(await shrink(files[k])); await makeView(p); photos[slots[k]] = p; upload(p, sheets.cur); }catch{ bad++; }
   }
   if(files.length > slots.length) toast(`${files.length-slots.length} photo(s) left out: every window is full`);
   if(bad) toast('That file could not be opened as a picture');
@@ -1971,7 +2015,7 @@ window.addEventListener('paste', e => {
 });
 
 /* ---------- export ---------- */
-async function drawSheet(W, type='image/png'){
+async function drawSheet(W, type='image/png', small){ // small: from the photos' small copies (the project's little picture)
   const k = W/BW, c = document.createElement('canvas'); c.width=W; c.height=Math.round(W*BH/BW);
   const g = c.getContext('2d'); g.imageSmoothingQuality='high';
   g.fillStyle=S.sheet; g.fillRect(0,0,c.width,c.height);
@@ -1982,8 +2026,12 @@ async function drawSheet(W, type='image/png'){
     g.roundRect ? g.roundRect(r.x*k, r.y*k, r.w*k, r.h*k, S.rad*k) : g.rect(r.x*k, r.y*k, r.w*k, r.h*k);
     g.clip(); g.fillStyle=S.fill; g.fillRect(r.x*k, r.y*k, r.w*k, r.h*k);
     if(p){
-      let im; if(hasAdj(p.adj)){ try{ im = G ? await gpuRender(p, Math.min(p.w, G.MAX), Math.round(Math.min(p.w, G.MAX)*p.h/p.w)) : await renderAdj(p, true); }catch{ im = null; } }
-      if(!im){ im = new Image(); im.src = p.base || p.url; await im.decode(); }
+      // an export is made from the whole photos, fetched now if they are not here yet
+      if(!small) await needFull(p);
+      const sw = small ? Math.min(p.w, 700) : Math.min(p.w, G ? G.MAX : p.w);
+      let im, tmp = ''; if(hasAdj(p.adj)){ try{ im = G ? await gpuRender(p, sw, Math.round(sw*p.h/p.w), !small) : await renderAdj(p, !small); }catch{ im = null; } }
+      if(!im){ im = new Image(); if(small) im.src = p.base || p.url; else { tmp = URL.createObjectURL(p.blob); im.src = tmp; } await im.decode(); }
+      if(tmp) setTimeout(() => URL.revokeObjectURL(tmp), 20000);
       const b = imgBox(p, r);
       g.translate((r.x+b.x+b.w/2)*k, (r.y+b.y+b.h/2)*k);
       if(p.rot) g.rotate(p.rot*Math.PI/180);
@@ -2066,7 +2114,8 @@ async function runExport(W, fmt){
   const btn = $('export'); btn.disabled = true; toast('Making the sheet…');
   try{
     const type = fmt==='jpg' ? 'image/jpeg' : 'image/png';
-    const blob = await drawSheet(W, type);
+    const blob = await drawSheet(W, type, W <= 800);
+    photos.forEach(q => { if(q && q.view && q.path && q.blob !== q.view){ if(q._gt && q._gtBlob === q.blob){ G.gl.deleteTexture(q._gt); q._gt = null; } q.blob = null; } }); // the whole photos are let go again; they wait in this browser's own store
     // the file takes the project's name (Alex, 14 Nov); without one, the old name with the date
     const pn = ((curSheet() || {}).name || '').replace(/[\/\\:*?"<>|\x00-\x1f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100);
     const name = `${pn || 'character-sheet-' + new Date().toISOString().slice(0,10)}.${fmt}`;
@@ -2150,8 +2199,8 @@ let moving = false;
 async function moveToR2(){
   if(moving || !(await r2ready()) || !me || !sheets.cur) return;
   const id = sheets.cur, todo = [];
-  photos.forEach(p => { if(p && p.path && !isR2(p.path)) todo.push({o:p, k:'path'}); if(p && p.orig && p.orig.path && !isR2(p.orig.path)) todo.push({o:p.orig, k:'path'}); });
-  pool.forEach(x => { if(x.path && !isR2(x.path)) todo.push({o:x, k:'path'}); if(x.tpath && !isR2(x.tpath)) todo.push({o:x, k:'tpath'}); });
+  photos.forEach(p => { if(p && p.path && !isR2(p.path)) todo.push({o:p, k:'path'}); if(p && p.ppath && !isR2(p.ppath)) todo.push({o:p, k:'ppath'}); if(p && p.orig && p.orig.path && !isR2(p.orig.path)) todo.push({o:p.orig, k:'path'}); });
+  pool.forEach(x => { if(x.path && !isR2(x.path)) todo.push({o:x, k:'path'}); if(x.tpath && !isR2(x.tpath)) todo.push({o:x, k:'tpath'}); if(x.ppath && !isR2(x.ppath)) todo.push({o:x, k:'ppath'}); });
   if(!todo.length){ if(photos.some(p => p && isR2(p.path)) || pool.some(x => isR2(x.path))){ lastClean = Date.now(); cleanFiles(id); } return; }
   moving = true; let moved = 0;
   try{
@@ -2197,7 +2246,7 @@ async function shrink(file){
    same file (no second copy), and stays in the pool. data.pool = [{path, tpath, w, h}]. */
 let pool = [];
 const POOL_MAX = 40;
-const packPool = () => pool.filter(x => x.path).map(({path, tpath, w, h, name}) => ({path, tpath, w, h, name}));
+const packPool = () => pool.filter(x => x.path).map(({path, tpath, ppath, w, h, name}) => ({path, tpath, ppath, w, h, name}));
 /* Download from the pool (Alex, 16 Nov: "to download the files as they are from the pool"): one photo by the round arrow on it,
    or all of them in one .zip. The bytes are the stored file's own, untouched; the name is the one the file came with (kept
    from now on as `name`), or the project's name and a number for photos added before. */
@@ -2259,8 +2308,10 @@ async function addToPool(files){
       const tb = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
       const id = newId(), it = {id, w:bm.width, h:bm.height, blob, turl:URL.createObjectURL(tb), busy:true, name:f.name || ''};
       pool.push(it); drawPool();
-      const job = Promise.all([store.put(`${me.id}/${sheetId}/${id}.jpg`, blob, blob.type), store.put(`${me.id}/${sheetId}/${id}.t.jpg`, tb, 'image/jpeg')])
-        .then(rs => { if(rs.some(r => r.error)) throw 0; it.path = rs[0].path; it.tpath = rs[1].path; it.busy = false; dbPut('blob:'+it.path, blob).catch(()=>{}); dbPut('blob:'+it.tpath, tb).catch(()=>{}); })
+      const vb = await viewBlobOf(blob).catch(() => null); it.view = vb;
+      const job = Promise.all([store.put(`${me.id}/${sheetId}/${id}.jpg`, blob, blob.type), store.put(`${me.id}/${sheetId}/${id}.t.jpg`, tb, 'image/jpeg'), vb ? store.put(`${me.id}/${sheetId}/${id}.p.jpg`, vb, 'image/jpeg') : null])
+        .then(rs => { if(rs.slice(0, 2).some(r => r.error)) throw 0; it.path = rs[0].path; it.tpath = rs[1].path; it.busy = false; dbPut('blob:'+it.path, blob).catch(()=>{}); dbPut('blob:'+it.tpath, tb).catch(()=>{});
+          if(rs[2] && rs[2].path){ it.ppath = rs[2].path; dbPut('blob:'+it.ppath, vb).catch(()=>{}); } it.blob = null; })
         .catch(() => { pool = pool.filter(x => x !== it); toast('A photo could not be saved to the pool. Check the connection and add it again.'); })
         .finally(() => { pending.delete(job); drawPool(); saveSoon(); });
       pending.add(job);
@@ -2276,8 +2327,11 @@ async function placeFromPool(it, target){
   if(slot < 0) for(let i = 0; i < n; i++) if(!photos[i]){ slot = i; break; }
   if(slot < 0){ toast('Every window is full: pick the window you want it in first'); return; }
   try{
-    if(!it.blob) it.blob = await getBlob(it.path);
-    const p = await loadImage(it.blob); p.path = it.path; photos[slot] = p; sel = slot; render(); save();
+    // onto the sheet goes the photo's small copy; the whole photo stays in the account for the export
+    let p;
+    if(it.ppath){ const v = it.view || await getBlob(it.ppath); p = await loadImage(v); p.view = v; p.blob = null; p.w = it.w; p.h = it.h; p.ppath = it.ppath; }
+    else { const whole = it.blob || await getBlob(it.path); p = await loadImage(whole); if(await makeView(p)){ p.path = it.path; const sid = sheets.cur; ensureView(p, sid).then(() => { if(p.ppath){ it.ppath = p.ppath; saveSoon(); } }); } }
+    p.path = it.path; photos[slot] = p; sel = slot; render(); save();
   }catch{ toast('The photo could not be fetched. Check the connection.'); }
 }
 function removeFromPool(it){ pool = pool.filter(x => x !== it); if(it.turl) URL.revokeObjectURL(it.turl); drawPool(); save(); }
@@ -2292,8 +2346,10 @@ function drawPool(){
   markPool();
 }
 function upload(p, sheetId){ // p gets its path once the photo is in the account
-  const job = store.put(`${me.id}/${sheetId}/${newId()}.jpg`, p.blob, p.blob.type).then(({error, path}) => {
-    if(error) throw error; p.path = path; dbPut('blob:'+path, p.blob).catch(()=>{});
+  const id = newId(), whole = p.blob, view = p.view && p.view !== p.blob ? p.view : null;
+  const job = Promise.all([store.put(`${me.id}/${sheetId}/${id}.jpg`, whole, whole.type), view ? store.put(`${me.id}/${sheetId}/${id}.p.jpg`, view, 'image/jpeg') : null]).then(([{error, path}, pv]) => {
+    if(error) throw error; p.path = path; dbPut('blob:'+path, whole).catch(()=>{});
+    if(pv && pv.path){ p.ppath = pv.path; dbPut('blob:'+pv.path, view).catch(()=>{}); if(p.blob === whole) p.blob = null; } // the whole photo is in the account and in this browser's store: the page keeps only the small copy
   }).catch(() => { toast('A photo could not be saved to your account. Check the connection and add it again.'); })
     .finally(() => { pending.delete(job); saveSoon(); });
   pending.add(job); return job;
@@ -2303,7 +2359,7 @@ async function getBlob(path){
   const data = await store.get(path);
   dbPut('blob:'+path, data).catch(()=>{}); return data;
 }
-const packPhotos = () => photos.map(p => p && p.path ? {path:p.path,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0,pw:p.pw||1,ph:p.ph||1,adj:hasAdj(p.adj) ? p.adj : undefined, lm:p.lm, orig:p.orig && p.orig.path ? {path:p.orig.path} : undefined} : null);
+const packPhotos = () => photos.map(p => p && p.path ? {path:p.path,ppath:p.ppath || undefined,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0,pw:p.pw||1,ph:p.ph||1,adj:hasAdj(p.adj) ? p.adj : undefined, lm:p.lm, orig:p.orig && p.orig.path ? {path:p.orig.path} : undefined} : null);
 async function save(){
   if(!me || !sheets.cur) return;
   histSoon();
@@ -2311,11 +2367,11 @@ async function save(){
   if(pending.size) await Promise.allSettled([...pending]);
   const { error } = await sb.from('roarref_sheets').update({ data:{S, photos:packPhotos(), pool:packPool()}, updated_at:new Date().toISOString() }).eq('id', id);
   if(error){ if(!saveErr) toast('Not saved: check the connection. RoarRef tries again with your next change.'); saveErr = true; return; }
-  saveErr = false; const c = curSheet(); if(c) c.updated_at = new Date().toISOString();
+  saveErr = false; thumbStale = true; const c = curSheet(); if(c) c.updated_at = new Date().toISOString();
   clearTimeout(thumbT); thumbT = setTimeout(() => { if(!document.querySelector('.spage')) saveThumb(); }, 6000);
   if(Date.now() - lastClean > 30000){ lastClean = Date.now(); cleanFiles(id); }
 }
-let thumbT = null;
+let thumbT = null, thumbStale = false; // the project's little picture is made again only after something was saved
 let st; function saveSoon(){ clearTimeout(st); st = setTimeout(save, 700); histSoon(); }
 /* Undo / Redo (Alex, 11 Nov): a step is the sheet (S) and, per window, which photo sits there with its place, size, turn and settings.
    Taken a moment after each change settles; the pixels of a Liquify are not part of it (that has its own way back). */
@@ -2334,7 +2390,7 @@ function histGo(d){
   const before = new Set(photos.filter(Boolean));
   S = JSON.parse(n.S);
   photos = n.ph.map(x => { if(!x) return null; const p = x.p, [vals, adj] = JSON.parse(x.v); HKEYS.forEach((k, i) => { if(vals[i] == null) delete p[k]; else p[k] = vals[i]; }); p.adj = adj; p._cmp = false;
-    if(!before.has(p) && !pending.size){ p.path = null; upload(p, sheets.cur); } return p; });
+    if(!before.has(p) && !pending.size){ const sid = sheets.cur; needFull(p).then(() => { if(sheets.cur === sid){ p.path = null; p.ppath = null; upload(p, sid); } }).catch(() => {}); } return p; });
   if(sel >= photos.length || !photos[sel]) sel = -1; selCover = -1;
   try{ setShape(); }catch{} render(); syncPanel(); placeControls(); histLock = false; histBtns(); save();
 }
@@ -2343,16 +2399,20 @@ document.addEventListener('keydown', e => { if(!(e.metaKey || e.ctrlKey) || e.ke
 async function cleanFiles(id){ // photos taken off the sheet leave the account too
   try{ if(moving) return; const all = await store.list(`${me.id}/${id}`); if(!all.length) return;
     const c = curSheet();
-    const keep = new Set(photos.filter(p => p && p.path).map(p => p.path).concat(photos.filter(p => p && p.orig && p.orig.path).map(p => p.orig.path), pool.flatMap(x => [x.path, x.tpath]).filter(Boolean), c && c.thumb ? [c.thumb] : []));
+    const keep = new Set(photos.filter(p => p && p.path).map(p => p.path).concat(photos.filter(p => p && p.orig && p.orig.path).map(p => p.orig.path), photos.filter(p => p && p.ppath).map(p => p.ppath), pool.flatMap(x => [x.path, x.tpath, x.ppath]).filter(Boolean), c && c.thumb ? [c.thumb] : []));
     const gone = all.filter(x => !keep.has(x));
     if(gone.length && id === sheets.cur && !pending.size && !moving) await store.remove(gone);
   }catch{}
 }
 async function saveThumb(){
   if(!me || !sheets.cur) return;
-  try{ const b = await drawSheet(360, 'image/jpeg');
-    const { error, path } = await store.put(`${me.id}/${sheets.cur}/thumb.jpg`, b, 'image/jpeg', true);
-    if(!error){ await sb.from('roarref_sheets').update({thumb:path}).eq('id', sheets.cur); const c = curSheet(); if(c){ c.thumb = path; c.thumbAt = Date.now(); } }
+  if(!thumbStale && (curSheet() || {}).thumb) return;
+  const id = sheets.cur;
+  try{ const b = await drawSheet(360, 'image/jpeg', true); if(sheets.cur !== id) return;
+    const { error, path } = await store.put(`${me.id}/${id}/thumb.jpg`, b, 'image/jpeg', true);
+    if(!error && sheets.cur === id){ thumbStale = false; S.tv = Date.now(); // tv: which picture this is, so a browser that has it does not fetch it again
+      const c = sheets.list.find(x => x.id === id); if(c){ c.thumb = path; c.thumbAt = S.tv; c.tv = S.tv; } dbPut('pic:' + path, {at:String(S.tv), blob:b}).catch(() => {});
+      await sb.from('roarref_sheets').update({thumb:path, data:{S, photos:packPhotos(), pool:packPool()}}).eq('id', id); }
   }catch{}
 }
 async function loadSheet(row){
@@ -2362,16 +2422,20 @@ async function loadSheet(row){
   sel = -1; selCover = -1;
   const list = d.photos || [];
   photos = list.map(() => null);
-  pool.forEach(x => { if(x.turl) URL.revokeObjectURL(x.turl); }); pool = (d.pool || []).filter(q => q && q.path).map(q => ({id:q.path.split('/').pop().replace(/\.jpg$/, ''), path:q.path, tpath:q.tpath, w:q.w, h:q.h, name:q.name || ''})); drawPool();
+  pool.forEach(x => { if(x.turl) URL.revokeObjectURL(x.turl); }); pool = (d.pool || []).filter(q => q && q.path).map(q => ({id:q.path.split('/').pop().replace(/\.jpg$/, ''), path:q.path, tpath:q.tpath, ppath:q.ppath, w:q.w, h:q.h, name:q.name || ''})); drawPool();
   render();
   await Promise.all(list.map(async (q, i) => { if(!q || !q.path) return;
-    try{ const blob = await getBlob(q.path); photos[i] = Object.assign({rot:0}, q, {blob, url:URL.createObjectURL(blob)}); migrateAdj(photos[i]); if(hasAdj(photos[i].adj)) await applyFx(photos[i]); }catch{} }));
+    try{ let view = null, blob = null;
+      if(q.ppath){ try{ view = await getBlob(q.ppath); }catch{} }  // the small copy alone: the project opens fast
+      if(!view) blob = await getBlob(q.path);
+      photos[i] = Object.assign({rot:0}, q, {blob, view, url:URL.createObjectURL(view || blob)}); migrateAdj(photos[i]); if(hasAdj(photos[i].adj)) await applyFx(photos[i]); }catch{} }));
   render(); histReset(); moveToR2();
+  { const sid = sheets.cur; (async () => { for(const p of photos){ if(p && !p.ppath && p.blob && sheets.cur === sid) await ensureView(p, sid); } })(); }
 }
 async function listSheets(){
   const { data, error } = await sb.from('roarref_sheets').select('id,name,thumb,updated_at,data').order('created_at');
   if(error) throw error;
-  return data.map(r => ({id:r.id, name:r.name, thumb:r.thumb, updated_at:r.updated_at, n:((r.data && r.data.photos) || []).filter(Boolean).length, paths:((r.data && r.data.photos) || []).filter(q => q && q.path).slice(0, 3).map(q => q.path)}));
+  return data.map(r => ({id:r.id, name:r.name, thumb:r.thumb, updated_at:r.updated_at, tv:r.data && r.data.S && r.data.S.tv, n:((r.data && r.data.photos) || []).filter(Boolean).length, paths:((r.data && r.data.photos) || []).filter(q => q && q.path).slice(0, 3).map(q => q.path)}));
 }
 async function insertSheet(name, data){
   const { data:row, error } = await sb.from('roarref_sheets').insert({name, data}).select('id,name,thumb,updated_at,data').single();
@@ -2509,14 +2573,16 @@ async function openSheets(first){
   };
   const draw = async () => {
     const urls = [], old = homeUrls;
-    const next = [];
-    for(const x of sheets.list){ let u = '';
-      if(x.thumb){ try{ const data = await store.get(x.thumb, x.thumbAt || x.updated_at); if(data){ u = URL.createObjectURL(data); urls.push(u); } }catch{} }
-      next.push({x, u}); }
-    // a card without a thumbnail shows its first photos side by side
-    for(const r of next){ if(r.u || !r.x.paths.length) continue; r.strip = [];
-      for(const pa of r.x.paths){ try{ const u2 = URL.createObjectURL(await getBlob(pa)); urls.push(u2); r.strip.push(u2); }catch{} } }
-    rows = next; homeUrls = urls; homeRows = new Map(next.map(r => [r.x.id, r])); paint();
+    // every project's little picture at the same time; one that has not changed comes from this browser's own store
+    const next = await Promise.all(sheets.list.map(async x => { let u = '';
+      if(x.thumb){ try{ const at = String(x.thumbAt || x.tv || x.updated_at), hit = await dbGet('pic:' + x.thumb).catch(() => null);
+          let data = hit && hit.at === at ? hit.blob : null;
+          if(!data){ data = await store.get(x.thumb, at); if(data) dbPut('pic:' + x.thumb, {at, blob:data}).catch(() => {}); }
+          if(data){ u = URL.createObjectURL(data); urls.push(u); } }catch{} }
+      return {x, u}; }));
+    rows = next; homeUrls = urls; homeRows = new Map(next.map(r => [r.x.id, r]));
+    if(m.querySelector('.sh-meta input')) return; // a name is being typed: the page is not drawn under it
+    if(m.querySelector('#pList')) paintList(); else paint();
     setTimeout(() => old.forEach(u => URL.revokeObjectURL(u)), 500);
   };
   const close = () => { m.remove(); syncPanel(); };
@@ -2524,9 +2590,11 @@ async function openSheets(first){
   m.onclick = async e => {
     let t = e.target.closest('button');
     if(!t || m.classList.contains('busy')) return;
-    if(m._sync){ // the page is still being brought up to date: wait, then find the same button on the fresh page
-      const pick = t.id ? '#' + t.id : ['open','ren','dup','del','pv','keep','sure'].map(k => t.dataset[k] != null ? `[data-${k}="${t.dataset[k]}"]` : '').find(Boolean);
-      await m._sync; t = pick && m.querySelector(pick); if(!t || !document.body.contains(m)) return; }
+    // while the page is still being brought up to date, only what leaves it waits (shown at once as busy); the pencil,
+    // the bin, the order and the view answer at the first click (Alex, 16 Nov: "I press it once and it does not take")
+    if(m._sync && (t.dataset.open || t.dataset.dup || t.dataset.sure || t.id === 'shNew' || t.id === 'shNew2' || t.id === 'shOut')){
+      const pick = t.id ? '#' + t.id : ['open','dup','sure'].map(k => t.dataset[k] != null ? `[data-${k}="${t.dataset[k]}"]` : '').find(Boolean);
+      busy(true); await m._sync; busy(false); t = pick && m.querySelector(pick); if(!t || !document.body.contains(m)) return; }
     if(t.id === 'shOut'){ close(); await save(); await sb.auth.signOut(); return; }
     if(t.dataset.pv){ const [k, v] = t.dataset.pv.split(':'); pv[k] = v; keep(); m.querySelectorAll(`[data-pv^="${k}:"]`).forEach(x => x.setAttribute('aria-pressed', x === t)); paintList(); return; }
     if(t.id === 'shNew' || t.id === 'shNew2'){ if(sheets.list.length >= MAX_SHEETS) return; busy(true); await newSheet(false); busy(false); return close(); }
@@ -2535,12 +2603,16 @@ async function openSheets(first){
     if(t.dataset.ren){ const x = sheets.list.find(y => y.id === t.dataset.ren), row = t.closest('.sh'), b = row.querySelector('.sh-meta');
       b.innerHTML = `<input class="field" style="height:38px;font-size:14px" maxlength="40" value="${esc(x.name)}" aria-label="Sheet name">`;
       const inp = b.querySelector('input'); inp.focus(); inp.select(); let done = false;
-      const finish = async () => { if(done) return; done = true; x.name = inp.value.trim() || x.name;
-        await sb.from('roarref_sheets').update({name:x.name}).eq('id', x.id); await draw(); syncPanel(); };
-      inp.onkeydown = ev => { if(ev.key==='Enter') finish(); if(ev.key==='Escape'){ done = true; draw(); } }; inp.onblur = finish; return; }
+      // the name is on the page at once (Enter, or a click elsewhere); it goes to the account behind
+      const finish = () => { if(done) return; done = true; const v = inp.value.trim();
+        // the list may have been read again since the pencil was pressed: the name goes on today's rows, found by id
+        const now = sheets.list.find(z => z.id === x.id) || x;
+        if(v && v !== now.name){ now.name = v; x.name = v; rows.forEach(r => { if(r.x.id === x.id) r.x.name = v; }); sb.from('roarref_sheets').update({name:v}).eq('id', x.id).then(({error}) => { if(error) toast('The name could not be saved. Check the connection.'); }); }
+        paintList(); syncPanel(); };
+      inp.onkeydown = ev => { if(ev.key==='Enter'){ ev.preventDefault(); finish(); } if(ev.key==='Escape'){ done = true; paintList(); } }; inp.onblur = finish; return; }
     if(t.dataset.del){ const row = t.closest('.sh');
       row.querySelector('.sh-acts').innerHTML = `<button type="button" class="pill" data-keep="1">Keep</button><button type="button" class="pill main" data-sure="${t.dataset.del}">Delete</button>`; return; }
-    if(t.dataset.keep) return draw();
+    if(t.dataset.keep) return paintList();
     if(t.dataset.sure){ busy(true); await deleteSheet(t.dataset.sure); await draw(); busy(false); syncPanel(); }
   };
   const esc2 = e => { if(e.key === 'Escape' && sheets.cur && document.body.contains(m) && !m.querySelector('input')){ document.removeEventListener('keydown', esc2); close(); } };
@@ -2552,6 +2624,41 @@ async function openSheets(first){
   // a click made in that moment waits for it to end, then does its work (m._sync)
   m._sync = (async () => { try{ await save(); await saveThumb(); try{ sheets.list = await listSheets(); }catch{} if(document.body.contains(m)) await draw(); }catch{} })();
   await m._sync; m._sync = null;
+}
+
+/* This project (Alex, 16 Nov): a window opened by the name in the top row: the name, what the project holds, a copy, delete */
+function openProject(){
+  const c = curSheet(); if(!c || document.querySelector('.modal.pm')) return;
+  const m = document.createElement('div'); m.className = 'modal pm';
+  const when = t => { try{ return new Date(t).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}); }catch{ return ''; } };
+  const draw = sure => {
+    const full = sheets.list.length >= MAX_SHEETS, n = photos.filter(Boolean).length, wins = rects(lay(), S.gap, pad()).length;
+    m.innerHTML = `<form class="card pcardm" novalidate><h2>This project</h2>
+      <p class="plabel">Name</p><input class="field" id="pmName" maxlength="40" value="${esc(c.name)}" aria-label="Project name" autocomplete="off">
+      <div class="pinfo"><div><b>${n} of ${wins}</b><small>windows filled</small></div><div><b>${pool.length}</b><small>in the pool</small></div><div><b>${esc(S.ratio || '16:9')}</b><small>sheet shape</small></div><div><b>${esc(when(c.updated_at))}</b><small>last change</small></div></div>
+      ${sure ? `<div class="row"><p style="flex:1;margin:0;color:var(--fg);font-size:14px">Delete this project with its photos and its pool? This cannot be taken back.</p><button type="button" class="pill" id="pmKeep">Keep</button><button type="button" class="pill main" id="pmSure">Delete</button></div>`
+        : `<div class="row"><button type="button" class="pill${full ? ' off' : ''}" id="pmDup" title="${full ? `All ${MAX_SHEETS} places are taken` : 'A copy of this project, as a new one'}"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Duplicate</button>
+          <button type="button" class="pill danger" id="pmDel"><svg viewBox="0 0 24 24">${IC.trash}</svg>Delete</button><span style="flex:1"></span>
+          <button type="button" class="pill" id="pmNo">Cancel</button><button type="submit" class="pill main" id="pmSave">Save</button></div>`}</form>`;
+    const f = m.querySelector('form'); f.onsubmit = e => { e.preventDefault(); saveName(true); };
+  };
+  const close = () => { m.remove(); document.removeEventListener('keydown', esc3); };
+  const saveName = async shut => { const inp = m.querySelector('#pmName'), v = inp ? inp.value.trim() : ''; 
+    if(v && v !== c.name){ c.name = v; syncPanel(); const { error } = await sb.from('roarref_sheets').update({name:v}).eq('id', c.id); if(error) toast('The name could not be saved. Check the connection.'); }
+    if(shut) close(); };
+  m.onclick = async e => {
+    if(e.target === m) return close();
+    const t = e.target.closest('button'); if(!t || m.classList.contains('busy')) return;
+    if(t.id === 'pmNo') return close();
+    if(t.id === 'pmDel'){ await saveName(false); return draw(true); }
+    if(t.id === 'pmKeep') return draw(false);
+    if(t.id === 'pmDup'){ if(sheets.list.length >= MAX_SHEETS) return; m.classList.add('busy'); await saveName(false); await newSheet(true); close(); toast('A copy was made: you are in it now'); return; }
+    if(t.id === 'pmSure'){ m.classList.add('busy'); await deleteSheet(c.id); close(); syncPanel(); openSheets(); }
+  };
+  const esc3 = e => { if(e.key === 'Escape') close(); };
+  document.addEventListener('keydown', esc3);
+  draw(false); document.body.appendChild(m);
+  const inp = m.querySelector('#pmName'); if(inp && !isPhone()){ inp.focus(); inp.select(); }
 }
 
 /* the door: RoarRef opens only with a Roar Account (sign in, create one, or the 6-digit code of two-step verification) */
@@ -2644,7 +2751,9 @@ function placeControls(){
   if(!lb.querySelector('.w')) lb.insertAdjacentHTML('beforeend','<span class="w">Names</span>');
   const sp = document.createElement('span'); sp.className = 'spacer';
   // the top row as a program's: Home, the name, then what is done to the sheet in three small groups (history, photos, export)
-  let pn = $('projName'); if(!pn){ pn = document.createElement('span'); pn.id = 'projName'; pn.className = 'bname'; const c0 = curSheet(); pn.textContent = c0 ? c0.name : ''; }
+  // the project's name is a button: it opens the project's own details (Alex, 16 Nov: "to edit each project's details from inside the project")
+  let pn = $('projName'); if(!pn){ pn = document.createElement('button'); pn.type = 'button'; pn.id = 'projName'; pn.className = 'pill bname'; pn.title = 'This project: name, copy, delete';
+    pn.innerHTML = '<span class="pnm"></span><svg viewBox="0 0 24 24">' + IC.pen + '</svg>'; const c0 = curSheet(); pn.querySelector('.pnm').textContent = c0 ? c0.name : ''; pn.hidden = !c0; pn.onclick = openProject; }
   const sepEl = () => { const i = document.createElement('i'); i.className = 'bsep'; return i; };
   [$('add'), $('clear'), $('sheetsBtn')].forEach(x => { x.classList.toggle('round', isPhone()); });
   $('add').style.marginLeft = '';
