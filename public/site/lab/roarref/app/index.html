@@ -2279,7 +2279,11 @@ function poolName(it, blob){
   if(given) return /\.[a-z0-9]{2,5}$/i.test(given) ? given.replace(/\.[a-z0-9]{2,5}$/i, '.' + ext) : given + '.' + ext;
   const n = pool.indexOf(it) + 1; return `${cleanName((curSheet() || {}).name) || 'Pool'} ${String(n).padStart(2, '0')}.${ext}`;
 }
-function giveFile(blob, name){ const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 8000); }
+// on a phone (and inside the iPhone app, where a link cannot save a file) the file goes through the phone's own Share sheet
+async function giveFile(blob, name){
+  if(matchMedia('(pointer:coarse)').matches){ try{ const file = new File([blob], name, {type:blob.type || 'application/octet-stream'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file]}); return; } }catch(e){ if(e && e.name === 'AbortError') return; } }
+  const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 8000); }
 async function downloadPoolOne(it){
   if(!it || !it.path){ toast('This photo is still going up: a moment'); return; }
   try{ if(!it.blob) it.blob = await getBlob(it.path); giveFile(it.blob, poolName(it, it.blob)); }catch{ toast('The photo could not be fetched. Check the connection.'); }
