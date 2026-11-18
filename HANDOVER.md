@@ -53,6 +53,8 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Collaborator page: Song and Lyrics Per Section are two boxes; every box starts folded and opens with the arrow at the end of its head (per device, tml_pj_folds2); the artist in capitals without Greek accents (upper() keeps the dialytika).
 - **The song plays on across the project's tabs** (lib/projectAudio.js: one <audio> on the page, used by Music.jsx and Overview's SongPlayer; Project.jsx stops it when the project is left or another opens).
 - Project top row on a computer: the whole title (wraps, no ellipsis), Overview / Budget on the right; the category and Delivered badges went (the category now reads under the progress: "46% done · Music Video · shoot ..."). The shoot date, crew and cast under the stages are plain words, no frame. Lyrics sit closer to their section's name.
+- **Move the boxes** (Alex: "next to the arrows the grip, to move them up and down; all but the top one"): a six-dot grip beside each fold arrow (and on the folded bar); hold and drag, the boxes swap as it passes their middle, the page scrolls at the edges. components/Fold.jsx useBoxOrder / Grip: CSS order on the Overview column by data-box, kept per device (tml_ov_order); people-db and its cols are display: contents on Overview so Crew, Cast, Locations, Gear move one by one.
+- PDF presentation pictures now go to the built-in photos bucket, not pCloud (pCloud's links did not open in the page: Alex's first import showed broken pictures; those fall back to their small thumbnail; deleting and importing again gives sharp ones).
 - Overview ⋯ lost Duplicate (it stays on Home's project tiles).
 - Still for Alex: Supabase Authentication "Prevent use of leaked passwords".
 

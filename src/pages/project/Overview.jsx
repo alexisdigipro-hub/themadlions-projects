@@ -17,7 +17,7 @@ import Tasks, { tasksFor } from './Tasks.jsx'
 import Notes from './Notes.jsx'
 import Script from './Script.jsx'
 import Music, { Waveform } from './Music.jsx'
-import Fold from '../../components/Fold.jsx'
+import Fold, { BoxOrderCtx, useBoxOrder } from '../../components/Fold.jsx'
 import PdfShows from './PdfShows.jsx'
 import People from './People.jsx'
 import RoardinoPage from '../RoardinoPage.jsx'
@@ -271,6 +271,9 @@ export default function Overview() {
     document.addEventListener('keydown', key)
     return () => { document.removeEventListener('click', on); document.removeEventListener('keydown', key) }
   }, [menu])
+  // the boxes' order, by dragging their grip (components/Fold.jsx)
+  const ovRef = useRef(null)
+  const boxOrder = useBoxOrder(ovRef)
   const [start, setStart] = useState({ task: 0, song: 0, link: 0, notes: 0, script: 0, paste: 0, pdf: 0 })
   const begin = (k) => setStart((s0) => ({ ...s0, [k]: s0[k] + 1 }))
   const isMusicVideo = project.category === 'Music Video'
@@ -287,7 +290,8 @@ export default function Overview() {
   ].filter(Boolean)
 
   return (
-    <div className="overview">
+    <BoxOrderCtx.Provider value={boxOrder}>
+    <div className="overview" ref={ovRef}>
       <span ref={stickMark} className="progress-mark" aria-hidden="true" />
       <section ref={stickPanel} className={`panel progress${stuck ? ' stuck' : ''}`}>
         <div className="progress-head">
@@ -395,7 +399,7 @@ export default function Overview() {
           administrators too (Alex, 10 Oct); it opens the finished ordino as the crew get it on a phone.
           Alex's on-set picture (public/ordino-set.webp) shows faintly across it */}
       {ordinoDays.length > 0 && (
-        <button type="button" className="panel ordino-btn" data-stage="ordino" style={{ '--ordino-bg': `url("${ORDINO_BG}")` }} onClick={() => setOrdinoOpen(true)}>
+        <button type="button" className="panel ordino-btn" data-box="ordino" data-stage="ordino" style={{ '--ordino-bg': `url("${ORDINO_BG}")` }} onClick={() => setOrdinoOpen(true)}>
           <span className="ordino-btn-text">
             <strong>Ordino</strong>
             <span>{[nextOrdino.date && new Date(nextOrdino.date + 'T00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }), nextOrdino.callTime && `call ${nextOrdino.callTime}`, ordinoDays.length > 1 && `${ordinoDays.length} days`].filter(Boolean).join(' · ')}</span>
@@ -410,7 +414,7 @@ export default function Overview() {
       {/* Add receipt for the team, not administrators (Alex, 10 Oct): the same box as the Ordino button,
           opening the Budget tab's receipt form */}
       {user?.role !== 'admin' && (
-        <button type="button" className="panel ordino-btn receipt-btn" onClick={() => setReceiptOpen(true)}>
+        <button type="button" className="panel ordino-btn receipt-btn" data-box="receipt" onClick={() => setReceiptOpen(true)}>
           <span className="ordino-btn-text">
             <strong>Add receipt</strong>
             <span>{myReceipts ? `${myReceipts} added by you · paid for something? Photograph it` : `Paid for something on ${project.title}? Photograph it`}</span>
@@ -467,5 +471,6 @@ export default function Overview() {
       </Modal>
       {sharing && <ProjectShare project={project} onClose={() => setSharing(false)} />}
     </div>
+    </BoxOrderCtx.Provider>
   )
 }
