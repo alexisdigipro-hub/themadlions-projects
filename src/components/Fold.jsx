@@ -66,13 +66,17 @@ export function useBoxOrder(ref) {
       raf = requestAnimationFrame(scroll)
     }
     const check = () => {
+      // only boxes on screen count (a box with nothing in it yet is hidden)
+      const shown = (k) => { const e = items.find((x) => x.dataset.box === k); return e && e.getClientRects().length ? e : null }
       const at = seq.indexOf(key)
-      const prev = items.find((e) => e.dataset.box === seq[at - 1])
-      const next = items.find((e) => e.dataset.box === seq[at + 1])
+      let pi = at - 1; while (pi >= 0 && !shown(seq[pi])) pi--
+      let ni = at + 1; while (ni < seq.length && !shown(seq[ni])) ni++
+      const prev = pi >= 0 ? shown(seq[pi]) : null
+      const next = ni < seq.length ? shown(seq[ni]) : null
       const mid = (e) => { const r = e.getBoundingClientRect(); return r.top + r.height / 2 }
       let to = -1
-      if (prev && y < mid(prev)) to = at - 1
-      else if (next && y > mid(next)) to = at + 1
+      if (prev && y < mid(prev)) to = pi
+      else if (next && y > mid(next)) to = ni
       if (to < 0) return
       seq.splice(at, 1)
       seq.splice(to, 0, key)
