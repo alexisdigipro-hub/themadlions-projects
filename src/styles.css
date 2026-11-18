@@ -9996,6 +9996,7 @@ html[data-theme] body .pds .ov-round svg, html[data-theme] body .pds-full .ov-ro
 .pds-pics img { display: block; width: 100%; max-height: 520px; object-fit: cover; border-radius: 14px; background: color-mix(in srgb, var(--text) 6%, transparent); user-select: none; }
 .pds-pics.n1 img { object-fit: contain; max-height: 560px; }
 .pds-slide.pics .pds-pics.n1 img { max-height: 640px; }
+.pds-text h3, html[data-theme] body .pds-text h3 { color: var(--text); }
 .pds-text h3 { margin: 0 0 12px; font-size: 24px; font-weight: 800; line-height: 1.2; letter-spacing: -.01em; }
 .pds-text p { margin: 0 0 10px; font-size: 15px; line-height: 1.6; color: color-mix(in srgb, var(--text) 82%, transparent); white-space: pre-line; }
 .pds-nav { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 14px; }
