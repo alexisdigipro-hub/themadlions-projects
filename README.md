@@ -7,7 +7,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 
 ## What is inside
 
-- **Hear a section again** (18 Nov): in the song map, the mic icon on a section sends only that stretch of the song to Whisper and opens the section with the new lyrics to fix and save; Cancel keeps the old ones.
+- **Fold any box** (18 Nov): on a project's Overview every box (Song, Lyrics Per Section, Tasks, Files & notes, Crew, Cast, Locations, Gear, Script) has a small arrow on its side that folds it into a slim bar; tap the bar to open it. Each device remembers what you folded.
 - **Share a project with collaborators** (18 Nov): Overview > ⋯ > Share with collaborators makes a link where outside people see the project almost as the team does, in the hub's look: progress, the song with its song map and lyrics, schedule, tasks, files & notes, script and breakdown, team, locations and gear, and can leave comments; nothing else. Never the budget, phone numbers or emails; songs and photos can be heard and seen, not downloaded. Switch any section off, add a code, a closing date, close it any time; it follows the project by itself.
 - **Finance PIN** (14 Nov): Finance > Settings > Set a PIN locks Finance with 4 digits of your own; it stays open while you use it and 10 minutes after. Forgot it: Forgot PIN? on the lock takes it off with your hub password.
 - **Final Deliverables held until paid** (Outbox, 10 Nov): tick **Hold the files until paid** when you send them, and the client's page shows the files with a kind note that the links open once the payment is settled; nothing downloads. **Paid · open files** in the list opens them on the same link.

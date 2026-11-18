@@ -93,23 +93,3 @@ export async function toMp3(file, onProgress) {
   const name = (file.name || 'audio').replace(/\.[^.]+$/, '') + '.mp3'
   return new File([bytes], name, { type: 'audio/mpeg', lastModified: file.lastModified || Date.now() })
 }
-
-/* One stretch of a song as a small mono MP3 (Alex, 18 Nov: "hear this section again and write its lyrics again"):
-   any file the browser can play is decoded here, cut from start to end with half a second either side, and encoded
-   at 96 kbps, so Whisper hears only that section. */
-export async function sliceMp3(file, start, end, onProgress) {
-  const lame = await loadLame()
-  const Ctx = window.AudioContext || window.webkitAudioContext
-  const ctx = new Ctx()
-  let buf
-  try { buf = await ctx.decodeAudioData(await file.arrayBuffer()) } finally { ctx.close?.() }
-  const sr = buf.sampleRate
-  const a = Math.max(0, Math.floor((start - 0.5) * sr))
-  const b = Math.min(buf.length, Math.ceil((end + 0.5) * sr))
-  if (b - a < sr) throw new Error('This section is too short to listen to.')
-  const mono = new Float32Array(b - a)
-  const chs = buf.numberOfChannels
-  for (let c = 0; c < chs; c++) { const d = buf.getChannelData(c); for (let i = a; i < b; i++) mono[i - a] += d[i] / chs }
-  const bytes = await encodeMp3([mono], sr, { lame, kbps: 96, onProgress })
-  return new File([bytes], 'section.mp3', { type: 'audio/mpeg' })
-}

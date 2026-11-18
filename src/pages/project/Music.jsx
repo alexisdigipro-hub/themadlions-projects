@@ -6,7 +6,8 @@ import { download } from '../../lib/dates.js'
 import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, songMapText, trackBlob, uploadTrack, lastTrackError } from '../../lib/audio.js'
 import { useTrackSource } from '../../lib/trackSource.js'
 import { pcloudTarget } from '../../lib/pcloud.js'
-import { needsEncoding, sliceMp3, toMp3 } from '../../lib/mp3.js'
+import Fold from '../../components/Fold.jsx'
+import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { useAudioChoice } from '../../components/AudioChoice.jsx'
 import { remote } from '../../lib/supabase.js'
 import { useStore } from '../../lib/store.jsx'
@@ -14,6 +15,7 @@ import { alignBlocks, groupSegments, transcribe } from '../../lib/transcribe.js'
 
 const ico = (d) => <svg viewBox="0 0 24 24" aria-hidden="true">{d}</svg>
 const MI = {
+  copy: ico(<><rect x="8.5" y="8.5" width="11" height="11" rx="2.5" /><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" /></>),
   plus: ico(<path d="M12 5v14M5 12h14" />),
   edit: ico(<><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></>),
   trash: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" /></svg>,
@@ -89,7 +91,10 @@ export function Waveform({ peaks = [], duration = 0, time = 0, sections = [], on
   return <canvas ref={ref} className="wave" onClick={seek} onMouseMove={(e) => e.buttons === 1 && seek(e)} />
 }
 
-export default function Music() {
+export default function Music({ split = false }) {
+  /* on Overview the song and Lyrics Per Section are two boxes, each folding on its own (Alex, 18 Nov) */
+  const top = (x) => (split ? <Fold k="song" title="Song"><section className="panel music-panel" data-stage="song">{x}</section></Fold> : x)
+  const map = (x) => (split ? !sections.length ? null : <Fold k="lyrics" title="Lyrics Per Section"><section className="panel song-map-panel">{x}</section></Fold> : x)
   const { project, edit, canEdit } = useProject()
   const { state } = useStore()
   const toast = useToast()
@@ -106,7 +111,6 @@ export default function Music() {
     return () => document.removeEventListener('keydown', key)
   }, [menu])
   const [trBusy, setTrBusy] = useState('')
-  const [reHear, setReHear] = useState('') // the section being heard again
   const music = { ...emptyMusic(), ...(project.music || {}) }
   const track = music.tracks.find((t) => t.id === music.activeTrackId) || music.tracks[0]
   const audioRef = useRef()
@@ -187,7 +191,7 @@ export default function Music() {
     if (s.end <= s.start) return toast('End must be after start.', 'error')
     setMusic((m) => {
       const i = m.sections.findIndex((x) => x.id === s.id)
-      const { startText, endText, heard, ...clean } = s
+      const { startText, endText, ...clean } = s
       if (i >= 0) m.sections[i] = clean
       else m.sections.push(clean)
     })
@@ -246,30 +250,6 @@ export default function Music() {
       setSaving(false)
     }
   }
-  /* Hear one section again (Alex, 18 Nov: "some sections' lyrics it does not read well; can it listen to that section
-     again and write its lyrics again"): only that stretch goes to Whisper, with the lyrics around it as a hint, and
-     the words come back in the section's window to read, fix and Save (Cancel keeps the old ones). */
-  const hearAgain = async (sec) => {
-    if (reHear) return
-    if (!state.settings.openaiKey) { toast('Add your OpenAI API key in Settings, Transcription, first.', 'error'); return }
-    setReHear(sec.id)
-    try {
-      const file = await sliceMp3(await getAudioFile(), sec.start, sec.end)
-      const i = sections.findIndex((x) => x.id === sec.id)
-      const prompt = [sections[i - 1]?.lyrics, sections[i + 1]?.lyrics].filter(Boolean).join('\n').slice(0, 600)
-      const LANG = { greek: 'el', english: 'en', spanish: 'es', italian: 'it', french: 'fr', german: 'de' }
-      const l = String(music.transcript?.language || '').toLowerCase()
-      const language = /^[a-z]{2}$/.test(l) ? l : LANG[l] || ''
-      const res = await transcribe({ apiKey: state.settings.openaiKey, file, language, prompt })
-      const lyrics = res.segments.map((x) => x.text).join('\n').trim()
-      if (!lyrics) throw new Error('Whisper heard no words in this section.')
-      setDraft({ ...sec, startText: fmtTimeMs(sec.start), endText: fmtTimeMs(sec.end), sceneIds: sec.sceneIds || [], lyrics, heard: sec.lyrics || '' })
-    } catch (e) {
-      toast(e.message, 'error')
-    } finally {
-      setReHear('')
-    }
-  }
   const runTranscribe = async () => {
     setTrBusy('Sending the song to Whisper…')
     try {
@@ -312,7 +292,8 @@ export default function Music() {
   }
 
   return (
-    <div className="music">
+    <div className={split ? 'music music-split' : 'music'}>
+      {top(<>
       <div className="toolbar">
         <div className="toolbar-info">
           <strong>{track ? track.name : 'No track yet'}</strong>
@@ -387,10 +368,25 @@ export default function Music() {
       ) : (
         <Empty title="Upload the song">MP3, M4A or WAV. A WAV is converted to MP3 on this device first, so only the small file is stored. The waveform is drawn here, then you mark the sections (intro, verses, choruses) with their times and lyrics, and tie each one to the setups that will cover it.</Empty>
       )}
+      </>)}
+      {map(<>
 
       {/* the song map's own heading, only once it has sections; its + Add is in the row above */}
       {/* "Lyrics Per Section", with room above it (Alex, 18 Nov) */}
-      {sections.length > 0 && <div className="toolbar song-map-head"><div className="toolbar-info"><strong>Lyrics Per Section</strong></div></div>}
+      {/* Copy: every section's lyrics, in the song's order, as one text to paste anywhere (Alex, 18 Nov) */}
+      {sections.length > 0 && (
+        <div className="toolbar song-map-head">
+          <div className="toolbar-info"><strong>Lyrics Per Section</strong></div>
+          {sections.some((x) => (x.lyrics || '').trim()) && (
+            <div className="toolbar-actions ov-acts">
+              <button type="button" className="add-pill" onClick={async () => {
+                const text = sections.map((x) => (x.lyrics || '').trim()).filter(Boolean).join('\n\n')
+                try { await navigator.clipboard.writeText(text); toast('All the lyrics copied', 'ok') } catch { toast('Could not copy', 'error') }
+              }}>{MI.copy}<span>Copy</span></button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* no sections yet: nothing here, the box stays short; Add section, Paste full lyrics or Lyrics from audio open it
           (Alex, 27 Oct: "delete the No sections yet text, fold the box, open it when something is added") */}
@@ -416,7 +412,6 @@ export default function Music() {
                       </>
                     )}
                     {track && <button type="button" className={`song-icon${loop === s.id ? ' on' : ''}`} onClick={() => { setLoop(loop === s.id ? null : s.id); if (loop !== s.id) { seek(s.start); play(audioRef.current) } }} title={loop === s.id ? 'Stop the loop' : 'Loop this section'} aria-label="Loop" aria-pressed={loop === s.id}>{MI.loop}</button>}
-                    {editable && track && <button type="button" className={`song-icon${reHear === s.id ? ' busy' : ''}`} onClick={() => hearAgain(s)} disabled={!!reHear} title={reHear === s.id ? 'Listening…' : 'Hear this section again and write its lyrics'} aria-label="Hear again">{MI.mic}</button>}
                     {editable && <button type="button" className="song-icon" onClick={() => openSection(s)} title="Edit" aria-label="Edit">{MI.edit}</button>}
                     {editable && <SecDelete onDelete={() => setMusic((m) => (m.sections = m.sections.filter((x) => x.id !== s.id)))} />}
                   </div>
@@ -433,6 +428,7 @@ export default function Music() {
           })}
         </ol>
       )}
+      </>)}
 
       {draft && (
         <Modal open wide title={music.sections.some((s) => s.id === draft.id) ? `Edit ${draft.name}` : 'New section'} onClose={() => setDraft(null)}
@@ -447,12 +443,6 @@ export default function Music() {
                 <div className="row-actions"><Input value={draft.endText} onChange={(e) => setDraft({ ...draft, endText: e.target.value })} />{track && <Button size="sm" variant="ghost" onClick={() => markNow('endText')}>now</Button>}</div>
               </Field>
             </div>
-            {draft.heard !== undefined && (
-              <div className="song-heard">
-                <p className="small muted">Heard again: the new lyrics are below. Fix any word and press Save; Cancel keeps the old ones.</p>
-                {draft.heard && <details><summary>The old lyrics</summary><pre className="song-lyrics">{draft.heard}</pre></details>}
-              </div>
-            )}
             <Field label="Lyrics"><Textarea rows={6} value={draft.lyrics} onChange={(e) => setDraft({ ...draft, lyrics: e.target.value })} placeholder="The words sung in this section" /></Field>
             <Field label="Setups that cover this section" hint="From the Breakdown. Hold Ctrl or Cmd to pick several.">
               <select multiple className="input multi" value={draft.sceneIds} onChange={(e) => setDraft({ ...draft, sceneIds: Array.from(e.target.selectedOptions).map((o) => o.value) })}>

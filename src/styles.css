@@ -9961,11 +9961,21 @@ html.pjh-page, html.pjh-page body { min-height: 100%; }
   .pjh-shared { display: none; }
 }
 
-/* Hear a section again (Alex, 18 Nov): the mic icon pulses while Whisper listens; the window shows the old lyrics folded */
-.song-icon.busy { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, transparent); animation: song-hear 1.1s ease-in-out infinite; }
-.song-icon:disabled:not(.busy) { opacity: .45; cursor: default; }
-@keyframes song-hear { 50% { background: color-mix(in srgb, var(--accent) 18%, transparent); } }
-.song-heard { margin: 0 0 10px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
-.song-heard p { margin: 0; }
-.song-heard summary { cursor: pointer; margin-top: 6px; font-size: 12.5px; color: var(--muted); }
-html[data-theme] body .song-heard .song-lyrics { margin: 6px 0 0; font-size: 13.5px; }
+/* Fold (Alex, 18 Nov): every box on a project's Overview gathers into a slim bar (components/Fold.jsx) */
+.fold { position: relative; min-width: 0; }
+.fold.folded:has(> .fold-body .panel) > .fold-body { display: none; }
+.fold:not(:has(> .fold-body .panel)) > .fold-bar, .fold:not(:has(> .fold-body .panel)) > .fold-btn { display: none; }
+.fold:not(:has(> .fold-body .panel)):not(:has(> .fold-body *)) { display: none; }
+html[data-theme] body .panel.fold-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; margin: 0; padding: 12px 14px 12px 20px; font: inherit; color: var(--text); text-align: left; cursor: pointer; }
+.fold-bar strong { font-size: 15px; font-weight: 700; }
+.fold-chev, .fold-btn { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; color: var(--text); border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); background: color-mix(in srgb, var(--text) 6%, transparent); transition: background .15s, transform .15s; }
+.fold-chev svg, .fold-btn svg { width: 15px; height: 15px; }
+.fold-chev svg { transform: rotate(180deg); }
+.fold-bar:hover .fold-chev, .fold-btn:hover { background: color-mix(in srgb, var(--text) 12%, transparent); }
+.fold-btn { position: absolute; top: -14px; right: 22px; z-index: 25; cursor: pointer; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); background: color-mix(in srgb, var(--surface, #1b1f24) 70%, transparent); box-shadow: 0 4px 14px rgba(0, 0, 0, .25); }
+.fold-btn:active, .fold-bar:active .fold-chev { transform: scale(.92); }
+.music-split { display: contents; }
+html[data-theme] body .song-map-panel .toolbar.song-map-head { margin-top: 0; }
+@media (max-width: 820px) {
+  .fold-btn { top: -12px; right: 18px; width: 26px; height: 26px; }
+}
