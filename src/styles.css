@@ -9979,3 +9979,56 @@ html[data-theme] body .ov-round.fold-btn svg { width: 16px; height: 16px; fill: 
 .fold-btn:active { transform: scale(.94); }
 .music-split { display: contents; }
 html[data-theme] body .song-map-panel .toolbar.song-map-head { margin-top: 0; }
+
+/* Presentations from a PDF on the Overview (Alex, 18 Nov; PdfShows.jsx): one slide at a time, soft tiles, hub look */
+.pds .toolbar-actions svg, .pds-nav svg, .pds-x svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+html[data-theme] body .pds .ov-round svg, html[data-theme] body .pds-full .ov-round svg { fill: none; stroke: currentColor; }
+.pds-del.armed, .pds-del:hover { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
+.pds-stage { margin-top: 14px; }
+.pds-slide { display: grid; gap: 22px; padding: 22px; border-radius: 18px; background: color-mix(in srgb, var(--text) 4%, transparent); min-height: 320px; align-items: center; }
+.pds-slide.split { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+.pds-slide.text { padding: 36px 40px; }
+.pds-pics { display: grid; gap: 10px; grid-template-columns: 1fr; }
+.pds-pics.n2 { grid-template-columns: 1fr 1fr; }
+.pds-pics.n3 { grid-template-columns: 1fr 1fr; }
+.pds-pics.n3 img:first-child { grid-column: 1 / -1; }
+.pds-pics.n4 { grid-template-columns: 1fr 1fr; }
+.pds-pics img { display: block; width: 100%; max-height: 520px; object-fit: cover; border-radius: 14px; background: color-mix(in srgb, var(--text) 6%, transparent); user-select: none; }
+.pds-pics.n1 img { object-fit: contain; max-height: 560px; }
+.pds-slide.pics .pds-pics.n1 img { max-height: 640px; }
+.pds-text h3 { margin: 0 0 12px; font-size: 24px; font-weight: 800; line-height: 1.2; letter-spacing: -.01em; }
+.pds-text p { margin: 0 0 10px; font-size: 15px; line-height: 1.6; color: color-mix(in srgb, var(--text) 82%, transparent); white-space: pre-line; }
+.pds-nav { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 14px; }
+.pds-nav .ov-round:disabled { opacity: .35; cursor: default; }
+.pds-count { min-width: 64px; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pds-busy { display: flex; align-items: center; gap: 12px; padding: 16px 20px; font-size: 14px; }
+.pds-spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--text) 20%, transparent); border-top-color: var(--accent); animation: pds-spin .8s linear infinite; }
+@keyframes pds-spin { to { transform: rotate(360deg); } }
+.pds-full { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; padding: 28px 28px 22px; background: color-mix(in srgb, var(--bg, #0d1117) 88%, transparent); -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px); color: var(--text); animation: pds-in .2s ease-out; }
+@keyframes pds-in { from { opacity: 0; } }
+.pds-x { position: absolute; top: 18px; right: 18px; z-index: 2; }
+.pds-full-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.pds-full .pds-slide { width: min(1400px, 100%); max-height: 100%; overflow: auto; background: color-mix(in srgb, var(--text) 5%, transparent); }
+.pds-full .pds-text h3 { font-size: 34px; }
+.pds-full .pds-text p { font-size: 18px; }
+.pds-full .pds-pics img { max-height: 70vh; }
+@media (max-width: 820px) {
+  .pds-slide, .pds-slide.split { grid-template-columns: 1fr; padding: 14px; gap: 14px; min-height: 0; }
+  .pds-slide.text { padding: 20px; }
+  .pds-text h3 { font-size: 20px; }
+  .pds-full { padding: 64px 12px 18px; }
+  .pds-full .pds-text h3 { font-size: 24px; }
+  .pds-full .pds-text p { font-size: 15.5px; }
+}
+
+/* the collaborator page's boxes fold too (Alex, 18 Nov): the arrow at the end of each head */
+.pjh-panel-body { display: contents; }
+.pjh-panel.shut > .pjh-panel-body { display: none; }
+.pjh-panel.shut .pjh-panel-head { margin-bottom: 0; }
+.pjh-head-end { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.pjh-panel.shut .pjh-seg { display: none; }
+.pjh-fold { flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; cursor: pointer; color: var(--text); border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); background: color-mix(in srgb, var(--text) 6%, transparent); transition: background .15s, transform .15s; }
+.pjh-fold svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s; }
+.pjh-panel.shut .pjh-fold svg { transform: rotate(180deg); }
+.pjh-fold:hover { background: color-mix(in srgb, var(--text) 12%, transparent); }
+.pjh-fold:active { transform: scale(.92); }

@@ -5,6 +5,9 @@ import { respondToDelivery } from '../lib/shares.js'
 import { applyThemeChoice } from '../lib/skin.js'
 import { SUPABASE_KEY, SUPABASE_URL } from '../lib/supabaseConfig.js'
 
+// capitals without Greek accents (Alex, 18 Nov: "if you make it capitals yourself, take the accents off"): ΓΙΩΡΓΟΣ, not ΓΙΏΡΓΟΣ
+const upper = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u0307\u0309-\u036f]/g, '').toUpperCase()
+
 /* A project for outside collaborators (Alex, 18 Nov; lib/projectShare.js). "Almost as we see it, everything we have
    put in, all but the budget", in the hub's own look (the theme of whoever shared it): the project's head with its
    progress, the song with its map and lyrics, the schedule, tasks, files & notes, script & breakdown, team,
@@ -41,12 +44,31 @@ function Photo({ token, item, className = '' }) {
   return <span className={`pjh-photo ${className}`}>{url && <img src={url} alt="" loading="lazy" draggable="false" onContextMenu={noMenu} />}</span>
 }
 
-const Panel = ({ title, aside, children, className = '' }) => (
-  <section className={`pjh-panel ${className}`}>
-    {title && <header className="pjh-panel-head"><h2>{title}</h2>{aside && <span className="pjh-aside">{aside}</span>}</header>}
-    {children}
-  </section>
-)
+/* each box folds into its head with the arrow on its right (Alex, 18 Nov: "an arrow there too, so it is not all
+   poured downwards"), remembered on that device */
+const FOLDS = 'tml_pj_folds'
+const foldedOf = (k) => { try { return !!JSON.parse(localStorage.getItem(FOLDS) || '{}')[k] } catch { return false } }
+const keepFold = (k, v) => { try { const m = JSON.parse(localStorage.getItem(FOLDS) || '{}'); if (v) m[k] = 1; else delete m[k]; localStorage.setItem(FOLDS, JSON.stringify(m)) } catch { /* private window */ } }
+const CHEV = <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6" /></svg>
+function Panel({ title, aside, extra, children, className = '', fold = true }) {
+  const [shut, setShut] = useState(() => fold && !!title && foldedOf(title))
+  const set = (v) => { setShut(v); keepFold(title, v) }
+  return (
+    <section className={`pjh-panel ${className}${shut ? ' shut' : ''}`}>
+      {title && (
+        <header className="pjh-panel-head">
+          <h2>{title}</h2>
+          <span className="pjh-head-end">
+            {extra}
+            {aside && <span className="pjh-aside">{aside}</span>}
+            {fold && <button type="button" className="pjh-fold" onClick={() => set(!shut)} aria-expanded={!shut} aria-label={shut ? `Open ${title}` : `Fold ${title}`}>{CHEV}</button>}
+          </span>
+        </header>
+      )}
+      <div className="pjh-panel-body">{children}</div>
+    </section>
+  )
+}
 
 export default function PublicProject() {
   const { token } = useParams()
@@ -76,7 +98,7 @@ export default function PublicProject() {
           <div className="pjh-hero-row">
             {d.cover ? <img className="pjh-cover" src={d.cover} alt="" draggable="false" onContextMenu={noMenu} /> : <span className="pjh-cover pjh-cover-none" style={{ background: d.color || undefined }} />}
             <div className="pjh-hero-text">
-              {d.artist && <p className="pjh-artist">{d.artist}</p>}
+              {d.artist && <p className="pjh-artist">{upper(d.artist)}</p>}
               <h1>{name}</h1>
               <p className="pjh-meta">{[d.client, d.category, d.status, d.code].filter(Boolean).join(' · ')}</p>
               {(d.startDate || d.director || d.producer) && (
@@ -191,10 +213,10 @@ function Song({ token, music }) {
   const toggle = () => { const a = audio.current; if (!a) return; if (a.paused) a.play().catch(() => {}); else a.pause() }
   const now = music.sections.find((s) => time >= s.start && time < s.end)
   return (
-    <section className="pjh-panel">
-      <header className="pjh-panel-head"><h2>Song</h2>{tracks.length > 1 && (
+    <>
+    <Panel title="Song" extra={tracks.length > 1 && (
         <span className="pjh-seg">{tracks.map((t) => <button key={t.id} type="button" className={t.id === tid ? 'on' : ''} onClick={() => { setTid(t.id); setPlaying(false); setTime(0) }}>{t.name}</button>)}</span>
-      )}</header>
+      )}>
       {track && (
         <div className="pjh-player">
           <button type="button" className="pjh-play" onClick={toggle} disabled={!url} aria-label={playing ? 'Pause' : 'Play'}>
@@ -207,7 +229,9 @@ function Song({ token, music }) {
           {url && <audio ref={audio} src={url} preload="metadata" controlsList="nodownload" onContextMenu={noMenu} onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />}
         </div>
       )}
-      {music.sections.length > 0 && (
+    </Panel>
+    {music.sections.length > 0 && (
+      <Panel title="Lyrics Per Section" aside={`${music.sections.length} section${music.sections.length === 1 ? '' : 's'}`}>
         <ol className="pjh-map">
           {music.sections.map((s, i) => (
             <li key={i} className={now === s ? 'now' : ''}>
@@ -216,8 +240,9 @@ function Song({ token, music }) {
             </li>
           ))}
         </ol>
-      )}
-    </section>
+      </Panel>
+    )}
+    </>
   )
 }
 
@@ -279,7 +304,7 @@ function Comment({ token }) {
     } catch (err) { setState(err.message || 'Could not send it. Try again.') }
   }
   return (
-    <Panel title="Leave a comment" className="pjh-comment">
+    <Panel title="Leave a comment" className="pjh-comment" fold={false}>
       <form onSubmit={send}>
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" maxLength={120} autoComplete="name" />
         <textarea className="input" rows={4} value={note} onChange={(e) => { setNote(e.target.value); if (state === 'sent') setState('') }} placeholder="Your comment for the team" maxLength={4000} />
