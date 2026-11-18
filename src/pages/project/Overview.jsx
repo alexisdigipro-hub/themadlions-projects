@@ -18,7 +18,6 @@ import Notes from './Notes.jsx'
 import Script from './Script.jsx'
 import Music, { Waveform } from './Music.jsx'
 import Fold, { BoxOrderCtx, useBoxOrder } from '../../components/Fold.jsx'
-import PdfShows from './PdfShows.jsx'
 import People from './People.jsx'
 import RoardinoPage from '../RoardinoPage.jsx'
 import { supabase } from '../../lib/supabase.js'
@@ -154,7 +153,6 @@ const ADD_ICONS = {
   script: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4" /><path d="m7.5 8.5 4.5-4.5 4.5 4.5" /><path d="M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15" /></svg>,
   paste: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4.5" width="12" height="16" rx="2.5" /><path d="M9.5 4.5V3.8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v.7" /><path d="M9 10h6M9 13.5h6M9 17h4" /></svg>,
   chat: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H10l-4.5 3.5v-3.5h0a2 2 0 0 1-1-1.7z" /><path d="M8.5 9.5h7M8.5 12.5h4.5" /></svg>,
-  pdf: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="11" rx="2" /><path d="M9 19.5h6M12 16v3.5M10.5 8.5v4l3.5-2z" /></svg>,
   notes: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5L19 8v11.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1Z" /><path d="M14 3.5V8h5M8.5 12.5h7M8.5 16h5" /></svg>,
   edit: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></svg>,
   lock: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /></svg>,
@@ -274,7 +272,7 @@ export default function Overview() {
   // the boxes' order, by dragging their grip (components/Fold.jsx)
   const ovRef = useRef(null)
   const boxOrder = useBoxOrder(ovRef)
-  const [start, setStart] = useState({ task: 0, song: 0, link: 0, notes: 0, script: 0, paste: 0, pdf: 0 })
+  const [start, setStart] = useState({ task: 0, song: 0, link: 0, notes: 0, script: 0, paste: 0 })
   const begin = (k) => setStart((s0) => ({ ...s0, [k]: s0[k] + 1 }))
   const isMusicVideo = project.category === 'Music Video'
   const hasSong = !!(project.music?.tracks || []).length
@@ -284,7 +282,6 @@ export default function Overview() {
     isMusicVideo && can(user, 'music') && canEdit('music') && !hasSong && ['song', 'Upload song'],
     can(user, 'files') && canEdit('files') && !(project.links || []).length && ['link', 'Add link'],
     can(user, 'files') && canEdit('files') && !(project.productionNotes || '').trim() && ['notes', 'Add notes'],
-    can(user, 'files') && canEdit('files') && ['pdf', 'Add presentation'],
     sections.includes('script') && canEdit('script') && !project.script?.text && !(project.scriptVersions || []).length && ['script', 'Upload script'],
     sections.includes('script') && canEdit('script') && !project.script?.text && !(project.scriptVersions || []).length && ['paste', 'Paste script'],
   ].filter(Boolean)
@@ -314,9 +311,9 @@ export default function Overview() {
                       <>
                         <span className="ab-export-shade" onClick={() => setMenu('')} />
                         <div className="ov-menu ov-menu-add">
-                          {adds.some(([k]) => ['task', 'link', 'notes', 'pdf'].includes(k)) && <>
+                          {adds.some(([k]) => ['task', 'link', 'notes'].includes(k)) && <>
                             <span className="ov-menu-head">Work</span>
-                            <div className="ov-menu-grid">{adds.filter(([k]) => ['task', 'link', 'notes', 'pdf'].includes(k)).map(([k, label]) => <button key={k} type="button" className="add-pill" onClick={() => begin(k)}>{ADD_ICONS[k]}<span>{label}</span></button>)}</div>
+                            <div className="ov-menu-grid">{adds.filter(([k]) => ['task', 'link', 'notes'].includes(k)).map(([k, label]) => <button key={k} type="button" className="add-pill" onClick={() => begin(k)}>{ADD_ICONS[k]}<span>{label}</span></button>)}</div>
                           </>}
                           {adds.some(([k]) => ['song', 'script', 'paste'].includes(k)) && <>
                             <span className="ov-menu-head">Song &amp; script</span>
@@ -429,8 +426,6 @@ export default function Overview() {
 
       {/* Files & Notes used to be its own tab; links and production notes moved here, Files was dropped */}
       {can(user, 'files') && <Fold k="notes" title="Files &amp; notes"><Notes hideEmpty startLink={start.link} startNotes={start.notes} /></Fold>}
-      {/* presentations from a PDF (Alex, 18 Nov), each its own box */}
-      {can(user, 'files') && <PdfShows startSignal={start.pdf} />}
 
       {/* Project Database and Script & Breakdown, once tabs, are Overview's own sections now (Alex, 27 Oct); a
           project can still switch either off in Edit details > Tabs */}

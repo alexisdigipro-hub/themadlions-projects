@@ -7,7 +7,6 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 
 ## What is inside
 
-- **Presentation from a PDF** (18 Nov): + Add > Add presentation on a project's Overview takes a PDF and keeps only what is in it, the titles, texts and pictures, shown as the hub's own slides, one at a time with arrows, and Present for the whole screen.
 - **Fold any box** (18 Nov): on a project's Overview every box (Song, Lyrics Per Section, Tasks, Files & notes, Crew, Cast, Locations, Gear, Script) has a small arrow on its side that folds it into a slim bar; tap the bar to open it. Each device remembers what you folded.
 - **Share a project with collaborators** (18 Nov): Overview > ⋯ > Share with collaborators makes a link where outside people see the project almost as the team does, in the hub's look: progress, the song with its song map and lyrics, schedule, tasks, files & notes, script and breakdown, team, locations and gear, and can leave comments; nothing else. Never the budget, phone numbers or emails; songs and photos can be heard and seen, not downloaded. Switch any section off, add a code, a closing date, close it any time; it follows the project by itself.
 - **Finance PIN** (14 Nov): Finance > Settings > Set a PIN locks Finance with 4 digits of your own; it stays open while you use it and 10 minutes after. Forgot it: Forgot PIN? on the lock takes it off with your hub password.
