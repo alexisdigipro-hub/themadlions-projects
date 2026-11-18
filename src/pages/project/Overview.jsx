@@ -23,6 +23,7 @@ import { supabase } from '../../lib/supabase.js'
 import { syncShootDay } from '../../lib/shootDays.js'
 import { ReceiptModal } from '../../components/Receipt.jsx'
 import { groupPairs } from '../../lib/budgetCats.js'
+import ProjectShare, { useProjectShareSync } from '../../components/ProjectShare.jsx'
 
 // Made absolute here: a relative url() inside a CSS variable is read against the stylesheet
 // (assets/), not the page, so "./ordino-set.webp" was looked for in the wrong folder
@@ -160,6 +161,9 @@ const ADD_ICONS = {
 
 export default function Overview() {
   const { project, edit, canEdit, user, sections = [] } = useProject()
+  // Share with collaborators (Alex, 18 Nov): the window, and the open link following the project
+  const [sharing, setSharing] = useState(false)
+  useProjectShareSync(project)
   const [ordinoOpen, setOrdinoOpen] = useState(false)
   const [receiptOpen, setReceiptOpen] = useState(false)
   const myReceipts = (project.budget?.lines || []).filter((l) => l.receipt && l.receipt.addedBy === user?.id).length
@@ -345,6 +349,7 @@ export default function Overview() {
                         <span className="ab-export-shade" onClick={() => setMenu('')} />
                         <div className="ov-menu ov-menu-more">
                           {can(user, 'projects', 'edit') && <button type="button" className="ov-menu-row" disabled={duping} onClick={() => { setMenu(''); duplicate() }}>{ADD_ICONS.duplicate}<span><b>{duping ? 'Copying…' : 'Duplicate'}</b><small>A copy of this project to start from</small></span></button>}
+                          {can(user, 'share', 'edit') && remote && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); setSharing(true) }}>{ADD_ICONS.link}<span><b>Share with collaborators</b><small>A link to see the progress and leave comments</small></span></button>}
                           {user?.role === 'admin' && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); edit((p) => { p.frozen = !p.frozen }); toast(project.frozen ? 'Project unlocked, the team can edit again' : 'Project locked: only administrators can change it now', 'ok') }}>{project.frozen ? ADD_ICONS.unlock : ADD_ICONS.lock}<span><b>{project.frozen ? 'Unlock project' : 'Lock project'}</b><small>{project.frozen ? 'The team can edit it again' : 'Only administrators can change it'}</small></span></button>}
                         </div>
                       </>
@@ -471,6 +476,7 @@ export default function Overview() {
       >
         {draft && <ProjectForm value={draft} onChange={setDraft} />}
       </Modal>
+      {sharing && <ProjectShare project={project} onClose={() => setSharing(false)} />}
     </div>
   )
 }

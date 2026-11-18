@@ -22,6 +22,8 @@ export const statusUrl = (t) => `${linkBase()}ps/${t}`
 export const estimateUrl = (t) => `${linkBase()}e/${t}`
 export const invoiceUrl = (t) => `${linkBase()}inv/${t}`
 export const deckUrl = (t) => `${linkBase()}pr/${t}`
+// a project for outside collaborators (Alex, 18 Nov; lib/projectShare.js, pages/PublicProject.jsx)
+export const projectUrl = (t) => `${linkBase()}pj/${t}`
 export const noteUrl = (t) => `${linkBase()}n/${t}`
 /* publishShare hands back a /s/ url; a delivery needs the token out of it to build its own. */
 export const tokenOf = (url) => String(url || '').split('/').filter(Boolean).pop() || ''
