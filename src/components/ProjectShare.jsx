@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Button, DateInput, Field, Modal, useToast } from './ui.jsx'
 import { can, useCurrentUser, useStore } from '../lib/store.jsx'
 import { newPin, projectUrl, tokenOf } from '../lib/shares.js'
-import { DEFAULT_SECTIONS, SECTIONS, getProjectShare, publishProjectShare, removeProjectShare, setProjectShare } from '../lib/projectShare.js'
+import { DEFAULT_SECTIONS, SECTIONS, sectionsOf, getProjectShare, publishProjectShare, removeProjectShare, setProjectShare } from '../lib/projectShare.js'
 import { fmtDate } from '../lib/dates.js'
 
 /* Share with collaborators (Alex, 18 Nov; lib/projectShare.js): one link per project, what it shows, a code, a date
@@ -18,7 +18,7 @@ export default function ProjectShare({ project, onClose }) {
     try {
       const r = await getProjectShare(state, project.id)
       setRow(r)
-      if (r?.data?.sections) setSections(r.data.sections)
+      if (r) setSections(sectionsOf(r))
     } catch (e) { setRow(null); toast(e.message, 'error') }
   }
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -49,7 +49,7 @@ export default function ProjectShare({ project, onClose }) {
 
   return (
     <Modal open title="Share with collaborators" onClose={onClose} className="pshare">
-      <p className="small muted">A link for people outside the team. They see the progress and what you choose below, and can leave comments; they cannot change anything. Money, phone numbers, emails, notes and files never go on it.</p>
+      <p className="small muted">A link for people outside the team. They see the project almost as you do, and can leave comments; they cannot change anything. The budget, phone numbers and emails never go on it; the song and photos can be heard and seen, not downloaded.</p>
       <div className="pshare-secs" role="group" aria-label="What the link shows">
         {SECTIONS.map(([k, label, hint]) => (
           <button key={k} type="button" role="switch" aria-checked={sections.includes(k)} className={`pshare-sec${sections.includes(k) ? ' on' : ''}`} onClick={() => toggle(k)} disabled={busy}>
@@ -110,7 +110,7 @@ export function useProjectShareSync(project) {
   useEffect(() => {
     let off = false
     if (!may || !project?.id) return undefined
-    getProjectShare(state, project.id).then((r) => { if (!off) live.current = r && !r.closed ? (r.data?.sections || DEFAULT_SECTIONS) : false }).catch(() => {})
+    getProjectShare(state, project.id).then((r) => { if (!off) live.current = r && !r.closed ? sectionsOf(r) : false }).catch(() => {})
     return () => { off = true }
   }, [project?.id, may]) // eslint-disable-line react-hooks/exhaustive-deps
   const first = useRef(true)

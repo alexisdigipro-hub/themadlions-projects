@@ -364,7 +364,8 @@ export default function Music() {
       )}
 
       {/* the song map's own heading, only once it has sections; its + Add is in the row above */}
-      {sections.length > 0 && <div className="toolbar"><div className="toolbar-info"><strong>Song map</strong></div></div>}
+      {/* "Lyrics Per Section", with room above it (Alex, 18 Nov) */}
+      {sections.length > 0 && <div className="toolbar song-map-head"><div className="toolbar-info"><strong>Lyrics Per Section</strong></div></div>}
 
       {/* no sections yet: nothing here, the box stays short; Add section, Paste full lyrics or Lyrics from audio open it
           (Alex, 27 Oct: "delete the No sections yet text, fold the box, open it when something is added") */}
