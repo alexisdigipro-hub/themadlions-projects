@@ -9960,3 +9960,12 @@ html.pjh-page, html.pjh-page body { min-height: 100%; }
   .pjh-player { flex-wrap: wrap; }
   .pjh-shared { display: none; }
 }
+
+/* Hear a section again (Alex, 18 Nov): the mic icon pulses while Whisper listens; the window shows the old lyrics folded */
+.song-icon.busy { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, transparent); animation: song-hear 1.1s ease-in-out infinite; }
+.song-icon:disabled:not(.busy) { opacity: .45; cursor: default; }
+@keyframes song-hear { 50% { background: color-mix(in srgb, var(--accent) 18%, transparent); } }
+.song-heard { margin: 0 0 10px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.song-heard p { margin: 0; }
+.song-heard summary { cursor: pointer; margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+html[data-theme] body .song-heard .song-lyrics { margin: 6px 0 0; font-size: 13.5px; }
