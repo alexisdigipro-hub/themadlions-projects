@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Modal, useToast } from '../../components/ui.jsx'
 import { ProjectForm } from '../Dashboard.jsx'
@@ -8,6 +8,7 @@ import { duplicateProject } from '../../lib/duplicate.js'
 import { fmtDate } from '../../lib/dates.js'
 import { projectProgress } from '../../lib/progress.js'
 import { analyze, fmtTime, fmtTimeMs, uploadTrack } from '../../lib/audio.js'
+import { useProjectAudio } from '../../lib/projectAudio.js'
 import { useTrackSource } from '../../lib/trackSource.js'
 import { pcloudTarget } from '../../lib/pcloud.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
@@ -44,8 +45,11 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
   const track = music.tracks.find((t) => t.id === music.activeTrackId) || music.tracks[0]
   const sections = music.sections || []
   const fileRef = useRef()
-  const audioRef = useRef()
   const { url, err, onError, play } = useTrackSource(track)
+  // the project's one player, kept playing across tabs (lib/projectAudio.js)
+  const player = useProjectAudio(project.id, track?.id, url, onError)
+  const audioRef = useMemo(() => ({ current: player }), [player])
+  useEffect(() => { setPlaying(!player.paused); setTime(player.currentTime || 0) }, [player]) // eslint-disable-line react-hooks/exhaustive-deps
   const [busy, setBusy] = useState('')
   const [time, setTime] = useState(0)
   const [playing, setPlaying] = useState(false)
@@ -129,7 +133,6 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
               ))}
             </select>
           )}
-          <audio ref={audioRef} src={url || undefined} preload="metadata" onError={onError} />
           {/* one slim row, play, the waveform, the time (Alex, 10 Oct: the whole box smaller, not only the wave) */}
           <div className="player-row">
             <button className="play" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
@@ -317,7 +320,7 @@ export default function Overview() {
           <div className="progress-main">
             <div className="progress-top">
               <span>
-                <strong className="progress-pct">{pct}%<small> done</small></strong> <span className="muted small progress-sub">{[project.status === 'Delivered' && ['Delivered'], project.frozen && ['🔒 locked'], project.startDate && [`shoot ${fmtDate(project.startDate)}`, 'progress-shoot']].filter(Boolean).map(([x, c]) => <span key={x} className={c}>{x}</span>)}</span>
+                <strong className="progress-pct">{pct}%<small> done</small></strong> <span className="muted small progress-sub">{[project.category && [project.category, 'progress-cat'], project.status === 'Delivered' && ['Delivered'], project.frozen && ['🔒 locked'], project.startDate && [`shoot ${fmtDate(project.startDate)}`, 'progress-shoot']].filter(Boolean).map(([x, c]) => <span key={x} className={c}>{x}</span>)}</span>
               </span>
               {/* the project's few actions, always in the same place (Alex, 28 Oct: "I was looking for Edit"):
                   + Add (everything that can be added, in groups), Edit, and ⋯ for Duplicate and Lock */}
