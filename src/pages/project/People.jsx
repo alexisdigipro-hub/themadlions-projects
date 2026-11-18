@@ -1,3 +1,4 @@
+import Fold from '../../components/Fold.jsx'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, useToast } from '../../components/ui.jsx'
@@ -125,6 +126,7 @@ export default function People({ onOverview = false, pillSlot = null }) {
     // cards and stay mounted either way, so that button has something to open.
     if (!list.length) return null
     return (
+      <Fold k={onOverview ? `db-${kind}` : ''} title={label} off={!onOverview}>
       <section className="panel db-card" data-stage={kind}>
         <div className="toolbar">
           <div className="toolbar-info">
@@ -185,6 +187,7 @@ export default function People({ onOverview = false, pillSlot = null }) {
           </div>
         )}
       </section>
+      </Fold>
     )
   }
 
@@ -225,10 +228,10 @@ export default function People({ onOverview = false, pillSlot = null }) {
         </div>
       )}
       {can(user, 'locations') && (project.locations.length > 0
-        ? <section className="panel db-card" data-stage="locations"><Locations hideEmpty startSignal={start.location} librarySignal={start.locationLib} /></section>
+        ? <Fold k="db-locations" title="Locations" off={!onOverview}><section className="panel db-card" data-stage="locations"><Locations hideEmpty startSignal={start.location} librarySignal={start.locationLib} /></section></Fold>
         : <Locations hideEmpty startSignal={start.location} librarySignal={start.locationLib} />)}
       {can(user, 'gear') && ((project.gear || []).length > 0
-        ? <section className="panel db-card"><Gear hideEmpty startSignal={start.gear} /></section>
+        ? <Fold k="db-gear" title="Gear" off={!onOverview}><section className="panel db-card"><Gear hideEmpty startSignal={start.gear} /></section></Fold>
         : <Gear hideEmpty startSignal={start.gear} />)}
 
       <Modal

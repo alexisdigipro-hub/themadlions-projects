@@ -6,6 +6,7 @@ import { download } from '../../lib/dates.js'
 import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, songMapText, trackBlob, uploadTrack, lastTrackError } from '../../lib/audio.js'
 import { useTrackSource } from '../../lib/trackSource.js'
 import { pcloudTarget } from '../../lib/pcloud.js'
+import Fold from '../../components/Fold.jsx'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { useAudioChoice } from '../../components/AudioChoice.jsx'
 import { remote } from '../../lib/supabase.js'
@@ -89,7 +90,10 @@ export function Waveform({ peaks = [], duration = 0, time = 0, sections = [], on
   return <canvas ref={ref} className="wave" onClick={seek} onMouseMove={(e) => e.buttons === 1 && seek(e)} />
 }
 
-export default function Music() {
+export default function Music({ split = false }) {
+  /* on Overview the song and Lyrics Per Section are two boxes, each folding on its own (Alex, 18 Nov) */
+  const top = (x) => (split ? <Fold k="song" title="Song"><section className="panel music-panel" data-stage="song">{x}</section></Fold> : x)
+  const map = (x) => (split ? !sections.length ? null : <Fold k="lyrics" title="Lyrics Per Section"><section className="panel song-map-panel">{x}</section></Fold> : x)
   const { project, edit, canEdit } = useProject()
   const { state } = useStore()
   const toast = useToast()
@@ -287,7 +291,8 @@ export default function Music() {
   }
 
   return (
-    <div className="music">
+    <div className={split ? 'music music-split' : 'music'}>
+      {top(<>
       <div className="toolbar">
         <div className="toolbar-info">
           <strong>{track ? track.name : 'No track yet'}</strong>
@@ -362,6 +367,8 @@ export default function Music() {
       ) : (
         <Empty title="Upload the song">MP3, M4A or WAV. A WAV is converted to MP3 on this device first, so only the small file is stored. The waveform is drawn here, then you mark the sections (intro, verses, choruses) with their times and lyrics, and tie each one to the setups that will cover it.</Empty>
       )}
+      </>)}
+      {map(<>
 
       {/* the song map's own heading, only once it has sections; its + Add is in the row above */}
       {/* "Lyrics Per Section", with room above it (Alex, 18 Nov) */}
@@ -407,6 +414,7 @@ export default function Music() {
           })}
         </ol>
       )}
+      </>)}
 
       {draft && (
         <Modal open wide title={music.sections.some((s) => s.id === draft.id) ? `Edit ${draft.name}` : 'New section'} onClose={() => setDraft(null)}

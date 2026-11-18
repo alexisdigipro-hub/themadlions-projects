@@ -17,6 +17,7 @@ import Tasks, { tasksFor } from './Tasks.jsx'
 import Notes from './Notes.jsx'
 import Script from './Script.jsx'
 import Music, { Waveform } from './Music.jsx'
+import Fold from '../../components/Fold.jsx'
 import People from './People.jsx'
 import RoardinoPage from '../RoardinoPage.jsx'
 import { supabase } from '../../lib/supabase.js'
@@ -401,8 +402,8 @@ export default function Overview() {
       {/* one song box (Alex, 27 Oct: "the audio is there twice"): with the Script section on and a song uploaded it is the
           full song map (waveform, sections, lyrics); otherwise the simple player, whose Upload song is a pill above */}
       {isMusicVideo && can(user, 'music') && (sections.includes('script') && hasSong
-        ? <section className="panel music-panel" data-stage="song"><Music /></section>
-        : <SongPlayer project={project} edit={edit} editable={canEdit('music')} hideEmpty startSignal={start.song} />)}
+        ? <Music split />
+        : <Fold k="song" title="Song"><SongPlayer project={project} edit={edit} editable={canEdit('music')} hideEmpty startSignal={start.song} /></Fold>)}
 
       {/* The ordino as one button that looks like the song box above it, for everyone on the project,
           administrators too (Alex, 10 Oct); it opens the finished ordino as the crew get it on a phone.
@@ -433,16 +434,16 @@ export default function Overview() {
       )}
       {receiptOpen && <ReceiptModal project={project} groups={groupPairs(state.settings, project.budget?.lines || [])} onClose={() => setReceiptOpen(false)} />}
 
-      {can(user, 'tasks') && <Tasks hideEmpty startSignal={start.task} />}
+      {can(user, 'tasks') && <Fold k="tasks" title="Tasks"><Tasks hideEmpty startSignal={start.task} /></Fold>}
 
 
       {/* Files & Notes used to be its own tab; links and production notes moved here, Files was dropped */}
-      {can(user, 'files') && <Notes hideEmpty startLink={start.link} startNotes={start.notes} />}
+      {can(user, 'files') && <Fold k="notes" title="Files &amp; notes"><Notes hideEmpty startLink={start.link} startNotes={start.notes} /></Fold>}
 
       {/* Project Database and Script & Breakdown, once tabs, are Overview's own sections now (Alex, 27 Oct); a
           project can still switch either off in Edit details > Tabs */}
       {sections.includes('people') && <People onOverview pillSlot={pillSlot} />}
-      {sections.includes('script') && <div data-stage="script" style={{ display: 'contents' }}><Script hideEmpty uploadSignal={start.script} pasteSignal={start.paste} /></div>}
+      {sections.includes('script') && <Fold k="script" title="Script &amp; Breakdown"><div data-stage="script" style={{ display: 'contents' }}><Script hideEmpty uploadSignal={start.script} pasteSignal={start.paste} /></div></Fold>}
 
       <Modal
         open={!!draft}
