@@ -1,29 +1,58 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
-import { LOOK_DEFAULT, loadFont, lookProps } from '../lib/estimateLook.js'
 import { respondToDelivery } from '../lib/shares.js'
+import { applyThemeChoice } from '../lib/skin.js'
+import { SUPABASE_KEY, SUPABASE_URL } from '../lib/supabaseConfig.js'
 
-/* A project for outside collaborators (Alex, 18 Nov; lib/projectShare.js). The page reads only the snapshot the team
-   published, in the company site's look (as a delivery's page), and offers one thing to do: leave a comment. */
+/* A project for outside collaborators (Alex, 18 Nov; lib/projectShare.js). "Almost as we see it, everything we have
+   put in, all but the budget", in the hub's own look (the theme of whoever shared it): the project's head with its
+   progress, the song with its map and lyrics, the schedule, tasks, files & notes, script & breakdown, team,
+   locations and gear, each a glass panel. Read only; the one thing to do is leave a comment. The song and the photos
+   come one by one from the share-media function, for this link only, to hear and see, with no download offered. */
 
 const fmt = (d, o = { day: 'numeric', month: 'short', year: 'numeric' }) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', o) : '')
-const upper = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().normalize('NFC')
+const clock = (sec) => { const t = Math.max(0, Math.round(sec || 0)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}` }
+const noMenu = (e) => e.preventDefault()
+
+/* one file of the link, by the server; cached per page */
+const cache = new Map()
+function useMedia(token, item) {
+  const key = item ? (item.fileid ? `pc:${item.fileid}` : `${item.b}:${item.path}`) : ''
+  const [url, setUrl] = useState(() => (item?.inline ? item.inline : cache.get(key) || ''))
+  useEffect(() => {
+    if (!item || item.inline || !key) return undefined
+    if (cache.get(key)) { setUrl(cache.get(key)); return undefined }
+    let off = false
+    let pin = ''
+    try { pin = localStorage.getItem(`tml_pin_${token}`) || '' } catch { /* private window */ }
+    fetch(`${SUPABASE_URL}/functions/v1/share-media`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ token, pin, fileid: item.fileid || 0, path: item.path || '', b: item.b || '' }),
+    }).then((r) => r.json()).then((r) => { if (r?.url && !off) { cache.set(key, r.url); setUrl(r.url) } }).catch(() => {})
+    return () => { off = true }
+  }, [key]) // eslint-disable-line react-hooks/exhaustive-deps
+  return url
+}
+
+function Photo({ token, item, className = '' }) {
+  const url = useMedia(token, item)
+  return <span className={`pjh-photo ${className}`}>{url && <img src={url} alt="" loading="lazy" draggable="false" onContextMenu={noMenu} />}</span>
+}
+
+const Panel = ({ title, aside, children, className = '' }) => (
+  <section className={`pjh-panel ${className}`}>
+    {title && <header className="pjh-panel-head"><h2>{title}</h2>{aside && <span className="pjh-aside">{aside}</span>}</header>}
+    {children}
+  </section>
+)
 
 export default function PublicProject() {
   const { token } = useParams()
   const { share, tryPin, pinErr } = usePublicShare(token)
-  useEffect(() => {
-    const html = document.documentElement
-    const before = html.dataset.theme
-    const skin = html.dataset.skin
-    html.dataset.theme = 'dark'
-    html.classList.add('pub-est-page')
-    delete html.dataset.skin
-    loadFont(LOOK_DEFAULT.font)
-    html.style.setProperty('--est-page-bg', LOOK_DEFAULT.bg)
-    return () => { html.dataset.theme = before; html.classList.remove('pub-est-page'); html.style.removeProperty('--est-page-bg'); if (skin) html.dataset.skin = skin }
-  }, [])
+  const look = share?.data?.look
+  useEffect(() => { applyThemeChoice(look || 'glassdark'); document.documentElement.classList.add('pjh-page'); return () => document.documentElement.classList.remove('pjh-page') }, [look])
 
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading…</p></div>
   if (share?.closed) return <div className="pub"><div className="pub-card"><h1>This link is closed</h1><p className="muted">The production has closed this page. Ask them for a fresh one.</p></div></div>
@@ -32,88 +61,205 @@ export default function PublicProject() {
   if (!share || share.kind !== 'project') return <div className="pub"><div className="pub-card"><h1>This link has expired</h1><p className="muted">Ask the production for a fresh one.</p></div></div>
 
   const d = share.data || {}
-  const look = lookProps(LOOK_DEFAULT)
-  const days = d.days || [], tasks = d.tasks || [], team = d.team || [], locs = d.locations || [], scenes = d.scenes || []
-  const open = tasks.filter((t) => !t.done), done = tasks.filter((t) => t.done)
-  const cast = team.filter((c) => c.kind === 'cast'), crew = team.filter((c) => c.kind !== 'cast')
   const updated = share.updated_at ? new Date(share.updated_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
+  const name = d.shortTitle || d.title
 
   return (
-    <div className={`pub dlv dlv-estimate dlv-site pj ${look.className}`} style={look.style}>
-      <div className="dlv-sheet">
-        <header className="dlv-band dlv-top dlv-brand">
-          <img className="dlv-wordmark" src="./site/wordmark.png" alt={d.company?.name || 'THEMADLIONS'} />
-        </header>
+    <div className="pjh">
+      <div className="pjh-wrap">
+        <div className="pjh-top">
+          <span className="pjh-brand">{(d.company?.name || 'THEMADLIONS').toUpperCase()}</span>
+          <span className="pjh-shared">Shared project{updated ? ` · updated ${updated}` : ''}</span>
+        </div>
 
-        <section className="dlv-band dlv-hero">
-          <div className="dlv-stage">Project · {d.category || 'Production'}</div>
-          <h1 className="dlv-title">{d.title}</h1>
-          {d.client && <p className="dlv-client">{upper(d.client)}</p>}
-          <p className="pj-meta">
-            {[d.status, d.startDate ? `${fmt(d.startDate)}${d.endDate && d.endDate !== d.startDate ? ` to ${fmt(d.endDate)}` : ''}` : '', updated ? `Updated ${updated}` : ''].filter(Boolean).map((t, i) => <span key={i}>{t}</span>)}
-          </p>
-          {d.cover && <img className="pj-cover" src={d.cover} alt="" />}
-        </section>
+        <Panel className="pjh-hero">
+          <div className="pjh-hero-row">
+            {d.cover ? <img className="pjh-cover" src={d.cover} alt="" draggable="false" onContextMenu={noMenu} /> : <span className="pjh-cover pjh-cover-none" style={{ background: d.color || undefined }} />}
+            <div className="pjh-hero-text">
+              {d.artist && <p className="pjh-artist">{d.artist}</p>}
+              <h1>{name}</h1>
+              <p className="pjh-meta">{[d.client, d.category, d.status, d.code].filter(Boolean).join(' · ')}</p>
+              {(d.startDate || d.director || d.producer) && (
+                <p className="pjh-meta">{[d.startDate ? `${fmt(d.startDate)}${d.endDate && d.endDate !== d.startDate ? ` to ${fmt(d.endDate)}` : ''}` : '', d.director ? `Director ${d.director}` : '', d.producer ? `Producer ${d.producer}` : ''].filter(Boolean).join(' · ')}</p>
+              )}
+            </div>
+            {d.progress && <span className="pjh-pct">{d.progress.pct}%</span>}
+          </div>
+          {d.progress && (
+            <>
+              <div className="pjh-bar"><i style={{ width: `${d.progress.pct}%` }} /></div>
+              <div className="pjh-stages">
+                {d.progress.stages.map((s, i) => <span key={i} className={`pjh-chip${s.done >= 100 ? ' done' : s.done > 0 ? ' part' : ''}`}><i />{s.label}{s.done > 0 && s.done < 100 ? ` ${s.done}%` : ''}</span>)}
+              </div>
+            </>
+          )}
+        </Panel>
 
-        {d.progress && (
-          <section className="dlv-block pj-block">
-            <h2>Progress</h2>
-            <div className="pj-pct"><b>{d.progress.pct}%</b></div>
-            <div className="pj-bar"><i style={{ width: `${d.progress.pct}%` }} /></div>
-            <ul className="plain pj-stages">
-              {d.progress.stages.map((s, i) => <li key={i} className={s.done >= 100 ? 'done' : s.done > 0 ? 'part' : ''}><span className="pj-dot" />{s.label}<small>{s.done >= 100 ? 'Done' : s.done > 0 ? `${s.done}%` : 'To do'}</small></li>)}
+        {d.music && (d.music.tracks.length > 0 || d.music.sections.length > 0) && <Song token={token} music={d.music} />}
+
+        {d.days?.length > 0 && (
+          <Panel title="Schedule" aside={`${d.days.length} day${d.days.length === 1 ? '' : 's'}`}>
+            <ul className="pjh-list">
+              {d.days.map((x, i) => (
+                <li key={i} className="pjh-row">
+                  <b>{fmt(x.date, { weekday: 'short', day: 'numeric', month: 'short' })}</b>
+                  <span className="pjh-dim">{[x.call && x.wrap ? `${x.call} to ${x.wrap}` : x.call, x.where, x.unit].filter(Boolean).join(' · ')}</span>
+                  {x.blocks?.length > 0 && (
+                    <ul className="pjh-blocks">{x.blocks.map((b, j) => <li key={j}><span className="pjh-time">{b.time}{b.end ? `–${b.end}` : ''}</span>{b.item}{b.owner ? <span className="pjh-dim"> · {b.owner}</span> : null}</li>)}</ul>
+                  )}
+                </li>
+              ))}
             </ul>
-          </section>
+          </Panel>
         )}
 
-        {days.length > 0 && (
-          <section className="dlv-block pj-block">
-            <h2>Schedule</h2>
-            <ul className="plain pj-tiles">
-              {days.map((x, i) => <li key={i}><b>{fmt(x.date, { weekday: 'short', day: 'numeric', month: 'short' })}</b><span>{[x.call && x.wrap ? `${x.call} to ${x.wrap}` : x.call, x.where, x.unit].filter(Boolean).join(' · ')}</span></li>)}
-            </ul>
-          </section>
+        {d.tasks?.length > 0 && <Tasks tasks={d.tasks} />}
+
+        {(d.notes || d.links?.length > 0) && (
+          <Panel title="Files & notes">
+            {d.notes && <p className="pjh-notes">{d.notes}</p>}
+            {d.links?.length > 0 && (
+              <div className="pjh-links">
+                {d.links.map((l, i) => <a key={i} className="pjh-link" href={l.url} target="_blank" rel="noreferrer noopener"><b>{l.title}</b><span className="pjh-dim">{[l.kind, l.note].filter(Boolean).join(' · ')}</span></a>)}
+              </div>
+            )}
+          </Panel>
         )}
 
-        {tasks.length > 0 && (
-          <section className="dlv-block pj-block">
-            <h2>Tasks <small>{done.length} of {tasks.length} done</small></h2>
-            <ul className="plain pj-tiles">
-              {[...open, ...done].map((t, i) => <li key={i} className={t.done ? 'done' : ''}><span className="pj-check">{t.done ? '✓' : ''}</span><b>{t.title}</b><span>{[t.dept, t.due ? `due ${fmt(t.due, { day: 'numeric', month: 'short' })}` : ''].filter(Boolean).join(' · ')}</span></li>)}
-            </ul>
-          </section>
+        {(d.script || d.scenes?.length > 0) && <Script text={d.script} scenes={d.scenes || []} />}
+
+        {d.team?.length > 0 && (
+          <Panel title="Team" aside={`${d.team.length}`}>
+            <div className="pjh-people">
+              {[...d.team.filter((c) => c.kind === 'cast'), ...d.team.filter((c) => c.kind !== 'cast')].map((c, i) => (
+                <div key={i} className="pjh-person">
+                  {c.photos?.[0] ? <Photo token={token} item={c.photos[0]} className="round" /> : <span className="pjh-photo round pjh-initial">{(c.name || '?').slice(0, 1)}</span>}
+                  <span><b>{c.name}</b><small>{c.kind === 'cast' ? (c.character ? `as ${c.character}` : 'Cast') : c.role || c.dept}</small></span>
+                </div>
+              ))}
+            </div>
+          </Panel>
         )}
 
-        {team.length > 0 && (
-          <section className="dlv-block pj-block">
-            <h2>Team</h2>
-            <ul className="plain pj-people">
-              {[...cast, ...crew].map((c, i) => <li key={i}><b>{c.name}</b><span>{c.kind === 'cast' ? (c.character ? `as ${c.character}` : 'Cast') : c.role || c.dept}</span></li>)}
-            </ul>
-          </section>
+        {d.locations?.length > 0 && (
+          <Panel title="Locations" aside={`${d.locations.length}`}>
+            <div className="pjh-places">
+              {d.locations.map((l, i) => (
+                <div key={i} className="pjh-place">
+                  {l.photos?.length > 0 && <div className="pjh-strip">{l.photos.slice(0, 6).map((ph, j) => <Photo key={j} token={token} item={ph} />)}</div>}
+                  <b>{l.name}</b>
+                  <span className="pjh-dim">{[l.type, l.address].filter(Boolean).join(' · ')}</span>
+                  {l.notes && <p className="pjh-small">{l.notes}</p>}
+                </div>
+              ))}
+            </div>
+          </Panel>
         )}
 
-        {locs.length > 0 && (
-          <section className="dlv-block pj-block">
-            <h2>Locations</h2>
-            <ul className="plain pj-tiles">
-              {locs.map((l, i) => <li key={i}><b>{l.name}</b><span>{[l.type, l.address].filter(Boolean).join(' · ')}</span></li>)}
+        {d.gear?.length > 0 && (
+          <Panel title="Gear" aside={`${d.gear.length}`}>
+            <ul className="pjh-list">
+              {d.gear.map((g, i) => <li key={i} className="pjh-row pjh-row-line"><b>{g.item}{g.qty > 1 ? ` ×${g.qty}` : ''}</b><span className="pjh-dim">{g.category}</span>{g.status && <span className={`pjh-chip small s-${g.status}`}>{g.status}</span>}</li>)}
             </ul>
-          </section>
-        )}
-
-        {scenes.length > 0 && (
-          <section className="dlv-block pj-block">
-            <h2>Scenes</h2>
-            <ul className="plain pj-tiles">
-              {scenes.map((s, i) => <li key={i}><b>{s.number}</b><span>{[s.heading, s.time].filter(Boolean).join(' · ')}</span></li>)}
-            </ul>
-          </section>
+          </Panel>
         )}
 
         <Comment token={token} />
       </div>
     </div>
+  )
+}
+
+/* the song: a player (heard, not downloaded), its waveform, and the song map with the lyrics */
+function Song({ token, music }) {
+  const tracks = music.tracks || []
+  const [tid, setTid] = useState(music.active && tracks.some((t) => t.id === music.active) ? music.active : tracks[0]?.id)
+  const track = tracks.find((t) => t.id === tid)
+  const url = useMedia(token, track && (track.fileid || track.path) ? track : null)
+  const audio = useRef(null)
+  const [time, setTime] = useState(0)
+  const [playing, setPlaying] = useState(false)
+  const dur = track?.duration || audio.current?.duration || 0
+  const peaks = useMemo(() => {
+    const p = track?.peaks || []
+    if (!p.length) return []
+    const n = 120, out = []
+    for (let i = 0; i < n; i++) out.push(p[Math.floor((i / n) * p.length)] || 0)
+    return out
+  }, [track])
+  const seek = (sec, go = true) => { const a = audio.current; if (!a) return; a.currentTime = sec; if (go) a.play().catch(() => {}) }
+  const toggle = () => { const a = audio.current; if (!a) return; if (a.paused) a.play().catch(() => {}); else a.pause() }
+  const now = music.sections.find((s) => time >= s.start && time < s.end)
+  return (
+    <section className="pjh-panel">
+      <header className="pjh-panel-head"><h2>Song</h2>{tracks.length > 1 && (
+        <span className="pjh-seg">{tracks.map((t) => <button key={t.id} type="button" className={t.id === tid ? 'on' : ''} onClick={() => { setTid(t.id); setPlaying(false); setTime(0) }}>{t.name}</button>)}</span>
+      )}</header>
+      {track && (
+        <div className="pjh-player">
+          <button type="button" className="pjh-play" onClick={toggle} disabled={!url} aria-label={playing ? 'Pause' : 'Play'}>
+            {playing ? <svg viewBox="0 0 24 24"><rect x="7" y="5" width="3.5" height="14" rx="1" /><rect x="13.5" y="5" width="3.5" height="14" rx="1" /></svg> : <svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" /></svg>}
+          </button>
+          <div className="pjh-wave" onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); if (dur) seek(((e.clientX - r.left) / r.width) * dur) }}>
+            {peaks.length ? peaks.map((v, i) => <i key={i} className={dur && (i / peaks.length) * dur <= time ? 'on' : ''} style={{ height: `${Math.max(8, v * 100)}%` }} />) : <span className="pjh-dim">{track.name}</span>}
+          </div>
+          <span className="pjh-time">{clock(time)} / {clock(dur)}</span>
+          {url && <audio ref={audio} src={url} preload="metadata" controlsList="nodownload" onContextMenu={noMenu} onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />}
+        </div>
+      )}
+      {music.sections.length > 0 && (
+        <ol className="pjh-map">
+          {music.sections.map((s, i) => (
+            <li key={i} className={now === s ? 'now' : ''}>
+              <button type="button" className="pjh-mini-play" onClick={() => seek(s.start)} disabled={!url} aria-label={`Play ${s.name}`}><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" /></svg></button>
+              <div><b>{s.name}</b><span className="pjh-dim"> {clock(s.start)} to {clock(s.end)}</span>{s.lyrics && <p className="pjh-lyrics">{s.lyrics}</p>}</div>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  )
+}
+
+function Tasks({ tasks }) {
+  const open = tasks.filter((t) => !t.done), done = tasks.filter((t) => t.done)
+  return (
+    <Panel title="Tasks" aside={`${done.length} of ${tasks.length} done`}>
+      <ul className="pjh-list">
+        {[...open, ...done].map((t, i) => (
+          <li key={i} className={`pjh-row pjh-task${t.done ? ' done' : ''}`}>
+            <span className="pjh-check">{t.done && <svg viewBox="0 0 24 24"><path d="m6 12.5 4 4 8-9" /></svg>}</span>
+            <span className="pjh-task-text"><b>{t.title}</b>{t.notes && <small>{t.notes}</small>}</span>
+            <span className="pjh-dim">{[t.who, t.dept, t.due ? `due ${fmt(t.due, { day: 'numeric', month: 'short' })}` : ''].filter(Boolean).join(' · ')}</span>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  )
+}
+
+function Script({ text, scenes }) {
+  const [show, setShow] = useState(false)
+  return (
+    <Panel title="Script & Breakdown" aside={scenes.length ? `${scenes.length} scene${scenes.length === 1 ? '' : 's'}` : ''}>
+      {scenes.length > 0 && (
+        <ul className="pjh-list">
+          {scenes.map((s, i) => (
+            <li key={i} className="pjh-row pjh-scene">
+              <span className="pjh-num">{s.number}</span>
+              <span className="pjh-task-text"><b>{s.heading}</b>{s.synopsis && <small>{s.synopsis}</small>}{s.characters?.length > 0 && <span className="pjh-tags">{s.characters.map((c, j) => <span key={j} className="pjh-chip small">{c}</span>)}</span>}</span>
+              {s.time && <span className="pjh-dim">{s.time}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {text && (
+        <>
+          <button type="button" className="pjh-pill" onClick={() => setShow(!show)}>{show ? 'Hide the script' : 'Read the script'}</button>
+          {show && <pre className="pjh-script">{text}</pre>}
+        </>
+      )}
+    </Panel>
   )
 }
 
@@ -133,16 +279,16 @@ function Comment({ token }) {
     } catch (err) { setState(err.message || 'Could not send it. Try again.') }
   }
   return (
-    <section className="dlv-block pj-block pj-comment">
-      <h2>Leave a comment</h2>
-      <p className="muted">The team sees it in the project. Nothing else on this page can be changed.</p>
+    <Panel title="Leave a comment" className="pjh-comment">
       <form onSubmit={send}>
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" maxLength={120} autoComplete="name" />
-        <textarea className="input" rows={4} value={note} onChange={(e) => { setNote(e.target.value); if (state === 'sent') setState('') }} placeholder="Your comment" maxLength={4000} />
-        <button type="submit" className="dlv-btn" disabled={state === 'sending' || !note.trim()}>{state === 'sending' ? 'Sending…' : 'Send comment'}</button>
-        {state === 'sent' && <p className="pj-sent">Thank you, the team has it.</p>}
-        {state && state !== 'sent' && state !== 'sending' && <p className="pj-err">{state}</p>}
+        <textarea className="input" rows={4} value={note} onChange={(e) => { setNote(e.target.value); if (state === 'sent') setState('') }} placeholder="Your comment for the team" maxLength={4000} />
+        <div className="pjh-send">
+          {state === 'sent' && <span className="pjh-ok">Thank you, the team has it.</span>}
+          {state && state !== 'sent' && state !== 'sending' && <span className="pjh-err">{state}</span>}
+          <button type="submit" className="pjh-pill main" disabled={state === 'sending' || !note.trim()}>{state === 'sending' ? 'Sending…' : 'Send comment'}</button>
+        </div>
       </form>
-    </section>
+    </Panel>
   )
 }

@@ -7,7 +7,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 
 ## What is inside
 
-- **Share a project with collaborators** (18 Nov): Overview > ⋯ > Share with collaborators makes a link where outside people see the progress and the sections you pick (schedule, tasks, team, locations, scenes), and can leave comments; nothing else. Never money, phone numbers or emails. Add a code, a closing date, close it any time; it follows the project by itself.
+- **Share a project with collaborators** (18 Nov): Overview > ⋯ > Share with collaborators makes a link where outside people see the project almost as the team does, in the hub's look: progress, the song with its song map and lyrics, schedule, tasks, files & notes, script and breakdown, team, locations and gear, and can leave comments; nothing else. Never the budget, phone numbers or emails; songs and photos can be heard and seen, not downloaded. Switch any section off, add a code, a closing date, close it any time; it follows the project by itself.
 - **Finance PIN** (14 Nov): Finance > Settings > Set a PIN locks Finance with 4 digits of your own; it stays open while you use it and 10 minutes after. Forgot it: Forgot PIN? on the lock takes it off with your hub password.
 - **Final Deliverables held until paid** (Outbox, 10 Nov): tick **Hold the files until paid** when you send them, and the client's page shows the files with a kind note that the links open once the payment is settled; nothing downloads. **Paid · open files** in the list opens them on the same link.
 - **TmlChat, tidier** (3 Nov): no bar at the foot of the chat; All, Unread, Groups and Archived sit at the top; the chat's settings are in **Settings > Chat**.
