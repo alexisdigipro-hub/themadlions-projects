@@ -4,6 +4,7 @@ import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, songMapText, trackBlob, uploadTrack, lastTrackError } from '../../lib/audio.js'
+import { useProjectAudio } from '../../lib/projectAudio.js'
 import { useTrackSource } from '../../lib/trackSource.js'
 import { pcloudTarget } from '../../lib/pcloud.js'
 import Fold from '../../components/Fold.jsx'
@@ -113,9 +114,12 @@ export default function Music({ split = false }) {
   const [trBusy, setTrBusy] = useState('')
   const music = { ...emptyMusic(), ...(project.music || {}) }
   const track = music.tracks.find((t) => t.id === music.activeTrackId) || music.tracks[0]
-  const audioRef = useRef()
   const fileRef = useRef()
   const { url, err, onError, play } = useTrackSource(track)
+  // the project's one player, kept playing across tabs (lib/projectAudio.js)
+  const player = useProjectAudio(project.id, track?.id, url, onError)
+  const audioRef = useMemo(() => ({ current: player }), [player])
+  useEffect(() => { setPlaying(!player.paused); setTime(player.currentTime || 0) }, [player]) // eslint-disable-line react-hooks/exhaustive-deps
   const [busy, setBusy] = useState('')
   const [time, setTime] = useState(0)
   const [playing, setPlaying] = useState(false)
@@ -349,7 +353,6 @@ export default function Music({ split = false }) {
 
       {track ? (
         <section className="panel player song-card">
-          <audio ref={audioRef} src={url || undefined} preload="metadata" onError={onError} />
           {/* one slim row, play, the waveform, the time; the rest on the line under it (Alex, 10 Oct) */}
           <div className="player-row">
             <button className="play" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>

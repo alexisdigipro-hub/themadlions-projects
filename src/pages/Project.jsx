@@ -1,12 +1,13 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { Badge, useIsMobile } from '../components/ui.jsx'
+import { useIsMobile } from '../components/ui.jsx'
 import { can, canAccessProject, useCurrentUser, useStore } from '../lib/store.jsx'
 import { hydrateProject } from '../lib/library.js'
 import { projectTabs, tabHidden } from '../lib/tabs.js'
 import { Icon } from '../components/icons.jsx'
 import { useGlide } from '../lib/glide.js'
 import { swipeTabs } from '../lib/swipeTabs.js'
+import { stopProjectAudio } from '../lib/projectAudio.js'
 
 // The brainstorm whiteboard is built and working but Alex does not need it yet, so the tab is
 // hidden. The page itself still lives at /p/<id>/whiteboard. Flip this to true to bring it back.
@@ -51,6 +52,8 @@ export default function Project() {
   const nav = useNavigate()
   const [slot, setSlot] = useState(null)
   useEffect(() => () => { swipeTabs.project = null }, [])
+  // the song plays on across the project's tabs and stops when the project is left (lib/projectAudio.js)
+  useEffect(() => () => stopProjectAudio(), [id])
   const raw = state.projects.find((p) => p.id === id)
   const project = raw ? hydrateProject(raw, state.library) : null
 
@@ -105,9 +108,8 @@ export default function Project() {
         <div className="db-top proj-top">
           <Link to="/" className="icon-btn proj-back" aria-label="Projects" title="Projects">‹</Link>
           {project.coverThumb && <img className="proj-top-cover" src={project.coverThumb} alt="" />}
+          {/* the category and Delivered moved under the progress on Overview (Alex, 18 Nov) */}
           <h1 className="page-title proj-name">{project.title}</h1>
-          <Badge>{project.category}</Badge>
-          {project.status === 'Delivered' && <Badge>Delivered</Badge>}
           <nav className="tabs db-tabs">
             {barTabs.map((t) => (
               <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')} onClick={glide.go}>
@@ -126,10 +128,6 @@ export default function Project() {
         <div className="project-title">
           {project.coverThumb && <img className="project-head-cover" src={project.coverThumb} alt="" />}
           <h1>{project.title}</h1>
-          <div className="project-meta">
-            <Badge>{project.category}</Badge>
-            {project.status === 'Delivered' && <Badge>Delivered</Badge>}
-          </div>
         </div>
       </div>}
       {mobile && <MobileTabs tabs={barTabs} onPick={glide.go} />}
