@@ -15,6 +15,7 @@ import { alignBlocks, groupSegments, transcribe } from '../../lib/transcribe.js'
 
 const ico = (d) => <svg viewBox="0 0 24 24" aria-hidden="true">{d}</svg>
 const MI = {
+  copy: ico(<><rect x="8.5" y="8.5" width="11" height="11" rx="2.5" /><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" /></>),
   plus: ico(<path d="M12 5v14M5 12h14" />),
   edit: ico(<><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></>),
   trash: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" /></svg>,
@@ -372,7 +373,20 @@ export default function Music({ split = false }) {
 
       {/* the song map's own heading, only once it has sections; its + Add is in the row above */}
       {/* "Lyrics Per Section", with room above it (Alex, 18 Nov) */}
-      {sections.length > 0 && <div className="toolbar song-map-head"><div className="toolbar-info"><strong>Lyrics Per Section</strong></div></div>}
+      {/* Copy: every section's lyrics, in the song's order, as one text to paste anywhere (Alex, 18 Nov) */}
+      {sections.length > 0 && (
+        <div className="toolbar song-map-head">
+          <div className="toolbar-info"><strong>Lyrics Per Section</strong></div>
+          {sections.some((x) => (x.lyrics || '').trim()) && (
+            <div className="toolbar-actions ov-acts">
+              <button type="button" className="add-pill" onClick={async () => {
+                const text = sections.map((x) => (x.lyrics || '').trim()).filter(Boolean).join('\n\n')
+                try { await navigator.clipboard.writeText(text); toast('All the lyrics copied', 'ok') } catch { toast('Could not copy', 'error') }
+              }}>{MI.copy}<span>Copy</span></button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* no sections yet: nothing here, the box stays short; Add section, Paste full lyrics or Lyrics from audio open it
           (Alex, 27 Oct: "delete the No sections yet text, fold the box, open it when something is added") */}
