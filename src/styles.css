@@ -9968,14 +9968,14 @@ html.pjh-page, html.pjh-page body { min-height: 100%; }
 .fold:not(:has(> .fold-body .panel)):not(:has(> .fold-body *)) { display: none; }
 html[data-theme] body .panel.fold-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; margin: 0; padding: 12px 14px 12px 20px; font: inherit; color: var(--text); text-align: left; cursor: pointer; }
 .fold-bar strong { font-size: 15px; font-weight: 700; }
-.fold-chev, .fold-btn { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; color: var(--text); border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); background: color-mix(in srgb, var(--text) 6%, transparent); transition: background .15s, transform .15s; }
-.fold-chev svg, .fold-btn svg { width: 15px; height: 15px; }
-.fold-chev svg { transform: rotate(180deg); }
-.fold-bar:hover .fold-chev, .fold-btn:hover { background: color-mix(in srgb, var(--text) 12%, transparent); }
-.fold-btn { position: absolute; top: -14px; right: 22px; z-index: 25; cursor: pointer; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); background: color-mix(in srgb, var(--surface, #1b1f24) 70%, transparent); box-shadow: 0 4px 14px rgba(0, 0, 0, .25); }
-.fold-btn:active, .fold-bar:active .fold-chev { transform: scale(.92); }
+.fold-chev { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); background: color-mix(in srgb, var(--text) 6%, transparent); transition: background .15s, transform .15s; }
+.fold-chev svg { width: 15px; height: 15px; transform: rotate(180deg); }
+.fold-bar:hover .fold-chev { background: color-mix(in srgb, var(--text) 12%, transparent); }
+.fold-bar:active .fold-chev { transform: scale(.92); }
+html[data-theme] body .ov-round.fold-btn { flex: none; margin-left: auto; }
+.toolbar-actions > .fold-btn, .row-actions > .fold-btn, .panel-actions > .fold-btn { margin-left: 0; }
+html[data-theme] body .ov-round.fold-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; }
+.fold-btn.loose { position: absolute; top: 18px; right: 18px; z-index: 5; }
+.fold-btn:active { transform: scale(.94); }
 .music-split { display: contents; }
 html[data-theme] body .song-map-panel .toolbar.song-map-head { margin-top: 0; }
-@media (max-width: 820px) {
-  .fold-btn { top: -12px; right: 18px; width: 26px; height: 26px; }
-}
