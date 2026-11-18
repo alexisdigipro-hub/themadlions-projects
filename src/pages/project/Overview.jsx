@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button, Modal, useToast } from '../../components/ui.jsx'
 import { ProjectForm } from '../Dashboard.jsx'
 import { useProject } from '../Project.jsx'
-import { can, nextProjectCode, uid, useStore } from '../../lib/store.jsx'
-import { duplicateProject } from '../../lib/duplicate.js'
+import { can, uid, useStore } from '../../lib/store.jsx'
 import { fmtDate } from '../../lib/dates.js'
 import { projectProgress } from '../../lib/progress.js'
 import { analyze, fmtTime, fmtTimeMs, uploadTrack } from '../../lib/audio.js'
@@ -158,7 +157,6 @@ const ADD_ICONS = {
   pdf: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="11" rx="2" /><path d="M9 19.5h6M12 16v3.5M10.5 8.5v4l3.5-2z" /></svg>,
   notes: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5L19 8v11.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1Z" /><path d="M14 3.5V8h5M8.5 12.5h7M8.5 16h5" /></svg>,
   edit: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></svg>,
-  duplicate: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" /><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8" /></svg>,
   lock: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /></svg>,
   unlock: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8 10.5V8a4 4 0 0 1 7.6-1.8" /></svg>,
   plus: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>,
@@ -188,27 +186,7 @@ export default function Overview() {
   const toast = useToast()
   const navigate = useNavigate()
   const [draft, setDraft] = useState(null)
-  const [duping, setDuping] = useState(false)
-  // copies the stored project, not the one shown here (which has the company library merged in)
-  const duplicate = async () => {
-    const raw = state.projects.find((p) => p.id === project.id)
-    if (!raw) return
-    setDuping(true)
-    try {
-      const { project: copy, shared } = await duplicateProject(raw)
-      update((s) => {
-        copy.code = nextProjectCode(s)
-        s.projects.push(copy)
-        return s
-      })
-      toast(shared ? `Copied. ${shared} file${shared === 1 ? '' : 's'} could not be copied and stay shared with the original.` : `Copied as "${copy.title}"`, shared ? 'error' : 'ok')
-      navigate(`/p/${copy.id}`)
-    } catch (e) {
-      toast(`Could not duplicate: ${e.message}`, 'error')
-    } finally {
-      setDuping(false)
-    }
-  }
+  // Duplicate lives on Home's project tiles only (Alex, 18 Nov: "not needed inside, the duplicate happens outside, on Home")
 
   const { pct, stages } = projectProgress(project, state.settings)
   // the facts under the progress (Overview's top, a computer): the shoot and how far off it is, days, crew, cast
@@ -351,14 +329,13 @@ export default function Overview() {
                   </span>
                 )}
                 {canEdit('projects') && <button type="button" className="add-pill ov-edit" onClick={() => setDraft({ ...project })}>{ADD_ICONS.edit}<span>Edit</span></button>}
-                {(can(user, 'projects', 'edit') || user?.role === 'admin') && (
+                {((can(user, 'share', 'edit') && remote) || user?.role === 'admin') && (
                   <span className="ov-menu-wrap">
-                    <button type="button" className={`ov-round${menu === 'more' ? ' on' : ''}`} onClick={() => setMenu(menu === 'more' ? '' : 'more')} aria-label="More" title="Duplicate, Lock">{ADD_ICONS.more}</button>
+                    <button type="button" className={`ov-round${menu === 'more' ? ' on' : ''}`} onClick={() => setMenu(menu === 'more' ? '' : 'more')} aria-label="More" title="Share, Lock">{ADD_ICONS.more}</button>
                     {menu === 'more' && (
                       <>
                         <span className="ab-export-shade" onClick={() => setMenu('')} />
                         <div className="ov-menu ov-menu-more">
-                          {can(user, 'projects', 'edit') && <button type="button" className="ov-menu-row" disabled={duping} onClick={() => { setMenu(''); duplicate() }}>{ADD_ICONS.duplicate}<span><b>{duping ? 'Copying…' : 'Duplicate'}</b><small>A copy of this project to start from</small></span></button>}
                           {can(user, 'share', 'edit') && remote && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); setSharing(true) }}>{ADD_ICONS.link}<span><b>Share with collaborators</b><small>A link to see the progress and leave comments</small></span></button>}
                           {user?.role === 'admin' && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); edit((p) => { p.frozen = !p.frozen }); toast(project.frozen ? 'Project unlocked, the team can edit again' : 'Project locked: only administrators can change it now', 'ok') }}>{project.frozen ? ADD_ICONS.unlock : ADD_ICONS.lock}<span><b>{project.frozen ? 'Unlock project' : 'Lock project'}</b><small>{project.frozen ? 'The team can edit it again' : 'Only administrators can change it'}</small></span></button>}
                         </div>

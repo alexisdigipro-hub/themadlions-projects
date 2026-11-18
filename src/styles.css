@@ -9384,7 +9384,7 @@ html[data-theme] body .panel.music-panel { overflow: visible; position: relative
 }
 /* the line beside the percentage: its parts with a dot between them; the shoot comes last, so a computer (where it is
    one of the facts under the stages) leaves it out with its dot */
-.progress-sub > span:not(:first-child)::before { content: ' · '; }
+.progress-sub > span::before { content: " · "; }
 /* The project's title row and the whole progress stay at the top while the Overview scrolls under them (Alex, 29 Oct:
    "I want ALL of this to stay fixed"), a computer only, both as they are; once the page has moved the title row sits on
    a glass band (.ov-scrolled), and the progress right under it (--proj-top-h, measured in Overview.jsx) */
