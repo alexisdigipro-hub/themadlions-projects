@@ -231,6 +231,9 @@ export default function Overview() {
       let el = document.querySelector(`.overview [data-stage="${k}"]`)
       if (el && el.style.display === 'contents') el = el.firstElementChild
       if (!el) continue
+      // a folded box opens first, then the page goes to it (Fold.jsx)
+      const fold = el.closest('.fold.folded')
+      if (fold) { fold.querySelector(':scope > .fold-bar')?.click(); setTimeout(() => goStage(st), 60); return }
       const bar = document.querySelector('.overview .panel.progress')
       const room = bar && getComputedStyle(bar).position === 'sticky' ? (parseFloat(getComputedStyle(bar).top) || 0) + bar.offsetHeight + 16 : 16
       window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - room, behavior: 'smooth' })
