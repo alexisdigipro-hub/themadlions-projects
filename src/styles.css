@@ -9851,5 +9851,6 @@ html .pub.dlv.pj .pj-tiles li b { flex: 0 1 auto; min-width: 0; }
   /* on a phone the tools fill one row edge to edge: the two pills share what the round icons leave */
   .song-tools { justify-content: flex-start; gap: 6px; }
   .song-pill { flex: 1 1 0; min-width: 0; padding: 0 8px; }
-  .song-pill span { overflow: hidden; text-overflow: ellipsis; }
+  .song-pill-t { display: none; }
 }
+.song-pill-t { font-style: normal; }

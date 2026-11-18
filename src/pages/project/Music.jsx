@@ -385,8 +385,8 @@ export default function Music() {
                   <div className="song-tools no-print">
                     {editable && track && (
                       <>
-                        <button type="button" className="song-pill" onClick={() => quickMark(s, 'start')} title="Set start to the playhead">{MI.markIn}<span>Start {fmtTimeMs(time)}</span></button>
-                        <button type="button" className="song-pill" onClick={() => quickMark(s, 'end')} title="Set end to the playhead">{MI.markOut}<span>End {fmtTimeMs(time)}</span></button>
+                        <button type="button" className="song-pill" onClick={() => quickMark(s, 'start')} title="Set start to the playhead">{MI.markIn}<span>Start<i className="song-pill-t"> {fmtTimeMs(time)}</i></span></button>
+                        <button type="button" className="song-pill" onClick={() => quickMark(s, 'end')} title="Set end to the playhead">{MI.markOut}<span>End<i className="song-pill-t"> {fmtTimeMs(time)}</i></span></button>
                       </>
                     )}
                     {track && <button type="button" className={`song-icon${loop === s.id ? ' on' : ''}`} onClick={() => { setLoop(loop === s.id ? null : s.id); if (loop !== s.id) { seek(s.start); play(audioRef.current) } }} title={loop === s.id ? 'Stop the loop' : 'Loop this section'} aria-label="Loop" aria-pressed={loop === s.id}>{MI.loop}</button>}
