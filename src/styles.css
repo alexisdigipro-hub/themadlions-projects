@@ -9979,10 +9979,21 @@ html[data-theme] body .panel.fold-bar { display: flex; align-items: center; just
 .fold-chev svg { width: 15px; height: 15px; transform: rotate(180deg); }
 .fold-bar:hover .fold-chev { background: color-mix(in srgb, var(--text) 12%, transparent); }
 .fold-bar:active .fold-chev { transform: scale(.92); }
-html[data-theme] body .ov-round.fold-btn { flex: none; margin-left: auto; }
+.fold-tools { flex: none; display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.toolbar-actions > .fold-tools, .row-actions > .fold-tools, .panel-actions > .fold-tools { margin-left: 0; }
+html[data-theme] body .ov-round.fold-btn { flex: none; }
 .toolbar-actions > .fold-btn, .row-actions > .fold-btn, .panel-actions > .fold-btn { margin-left: 0; }
 html[data-theme] body .ov-round.fold-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; }
-.fold-btn.loose { position: absolute; top: 18px; right: 18px; z-index: 5; }
+.fold-tools.loose { position: absolute; top: 18px; right: 18px; z-index: 5; }
+/* the grip that moves a box (Alex, 18 Nov) */
+html[data-theme] body .ov-round.box-grip { flex: none; cursor: grab; touch-action: none; color: var(--muted); }
+html[data-theme] body .ov-round.box-grip svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
+html[data-theme] body .ov-round.box-grip:hover { color: var(--text); }
+.fold-bar .box-grip { width: 30px !important; height: 30px !important; }
+html.box-dragging, html.box-dragging * { cursor: grabbing !important; user-select: none; }
+.box-lifted { position: relative; z-index: 40; transform: scale(1.01); filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .35)); transition: transform .15s; }
+.box-lifted .panel { border-color: color-mix(in srgb, var(--accent) 55%, transparent) !important; }
+.overview .people-db, .overview .people-db > .cols.db-grid { display: contents; }
 .fold-btn:active { transform: scale(.94); }
 .music-split { display: contents; }
 html[data-theme] body .song-map-panel .toolbar.song-map-head { margin-top: 0; }

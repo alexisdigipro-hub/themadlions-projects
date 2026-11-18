@@ -46,9 +46,10 @@ function Photo({ token, item, className = '' }) {
 
 /* each box folds into its head with the arrow on its right (Alex, 18 Nov: "an arrow there too, so it is not all
    poured downwards"), remembered on that device */
-const FOLDS = 'tml_pj_folds'
-const foldedOf = (k) => { try { return !!JSON.parse(localStorage.getItem(FOLDS) || '{}')[k] } catch { return false } }
-const keepFold = (k, v) => { try { const m = JSON.parse(localStorage.getItem(FOLDS) || '{}'); if (v) m[k] = 1; else delete m[k]; localStorage.setItem(FOLDS, JSON.stringify(m)) } catch { /* private window */ } }
+const FOLDS = 'tml_pj_folds2'
+// folded until the person opens one (Alex, 18 Nov: "in the links the sections folded, they open them with the arrows")
+const foldedOf = (k) => { try { const v = JSON.parse(localStorage.getItem(FOLDS) || '{}')[k]; return v === undefined ? true : !!v } catch { return true } }
+const keepFold = (k, v) => { try { const m = JSON.parse(localStorage.getItem(FOLDS) || '{}'); m[k] = v ? 1 : 0; localStorage.setItem(FOLDS, JSON.stringify(m)) } catch { /* private window */ } }
 const CHEV = <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6" /></svg>
 function Panel({ title, aside, extra, children, className = '', fold = true }) {
   const [shut, setShut] = useState(() => fold && !!title && foldedOf(title))

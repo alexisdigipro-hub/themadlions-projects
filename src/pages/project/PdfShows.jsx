@@ -3,8 +3,6 @@ import { createPortal } from 'react-dom'
 import { useToast } from '../../components/ui.jsx'
 import Fold from '../../components/Fold.jsx'
 import { useProject } from '../Project.jsx'
-import { useStore } from '../../lib/store.jsx'
-import { pcloudTarget } from '../../lib/pcloud.js'
 import { deletePhoto, photoUrls } from '../../lib/photos.js'
 import { importPdfShow } from '../../lib/pdfShow.js'
 
@@ -26,7 +24,7 @@ function Slide({ s, urls }) {
     <div className={`pds-slide ${kind}`}>
       {pics.length > 0 && (
         <div className={`pds-pics n${Math.min(pics.length, 4)}`}>
-          {pics.slice(0, 6).map((p) => <img key={p.id} src={urls[p.id] || p.thumb} alt="" loading="lazy" draggable="false" />)}
+          {pics.slice(0, 6).map((p) => <img key={p.id} src={urls[p.id] || p.thumb} alt="" loading="lazy" draggable="false" onError={(e) => { if (p.thumb && e.currentTarget.src !== p.thumb) e.currentTarget.src = p.thumb }} />)}
         </div>
       )}
       {(s.title || s.body) && (
@@ -67,7 +65,7 @@ function Show({ show, editable, onDelete }) {
   const swipe = { onTouchStart: (e) => { touch.current = e.touches[0].clientX }, onTouchEnd: (e) => { const dx = e.changedTouches[0].clientX - (touch.current ?? 0); if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1) } }
   const s = show.slides[i]
   return (
-    <Fold k="pdfshow" title={show.name}>
+    <Fold k="pdfshow" box={`pdf-${show.id}`} title={show.name}>
       <section className="panel pds">
         <div className="toolbar">
           <div className="toolbar-info"><strong>{show.name}</strong><span className="muted">{n} slide{n === 1 ? '' : 's'} · from PDF</span></div>
@@ -101,7 +99,6 @@ function Show({ show, editable, onDelete }) {
 
 export default function PdfShows({ startSignal = 0 }) {
   const { project, edit, canEdit } = useProject()
-  const { state } = useStore()
   const toast = useToast()
   const editable = canEdit('files')
   const fileRef = useRef(null)
@@ -113,7 +110,8 @@ export default function PdfShows({ startSignal = 0 }) {
     if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') return toast('Pick a PDF file.', 'error')
     setBusy('Opening the PDF…')
     try {
-      const show = await importPdfShow({ file, projectId: project.id, pcloud: pcloudTarget(state, project.id), onStep: setBusy })
+      // the built-in storage, not pCloud (as the Office presentations): pCloud's links would not open in the page
+      const show = await importPdfShow({ file, projectId: project.id, pcloud: null, onStep: setBusy })
       edit((p) => { p.pdfShows = [...(p.pdfShows || []), show] })
       toast(`${show.slides.length} slides from ${show.name}`, 'ok')
     } catch (e) { toast(e.message || 'Could not read this PDF.', 'error') }
