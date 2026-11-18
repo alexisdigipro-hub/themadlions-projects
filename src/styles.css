@@ -9785,7 +9785,7 @@ html[data-theme='light'] .deliv-tag.t-held { color: #9a6a10; }
 .pub.dlv.pj .pj-tiles, .pub.dlv.pj .pj-people { display: flex; flex-direction: column; gap: 8px; text-align: left; }
 .pub.dlv.pj .pj-tiles li, .pub.dlv.pj .pj-people li { display: flex; align-items: center; gap: 14px; padding: 13px 18px; border-radius: var(--est-r, 14px); background: var(--tile, rgba(255, 255, 255, .05)); }
 .pub.dlv.pj .pj-tiles li b, .pub.dlv.pj .pj-people li b { font-weight: 500; font-size: 15px; }
-.pub.dlv.pj .pj-tiles li span, .pub.dlv.pj .pj-people li span { margin-left: auto; text-align: right; font-size: 13px; color: var(--muted, rgba(255, 255, 255, .6)); }
+.pub.dlv.pj .pj-tiles li > span:last-child, .pub.dlv.pj .pj-people li > span:last-child { margin-left: auto; text-align: right; font-size: 13px; color: var(--muted, rgba(255, 255, 255, .6)); }
 .pub.dlv.pj .pj-people { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 .pub.dlv.pj .pj-tiles li.done b { color: var(--muted, rgba(255, 255, 255, .55)); text-decoration: line-through; }
 .pub.dlv.pj .pj-check { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; border: 1.5px solid color-mix(in srgb, var(--text) 30%, transparent); }
@@ -9798,7 +9798,7 @@ html[data-theme='light'] .deliv-tag.t-held { color: #9a6a10; }
 .pub.dlv.pj .pj-err { color: #ff7b7b; }
 @media (max-width: 600px) {
   .pub.dlv.pj .pj-tiles li { flex-wrap: wrap; }
-  .pub.dlv.pj .pj-tiles li span { margin-left: 0; text-align: left; width: 100%; }
+  .pub.dlv.pj .pj-tiles li > span:last-child { margin-left: 0; text-align: left; width: 100%; }
 }
 
 /* ---------- Song map, fresh (Alex, 18 Nov: "the buttons as they should be, symmetric, minimal, no space taken for
@@ -9840,6 +9840,10 @@ html[data-theme] body .song-setups { margin: 10px 0 0 52px; }
 /* the collaborator's page tidied: no rule lines between sections, stages as small chips, rows read from the left */
 html .pub.dlv.pj .pj-block { border: 0; padding-top: 0; padding-bottom: 0; }
 html .pub.dlv.pj .plain li { border-bottom: 0; }
-html .pub.dlv.pj .pj-stages li { flex: 0 0 auto; width: auto; justify-content: flex-start; }
+html .pub.dlv.pj .pj-stages { flex-direction: row; }
+html .pub.dlv.pj .pj-stages li { flex: 0 0 auto; width: auto; max-width: max-content; justify-content: flex-start; }
 html .pub.dlv.pj .pj-tiles li, html .pub.dlv.pj .pj-people li { justify-content: flex-start; text-align: left; }
 html .pub.dlv.pj .pj-tiles li b { flex: 0 1 auto; min-width: 0; }
+
+/* the song map's round icons keep their circle when the row is tight (a phone) */
+.song-icon { flex: none; }
