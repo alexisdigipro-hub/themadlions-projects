@@ -25,6 +25,19 @@ const MI = {
   lyrics: ico(<><path d="M6 3.5h8.5L19 8v11.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1Z" /><path d="M8.5 12.5h7M8.5 16h5" /></>),
   mic: ico(<><rect x="9" y="3.5" width="6" height="11" rx="3" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5" /></>),
   stop: ico(<rect x="7" y="7" width="10" height="10" rx="2" />),
+  play: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none" /></svg>,
+  loop: ico(<><path d="M17 3l3 3-3 3" /><path d="M4 11V9a3 3 0 0 1 3-3h13" /><path d="M7 21l-3-3 3-3" /><path d="M20 13v2a3 3 0 0 1-3 3H4" /></>),
+  markIn: ico(<><path d="M7 4v16" /><path d="M11 12h9M16 8l4 4-4 4" /></>),
+  markOut: ico(<><path d="M17 4v16" /><path d="M13 12H4M8 8l-4 4 4 4" /></>),
+}
+
+/* a section's delete: a round red trash; the first tap asks, the second deletes (Alex: delete stands apart in red) */
+function SecDelete({ onDelete }) {
+  const [armed, setArmed] = useState(false)
+  useEffect(() => { if (!armed) return undefined; const t = setTimeout(() => setArmed(false), 3000); return () => clearTimeout(t) }, [armed])
+  return armed
+    ? <button type="button" className="song-pill danger" onClick={onDelete}>{MI.trash}<span>Delete?</span></button>
+    : <button type="button" className="song-icon danger" onClick={() => setArmed(true)} title="Delete" aria-label="Delete">{MI.trash}</button>
 }
 const TRACK_KINDS = [['master', 'Master'], ['playback', 'Playback'], ['instrumental', 'Instrumental'], ['demo', 'Demo'], ['other', 'Other']]
 const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
@@ -361,26 +374,33 @@ export default function Music() {
             const setups = (s.sceneIds || []).map((id) => project.scenes.find((x) => x.id === id)).filter(Boolean)
             return (
               <li key={s.id} className={`song-sec ${current?.id === s.id ? 'now' : ''} ${loop === s.id ? 'loop' : ''}`} onMouseEnter={() => setActiveSec(s.id)} onMouseLeave={() => setActiveSec('')}>
+                {/* one row: play, the name and its times, then the tools as round glass icons (Alex, 18 Nov: "fresher,
+                    the buttons as they should be, symmetric, minimal, no space taken for nothing") */}
                 <div className="song-sec-head">
-                  <button className="song-time" onClick={() => track && playSection(s)} title="Play from here">▶ {fmtTime(s.start)}</button>
-                  <strong className="song-name">{s.name}</strong>
-                  <span className="muted small">{fmtTime(s.start)} to {fmtTime(s.end)} · {Math.round(s.end - s.start)}s</span>
-                  <span className="grow" />
-                  {editable && track && (
-                    <span className="row-actions song-marks no-print">
-                      <button onClick={() => quickMark(s, 'start')} title="Set start to the playhead">start = {fmtTimeMs(time)}</button>
-                      <button onClick={() => quickMark(s, 'end')} title="Set end to the playhead">end = {fmtTimeMs(time)}</button>
-                    </span>
-                  )}
-                  {track && <button className="link small" onClick={() => { setLoop(loop === s.id ? null : s.id); if (loop !== s.id) { seek(s.start); play(audioRef.current) } }}>{loop === s.id ? 'looping' : 'loop'}</button>}
-                  {editable && <button className="link small" onClick={() => openSection(s)}>Edit</button>}
-                  {editable && <Confirm label="Delete" onConfirm={() => setMusic((m) => (m.sections = m.sections.filter((x) => x.id !== s.id)))}>×</Confirm>}
+                  <button type="button" className="song-play" onClick={() => track && playSection(s)} disabled={!track} title="Play from here" aria-label={`Play ${s.name}`}>{MI.play}</button>
+                  <div className="song-title">
+                    <strong className="song-name">{s.name}</strong>
+                    <span className="song-when">{fmtTime(s.start)} to {fmtTime(s.end)} · {Math.round(s.end - s.start)}s</span>
+                  </div>
+                  <div className="song-tools no-print">
+                    {editable && track && (
+                      <>
+                        <button type="button" className="song-pill" onClick={() => quickMark(s, 'start')} title="Set start to the playhead">{MI.markIn}<span>Start<i className="song-pill-t"> {fmtTimeMs(time)}</i></span></button>
+                        <button type="button" className="song-pill" onClick={() => quickMark(s, 'end')} title="Set end to the playhead">{MI.markOut}<span>End<i className="song-pill-t"> {fmtTimeMs(time)}</i></span></button>
+                      </>
+                    )}
+                    {track && <button type="button" className={`song-icon${loop === s.id ? ' on' : ''}`} onClick={() => { setLoop(loop === s.id ? null : s.id); if (loop !== s.id) { seek(s.start); play(audioRef.current) } }} title={loop === s.id ? 'Stop the loop' : 'Loop this section'} aria-label="Loop" aria-pressed={loop === s.id}>{MI.loop}</button>}
+                    {editable && <button type="button" className="song-icon" onClick={() => openSection(s)} title="Edit" aria-label="Edit">{MI.edit}</button>}
+                    {editable && <SecDelete onDelete={() => setMusic((m) => (m.sections = m.sections.filter((x) => x.id !== s.id)))} />}
+                  </div>
                 </div>
                 {s.lyrics && <pre className="song-lyrics">{s.lyrics}</pre>}
-                <div className="song-setups small">
-                  {setups.length ? setups.map((x) => <span key={x.id} className="pill">Sc. {x.number} · {x.location || x.heading}</span>) : <span className="muted">No setup yet</span>}
-                  {s.notes && <span className="muted"> · {s.notes}</span>}
-                </div>
+                {(setups.length > 0 || s.notes) && (
+                  <div className="song-setups small">
+                    {setups.map((x) => <span key={x.id} className="pill">Sc. {x.number} · {x.location || x.heading}</span>)}
+                    {s.notes && <span className="muted">{s.notes}</span>}
+                  </div>
+                )}
               </li>
             )
           })}

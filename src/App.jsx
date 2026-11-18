@@ -45,6 +45,7 @@ const RoardinoRoute = lazyPage(() => import('./pages/RoardinoPage.jsx').then((m)
 const PublicDelivery = lazyPage(() => import('./pages/PublicDelivery.jsx'))
 const Deliveries = lazyPage(() => import('./pages/Deliveries.jsx'))
 const PublicStatus = lazyPage(() => import('./pages/PublicStatus.jsx'))
+const PublicProject = lazyPage(() => import('./pages/PublicProject.jsx'))
 const PublicEstimate = lazyPage(() => import('./pages/PublicEstimate.jsx'))
 const PublicInvoice = lazyPage(() => import('./pages/PublicInvoice.jsx'))
 const PublicDeck = lazyPage(() => import('./pages/PublicDeck.jsx'))
@@ -150,6 +151,7 @@ export default function App() {
             <Route path="/o/:token" element={<RoardinoLink />} />
             <Route path="/d/:token" element={<PublicDelivery />} />
             <Route path="/ps/:token" element={<PublicStatus />} />
+            <Route path="/pj/:token" element={<PublicProject />} />
             <Route path="/e/:token" element={<PublicEstimate />} />
             <Route path="/inv/:token" element={<PublicInvoice />} />
             <Route path="/sl/:token" element={<OldShotListLink />} />

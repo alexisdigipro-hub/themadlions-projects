@@ -37,6 +37,13 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (18 Nov 2026: a project shared with outside collaborators; Song map fresh)
+- Alex: "a link to the project for outside collaborators: they see the progress and what we have put in, they may leave comments, otherwise they can do nothing; and safe".
+- **Overview > ⋯ > Share with collaborators** (components/ProjectShare.jsx, Share edit permission, online only): one link per project (shares kind 'project', ref project:<id>, page /pj/<token> = pages/PublicProject.jsx, short link go.themadlions.com/?pj/...). Sections to show (Progress, Schedule, Tasks, Team, Locations, Scenes), Copy link, a code (Add a code, newPin), Closes on, Close / Open again, Delete, Update now, and the comments list. lib/projectShare.js projectSnapshot writes only those sections and never money, phones, emails, notes, files, chat or the script's text; while the link is open, Overview re-writes the snapshot 4 s after any change (useProjectShareSync).
+- **Comments:** supabase/project_share.sql widens share_respond to kind 'project' (only 'comment', words required); the code, closed, closing date and 200-reply limits stay. **Alex has to run it.**
+- **Song map (Music on Overview)**, Alex: "fresher, the buttons as they should be, symmetric, minimal": each section a soft tile, a round accent play, name and times, then Start / End pills (time hidden on a phone), round glass loop (green when looping), edit, and a red trash that asks once (SecDelete); "No setup yet" gone. CSS at the end of styles.css (Song map, fresh).
+- Checked in the local build: collaborator page with a stubbed share at 1280 and 390, comment sent as 'comment'; song map at 1440 and 390.
+
 ## Where we stopped (14 Nov 2026: a PIN on Finance)
 - Alex: "a 4-number pin code on my finance, which I can get past from here if I forget it".
 - src/components/FinancePin.jsx: **FinancePinGate** wraps the Finance page (Finance.jsx default export); **FinancePinSettings** is the first panel of Finance > Settings (Set a PIN, typed twice; Change PIN; Take the PIN off; Lock now). Each administrator has their own PIN, kept only as a PBKDF2 fingerprint with its own salt in finance.settings.pins[userId] (the Finance settings row, administrators only). Unlocked, it stays open while Finance is on screen and 10 minutes after, in that tab (sessionStorage). Five wrong tries wait 30 s.
