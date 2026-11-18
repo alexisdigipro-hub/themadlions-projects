@@ -9837,3 +9837,9 @@ html[data-theme] body .song-setups { margin: 10px 0 0 52px; }
   .song-pill span { font-size: 11.5px; }
   html[data-theme] body .song-lyrics, html[data-theme] body .song-setups { margin-left: 0; }
 }
+/* the collaborator's page tidied: no rule lines between sections, stages as small chips, rows read from the left */
+html .pub.dlv.pj .pj-block { border: 0; padding-top: 0; padding-bottom: 0; }
+html .pub.dlv.pj .plain li { border-bottom: 0; }
+html .pub.dlv.pj .pj-stages li { flex: 0 0 auto; width: auto; justify-content: flex-start; }
+html .pub.dlv.pj .pj-tiles li, html .pub.dlv.pj .pj-people li { justify-content: flex-start; text-align: left; }
+html .pub.dlv.pj .pj-tiles li b { flex: 0 1 auto; min-width: 0; }
