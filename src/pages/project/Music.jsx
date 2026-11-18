@@ -6,7 +6,7 @@ import { download } from '../../lib/dates.js'
 import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, songMapText, trackBlob, uploadTrack, lastTrackError } from '../../lib/audio.js'
 import { useTrackSource } from '../../lib/trackSource.js'
 import { pcloudTarget } from '../../lib/pcloud.js'
-import { needsEncoding, toMp3 } from '../../lib/mp3.js'
+import { needsEncoding, sliceMp3, toMp3 } from '../../lib/mp3.js'
 import { useAudioChoice } from '../../components/AudioChoice.jsx'
 import { remote } from '../../lib/supabase.js'
 import { useStore } from '../../lib/store.jsx'
@@ -106,6 +106,7 @@ export default function Music() {
     return () => document.removeEventListener('keydown', key)
   }, [menu])
   const [trBusy, setTrBusy] = useState('')
+  const [reHear, setReHear] = useState('') // the section being heard again
   const music = { ...emptyMusic(), ...(project.music || {}) }
   const track = music.tracks.find((t) => t.id === music.activeTrackId) || music.tracks[0]
   const audioRef = useRef()
@@ -186,7 +187,7 @@ export default function Music() {
     if (s.end <= s.start) return toast('End must be after start.', 'error')
     setMusic((m) => {
       const i = m.sections.findIndex((x) => x.id === s.id)
-      const { startText, endText, ...clean } = s
+      const { startText, endText, heard, ...clean } = s
       if (i >= 0) m.sections[i] = clean
       else m.sections.push(clean)
     })
@@ -243,6 +244,30 @@ export default function Music() {
       toast(e.message, 'error')
     } finally {
       setSaving(false)
+    }
+  }
+  /* Hear one section again (Alex, 18 Nov: "some sections' lyrics it does not read well; can it listen to that section
+     again and write its lyrics again"): only that stretch goes to Whisper, with the lyrics around it as a hint, and
+     the words come back in the section's window to read, fix and Save (Cancel keeps the old ones). */
+  const hearAgain = async (sec) => {
+    if (reHear) return
+    if (!state.settings.openaiKey) { toast('Add your OpenAI API key in Settings, Transcription, first.', 'error'); return }
+    setReHear(sec.id)
+    try {
+      const file = await sliceMp3(await getAudioFile(), sec.start, sec.end)
+      const i = sections.findIndex((x) => x.id === sec.id)
+      const prompt = [sections[i - 1]?.lyrics, sections[i + 1]?.lyrics].filter(Boolean).join('\n').slice(0, 600)
+      const LANG = { greek: 'el', english: 'en', spanish: 'es', italian: 'it', french: 'fr', german: 'de' }
+      const l = String(music.transcript?.language || '').toLowerCase()
+      const language = /^[a-z]{2}$/.test(l) ? l : LANG[l] || ''
+      const res = await transcribe({ apiKey: state.settings.openaiKey, file, language, prompt })
+      const lyrics = res.segments.map((x) => x.text).join('\n').trim()
+      if (!lyrics) throw new Error('Whisper heard no words in this section.')
+      setDraft({ ...sec, startText: fmtTimeMs(sec.start), endText: fmtTimeMs(sec.end), sceneIds: sec.sceneIds || [], lyrics, heard: sec.lyrics || '' })
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setReHear('')
     }
   }
   const runTranscribe = async () => {
@@ -391,6 +416,7 @@ export default function Music() {
                       </>
                     )}
                     {track && <button type="button" className={`song-icon${loop === s.id ? ' on' : ''}`} onClick={() => { setLoop(loop === s.id ? null : s.id); if (loop !== s.id) { seek(s.start); play(audioRef.current) } }} title={loop === s.id ? 'Stop the loop' : 'Loop this section'} aria-label="Loop" aria-pressed={loop === s.id}>{MI.loop}</button>}
+                    {editable && track && <button type="button" className={`song-icon${reHear === s.id ? ' busy' : ''}`} onClick={() => hearAgain(s)} disabled={!!reHear} title={reHear === s.id ? 'Listening…' : 'Hear this section again and write its lyrics'} aria-label="Hear again">{MI.mic}</button>}
                     {editable && <button type="button" className="song-icon" onClick={() => openSection(s)} title="Edit" aria-label="Edit">{MI.edit}</button>}
                     {editable && <SecDelete onDelete={() => setMusic((m) => (m.sections = m.sections.filter((x) => x.id !== s.id)))} />}
                   </div>
@@ -421,6 +447,12 @@ export default function Music() {
                 <div className="row-actions"><Input value={draft.endText} onChange={(e) => setDraft({ ...draft, endText: e.target.value })} />{track && <Button size="sm" variant="ghost" onClick={() => markNow('endText')}>now</Button>}</div>
               </Field>
             </div>
+            {draft.heard !== undefined && (
+              <div className="song-heard">
+                <p className="small muted">Heard again: the new lyrics are below. Fix any word and press Save; Cancel keeps the old ones.</p>
+                {draft.heard && <details><summary>The old lyrics</summary><pre className="song-lyrics">{draft.heard}</pre></details>}
+              </div>
+            )}
             <Field label="Lyrics"><Textarea rows={6} value={draft.lyrics} onChange={(e) => setDraft({ ...draft, lyrics: e.target.value })} placeholder="The words sung in this section" /></Field>
             <Field label="Setups that cover this section" hint="From the Breakdown. Hold Ctrl or Cmd to pick several.">
               <select multiple className="input multi" value={draft.sceneIds} onChange={(e) => setDraft({ ...draft, sceneIds: Array.from(e.target.selectedOptions).map((o) => o.value) })}>
