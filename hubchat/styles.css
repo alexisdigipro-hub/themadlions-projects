@@ -4043,3 +4043,6 @@ html[data-embed='hub'] .modal, html[data-embed='hub'] .modal:has(.cc), html[data
   html[data-embed='hub'][data-theme] .app > .side { padding: 2px 10px 0 !important; }
   html[data-embed='hub'] .app, html[data-embed='hub'][data-theme] .app { padding-bottom: var(--hub-inset-b, 0px) !important; }
 }
+
+/* Face ID / Touch ID on the lock (19 Nov 2026) */
+.lock-bio { min-width: 160px; }
