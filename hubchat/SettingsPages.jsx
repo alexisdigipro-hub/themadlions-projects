@@ -4,7 +4,7 @@ import { Avatar, I, Lens, Modal, NAME_COLORS, Wordmark, colorOf, revealFrom, svg
 import { ACCENTS, DEFAULTS, FONTS, REACTIONS, SOUNDS, TEXT_SIZES, applyMode, chime, setPrefs, usePrefs, wearTheme } from './prefs.js'
 import { WallTiles } from './extras.jsx'
 import { useWalls, wallStyle } from './walls.js'
-import { checkCode, clearLock, getLock, lockNow, setLockAfter, setLockCode } from './lock.jsx'
+import { checkCode, clearLock, getLock, lockNow, setLockAfter, setLockCode, bioAvailable, bioName, bioOn, bioOff } from './lock.jsx'
 import { LANGS as UI_LANGS, lang, locale } from './i18n.js'
 import { badgeSupported, isIOS, isStandalone, onPhone, pushIsOn, pushOff, pushOn, pushSupported, pushTest } from './push.js'
 
@@ -376,6 +376,8 @@ function EmailReminders() {
 function Passcode({ toast }) {
   const [lock, setL] = useState(getLock)
   const [form, setForm] = useState(null) // null · { a, b, old }
+  const [canBio, setCanBio] = useState(false)
+  useEffect(() => { bioAvailable().then(setCanBio) }, [])
   useEffect(() => {
     const on = () => setL(getLock())
     window.addEventListener('hubchat-lock', on)
@@ -403,6 +405,10 @@ function Passcode({ toast }) {
             <span className="set-text">Lock After<small>Away from the chat, or not touching it, this long</small></span>
             <Lens className="seg" dep={lock.after}>{[[1, '1 min'], [5, '5 min'], [60, '1 hour'], [300, '5 hours']].map(([v, t]) => <button key={v} type="button" className={lock.after === v ? 'on' : ''} onClick={() => setLockAfter(v)}>{t}</button>)}</Lens>
           </div>
+          {canBio && <button type="button" className="set-row set-pick" onClick={async () => {
+            if (lock.bio) { bioOff(); toast(`${bioName()} off`) }
+            else { try { if (await bioOn()) toast(`${bioName()} on`) } catch { toast(`${bioName()} was not turned on`) } }
+          }}><span className="set-text">Unlock with {bioName()}<small>Instead of the code; the code still works</small></span><span className="set-val">{lock.bio ? 'On' : 'Off'}</span></button>}
           <button type="button" className="set-row set-pick" onClick={lockNow}><span className="set-text">Lock Now</span></button>
           <button type="button" className="set-row set-pick" onClick={() => setForm({ a: '', b: '', old: '' })}><span className="set-text">Change Passcode</span></button>
           <button type="button" className="set-row set-pick danger" onClick={off}><span className="set-text">Turn Passcode Off</span></button>
