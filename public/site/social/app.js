@@ -558,13 +558,21 @@ function ytEmbed(url) {
 
 /* ---------- pictures and files: private bucket, signed links ---------- */
 const signed = new Map(); // path -> { url, until }
+// the signed links are kept on the device for their hour (Alex, 19 Nov: "as the app opens the videos are black, then
+// the picture comes"): a new link every opening meant every cover and picture was fetched again from nothing; the same
+// link lets the phone show them at once from its own cache
+const SIGNED_KEY = 'roardino-signed';
+try { const kept = JSON.parse(localStorage.getItem(SIGNED_KEY) || '{}'); const now = Date.now() + 120e3; for (const [k, v] of Object.entries(kept)) if (v && v.until > now) signed.set(k, v); } catch { /* none */ }
+let signedSaveT = 0;
+const signedSave = () => { clearTimeout(signedSaveT); signedSaveT = setTimeout(() => { try { const now = Date.now(); const o = {}; let n = 0; for (const [k, v] of signed) { if (v.until > now && n++ < 1500) o[k] = v; } localStorage.setItem(SIGNED_KEY, JSON.stringify(o)); } catch { /* full */ } }, 400); };
 async function sign(paths) {
-  const need = [...new Set(paths.filter(Boolean))].filter((p) => !/^https?:/.test(p) && !(signed.get(p)?.until > Date.now()));
+  const need = [...new Set(paths.filter(Boolean))].filter((p) => !/^https?:/.test(p) && !(signed.get(p)?.until > Date.now() + 120e3));
   for (let i = 0; i < need.length; i += 100) {
     const part = need.slice(i, i + 100);
     const { data } = await sb.storage.from(BUCKET).createSignedUrls(part, 3600);
     (data || []).forEach((d) => { if (d.signedUrl) signed.set(d.path, { url: d.signedUrl, until: Date.now() + 3300e3 }); });
   }
+  if (need.length) signedSave();
 }
 // a full address is used as it is (the sample profiles' pictures); a path in the bucket gets a signed link
 const urlOf = (p) => (!p ? '' : /^https?:/.test(p) ? p : signed.get(p)?.url || '');
@@ -619,7 +627,11 @@ function feedVideo(src, poster, codec) {
   // the cover stays until the video really moves (Alex, 9 Nov: "it plays black before"): the video shows only once a
   // third of a second has played, the cover (behind it, on the post) until then
   const v = h('video', { class: 'fv' + (poster ? '' : ' live'), playsInline: true, preload: 'none', muted: !feedSound && prefs.mutedVideos, loop: true, poster: poster || null,
-    ontimeupdate: (e) => { if (e.target.currentTime > 0.3) e.target.classList.add('live'); },
+    // shown only once a picture has really been drawn (an iPhone counts time on a video whose picture is still black
+    // as it wakes up): the browser's own word for a drawn frame where it has one, else a third of a second of play
+    // with the picture's size known
+    ontimeupdate: (e) => { const x = e.target; if (x.currentTime > 0.3 && x.videoWidth && !x.requestVideoFrameCallback) x.classList.add('live'); },
+    onplaying: (e) => { const x = e.target; if (x.requestVideoFrameCallback) { let n = 0; const go = () => x.requestVideoFrameCallback(() => { if (++n >= 3) x.classList.add('live'); else go(); }); go(); } },
     // a computer: the mouse over a video starts it (and so stops the others)
     onmouseenter: () => { if (isPhone()) return; delete v.dataset.held; if (!v.src && v.dataset.src) v.src = v.dataset.src; if (v.paused) v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } });
   // an H.265 video on the few browsers that cannot show one: its cover stays, nothing is fetched
@@ -2749,6 +2761,7 @@ function postCard(r, st, refresh) {
     const cov = urlOf(media[0].posterFull || media[0].poster);
     if (cov) {
       slides.classList.add('has-cover'); slides.style.setProperty('--cover', `url("${cov}")`);
+      const pre = new Image(); pre.decoding = 'async'; pre.src = cov; // fetched now, before the post is even in view
       // a cover cut to another shape than a wide video (the 4:5 cut of the profile's grid, on posts made before the
       // whole frame was kept): the feed shows the video's own first frame instead of a cropped, blown-up cover
       const m0 = media[0], vr = m0.w && m0.h ? m0.w / m0.h : 0;
