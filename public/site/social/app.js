@@ -3155,63 +3155,123 @@ function storyEditor(file) {
     const card = h('div', { class: 'st-card cam editor' }, stage, tools, controls, panel);
     const veil = h('div', { class: 'st-veil' }, card, h('button', { type: 'button', class: 'st-x', 'aria-label': t('Close'), html: ICON.x, onclick: () => finish(null) }));
     document.body.append(veil);
+    // STORIES AS INSTAGRAM'S (Alex, 19 Nov: "write straight on the screen, the colours at the right, no boxes; open and
+    // close it with two fingers"): a sticker is moved with one finger, sized and turned with two, and dropped on the bin
+    // at the foot to take it away; a tap edits it. Writing happens on the picture itself, the screen dimmed, the
+    // colours down the right side, the size on a slider at the left, Done at the top.
+    const bin = h('div', { class: 'ed-bin', html: ICON.trash });
+    card.append(bin);
+    const xf = (o) => `translate(-50%,-50%) rotate(${o.r || 0}deg) scale(${o.s || 1})`;
     function place(o) {
       o.el?.remove();
       const el = stickerEl(o, true);
-      el.style.left = o.x + '%'; el.style.top = o.y + '%';
-      // drag to move; a tap without moving edits it
-      let sx, sy, moved = false;
-      el.addEventListener('pointerdown', (e) => { e.preventDefault(); el.setPointerCapture(e.pointerId); sx = e.clientX; sy = e.clientY; moved = false; el.classList.add('drag'); });
+      el.style.left = o.x + '%'; el.style.top = o.y + '%'; el.style.transform = xf(o);
+      const pts = new Map(); let start = null, moved = false, overBin = false;
+      const snap = () => {
+        const ps = [...pts.values()];
+        start = { x: o.x, y: o.y, s: o.s || 1, r: o.r || 0, p: ps.map((p) => ({ ...p })) };
+        if (ps.length === 2) { start.d = Math.hypot(ps[1].x - ps[0].x, ps[1].y - ps[0].y) || 1; start.a = Math.atan2(ps[1].y - ps[0].y, ps[1].x - ps[0].x); start.m = { x: (ps[0].x + ps[1].x) / 2, y: (ps[0].y + ps[1].y) / 2 }; }
+      };
+      el.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); el.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 1) moved = false; snap(); el.classList.add('drag'); card.classList.add('ed-dragging'); });
       el.addEventListener('pointermove', (e) => {
-        if (!el.hasPointerCapture(e.pointerId)) return;
-        if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 4) moved = true;
-        const r = layer.getBoundingClientRect();
-        o.x = Math.max(4, Math.min(96, ((e.clientX - r.left) / r.width) * 100)); o.y = Math.max(4, Math.min(96, ((e.clientY - r.top) / r.height) * 100));
-        el.style.left = o.x + '%'; el.style.top = o.y + '%';
+        if (!pts.has(e.pointerId)) return;
+        pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        const r = layer.getBoundingClientRect(), ps = [...pts.values()];
+        if (ps.length >= 2 && start.d) {
+          const d = Math.hypot(ps[1].x - ps[0].x, ps[1].y - ps[0].y), a = Math.atan2(ps[1].y - ps[0].y, ps[1].x - ps[0].x), m = { x: (ps[0].x + ps[1].x) / 2, y: (ps[0].y + ps[1].y) / 2 };
+          o.s = Math.max(0.4, Math.min(5, start.s * d / start.d)); o.r = start.r + (a - start.a) * 180 / Math.PI;
+          o.x = start.x + ((m.x - start.m.x) / r.width) * 100; o.y = start.y + ((m.y - start.m.y) / r.height) * 100; moved = true;
+        } else {
+          const p0 = start.p[0]; const dx = ps[0].x - p0.x, dy = ps[0].y - p0.y;
+          if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+          o.x = start.x + (dx / r.width) * 100; o.y = start.y + (dy / r.height) * 100;
+          const b = bin.getBoundingClientRect(); overBin = ps[0].x > b.left - 20 && ps[0].x < b.right + 20 && ps[0].y > b.top - 20 && ps[0].y < b.bottom + 20;
+          bin.classList.toggle('over', overBin); el.classList.toggle('to-bin', overBin);
+        }
+        o.x = Math.max(2, Math.min(98, o.x)); o.y = Math.max(2, Math.min(98, o.y));
+        el.style.left = o.x + '%'; el.style.top = o.y + '%'; el.style.transform = xf(o);
       });
-      el.addEventListener('pointerup', () => { el.classList.remove('drag'); if (!moved) (o.type === 'text' ? editText : o.type === 'tag' ? editTag : editLink)(o); });
+      const up = (e) => {
+        if (!pts.has(e.pointerId)) return;
+        pts.delete(e.pointerId);
+        if (pts.size) { snap(); return; }
+        el.classList.remove('drag'); card.classList.remove('ed-dragging'); bin.classList.remove('over');
+        if (overBin) { overBin = false; remove(o); return; }
+        if (!moved) (o.type === 'text' ? editText : o.type === 'tag' ? editTag : editLink)(o);
+      };
+      el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
       o.el = el; layer.append(el);
     }
-    function openPanel(...kids) { put(panel, ...kids); panel.classList.remove('hidden'); panel.querySelector('input')?.focus(); }
-    const closePanel = () => panel.classList.add('hidden');
-    const remove = (o) => { o.el?.remove(); const k = overlays.indexOf(o); if (k >= 0) overlays.splice(k, 1); closePanel(); };
-    const panelFoot = (o, ok) => h('div', { class: 'ed-foot' }, o ? h('button', { type: 'button', class: 'btn red', onclick: () => remove(o) }, icon('trash'), t('Remove')) : h('button', { type: 'button', class: 'btn', onclick: closePanel }, t('Cancel')), h('button', { type: 'button', class: 'btn main', onclick: ok }, t('Done')));
+    const remove = (o) => { o.el?.remove(); const k = overlays.indexOf(o); if (k >= 0) overlays.splice(k, 1); };
+    // the writing screen: the picture dimmed, the words big in the middle, Done at the top, the colours at the right
+    function typing({ field, extra, colours, size, boxBtn, onDone }) {
+      card.classList.add('ed-typing-on');
+      const done = () => { tv.remove(); card.classList.remove('ed-typing-on'); onDone(); };
+      const tv = h('div', { class: 'ed-typing', onclick: (e) => { if (e.target === tv) done(); } },
+        h('div', { class: 'ed-ty-top' }, boxBtn || h('span'), h('button', { type: 'button', class: 'ed-ty-done', onclick: done }, t('Done'))),
+        size || null, h('div', { class: 'ed-ty-mid' }, field, extra || null), colours || null);
+      card.append(tv);
+      setTimeout(() => { field.focus(); try { const rg = document.createRange(); rg.selectNodeContents(field); rg.collapse(false); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(rg); } catch { /* an input */ } }, 60);
+      return tv;
+    }
     function editText(o) {
-      const cur = o || { type: 'text', x: 50, y: 40, text: '', color: '#ffffff', box: false };
-      const inp = h('input', { class: 'input', maxlength: 120, value: cur.text, placeholder: t('Write something') });
-      const sw = h('div', { class: 'ed-swatches' });
-      const drawSw = () => put(sw, ST_COLORS.map((c) => h('button', { type: 'button', class: 'swatch' + (cur.color === c ? ' on' : ''), style: { '--sw': c }, 'aria-label': c, onclick: () => { cur.color = c; drawSw(); } })),
-        h('button', { type: 'button', class: 'btn sm' + (cur.box ? ' main' : ''), onclick: () => { cur.box = !cur.box; drawSw(); } }, t('Box')));
-      drawSw();
-      const ok = () => { cur.text = inp.value.trim(); if (!cur.text) return remove(cur); if (!o) overlays.push(cur); place(cur); closePanel(); };
-      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') ok(); });
-      openPanel(h('b', {}, t('Text')), inp, sw, panelFoot(o, ok));
+      const cur = o || { type: 'text', x: 50, y: 42, text: '', color: '#ffffff', box: false, s: 1, r: 0 };
+      if (o) o.el?.classList.add('ed-hidden');
+      const light = (c) => ['#ffffff', '#f2c94c'].includes(c);
+      const field = h('div', { class: 'ed-ty-text', contentEditable: 'true', spellcheck: false, 'data-ph': t('Write something') });
+      field.textContent = cur.text;
+      const paint = () => {
+        field.style.fontSize = Math.round(30 * (cur.s || 1)) + 'px';
+        if (cur.box) { field.style.background = cur.color; field.style.color = light(cur.color) ? '#111' : '#fff'; field.classList.add('box'); }
+        else { field.style.background = 'none'; field.style.color = cur.color; field.classList.remove('box'); }
+        boxBtn.classList.toggle('on', cur.box);
+        cols.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.c === cur.color));
+      };
+      const cols = h('div', { class: 'ed-ty-cols' }, ST_COLORS.map((c) => h('button', { type: 'button', 'data-c': c, style: { '--sw': c }, 'aria-label': c, onmousedown: (e) => e.preventDefault(), onclick: () => { cur.color = c; paint(); field.focus(); } })));
+      const boxBtn = h('button', { type: 'button', class: 'ed-ty-box', title: t('Box'), 'aria-label': t('Box'), onmousedown: (e) => e.preventDefault(), onclick: () => { cur.box = !cur.box; paint(); field.focus(); } }, h('b', {}, 'A'));
+      const size = h('input', { type: 'range', class: 'ed-ty-size', min: '0.5', max: '2.6', step: '0.02', value: String(cur.s || 1), 'aria-label': t('Size'), oninput: (e) => { cur.s = +e.target.value; paint(); } });
+      typing({ field, colours: cols, size, boxBtn, onDone: () => {
+        cur.text = field.innerText.replace(/\n{3,}/g, '\n\n').trim().slice(0, 160);
+        if (!cur.text) { if (o) remove(o); return; }
+        if (!o) overlays.push(cur);
+        place(cur);
+      } });
+      paint();
     }
     function editTag(o) {
-      const cur = o || { type: 'tag', x: 50, y: 60, handle: '', id: '' };
-      const inp = h('input', { class: 'input', value: cur.handle ? '@' + cur.handle : '@', placeholder: '@username', autocapitalize: 'off' });
-      const ok = async () => {
-        const hd = inp.value.replace(/^@/, '').trim().toLowerCase();
-        const p = (await loadTagPeople()).find((x) => x.handle === hd);
-        if (!p) { toast(t('No profile with that username.')); return; }
-        cur.handle = p.handle; cur.id = p.id; if (!o) overlays.push(cur); place(cur); closePanel();
+      const cur = o || { type: 'tag', x: 50, y: 50, handle: '', id: '', s: 1, r: 0 };
+      if (o) o.el?.classList.add('ed-hidden');
+      const inp = h('input', { class: 'ed-ty-input', value: '@' + (cur.handle || ''), placeholder: '@username', autocapitalize: 'off', autocomplete: 'off', spellcheck: false });
+      const sugg = h('div', { class: 'ed-ty-sugg' });
+      let pick = null;
+      const draw = async () => {
+        const q = inp.value.replace(/^@/, '').trim().toLowerCase();
+        const ppl = (await loadTagPeople()).filter((p) => !q || p.handle.startsWith(q) || fold(p.name).includes(fold(q))).slice(0, 8);
+        put(sugg, ...ppl.map((p) => h('button', { type: 'button', class: 'ed-ty-chip', onmousedown: (e) => e.preventDefault(), onclick: () => { inp.value = '@' + p.handle; pick = p; tv.querySelector('.ed-ty-done').click(); } }, avatar(p, 'xs'), '@' + p.handle)));
       };
-      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !document.querySelector('.ed-panel .mention-list:not(.hidden)')) ok(); });
-      openPanel(h('b', {}, t('Tag someone')), withMentions(inp), panelFoot(o, ok));
-      inp.setSelectionRange(inp.value.length, inp.value.length); inp.dispatchEvent(new Event('input'));
+      inp.addEventListener('input', draw); draw();
+      const tv = typing({ field: inp, extra: sugg, onDone: async () => {
+        const hd = inp.value.replace(/^@/, '').trim().toLowerCase();
+        if (!hd) { if (o) remove(o); return; }
+        const p = pick || (await loadTagPeople()).find((x) => x.handle === hd);
+        if (!p) { toast(t('No profile with that username.')); if (o) place(o); return; }
+        cur.handle = p.handle; cur.id = p.id; if (!o) overlays.push(cur); place(cur);
+      } });
     }
     function editLink(o) {
-      const cur = o || { type: 'link', x: 50, y: 75, url: '', text: '' };
-      const u = h('input', { class: 'input', type: 'url', value: cur.url, placeholder: 'https://', autocapitalize: 'off' });
-      const lbl = h('input', { class: 'input', value: cur.text, maxlength: 40, placeholder: t('What it says (optional)') });
-      const ok = () => {
-        let v = u.value.trim(); if (!v) return remove(cur);
+      const cur = o || { type: 'link', x: 50, y: 58, url: '', text: '', s: 1, r: 0 };
+      if (o) o.el?.classList.add('ed-hidden');
+      const u = h('input', { class: 'ed-ty-input', type: 'url', value: cur.url, placeholder: 'https://', autocapitalize: 'off', autocomplete: 'off', spellcheck: false });
+      const lbl = h('input', { class: 'ed-ty-input small', value: cur.text, maxlength: 40, placeholder: t('What it says (optional)') });
+      typing({ field: u, extra: lbl, onDone: () => {
+        let v = u.value.trim(); if (!v) { if (o) remove(o); return; }
         if (!/^https?:\/\//i.test(v)) v = 'https://' + v;
-        try { new URL(v); } catch { toast(t('That link does not look right.')); return; }
-        cur.url = v; cur.text = lbl.value.trim(); if (!o) overlays.push(cur); place(cur); closePanel();
-      };
-      openPanel(h('b', {}, t('Link')), u, lbl, panelFoot(o, ok));
+        try { new URL(v); } catch { toast(t('That link does not look right.')); if (o) place(o); return; }
+        cur.url = v; cur.text = lbl.value.trim(); if (!o) overlays.push(cur); place(cur);
+      } });
     }
+    // a tap on the picture itself starts writing, as Instagram's
+    stage.addEventListener('click', (e) => { if (e.target === media || e.target === layer || e.target === stage) editText(); });
   });
 }
 // one sticker on a story: text, @tag (opens the profile) or a link (opens in a new tab)
@@ -3268,7 +3328,7 @@ function openStories(groups, gi) {
         if (!grp.items.length) { groups.splice(g, 1); if (!groups.length) return close(); if (g >= groups.length) return close(); i = 0; } else if (i >= grp.items.length) i = grp.items.length - 1;
         show();
       } }) : null);
-    put(stickers, (st.overlays || []).map((o) => { const el = stickerEl(o, false); el.style.left = o.x + '%'; el.style.top = o.y + '%'; if (el.tagName === 'A') el.addEventListener('click', (e) => { e.stopPropagation(); if (o.type === 'tag') close(); }); el.addEventListener('pointerdown', (e) => e.stopPropagation()); return el; }));
+    put(stickers, (st.overlays || []).map((o) => { const el = stickerEl(o, false); el.style.left = o.x + '%'; el.style.top = o.y + '%'; el.style.transform = `translate(-50%,-50%) rotate(${o.r || 0}deg) scale(${o.s || 1})`; if (el.tagName === 'A') el.addEventListener('click', (e) => { e.stopPropagation(); if (o.type === 'tag') close(); }); el.addEventListener('pointerdown', (e) => e.stopPropagation()); return el; }));
     cap.textContent = st.caption || '';
     cap.classList.toggle('hidden', !st.caption);
     const m = st.media || {};
