@@ -50,6 +50,13 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .ctl{display:flex;align-items:center;gap:7px;height:40px;padding:0 11px;border-radius:999px;background:var(--panel);border:1px solid var(--line);
   font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
 .ctl input[type=range]{width:56px;accent-color:var(--accent)}
+.rpre{flex:none;height:26px;min-width:40px;padding:0 9px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--fg);font:inherit;font-size:12px;
+  font-variant-numeric:tabular-nums;letter-spacing:0;text-transform:none;cursor:pointer;transition:background .15s,transform .12s}
+.rpre:hover{background:rgba(255,255,255,.12)} .rpre:active{transform:scale(.94)}
+.rpre[aria-pressed=true]{background:var(--accent);border-color:transparent;color:#fff}
+.rpres{display:flex;gap:6px;flex:none}
+.side .ctl[data-k=rot]{flex-wrap:wrap;height:auto;padding:7px 11px 9px;border-radius:22px;row-gap:7px}
+.side .ctl[data-k=rot] .rpres{flex:1 1 100%} .side .ctl[data-k=rot] .rpre{flex:1;height:28px}
 .sw{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:0}
 .sw[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px}
 .sw.pick{position:relative;overflow:hidden;background:conic-gradient(#f44,#fd4,#4f6,#4cf,#64f,#f4c,#f44)}
@@ -1742,6 +1749,12 @@ function buildPanel(){
     slider('ph','Height', -100, 100, 1, (v,p)=>{ p.ph = Math.pow(2, v/100); }),
     slider('rot','Rotate', -180, 180, 1, (v,p)=>{ p.rot = v; }),
     );
+  // ready turns beside Rotate (Alex, 19 Nov: "ready presets in rotate, 90 degrees, -90"): one press sets it, a second press on the lit one puts it straight
+  { const rw = document.createElement('span'); rw.className = 'rpres'; photo.querySelector('[data-k="rot"]').appendChild(rw);
+    [-90, 90].forEach(d => { const b = document.createElement('button'); b.type = 'button'; b.className = 'rpre'; b.dataset.rot = d; b.textContent = (d < 0 ? '\u2212' : '') + Math.abs(d) + '\u00b0';
+      b.title = 'Turn the photo ' + (d < 0 ? '90\u00b0 to the left' : '90\u00b0 to the right'); b.setAttribute('aria-pressed', 'false');
+      b.onclick = e => { e.preventDefault(); const q = sel >= 0 ? photos[sel] : null; if(!q) return; q.rot = Math.round(q.rot || 0) === d ? 0 : d; place(sel); save(); };
+      rw.appendChild(b); }); }
   photo.appendChild(buildAdjust());
   const fine = (id, label, max, key, title) => { const w = document.createElement('label'); w.className='ctl big'; w.title=title; w.id = id+'Ctl';
     w.innerHTML = `${label} <input type="range" id="${id}" min="0" max="${max}" step="0.5"><output></output>`;
@@ -1900,6 +1913,7 @@ function syncPanel(light){
   set('x', on ? Math.round(p.ox) : 0, -Math.round(r.w), Math.round(r.w), on ? Math.round(p.ox/r.w*100)+'%' : '');
   set('y', on ? Math.round(p.oy) : 0, -Math.round(r.h), Math.round(r.h), on ? Math.round(p.oy/r.h*100)+'%' : '');
   set('rot', on ? Math.round(p.rot||0) : 0, null, null, on ? Math.round(p.rot||0)+'°' : '');
+  document.querySelectorAll('.rpre').forEach(b => b.setAttribute('aria-pressed', on && Math.round(p.rot||0) === +b.dataset.rot));
   set('pw', on ? Math.round(Math.log2(p.pw||1)*100) : 0, null, null, on ? Math.round((p.pw||1)*100)+'%' : '');
   set('ph', on ? Math.round(Math.log2(p.ph||1)*100) : 0, null, null, on ? Math.round((p.ph||1)*100)+'%' : '');
   { const np = $('needPhoto'); if(np) np.hidden = !!p; }
