@@ -4558,3 +4558,21 @@ html[data-theme][data-theme] body .post.ig:not(.has-media){padding:6px 4px 10px!
 html[data-theme][data-theme] body .post.ig:not(.has-media) .post-body.big{font-size:17px;line-height:1.5;padding:6px 18px 8px}
 html[data-theme][data-theme] body :is(.th-row,.post.ig:not(.has-media)) .th-reply{background:rgba(255,255,255,.4)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.6)}
 html[data-theme=dark][data-theme] body :is(.th-row,.post.ig:not(.has-media)) .th-reply{background:rgba(255,255,255,.06)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+
+/* New thread on the light glass (Alex, 19 Nov: "white letters on light, we cannot see what we write"): every word and
+   control dark there, on a phone too; the dark theme keeps white */
+html[data-theme=light][data-theme] body .pf-one.pf-thread{color:var(--ink)!important}
+html[data-theme=light][data-theme] body .pf-thread :is(.pf-th-main b,.pf-head b,.pf-th-box){color:var(--ink)!important;-webkit-text-fill-color:var(--ink)!important;caret-color:var(--ink)!important}
+html[data-theme=light][data-theme] body .pf-thread .pf-th-box::placeholder{color:rgba(28,35,51,.42)!important;-webkit-text-fill-color:rgba(28,35,51,.42)!important}
+html[data-theme=light][data-theme] body .pf-thread :is(.pf-th-left,.th-replying small){color:var(--muted)!important}
+html[data-theme=light][data-theme] body .pf-thread .th-replying{border-left-color:rgba(28,35,51,.2)!important}
+html[data-theme=light][data-theme] body .pf-thread .th-replying p{color:var(--ink2,#3b3f45)!important}
+html[data-theme=light][data-theme] body .pf-thread .th-fx-b{background:rgba(255,255,255,.6)!important;color:var(--ink)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.85),0 2px 6px rgba(28,35,51,.06)!important}
+html[data-theme=light][data-theme] body .pf-thread .th-fx-b :is(b,i,u,s){color:var(--ink)!important;-webkit-text-fill-color:var(--ink)!important}
+html[data-theme=light][data-theme] body .pf-thread .pf-th-tags .pf-chip{background:rgba(255,255,255,.55)!important;color:var(--ink2,#3b3f45)!important;-webkit-text-fill-color:var(--ink2,#3b3f45)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.85)!important}
+html[data-theme=light][data-theme] body .pf-thread .pf-th-tags .pf-chip.on{background:var(--ink)!important;color:#fff!important;-webkit-text-fill-color:#fff!important}
+html[data-theme=light][data-theme] body .pf-thread .pf-head .pf-round{background:rgba(255,255,255,.6)!important;color:var(--ink)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.85)!important}
+html[data-theme=light][data-theme] body .pf-thread .pf-head .pf-round svg{stroke:var(--ink)!important;color:var(--ink)!important}
+html[data-theme=light][data-theme] body .pf-thread .pf-modes{background:rgba(255,255,255,.45)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.8)!important}
+html[data-theme=light][data-theme] body .pf-thread .pf-modes button{color:var(--muted)!important;-webkit-text-fill-color:var(--muted)!important}
+html[data-theme=light][data-theme] body .pf-thread .pf-modes button.on{background:rgba(255,255,255,.9)!important;color:var(--ink)!important;-webkit-text-fill-color:var(--ink)!important}
