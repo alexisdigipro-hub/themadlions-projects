@@ -1939,7 +1939,10 @@ async function postFlow(opts = {}) {
     if (lib.off) return;
     try { const r = await Promise.race([libCall()('getMedias', { quantity: lib.want, thumbnailWidth: 300, thumbnailHeight: 300, thumbnailQuality: 65, types: 'all' }), new Promise((_, no) => setTimeout(() => no(new Error('no answer from the app')), 12000))]); lib.items = r?.medias || []; lib.state = lib.items.length ? 'ok' : 'empty'; }
     catch (e) { lib.off = true; lib.why = String(e?.message || e?.errorMessage || e || 'no answer').slice(0, 90); }
-    if (layer.isConnected && layer.querySelector('.pf-one')) stepOne();
+    // more photos as the end comes near (Alex, 19 Nov: "I scroll down my photos and it goes back up by itself"): only the
+    // grid is drawn again, in its place and at the same scroll, not the whole screen
+    const old = layer.isConnected && layer.querySelector('.pf-one .pf-lib');
+    if (old) old.replaceWith(libGrid()); else if (layer.isConnected && layer.querySelector('.pf-one')) stepOne();
   }
   async function libTap(a) {
     if (st.mode === 'story') { if (lib.busy.size) return; lib.busy.add(a.identifier); stepOne(); try { const f = await libFile(a); lib.busy.delete(a.identifier); return toStory(f); } catch { lib.busy.delete(a.identifier); toast(t('This one could not be opened. Try the Gallery button.')); return stepOne(); } }
@@ -1964,6 +1967,9 @@ async function postFlow(opts = {}) {
         a.duration ? h('small', {}, mmss(a.duration)) : null,
         h('em', {}, n >= 0 ? String(n + 1) : ''));
     }), end);
+    // the grid keeps its scroll through every redraw (a tap on a photo, more photos coming in, the camera's turn)
+    grid.addEventListener('scroll', () => { lib.top = grid.scrollTop; }, { passive: true });
+    if (lib.top) { grid.scrollTop = lib.top; requestAnimationFrame(() => { grid.scrollTop = lib.top; }); }
     if (lib.items && lib.items.length >= lib.want && 'IntersectionObserver' in window) { const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { io.disconnect(); lib.want += 60; libLoad(); } }, { root: grid, rootMargin: '300px' }); io.observe(end); }
     return grid;
   };
