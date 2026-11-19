@@ -987,5 +987,6 @@ window.RD_EL = {
 "Choose a photo or a video": "Διάλεξε μια φωτογραφία ή ένα βίντεο",
 "One per post": "Ένα σε κάθε post",
 "Tagged people": "Άτομα στο post",
-"Already tagged": "Υπάρχει ήδη"
+"Already tagged": "Υπάρχει ήδη",
+"Size": "Μέγεθος"
 };
