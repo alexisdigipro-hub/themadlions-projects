@@ -1563,7 +1563,9 @@ async function openLiquify(i){
   const stop = () => { last = null; clearInterval(timer); };
   cv.onpointerup = cv.onpointercancel = stop; cv.onpointerleave = () => { brushEl.style.display = 'none'; };
   m.querySelector('#lqAll').onclick = () => { dx.fill(0); dy.fill(0); redraw(0, 0, W-1, H-1); };
-  const close = () => { ro.disconnect(); m.remove(); };
+  const escL = e => { if(e.key === 'Escape'){ e.stopPropagation(); close(); } };
+  const close = () => { ro.disconnect(); m.remove(); document.removeEventListener('keydown', escL, true); };
+  document.addEventListener('keydown', escL, true);
   m.querySelector('#lqNo').onclick = close;
   m.querySelector('#lqOk').onclick = async () => {
     if(!dx.some(v => v) && !dy.some(v => v)) return close();
@@ -1854,7 +1856,7 @@ function buildPanel(){
   const shb = document.createElement('button'); shb.type='button'; shb.className='pill'; shb.id='sheetsBtn'; shb.title='Home: all your characters';
   // Home (Alex, 14 Nov: "the button with the arrow down is odd; a program's menu, easy to get home"): a house and the word, first in the top row
   shb.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h4v-5h4v5h4v-9"/></svg><span class="w">Home</span>';
-  shb.onclick = () => openSheets();
+  shb.onclick = () => goHome();
   panelEl.append(shb, fine('gap','Gap',80,'gap','Space between windows · double-click for 14'), fine('rad','Round',80,'rad','Round corners · double-click for none'), even, photo);
 }
 /* covers: solid circles or squares laid over the sheet, to hide a face (Alex, 6 Nov) */
@@ -1993,6 +1995,11 @@ function toolbar(i){
 function syncPanel(light){
   const p = sel>=0 ? photos[sel] : null, on = !!p;
   { const c = curSheet(); const n = $('projName'); if(n){ n.querySelector('.pnm').textContent = c ? c.name : ''; n.hidden = !c; } }
+  { const b = $('sheetsBtn'), f = homeFolder(); // back to the project's folder, or Home (Alex, 20 Nov: "from inside the project, back to the folder")
+    if(b && b.dataset.to !== (f ? f.id : '')){ b.dataset.to = f ? f.id : '';
+      b.innerHTML = f ? `<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span class="w">${esc(f.name)}</span>` : '<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h4v-5h4v5h4v-9"/></svg><span class="w">Home</span>';
+      b.title = f ? `Back to the folder ${f.name}` : 'Home: all your characters'; b.setAttribute('aria-label', f ? `Back to ${f.name}` : 'Home'); }
+    else if(b && f){ const w = b.querySelector('.w'); if(w && w.textContent !== f.name) w.textContent = f.name; } }
   const g = $('gap'), rd = $('rad');
   if(g){ g.value = S.gap; g.nextElementSibling.textContent = S.gap; rd.value = S.rad; rd.nextElementSibling.textContent = S.rad; }
   $('even').classList.toggle('off', !(S.layout==='custom' || (S.sizes && S.sizes[lay().id])));
@@ -2669,6 +2676,21 @@ async function deleteSheet(id){
 /* the window with every sheet: open one, rename, duplicate, delete (asks first), new; who is signed in, and Sign out */
 // the pictures of the projects page stay between visits, so Home opens at once with what it showed last
 let homeUrls = [], homeRows = new Map();
+/* getting about (Alex, 20 Nov: "a back button from the project to its folder; navigation on every tab and page"): the editor's
+   first button goes back to the project's folder (or Home); the browser's and the phone's Back walk the same way back
+   (history: Home, a folder {rr:'fold'}, the editor {rr:'edit'}); every window closes with Escape. */
+let homeNav = null;
+const homeFolder = () => { const c = curSheet(); return c && c.folder && folders ? folders.find(f => f.id === c.folder) || null : null; };
+function homeAt(fid){ let pv = {}; try{ pv = JSON.parse(localStorage.getItem('roarref-projects') || '{}'); }catch{}
+  pv.folder = fid || ''; try{ localStorage.setItem('roarref-projects', JSON.stringify(pv)); }catch{} }
+function goHome(){ if(document.querySelector('.spage')) return; const f = homeFolder(); homeAt(f ? f.id : '');
+  if(history.state && history.state.rr === 'edit'){ history.back(); return; } // the popstate below opens Home
+  openSheets(); }
+addEventListener('popstate', e => { const st = e.state || {};
+  if(document.querySelector('.spage')){ if(homeNav) homeNav(st); return; }
+  if(st.rr === 'edit' || !sheets.cur || !me) return;
+  document.querySelectorAll('.modal, .lq').forEach(n => { const x = n.querySelector('#lqNo'); if(x) x.click(); else n.remove(); });
+  const f = homeFolder(); homeAt(f ? f.id : (st.rr === 'fold' ? st.f : '')); openSheets(); });
 async function openSheets(first){
   if(document.querySelector('.spage')) return;
   clearTimeout(st);
@@ -2780,7 +2802,13 @@ async function openSheets(first){
     if(m.querySelector('#pList') && !!curF() === !!m.querySelector('#pBack')) paintList(); else paint();
     setTimeout(() => old.forEach(u => URL.revokeObjectURL(u)), 500);
   };
-  const close = () => { m.remove(); syncPanel(); };
+  const close = () => { m.remove(); homeNav = null; syncPanel();
+    if(!(history.state && history.state.rr === 'edit')) try{ history.pushState({rr:'edit'}, ''); }catch{} };
+  // Back on Home: out of a folder; a folder entered pushes a step, so Back comes out of it
+  const toFolder = fid => { pv.folder = fid; query = ''; keep(); paint(); slide('pslide-l'); m.scrollTop = 0; try{ history.pushState({rr:'fold', f:fid}, ''); }catch{} };
+  const outFolder = () => { if(history.state && history.state.rr === 'fold'){ history.back(); return; } pv.folder = ''; query = ''; keep(); paint(); slide('pslide-r'); };
+  homeNav = st => { shutMenu(); const want = st.rr === 'fold' && fOf(st.f) ? st.f : '';
+    if((pv.folder || '') === want) return; const back = !want; pv.folder = want; query = ''; keep(); paint(); slide(back ? 'pslide-r' : 'pslide-l'); };
   const busy = on => m.classList.toggle('busy', on);
   const freshName = () => { let n = (folders || []).length + 1; const has = v => (folders || []).some(f => f.name === v); while(has('Person ' + n)) n++; return 'Person ' + n; };
   // a folder's name is typed in place, as a project's: Enter or a click elsewhere keeps it, Escape leaves it
@@ -2897,7 +2925,7 @@ async function openSheets(first){
   m.addEventListener('touchend', e => { if(!sw) return; const s0 = sw; sw = null;
     if(s0.used || m.querySelector('.pmenu, .sh-meta input') || !curF() || m.classList.contains('busy')) return;
     const t1 = e.changedTouches[0], dx = t1.clientX - s0.x, dy = t1.clientY - s0.y;
-    if(dx > 70 && Math.abs(dx) > 1.6 * Math.abs(dy) && Date.now() - s0.t < 700){ pv.folder = ''; query = ''; keep(); paint(); slide('pslide-r'); } }, {passive:true});
+    if(dx > 70 && Math.abs(dx) > 1.6 * Math.abs(dy) && Date.now() - s0.t < 700) outFolder(); }, {passive:true});
   m.addEventListener('contextmenu', e => { const c = e.target.closest('.sh[data-id], .sh.pfold');
     if(td || (isPhone() && c)){ e.preventDefault(); return; }
     if(c && !e.target.closest('input')){ e.preventDefault(); if(c.dataset.fid) openFctx(c, c.dataset.fid); else openCtx(c, c.dataset.id); } }); // on a computer the same menu comes with a right click
@@ -2993,8 +3021,8 @@ async function openSheets(first){
     if(t.dataset.pv){ const [k, v] = t.dataset.pv.split(':'); pv[k] = v; keep(); m.querySelectorAll(`[data-pv^="${k}:"]`).forEach(x => x.setAttribute('aria-pressed', x === t)); paintList(); return; }
     if(t.id === 'shNew' || t.id === 'shNew2'){ if(sheets.list.length >= MAX_SHEETS) return; const cf = curF(); busy(true); await newSheet(false, cf && cf.id); busy(false); return close(); }
     // folders (Alex, 20 Nov)
-    if(t.dataset.fold){ shutMenu(); pv.folder = t.dataset.fold; query = ''; keep(); paint(); slide('pslide-l'); m.scrollTop = 0; return; }
-    if(t.id === 'pBack'){ shutMenu(); pv.folder = ''; query = ''; keep(); paint(); slide('pslide-r'); return; }
+    if(t.dataset.fold){ shutMenu(); toFolder(t.dataset.fold); return; }
+    if(t.id === 'pBack'){ shutMenu(); outFolder(); return; }
     if(t.id === 'shFold'){ busy(true); const f = await makeFolder(freshName()); busy(false); if(!f) return; paintList(); renameFolder(f.id); return; }
     if(t.dataset.fren){ renameFolder(t.dataset.fren); return; }
     if(t.dataset.fdel){ const row = t.closest('.sh');
@@ -3007,7 +3035,7 @@ async function openSheets(first){
     if(t.dataset.move){ openMenu(t, t.dataset.move); return; }
     if(t.dataset.fx){ const o = m.querySelector('.pmenu'), fid = o && o.dataset.folder, k = t.dataset.fx; if(!fid) return;
       const card = m.querySelector(`[data-fid="${fid}"]`);
-      if(k === 'open'){ shutMenu(); pv.folder = fid; query = ''; keep(); paint(); slide('pslide-l'); m.scrollTop = 0; return; }
+      if(k === 'open'){ shutMenu(); toFolder(fid); return; }
       if(k === 'ren'){ shutMenu(); return renameFolder(fid); }
       if(k === 'thumb'){ shutMenu(); return pickThumb(null, fid); }
       if(k === 'del') return card ? openFctx(card, fid, 'del') : shutMenu();
@@ -3050,7 +3078,7 @@ async function openSheets(first){
   };
   const esc2 = e => { if(e.key !== 'Escape' || !document.body.contains(m) || m.querySelector('.sh-meta input')) return;
     if(m.querySelector('.pmenu')) return shutMenu();
-    if(curF()){ pv.folder = ''; query = ''; keep(); return paint(); }
+    if(curF()) return outFolder();
     if(sheets.cur && !(e.target && e.target.id === 'pQ' && e.target.value)){ document.removeEventListener('keydown', esc2); close(); } };
   document.addEventListener('keydown', esc2);
   if(first){ await draw(); document.body.appendChild(m); m.scrollTop = 0; return; }
@@ -3278,11 +3306,13 @@ function placeControls(){
     if(!isPhone() || e.touches.length !== 1 || document.querySelector('.spage, .modal, .lq, .pm')) return;
     const t0 = e.touches[0], tg = e.target, edge = t0.clientX < 22 && !tg.closest('.stage');
     if(!edge && (!tg.closest('#mpane, #mtabs') || tg.closest('input, select, textarea, .group:not(.mtabs), #poolBox .pth, canvas, .wheel, [draggable="true"]'))) return;
-    es = {x:t0.clientX, y:t0.clientY, t:Date.now(), edge}; }, {passive:true});
+    es = {x:t0.clientX, y:t0.clientY, t:Date.now(), edge, adj:!edge && !!tg.closest('[data-k="adjust"]')}; }, {passive:true}); // in Adjust a swipe goes Face, Edit, Body, Hair
   document.addEventListener('touchend', e => { if(!es) return; const s0 = es; es = null;
     const t1 = e.changedTouches[0], dx = t1.clientX - s0.x, dy = t1.clientY - s0.y;
     if(Math.abs(dx) < 60 || Math.abs(dx) < 1.6 * Math.abs(dy) || Date.now() - s0.t > 700) return;
-    if(s0.edge){ if(dx > 0) openSheets(); return; }
+    if(s0.edge){ if(dx > 0) goHome(); return; }
+    if(s0.adj){ const box = document.querySelector('[data-k="adjust"]'), A = ['face', 'edit', 'body', 'hair'], k = A.indexOf(adjTab) + (dx < 0 ? 1 : -1);
+      if(box && box.show && k >= 0 && k < A.length){ box.show(A[k]); box.classList.remove('pslide-l', 'pslide-r'); void box.offsetWidth; box.classList.add(dx < 0 ? 'pslide-l' : 'pslide-r'); } return; }
     const j = TABS.indexOf(mTab) + (dx < 0 ? 1 : -1); if(j < 0 || j >= TABS.length) return;
     mTab = TABS[j]; placeControls(); const p = $('mpane'); p.classList.remove('pslide-l', 'pslide-r'); void p.offsetWidth; p.classList.add(dx < 0 ? 'pslide-l' : 'pslide-r'); }, {passive:true}); }
 $('mtabs').onclick = e => { const b = e.target.closest('[data-t]'); if(!b) return; mTab = b.dataset.t; placeControls(); };
