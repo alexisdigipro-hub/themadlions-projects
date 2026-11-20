@@ -579,6 +579,10 @@ a.pill{text-decoration:none}
 @media (hover:none){.pcard:hover{transform:none;box-shadow:0 10px 30px rgba(0,0,0,.25);border-color:var(--line)}.pcard:hover .pthumb > img,.pcard:hover .pstrip,.pcard:hover .pmos{transform:none}.pcard:hover .pthumb::after{opacity:0}.pcard:hover .popen{opacity:0}}
 /* a card's buttons behind it on a phone: a slide to the left from its right side shows them */
 .spage .sh{position:relative}
+/* the hidden side buttons stay inside their card: a row of the list clips them too, and Home never moves sideways
+   (Alex, 20 Nov: in the list the whole page slid left and every card's buttons showed) */
+.spage .prow.sh,.spage .pcard.sh{overflow:hidden}
+.spage{overflow-x:hidden;touch-action:pan-y}.spage .pwrap{overflow-x:clip}
 .pswp{position:absolute;top:0;right:0;bottom:0;width:74px;display:flex;flex-direction:column;z-index:3;transform:translateX(100%);transition:transform .26s cubic-bezier(.2,.8,.3,1);background:#18181a}
 .pswiping .pswp{transition:none}.pswopen .pswp{transform:none}
 .pswp button{flex:1;border:0;background:#2a2a2d;color:var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:600 10.5px var(--body);cursor:pointer;border-top:1px solid rgba(255,255,255,.06)}
