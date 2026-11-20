@@ -441,6 +441,16 @@ a.pill{text-decoration:none}
 .pmenu svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;flex:none}
 .pmenu .ptick{color:#ff8f86;stroke-width:2.2}
 .pmenu hr{border:0;border-top:1px solid var(--line);margin:5px 6px}
+.modal.ptm{z-index:96}.ptmcard{max-width:560px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
+.ptmcard p{margin:0;color:var(--muted);font-size:14px}.ptmcard p b{color:var(--fg)}
+.ptmcard .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ptmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-height:min(52vh,420px);overflow:auto;padding:2px}
+.ptmi{position:relative;aspect-ratio:1;border:0;padding:0;border-radius:12px;overflow:hidden;background:#1d1d1f;cursor:pointer;outline:1px solid var(--line);transition:transform .15s,outline-color .15s}
+.ptmi img{width:100%;height:100%;object-fit:cover;display:block}
+.ptmi:hover{outline:2px solid var(--accent)}.ptmi:active{transform:scale(.96)}
+.ptmfoot .pill{flex:1;justify-content:center}.ptmfoot .pill svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.ptm.busy{cursor:progress}.ptm.busy .ptmcard{opacity:.6;pointer-events:none}
+@media (max-width:820px){.ptmgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .pmenu .pdanger{color:#ff6b6b}.pmenu .pdanger:hover{background:rgba(255,80,80,.1)}
 .pheld{transform:scale(.97)!important;box-shadow:0 0 0 2px rgba(212,0,0,.65),0 18px 40px rgba(0,0,0,.5)!important;transition:transform .2s,box-shadow .2s}
 .pctx{min-width:220px;transform-origin:50% 0;animation:ptpop .2s cubic-bezier(.2,1.3,.4,1)}
@@ -2507,7 +2517,7 @@ document.addEventListener('keydown', e => { if(!(e.metaKey || e.ctrlKey) || e.ke
 async function cleanFiles(id){ // photos taken off the sheet leave the account too
   try{ if(moving) return; const all = await store.list(`${me.id}/${id}`); if(!all.length) return;
     const c = curSheet();
-    const keep = new Set(photos.filter(p => p && p.path).map(p => p.path).concat(photos.filter(p => p && p.orig && p.orig.path).map(p => p.orig.path), photos.filter(p => p && p.ppath).map(p => p.ppath), pool.flatMap(x => [x.path, x.tpath, x.ppath]).filter(Boolean), c && c.thumb ? [c.thumb] : []));
+    const keep = new Set(photos.filter(p => p && p.path).map(p => p.path).concat(photos.filter(p => p && p.orig && p.orig.path).map(p => p.orig.path), photos.filter(p => p && p.ppath).map(p => p.ppath), pool.flatMap(x => [x.path, x.tpath, x.ppath]).filter(Boolean), c && c.thumb ? [c.thumb] : [], [S.pick, S.autoThumb].filter(Boolean)));
     const gone = all.filter(x => !keep.has(x));
     if(gone.length && id === sheets.cur && !pending.size && !moving) await store.remove(gone);
   }catch{}
@@ -2515,6 +2525,7 @@ async function cleanFiles(id){ // photos taken off the sheet leave the account t
 async function saveThumb(){
   if(!me || !sheets.cur) return;
   if(!thumbStale && (curSheet() || {}).thumb) return;
+  if(S.pick && (curSheet() || {}).thumb === S.pick) return; // a picture picked for Home stays (Alex, 20 Nov)
   const id = sheets.cur;
   try{ const b = await drawSheet(360, 'image/jpeg', true); if(sheets.cur !== id) return;
     const { error, path } = await store.put(`${me.id}/${id}/thumb.jpg`, b, 'image/jpeg', true);
@@ -2769,7 +2780,8 @@ async function openSheets(first){
       ? `<p>Delete ${esc(x.name)}?</p><button type="button" data-cx="keep"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>Keep it</span></button>
          <button type="button" class="pdanger" data-cx="sure"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete, with its photos</span></button>`
       : `<p>${esc(x.name)}</p>${folders ? `<button type="button" data-cx="move"><svg viewBox="0 0 24 24">${IC.folderGo}</svg><span>Move</span></button>
-         <button type="button" data-cx="newf"><svg viewBox="0 0 24 24">${IC.folderPlus}</svg><span>Create a folder</span></button><hr>` : ''}
+         <button type="button" data-cx="newf"><svg viewBox="0 0 24 24">${IC.folderPlus}</svg><span>Create a folder</span></button>` : ''}
+         <button type="button" data-cx="thumb"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8"/></svg><span>Thumbnail</span></button><hr>
          <button type="button" class="pdanger" data-cx="del"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete</span></button>`;
     card.classList.add('pheld'); m.appendChild(o); const r = card.getBoundingClientRect(), w = o.offsetWidth, h = o.offsetHeight;
     o.style.left = Math.max(10, Math.min(innerWidth - w - 10, r.left + r.width / 2 - w / 2)) + 'px';
@@ -2835,7 +2847,71 @@ async function openSheets(first){
     const to = d.id === 'pBack' ? '' : d.dataset.fid, x = sheets.list.find(y => y.id === id); if(!x || (fOf(x.folder) ? x.folder : '') === to) return;
     if(await setFolder(id, to)){ paintList(); const f = fOf(to); toast(f ? `Moved to ${f.name}` : 'Moved to Home'); } }, {passive:false});
   m.addEventListener('touchcancel', tEnd);
-  m.addEventListener('contextmenu', e => { if(td || (isPhone() && e.target.closest('.sh[data-id]'))) e.preventDefault(); });
+  m.addEventListener('contextmenu', e => { const c = e.target.closest('.sh[data-id]');
+    if(td || (isPhone() && c)){ e.preventDefault(); return; }
+    if(c && !e.target.closest('input')){ e.preventDefault(); openCtx(c, c.dataset.id); } }); // on a computer the same menu comes with a right click
+  /* Thumbnail (Alex, 20 Nov: "it opens the pool of photos, you pick one, or upload one"): the picture a character shows on
+     Home. Its sheet's photos and its pool, or a photo from the device; made into a 960 x 540 JPEG, kept as the row's thumb,
+     and S.pick says it was picked, so saving the sheet does not draw over it. Use the sheet goes back to the drawn one. */
+  const pickThumb = async id => {
+    const x = sheets.list.find(y => y.id === id); if(!x) return;
+    const w = document.createElement('div'); w.className = 'modal ptm';
+    w.innerHTML = `<div class="card ptmcard"><div class="row"><h2 style="flex:1">Thumbnail</h2><button type="button" class="pill round" data-tm="x" aria-label="Close" title="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <p>The picture <b>${esc(x.name)}</b> shows on Home. Pick one of its photos, or upload one.</p>
+      <div class="ptmgrid"><p class="pnone">Reading the photos…</p></div>
+      <div class="row ptmfoot"><button type="button" class="pill main" data-tm="up"><svg viewBox="0 0 24 24"><path d="M12 19V7M7 12l5-5 5 5M5 4h14"/></svg>Upload a photo</button>
+        <button type="button" class="pill" data-tm="sheet" hidden><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M9 5v14M15 5v14"/></svg>Use the sheet</button></div>
+      <input type="file" accept="image/*" hidden></div>`;
+    document.body.appendChild(w);
+    const urls = [];
+    const shut = () => { w.remove(); urls.forEach(u => URL.revokeObjectURL(u)); document.removeEventListener('keydown', escT, true); };
+    const escT = e => { if(e.key === 'Escape'){ e.stopPropagation(); shut(); } }; document.addEventListener('keydown', escT, true);
+    if(id === sheets.cur){ clearTimeout(st); await save(); }
+    const { data:row, error } = await sb.from('roarref_sheets').select('data,thumb').eq('id', id).single();
+    const grid = w.querySelector('.ptmgrid');
+    if(error || !row){ grid.innerHTML = '<p class="pnone">The photos could not be read. Check the connection.</p>'; return; }
+    const d = row.data || {}, dS = d.S || {};
+    if(dS.pick && row.thumb === dS.pick) w.querySelector('[data-tm="sheet"]').hidden = false;
+    const items = [];
+    (d.photos || []).forEach(q => { if(q && q.path) items.push({show:q.ppath || q.path, full:q.ppath || q.path}); });
+    (d.pool || []).forEach(q => { if(q && q.path && !items.some(i => i.full === (q.ppath || q.path))) items.push({show:q.tpath || q.ppath || q.path, full:q.ppath || q.path}); });
+    grid.innerHTML = items.length ? items.map((it, i) => `<button type="button" class="ptmi" data-tm="i${i}" aria-label="Use this photo"><span class="pblank"></span></button>`).join('')
+      : '<p class="pnone">This character has no photos yet. Upload one.</p>';
+    items.forEach(async (it, i) => { try{ const b = await getBlob(it.show); const u = URL.createObjectURL(b); urls.push(u);
+      const btn = grid.querySelector(`[data-tm="i${i}"]`); if(btn) btn.innerHTML = `<img src="${u}" alt="">`; }catch{} });
+    const make = async blob => { // a 16:9 picture, a little above the middle so a face stays in it
+      const bm = await createImageBitmap(blob); const W = 960, H = 540, r = W / H;
+      let sw = bm.width, sh = bm.height, sx = 0, sy = 0;
+      if(sw / sh > r){ sw = sh * r; sx = (bm.width - sw) / 2; } else { sh = sw / r; sy = (bm.height - sh) * 0.28; }
+      const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+      g.drawImage(bm, sx, sy, sw, sh, 0, 0, W, H); if(bm.close) bm.close();
+      return await new Promise(res => c.toBlob(res, 'image/jpeg', 0.86)); };
+    const apply = async (blob, back) => { w.classList.add('busy');
+      try{
+        let path = null; const at = Date.now();
+        if(!back){ const pic = await make(blob); const r = await store.put(`${me.id}/${id}/pick-${newId()}.jpg`, pic, 'image/jpeg');
+          if(r.error) throw r.error; path = r.path; dbPut('pic:' + path, {at:String(at), blob:pic}).catch(() => {}); }
+        const old = dS.pick && row.thumb === dS.pick ? dS.pick : null;
+        const auto = old ? (dS.autoThumb || null) : row.thumb;
+        const nS = Object.assign({}, dS, {pick:path, autoThumb:path ? auto : null, tv:at}), thumb = path || auto;
+        if(id === sheets.cur){ S.pick = nS.pick; S.autoThumb = nS.autoThumb; S.tv = at; if(!path) thumbStale = true; }
+        const { error:e2 } = await sb.from('roarref_sheets').update({thumb, data:id === sheets.cur ? {S, photos:packPhotos(), pool:packPool()} : Object.assign({}, d, {S:nS})}).eq('id', id);
+        if(e2) throw e2;
+        if(old) store.remove([old]).catch(() => {});
+        Object.assign(x, {thumb, thumbAt:at, tv:at});
+        shut(); await draw(); toast(path ? 'Thumbnail changed' : 'The sheet is the thumbnail again');
+        if(!path && id === sheets.cur) saveThumb().then(() => { if(document.body.contains(m)) draw(); });
+      }catch{ w.classList.remove('busy'); toast('The thumbnail could not be saved. Check the connection.'); } };
+    const inp = w.querySelector('input[type=file]');
+    inp.onchange = () => { const f = inp.files && inp.files[0]; if(f) apply(f); };
+    w.onclick = async e => { if(e.target === w) return shut(); const b = e.target.closest('[data-tm]'); if(!b || w.classList.contains('busy')) return;
+      const k = b.dataset.tm;
+      if(k === 'x') return shut();
+      if(k === 'up') return inp.click();
+      if(k === 'sheet') return apply(null, true);
+      if(k[0] === 'i'){ const it = items[+k.slice(1)]; if(!it) return; w.classList.add('busy'); let blob = null; try{ blob = await getBlob(it.full); }catch{} w.classList.remove('busy');
+        if(!blob) return toast('That photo could not be read. Check the connection.'); apply(blob); } };
+  };
   m.onclick = async e => {
     let t = e.target.closest('button');
     if(!t || m.classList.contains('busy')) return;
@@ -2867,6 +2943,7 @@ async function openSheets(first){
         document.body.appendChild(a); openMenu(a, id); a.remove(); return; }
       if(k === 'newf'){ shutMenu(); busy(true); const f = await makeFolder(freshName()); if(f) await setFolder(id, f.id); busy(false); if(!f) return;
         if(pv.folder){ pv.folder = ''; keep(); paint(); } else paintList(); renameFolder(f.id); return; }
+      if(k === 'thumb'){ shutMenu(); return pickThumb(id); }
       if(k === 'del') return card ? openCtx(card, id, 'del') : shutMenu();
       if(k === 'keep') return shutMenu();
       if(k === 'sure'){ shutMenu(); busy(true); await deleteSheet(id); await draw(); busy(false); syncPanel(); return; } }
