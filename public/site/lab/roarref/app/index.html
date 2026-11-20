@@ -446,9 +446,11 @@ a.pill{text-decoration:none}
 .modal.ptm{z-index:96}.ptmcard{max-width:560px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
 .ptmcard p{margin:0;color:var(--muted);font-size:14px}.ptmcard p b{color:var(--fg)}
 .ptmcard .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.ptmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-height:min(52vh,420px);overflow:auto;padding:2px}
-.ptmi{position:relative;aspect-ratio:1;border:0;padding:0;border-radius:12px;overflow:hidden;background:#1d1d1f;cursor:pointer;outline:1px solid var(--line);transition:transform .15s,outline-color .15s}
-.ptmi img{width:100%;height:100%;object-fit:cover;display:block}
+.ptmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));grid-auto-rows:max-content;align-content:start;gap:8px;max-height:min(52vh,420px);overflow:auto;padding:2px;-webkit-overflow-scrolling:touch}
+/* square tiles without aspect-ratio: in a scrolling grid Safari squeezed them on top of one another (Alex, 20 Nov, iPhone) */
+.ptmi{position:relative;display:block;width:100%;height:0;padding:0 0 100%;border:0;border-radius:12px;overflow:hidden;background:#1d1d1f;cursor:pointer;outline:1px solid var(--line);transition:transform .15s,outline-color .15s}
+.ptmi > *{position:absolute;inset:0}
+.ptmi img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
 .ptmi:hover{outline:2px solid var(--accent)}.ptmi:active{transform:scale(.96)}
 .ptmfoot .pill{flex:1;justify-content:center}.ptmfoot .pill svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
 .ptm.busy{cursor:progress}.ptm.busy .ptmcard{opacity:.6;pointer-events:none}
