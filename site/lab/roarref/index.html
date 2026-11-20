@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- RoarRef's small page in the Lab (Alex, 6 Nov 2026: "a small page with the basics, and from there you open the web app").
+     The app itself is app/ (plain HTML, nothing to install). EN and GR. -->
+<title>RoarRef · Character sheet for AI, in your browser · by The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/lab/roarref/">
+<meta name="description" content="RoarRef, by The Mad Lions Lab: a 16:9 character reference sheet for AI. Pick 2 to 8 windows, drop your photos in, move and zoom each one inside its window, export up to 8K. Free with a Roar Account, in your browser, up to 10 sheets on any computer.">
+<meta name="theme-color" content="#16181c">
+<meta property="og:title" content="RoarRef · by The Mad Lions">
+<meta property="og:description" content="Your character from every side, on one 16:9 sheet, ready for AI.">
+<meta property="og:url" content="https://themadlions.com/lab/roarref/">
+<meta property="og:image" content="https://themadlions.com/lab/roarref.jpg">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../fresh.css">
+<style>
+:root {
+  --bg: #16181c; --bg-2: #1d2025; --line: rgba(255,255,255,.09);
+  --text: #eef0f3; --muted: rgba(214,220,228,.62); --dim: rgba(214,220,228,.4);
+  --red: #d40000; --red-hi: #ff3b2f;
+  --glass: rgba(255,255,255,.055); --glass-edge: rgba(255,255,255,.12);
+  --pad: clamp(18px, 4.5vw, 72px); --ease: cubic-bezier(.16, 1, .3, 1);
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%, transparent 62%), radial-gradient(800px 600px at 100% 100%, rgba(212,0,0,.10), transparent 70%), linear-gradient(180deg, #23272e 0%, #17191d 50%, #121417 100%); }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+img, svg { display: block; }
+:focus-visible { outline: 2px solid var(--red-hi); outline-offset: 3px; border-radius: 8px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(var(--pad), env(safe-area-inset-left, 0px)); padding-right: max(var(--pad), env(safe-area-inset-right, 0px)); }
+.bar { display: flex; align-items: center; gap: 10px; padding-block: max(18px, env(safe-area-inset-top, 0px)) 0; }
+.bar .grow { flex: 1; }
+.wordmark { filter: invert(1); width: 128px; height: auto; }
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 48px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 600; border: 1px solid var(--glass-edge); background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); cursor: pointer; transition: transform .3s var(--ease), background .2s, border-color .2s, filter .2s; white-space: nowrap; }
+.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.28); }
+.pill:active { transform: scale(.97); }
+.pill.main { background: var(--red); border-color: transparent; color: #fff; box-shadow: 0 12px 34px rgba(212,0,0,.32); }
+.pill.main:hover { filter: brightness(1.1); }
+.pill.sm { height: 38px; padding: 0 16px; font-size: 13.5px; }
+.pill svg { width: 18px; height: 18px; flex: none; }
+.hero { text-align: center; padding-top: clamp(48px, 8vw, 110px); display: flex; flex-direction: column; align-items: center; }
+.brand { display: flex; align-items: center; gap: 14px; margin: 0; font-family: Jost, var(--sans); font-size: clamp(30px, 3.6vw, 48px); letter-spacing: .02em; line-height: 1; }
+.brand img { width: clamp(52px, 5vw, 70px); height: auto; border-radius: 22%; }
+.brand .a { font-weight: 200; } .brand .b { font-weight: 800; }
+.beta { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(212,0,0,.6); color: #ff8f86; background: rgba(212,0,0,.14); }
+.claim { margin: clamp(18px, 2.4vw, 28px) 0 0; font-family: Jost, var(--sans); font-weight: 200; font-size: clamp(44px, 7.4vw, 112px); line-height: .92; letter-spacing: -.02em; text-wrap: balance; max-width: 1000px; }
+.claim b { font-weight: 800; background: linear-gradient(180deg, #fff 30%, #ff8a7f); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lead { margin: clamp(18px, 2.2vw, 26px) 0 0; max-width: 680px; font-size: clamp(16px, 1.4vw, 19px); line-height: 1.55; color: var(--muted); text-wrap: balance; }
+.cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: clamp(24px, 3vw, 34px); }
+.note { margin: 14px 0 0; font-family: var(--mono); font-size: 12px; letter-spacing: .04em; color: var(--dim); }
+.shot { display: block; margin: clamp(40px, 6vw, 72px) auto 0; max-width: 1240px; border-radius: 22px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 40px 120px rgba(0,0,0,.5); transition: transform .5s var(--ease); }
+.shot:hover { transform: translateY(-3px); }
+.shot img { width: 100%; height: auto; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: clamp(40px, 6vw, 72px); }
+.step { padding: clamp(22px, 2.4vw, 30px); border-radius: 22px; background: var(--bg-2); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.step .n { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; color: #ff8f86; }
+.step h3 { margin: 0; font-family: Jost, var(--sans); font-weight: 500; font-size: 22px; letter-spacing: .01em; }
+.step p { margin: 0; color: var(--muted); line-height: 1.55; font-size: 15px; }
+.end { text-align: center; padding-block: clamp(56px, 8vw, 100px) clamp(40px, 6vw, 64px); display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.end h2 { margin: 0; font-family: Jost, var(--sans); font-weight: 300; font-size: clamp(30px, 4vw, 52px); letter-spacing: -.01em; text-wrap: balance; }
+.end h2 b { font-weight: 800; }
+footer { border-top: 1px solid var(--line); padding-block: 26px max(26px, env(safe-area-inset-bottom, 0px)); color: var(--dim); font-size: 13px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.lang { display: flex; gap: 4px; padding: 4px; border-radius: 999px; border: 1px solid var(--glass-edge); background: var(--glass); }
+.lang button { border: 0; background: transparent; height: 30px; padding: 0 12px; border-radius: 999px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.lang button[aria-pressed="true"] { background: rgba(255,255,255,.14); color: var(--text); }
+@media (max-width: 820px) {
+  .steps { grid-template-columns: 1fr; }
+  .bar .pill.sm span { display: none; }
+  .bar .pill.sm { width: 38px; padding: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"RoarRef","url":"https://themadlions.com/lab/roarref/","description":"RoarRef, by The Mad Lions Lab: a 16:9 character reference sheet for AI. Pick 2 to 8 windows, drop your photos in, move and zoom each one inside its window, export up to 8K. Free with a Roar Account, in your browser, up to 10 sheets on any computer.","applicationCategory":"DesignApplication","operatingSystem":"Web","image":"https://themadlions.com/lab/roarref.jpg","screenshot":"https://themadlions.com/lab/roarref.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
+</head>
+<body>
+<header class="wrap bar">
+  <a href="../../"><img class="wordmark" src="../../wordmark.png" alt="The Mad Lions" width="128" height="26"></a>
+  <span class="grow"></span>
+  <a class="pill sm" href="../" title="The Lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span data-t="lab">The Lab</span></a>
+  <div class="lang" role="group" aria-label="Language"><button type="button" data-l="en">EN</button><button type="button" data-l="el">GR</button></div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1 class="brand"><img src="icon.png" alt="" width="70" height="70"><span><span class="a">ROAR</span><span class="b">REF</span></span><i class="beta" data-t="new">New</i></h1>
+    <p class="claim" data-t="claim" data-html>Your character, <b>every side</b>, one sheet.</p>
+    <p class="lead" data-t="lead">A 16:9 reference sheet for AI. Pick how many windows, drop your photos in, move and zoom each one inside its window, and export a 4K picture to give any image or video model.</p>
+    <div class="cta">
+      <a class="pill main" href="app/"><span data-t="open">Open in the browser</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+    <p class="note" data-t="note">Free with a Roar Account · nothing to install · up to 10 sheets, on any computer</p>
+  </section>
+
+  <a class="shot" href="app/" aria-label="Open RoarRef"><img src="../roarref.jpg" alt="RoarRef: one character in three windows, front, back and face, on one white 16:9 sheet" width="1600" height="1000" loading="lazy"></a>
+
+  <section class="steps">
+    <div class="step"><span class="n">01</span><h3 data-t="s1">Pick the windows</h3><p data-t="s1p">From 2 to 8: front, back and face; front, side, back, face; five or six views; bodies with faces; six expressions.</p></div>
+    <div class="step"><span class="n">02</span><h3 data-t="s2">Drop and frame</h3><p data-t="s2p">Drop the photos on the windows. The windows stay put; drag each photo where you want it, zoom with the wheel or two fingers, mirror it.</p></div>
+    <div class="step"><span class="n">03</span><h3 data-t="s3">Export up to 8K</h3><p data-t="s3p">PNG or JPEG up to 8K, no writing on it unless you turn the names on. Your sheets wait in your Roar Account.</p></div>
+  </section>
+
+  <section class="end">
+    <h2 data-t="end" data-html>Ready when <b>you are</b>.</h2>
+    <a class="pill main" href="app/"><span data-t="open">Open in the browser</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  </section>
+</main>
+
+<footer><div class="wrap"><span>© The Mad Lions · Athens</span><span data-t="foot">An experiment of The Mad Lions Lab</span></div></footer>
+
+<script>
+(function () {
+  var EL = {
+    lab: 'Το Lab', new: 'Νέο', claim: 'Ο χαρακτήρας σου, <b>από κάθε πλευρά</b>, σε ένα φύλλο.',
+    lead: 'Ένα φύλλο αναφοράς 16:9 για AI. Διαλέγεις πόσα παράθυρα, ρίχνεις μέσα τις φωτογραφίες σου, μετακινείς και κάνεις ζουμ στην καθεμία μέσα στο παράθυρό της, και βγάζεις μια εικόνα 4K για οποιοδήποτε μοντέλο εικόνας ή βίντεο.',
+    open: 'Άνοιξέ το στον browser', note: 'Δωρεάν με Roar Account · τίποτα για εγκατάσταση · έως 10 φύλλα, σε κάθε υπολογιστή',
+    s1: 'Διάλεξε τα παράθυρα', s1p: 'Από 2 έως 8: μπρος, πίσω και πρόσωπο· μπρος, προφίλ, πίσω, πρόσωπο· πέντε ή έξι όψεις· σώματα με πρόσωπα· έξι εκφράσεις.',
+    s2: 'Ρίξε και κάδραρε', s2p: 'Ρίξε τις φωτογραφίες στα παράθυρα. Τα παράθυρα μένουν σταθερά· σέρνεις κάθε φωτογραφία όπου τη θες, ζουμ με τη ρόδα ή με δύο δάχτυλα, καθρέφτισμα.',
+    s3: 'Βγάλ’ το έως 8K', s3p: 'PNG ή JPEG έως 8K, χωρίς γράμματα εκτός αν ανοίξεις τα ονόματα. Τα φύλλα σου σε περιμένουν στο Roar Account σου.',
+    end: 'Έτοιμο όποτε <b>είσαι κι εσύ</b>.', foot: 'Ένα πείραμα του The Mad Lions Lab'
+  }
+  var EN = {}
+  ;[].slice.call(document.querySelectorAll('[data-t]')).forEach(function (e) { var k = e.dataset.t; if (!(k in EN)) EN[k] = e.hasAttribute('data-html') ? e.innerHTML : e.textContent })
+  function setLang(l, pick) {
+    document.documentElement.lang = l
+    ;[].slice.call(document.querySelectorAll('[data-t]')).forEach(function (e) { var v = (l === 'el' ? EL : EN)[e.dataset.t]; if (v == null) return; if (e.hasAttribute('data-html')) e.innerHTML = v; else e.textContent = v })
+    ;[].slice.call(document.querySelectorAll('.lang button')).forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.l === l) })
+    if (pick) { try { localStorage.setItem('tml_site_lang', l); localStorage.setItem('tml_site_lang_set', '1') } catch (e) {} }
+  }
+  ;[].slice.call(document.querySelectorAll('.lang button')).forEach(function (b) { b.onclick = function () { setLang(b.dataset.l, 1) } })
+  // Greek by itself for a visitor from Greece (Alex, 10 Nov 2026): a browser set to Greek, or a clock on Greek or Cypriot time.
+  // EN / GR pressed once stays (tml_site_lang with tml_site_lang_set; an "en" kept before 10 Nov was only the default).
+  function firstLang() {
+    try { var s = localStorage.getItem('tml_site_lang'); if (s === 'el' || (s === 'en' && localStorage.getItem('tml_site_lang_set'))) return s } catch (e) {}
+    try { if ((navigator.languages || [navigator.language || '']).some(function (x) { return /^el/i.test(x) }) || /Athens|Nicosia/.test(Intl.DateTimeFormat().resolvedOptions().timeZone)) return 'el' } catch (e) {}
+    return 'en'
+  }
+  var saved = firstLang()
+  setLang(saved)
+})()
+</script>
+<script src="../fresh.js" defer></script>
+</body>
+</html>
