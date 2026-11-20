@@ -454,6 +454,9 @@ a.pill{text-decoration:none}
 @media (max-width:820px){.ptmgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .pmenu .pdanger{color:#ff6b6b}.pmenu .pdanger:hover{background:rgba(255,80,80,.1)}
 .pheld{transform:scale(.97)!important;box-shadow:0 0 0 2px rgba(212,0,0,.65),0 18px 40px rgba(0,0,0,.5)!important;transition:transform .2s,box-shadow .2s}
+.pslide-l{animation:pslideL .28s cubic-bezier(.2,.8,.3,1)}.pslide-r{animation:pslideR .28s cubic-bezier(.2,.8,.3,1)}
+@keyframes pslideL{from{opacity:.3;transform:translateX(36px)}to{opacity:1;transform:none}}
+@keyframes pslideR{from{opacity:.3;transform:translateX(-36px)}to{opacity:1;transform:none}}
 .pscrim{position:fixed;inset:0;z-index:89;background:transparent;touch-action:none}
 .pctx{min-width:220px;transform-origin:50% 0;animation:ptpop .2s cubic-bezier(.2,1.3,.4,1)}
 .pcardm select.field{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9a97' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:16px;padding-right:40px}
@@ -2783,7 +2786,7 @@ async function openSheets(first){
   // Move to a folder: a small menu by the project's folder button
   /* a menu stands on a clear veil (Alex, 20 Nov: "I press Thumbnail and it takes me into the project"): a tap that misses the
      menu, or lands as it closes, can never reach the card under it; and for a moment after a menu closes no card opens */
-  let menuShutAt = 0;
+  let menuShutAt = 0, ctxAt = 0, sw = null;
   const shutMenu = () => { const o = m.querySelector('.pmenu'), sc = m.querySelector('.pscrim'); if(o || sc) menuShutAt = Date.now();
     if(o) o.remove(); if(sc) sc.remove(); m.querySelectorAll('.pheld').forEach(n => n.classList.remove('pheld')); };
   const veil = () => { const sc = document.createElement('div'); sc.className = 'pscrim'; sc.onclick = e => { e.stopPropagation(); shutMenu(); }; m.appendChild(sc); };
@@ -2852,7 +2855,7 @@ async function openSheets(first){
   const tScroll = () => { if(!td || td.on !== true) return; const edge = 80, h = innerHeight;
     const v = td.y < edge ? -(edge - td.y) / 4 : td.y > h - edge ? (td.y - (h - edge)) / 4 : 0;
     if(v){ m.scrollTop += v; tPlace(); } td.raf = requestAnimationFrame(tScroll); };
-  const startDrag = () => { td.on = true; shutMenu(); const c = td.card;
+  const startDrag = () => { td.on = true; if(sw) sw.used = true; shutMenu(); const c = td.card;
     const g = document.createElement('div'); g.className = 'ptghost'; const img = c.querySelector('.pthumb img');
     const x = sheets.list.find(y => y.id === td.id);
     g.innerHTML = (img ? `<img src="${img.src}" alt="">` : `<span class="ptgb"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/></svg></span>`) + `<b>${esc(x ? x.name : '')}</b>`;
@@ -2864,7 +2867,7 @@ async function openSheets(first){
     const c = e.target.closest('.sh[data-id], .sh.pfold'); if(!c || e.target.closest('.sh-acts, .sh-meta b, input, .pmenu')) return;
     const fid = c.dataset.fid || '';
     const t0 = e.touches[0]; td = {id:c.dataset.id || '', fid, card:c, x0:t0.clientX, y0:t0.clientY, x:t0.clientX, y:t0.clientY, on:false};
-    td.t = setTimeout(() => { if(!td) return; td.on = 'menu'; td.x0 = td.x; td.y0 = td.y; if(fid) openFctx(c, fid); else openCtx(c, td.id);
+    td.t = setTimeout(() => { if(!td) return; td.on = 'menu'; td.x0 = td.x; td.y0 = td.y; ctxAt = Date.now(); if(sw) sw.used = true; if(fid) openFctx(c, fid); else openCtx(c, td.id);
       try{ navigator.vibrate && navigator.vibrate(12); }catch{} }, 420); }, {passive:true});
   m.addEventListener('touchmove', e => { if(!td) return; const t0 = e.touches[0]; td.x = t0.clientX; td.y = t0.clientY;
     if(!td.on){ if(Math.hypot(td.x - td.x0, td.y - td.y0) > 10) tEnd(); return; }
@@ -2878,6 +2881,15 @@ async function openSheets(first){
     const to = d.id === 'pBack' ? '' : d.dataset.fid, x = sheets.list.find(y => y.id === id); if(!x || (fOf(x.folder) ? x.folder : '') === to) return;
     if(await setFolder(id, to)){ paintList(); const f = fOf(to); toast(f ? `Moved to ${f.name}` : 'Moved to Home'); } }, {passive:false});
   m.addEventListener('touchcancel', tEnd);
+  /* swipes (Alex, 20 Nov: "the right and left swipes for getting about"): in a folder a swipe to the right goes back to All
+     characters; a swipe that became a long press or a drag does nothing */
+  const slide = dir => { const w = m.querySelector('.pwrap'); if(!w) return; w.classList.remove('pslide-l', 'pslide-r'); void w.offsetWidth; w.classList.add(dir); };
+  m.addEventListener('touchstart', e => { sw = null; if(e.touches.length !== 1 || e.target.closest('input, .pmenu, .pscrim')) return;
+    const t0 = e.touches[0]; sw = {x:t0.clientX, y:t0.clientY, t:Date.now(), used:false}; }, {passive:true});
+  m.addEventListener('touchend', e => { if(!sw) return; const s0 = sw; sw = null;
+    if(s0.used || m.querySelector('.pmenu, .sh-meta input') || !curF() || m.classList.contains('busy')) return;
+    const t1 = e.changedTouches[0], dx = t1.clientX - s0.x, dy = t1.clientY - s0.y;
+    if(dx > 70 && Math.abs(dx) > 1.6 * Math.abs(dy) && Date.now() - s0.t < 700){ pv.folder = ''; query = ''; keep(); paint(); slide('pslide-r'); } }, {passive:true});
   m.addEventListener('contextmenu', e => { const c = e.target.closest('.sh[data-id], .sh.pfold');
     if(td || (isPhone() && c)){ e.preventDefault(); return; }
     if(c && !e.target.closest('input')){ e.preventDefault(); if(c.dataset.fid) openFctx(c, c.dataset.fid); else openCtx(c, c.dataset.id); } }); // on a computer the same menu comes with a right click
@@ -2960,7 +2972,9 @@ async function openSheets(first){
   m.onclick = async e => {
     let t = e.target.closest('button');
     if(!t || m.classList.contains('busy')) return;
-    if((t.dataset.open || t.dataset.fold) && Date.now() - menuShutAt < 450) return; // the tap that closed a menu opens nothing
+    // the tap that closed a menu opens nothing, nor the finger lifting from a long press (Alex, 20 Nov: "the menu comes, then it
+    // goes into the folder; we want to choose from the menu"), nor anything while a menu is open
+    if((t.dataset.open || t.dataset.fold) && (m.querySelector('.pmenu') || Date.now() - menuShutAt < 450 || Date.now() - ctxAt < 900)) return;
     // while the page is still being brought up to date, only what leaves it waits (shown at once as busy); the pencil,
     // the bin, the order and the view answer at the first click (Alex, 16 Nov: "I press it once and it does not take")
     if(m._sync && (t.dataset.open || t.dataset.dup || t.dataset.sure || t.id === 'shNew' || t.id === 'shNew2' || t.id === 'shOut')){
@@ -2971,8 +2985,8 @@ async function openSheets(first){
     if(t.dataset.pv){ const [k, v] = t.dataset.pv.split(':'); pv[k] = v; keep(); m.querySelectorAll(`[data-pv^="${k}:"]`).forEach(x => x.setAttribute('aria-pressed', x === t)); paintList(); return; }
     if(t.id === 'shNew' || t.id === 'shNew2'){ if(sheets.list.length >= MAX_SHEETS) return; const cf = curF(); busy(true); await newSheet(false, cf && cf.id); busy(false); return close(); }
     // folders (Alex, 20 Nov)
-    if(t.dataset.fold){ shutMenu(); pv.folder = t.dataset.fold; query = ''; keep(); paint(); m.scrollTop = 0; return; }
-    if(t.id === 'pBack'){ shutMenu(); pv.folder = ''; query = ''; keep(); paint(); return; }
+    if(t.dataset.fold){ shutMenu(); pv.folder = t.dataset.fold; query = ''; keep(); paint(); slide('pslide-l'); m.scrollTop = 0; return; }
+    if(t.id === 'pBack'){ shutMenu(); pv.folder = ''; query = ''; keep(); paint(); slide('pslide-r'); return; }
     if(t.id === 'shFold'){ busy(true); const f = await makeFolder(freshName()); busy(false); if(!f) return; paintList(); renameFolder(f.id); return; }
     if(t.dataset.fren){ renameFolder(t.dataset.fren); return; }
     if(t.dataset.fdel){ const row = t.closest('.sh');
@@ -2985,7 +2999,7 @@ async function openSheets(first){
     if(t.dataset.move){ openMenu(t, t.dataset.move); return; }
     if(t.dataset.fx){ const o = m.querySelector('.pmenu'), fid = o && o.dataset.folder, k = t.dataset.fx; if(!fid) return;
       const card = m.querySelector(`[data-fid="${fid}"]`);
-      if(k === 'open'){ shutMenu(); pv.folder = fid; query = ''; keep(); paint(); m.scrollTop = 0; return; }
+      if(k === 'open'){ shutMenu(); pv.folder = fid; query = ''; keep(); paint(); slide('pslide-l'); m.scrollTop = 0; return; }
       if(k === 'ren'){ shutMenu(); return renameFolder(fid); }
       if(k === 'thumb'){ shutMenu(); return pickThumb(null, fid); }
       if(k === 'del') return card ? openFctx(card, fid, 'del') : shutMenu();
@@ -3248,6 +3262,21 @@ function placeControls(){
   fillMTools();
   moveLens(); moveRatioLens(); fit();
 }
+/* swipes in the editor on a phone (Alex, 20 Nov): across the settings under the sheet, left and right go to the next and the
+   previous tab (Pool, Layout, Look, Window); in from the screen's left edge, Home. Sliders, the layouts' row, the pool's
+   photos and the sheet itself keep their own moves. */
+{ let es = null; const TABS = ['pool', 'layout', 'look', 'photo'];
+  document.addEventListener('touchstart', e => { es = null;
+    if(!isPhone() || e.touches.length !== 1 || document.querySelector('.spage, .modal, .lq, .pm')) return;
+    const t0 = e.touches[0], tg = e.target, edge = t0.clientX < 22 && !tg.closest('.stage');
+    if(!edge && (!tg.closest('#mpane, #mtabs') || tg.closest('input, select, textarea, .group:not(.mtabs), #poolBox .pth, canvas, .wheel, [draggable="true"]'))) return;
+    es = {x:t0.clientX, y:t0.clientY, t:Date.now(), edge}; }, {passive:true});
+  document.addEventListener('touchend', e => { if(!es) return; const s0 = es; es = null;
+    const t1 = e.changedTouches[0], dx = t1.clientX - s0.x, dy = t1.clientY - s0.y;
+    if(Math.abs(dx) < 60 || Math.abs(dx) < 1.6 * Math.abs(dy) || Date.now() - s0.t > 700) return;
+    if(s0.edge){ if(dx > 0) openSheets(); return; }
+    const j = TABS.indexOf(mTab) + (dx < 0 ? 1 : -1); if(j < 0 || j >= TABS.length) return;
+    mTab = TABS[j]; placeControls(); const p = $('mpane'); p.classList.remove('pslide-l', 'pslide-r'); void p.offsetWidth; p.classList.add(dx < 0 ? 'pslide-l' : 'pslide-r'); }, {passive:true}); }
 $('mtabs').onclick = e => { const b = e.target.closest('[data-t]'); if(!b) return; mTab = b.dataset.t; placeControls(); };
 matchMedia('(max-width:820px)').addEventListener('change', placeControls);
 buildPanel(); render(); placeControls(); restore();
