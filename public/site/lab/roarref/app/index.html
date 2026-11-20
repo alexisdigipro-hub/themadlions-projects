@@ -557,6 +557,48 @@ a.pill{text-decoration:none}
   .mpane #sheetSw .swl,.mpane #fillSw .swl{width:52px;flex:none}
   .mpane #poolBox .poolhead{gap:10px}.mpane #poolBox .poolhead > .pill.main{flex:1;justify-content:center}
 }
+/* Home calm (Alex, 20 Nov): the logo in the middle, the account left, the bin right; order and view in one button on a phone */
+.phead{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+.phead .mark{justify-self:center}.phl{justify-self:start}.phr{justify-self:end;display:flex;gap:8px}
+.pacct{position:relative;width:40px;height:40px;border-radius:50%;padding:0;border:1px solid var(--line);background:var(--panel);cursor:pointer;display:grid;place-items:center}
+.pacct i{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font:600 13px var(--body);font-style:normal;box-shadow:0 0 12px var(--accent-glow)}
+.pacct.ispro::after{content:"";position:absolute;right:1px;bottom:1px;width:11px;height:11px;border-radius:50%;background:linear-gradient(135deg,#ffd77a,#e6a93a);border:2px solid var(--bg)}
+.pacline{display:flex;align-items:center;gap:8px;margin:0 10px 6px;font-size:13px;color:var(--muted)}
+.pacm{min-width:240px}.pacm p{text-transform:none;letter-spacing:0;font:600 13px var(--body);color:var(--fg)}
+#shView{display:none}
+.phero:has(.pfh){align-items:center}
+/* Recently deleted */
+.ptrlist{display:flex;flex-direction:column;gap:8px;max-height:min(56vh,460px);overflow:auto}
+.ptri{display:flex;align-items:center;gap:10px;padding:6px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.ptrt{width:72px;aspect-ratio:16/9;border-radius:9px;overflow:hidden;background:#1d1d1f;flex:none}.ptrt img{width:100%;height:100%;object-fit:cover;display:block}
+.ptrm{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.ptrm b{font:600 14px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ptrm small{color:var(--muted);font-size:12px}
+.ptri .pill{height:34px;font-size:12.5px;gap:6px;padding:0 12px}.ptri .pill svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
+.ptri .pill.round{width:34px;padding:0;justify-content:center}.ptri .pill.danger,.ptmfoot .pill.danger{color:#ff6b6b}.ptri .pill.sure{background:#d40000;color:#fff;border-color:transparent}
+/* the long press holds the whole card: its pictures take no touch of their own, and a touch is no hover */
+.spage .pthumb img,.spage .pmos img,.spage .pstrip img{pointer-events:none;-webkit-user-drag:none;-webkit-touch-callout:none}
+@media (hover:none){.pcard:hover{transform:none;box-shadow:0 10px 30px rgba(0,0,0,.25);border-color:var(--line)}.pcard:hover .pthumb > img,.pcard:hover .pstrip,.pcard:hover .pmos{transform:none}.pcard:hover .pthumb::after{opacity:0}.pcard:hover .popen{opacity:0}}
+/* a card's buttons behind it on a phone: a slide to the left from its right side shows them */
+.spage .sh{position:relative}
+.pswp{position:absolute;top:0;right:0;bottom:0;width:74px;display:flex;flex-direction:column;z-index:3;transform:translateX(100%);transition:transform .26s cubic-bezier(.2,.8,.3,1);background:#18181a}
+.pswiping .pswp{transition:none}.pswopen .pswp{transform:none}
+.pswp button{flex:1;border:0;background:#2a2a2d;color:var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:600 10.5px var(--body);cursor:pointer;border-top:1px solid rgba(255,255,255,.06)}
+.pswp button:first-child{border-top:0}.pswp button svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8}
+.pswp button:active{filter:brightness(1.25)}.pswp .pswdel{background:#d40000;color:#fff}
+.prow .pswp{flex-direction:row;width:186px;border-radius:0 18px 18px 0;overflow:hidden}.prow .pswp button{border-top:0;border-left:1px solid rgba(255,255,255,.06)}
+/* pull to refresh */
+.pptr{position:fixed;left:50%;top:calc(max(18px,env(safe-area-inset-top,0px)) - 46px);z-index:5;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  background:var(--panel);border:1px solid var(--line);box-shadow:0 8px 20px rgba(0,0,0,.4);transform:translate(-50%,0);opacity:0;transition:transform .25s,opacity .25s;pointer-events:none}
+.pptr svg{width:19px;height:19px;stroke:var(--muted);fill:none;stroke-width:2}.pptr.ready svg{stroke:var(--accent)}
+.pptr.spin{opacity:1!important}.pptr.spin svg{stroke:var(--accent);animation:pspin .8s linear infinite}
+.spage{overscroll-behavior:none}
+html,body{overscroll-behavior:none}
+@media (max-width:820px){
+  .ptools .pseg{display:none}#shView{display:grid;width:42px;padding:0;place-items:center}#shView svg{width:19px;height:19px}
+  .ptools{flex-wrap:nowrap}.ptools .psearch{min-width:0}
+  .pcard .pbody .sh-acts,.prow .sh-acts{display:none}
+  .pcard .pbody{padding:10px 12px}
+  .phead .mark{font-size:24px}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 :root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
@@ -2573,7 +2615,9 @@ async function loadSheet(row){
 }
 async function listSheets(){
   // folders (Alex, 20 Nov): the sheet's folder comes with it; before the database has the column, the list is read as before
-  let { data, error } = await sb.from('roarref_sheets').select('id,name,thumb,updated_at,data,folder').order('created_at');
+  // the bin (Alex, 20 Nov): a deleted sheet waits 30 days with deleted_at set and is left out here
+  let { data, error } = await sb.from('roarref_sheets').select('id,name,thumb,updated_at,data,folder').is('deleted_at', null).order('created_at');
+  if(error){ ({ data, error } = await sb.from('roarref_sheets').select('id,name,thumb,updated_at,data,folder').order('created_at')); }
   if(error){ ({ data, error } = await sb.from('roarref_sheets').select('id,name,thumb,updated_at,data').order('created_at')); }
   if(error) throw error;
   return data.map(r => ({id:r.id, name:r.name, thumb:r.thumb, updated_at:r.updated_at, folder:r.folder || null, tv:r.data && r.data.S && r.data.S.tv, n:((r.data && r.data.photos) || []).filter(Boolean).length, paths:((r.data && r.data.photos) || []).filter(q => q && q.path).slice(0, 3).map(q => q.path)}));
@@ -2666,9 +2710,14 @@ async function newSheet(copy, folder){
     sheets.list = await listSheets(); await openSheet(row.id);
   }
 }
-async function deleteSheet(id){
+async function purgeSheet(id){ // for good: its files and its row
   try{ const all = await store.list(`${me.id}/${id}`); if(all.length) await store.remove(all); }catch{}
   await sb.from('roarref_sheets').delete().eq('id', id);
+}
+async function deleteSheet(id){ // into the bin for 30 days; for good only where the database has no bin yet
+  if(id === sheets.cur){ clearTimeout(st); await save(); }
+  const { error } = await sb.from('roarref_sheets').update({deleted_at:new Date().toISOString()}).eq('id', id);
+  if(error) await purgeSheet(id);
   sheets.list = await listSheets();
   if(!sheets.list.length){ const row = await insertSheet('Character 1', {S:JSON.parse(DEF), photos:[]}); sheets.list = await listSheets(); if(row) await openSheet(row.id); return; }
   if(sheets.cur === id) await openSheet(sheets.list[0].id);
@@ -2716,6 +2765,10 @@ async function openSheets(first){
   const loose = x => !fOf(x.folder);
   const fWhen = f => rows.filter(r => r.x.folder === f.id).reduce((a, r) => String(r.x.updated_at) > a ? String(r.x.updated_at) : a, String(f.created_at || ''));
   const fIcon = `<svg class="pfi" viewBox="0 0 24 24">${IC.folder}</svg>`;
+  const swp = (x, isF) => isPhone() ? `<div class="pswp">
+      <button type="button" data-sw="edit"><svg viewBox="0 0 24 24">${IC.pen}</svg><span>Edit</span></button>
+      ${!isF && folders ? `<button type="button" data-sw="move"><svg viewBox="0 0 24 24">${IC.folderGo}</svg><span>Move</span></button>` : ''}
+      <button type="button" data-sw="del" class="pswdel"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete</span></button></div>` : '';
   const fActs = f => `<div class="sh-acts">
       <button type="button" class="ico" data-fren="${f.id}" title="Rename folder" aria-label="Rename folder"><svg viewBox="0 0 24 24">${IC.pen}</svg></button>
       <button type="button" class="ico del" data-fdel="${f.id}" title="Delete folder (its characters stay, back on Home)" aria-label="Delete folder"><svg viewBox="0 0 24 24">${IC.trash}</svg></button></div>`;
@@ -2741,38 +2794,40 @@ async function openSheets(first){
       + fl.map(f => `<div class="sh prow pfold" data-fid="${f.id}">
         <button type="button" class="pthumb" data-fold="${f.id}" title="Open ${esc(f.name)}">${mosaic(f)}</button>
         <div class="sh-meta"><b>${fIcon}${esc(f.name)}</b><small>Folder · ${cnt(f)}</small></div>
-        ${fActs(f)}<button type="button" class="pill pgo" data-fold="${f.id}">Open<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>`).join('')
+        ${fActs(f)}<button type="button" class="pill pgo" data-fold="${f.id}">Open<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>${swp(f, true)}</div>`).join('')
       + list.map(r => { const x = r.x; return `<div class="sh prow${x.id===sheets.cur?' on':''}" data-id="${x.id}"${drag}>
         <button type="button" class="pthumb" data-open="${x.id}" title="Open ${esc(x.name)}">${pic(r)}</button>
         <div class="sh-meta"><b>${esc(x.name)}</b><small>${where(x)}${x.id===sheets.cur?'Last opened · ':''}${x.n} photo${x.n===1?'':'s'}</small></div>
         <span class="pwhen">Edited ${when(x.updated_at)}</span>${acts(x, full)}
-        <button type="button" class="pill pgo" data-open="${x.id}">Open<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>`; }).join('');
+        <button type="button" class="pill pgo" data-open="${x.id}">Open<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>${swp(x)}</div>`; }).join('');
     else box.innerHTML = none
       + fl.map(f => `<div class="sh pcard pfold" data-fid="${f.id}">
         <button type="button" class="pthumb" data-fold="${f.id}" title="Open ${esc(f.name)}">${mosaic(f)}${rows.some(r => r.x.folder === f.id) ? `<i class="pfbadge">${fIcon}${cnt(f)}</i>` : ''}
           <span class="popen">Open<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
-        <div class="pbody"><div class="sh-meta"><b>${fIcon}${esc(f.name)}</b><small>Folder · ${when(fWhen(f))}</small></div>${fActs(f)}</div></div>`).join('')
+        <div class="pbody"><div class="sh-meta"><b>${fIcon}${esc(f.name)}</b><small>Folder · ${when(fWhen(f))}</small></div>${fActs(f)}</div>${swp(f, true)}</div>`).join('')
       + list.map(r => { const x = r.x; return `<div class="sh pcard${x.id===sheets.cur?' on':''}" data-id="${x.id}"${drag}>
         <button type="button" class="pthumb" data-open="${x.id}" title="Open ${esc(x.name)}">${pic(r)}
           ${x.id===sheets.cur?'<i class="pnow">Last opened</i>':''}<span class="popen">Open<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
-        <div class="pbody"><div class="sh-meta"><b>${esc(x.name)}</b><small>${where(x)}${x.n} photo${x.n===1?'':'s'} · ${when(x.updated_at)}</small></div>${acts(x, full)}</div></div>`; }).join('')
+        <div class="pbody"><div class="sh-meta"><b>${esc(x.name)}</b><small>${where(x)}${x.n} photo${x.n===1?'':'s'} · ${when(x.updated_at)}</small></div>${acts(x, full)}</div>${swp(x)}</div>`; }).join('')
       + (full || q ? '' : `<button type="button" class="pcard pnew" id="shNew"><span class="pplus"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><b>${nw}</b><small>An empty sheet, ready for photos</small></button>`);
   };
   const paint = () => {
     const full = sheets.list.length >= MAX_SHEETS;
     const opt = (k, v, label, icon) => `<button type="button" class="pill${icon ? ' round' : ''}" data-pv="${k}:${v}" aria-pressed="${pv[k] === v}" title="${label}" aria-label="${label}">${icon ? `<svg viewBox="0 0 24 24">${icon}</svg>` : label}</button>`;
-    m.innerHTML = `<header class="phead"><div class="mark">Roar<b>Ref</b></div><span style="flex:1"></span>
-        ${pro.pro ? `<span class="probadge" title="${pro.until ? 'Pro until ' + new Date(pro.until).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) : 'Pro for life'}">PRO</span>` : ''}
-        <span class="pwho"><i>${esc((me.email || '?')[0].toUpperCase())}</i>${esc(me.email || '')}</span>
-        ${pro.admin ? '<button type="button" class="pill" id="shAdmin"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>Admin</button>' : ''}
-        <button type="button" class="pill" id="shOut">Sign out</button></header>
+    /* Home made calm (Alex, 20 Nov: "the logo in the middle, the buttons tidied, take the title out"): the account on the
+       left (a menu with the email, Pro, Admin, Sign out), the logo in the middle, the bin of deleted characters on the right;
+       no title; in a folder a back arrow and its name; how many characters is said in the search's own words */
+    const cnt = pro.pro ? `(${sheets.list.length})` : `(${sheets.list.length}/${MAX_SHEETS})`;
+    m.innerHTML = `<header class="phead">
+        <div class="phl"><button type="button" class="pacct${pro.pro ? ' ispro' : ''}" id="shAcct" title="${esc(me.email || '')}" aria-label="Your account"><i>${esc((me.email || '?')[0].toUpperCase())}</i></button></div>
+        <div class="mark">Roar<b>Ref</b></div>
+        <div class="phr"><button type="button" class="pill round" id="shTrash" title="Recently deleted" aria-label="Recently deleted"><svg viewBox="0 0 24 24">${IC.trash}</svg></button></div></header>
+      <div class="pptr" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></div>
       <div class="pwrap">
-        <div class="phero"><div>${curF() ? `<button type="button" class="pill pback" id="pBack" title="Back to all your characters"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>All characters</button><h1 class="pfh">${fIcon}${esc(curF().name)}</h1>`
-            : '<p class="pkick">Character sheets for AI</p><h1>Your characters</h1>'}</div>
-          ${pro.pro ? `<div class="pcount" title="Pro: as many characters as you like"><span style="margin-left:0">${sheets.list.length} character${sheets.list.length === 1 ? '' : 's'}<em class="pnolim"> · no limit</em></span></div>`
-            : `<div class="pcount" title="${sheets.list.length} of ${MAX_SHEETS} projects">${Array.from({length:MAX_SHEETS}, (_, i) => `<i class="${i < sheets.list.length ? 'on' : ''}"></i>`).join('')}<span>${sheets.list.length} of ${MAX_SHEETS}</span></div>`}</div>
+        ${curF() ? `<div class="phero"><div><button type="button" class="pill pback" id="pBack" title="Back to all your characters"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>All characters</button><h1 class="pfh">${fIcon}${esc(curF().name)}</h1></div></div>` : ''}
         <div class="ptools">
-          <label class="psearch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="pQ" placeholder="${curF() ? 'Search in ' + esc(curF().name) : folders ? 'Search characters and folders' : 'Search your characters'}" aria-label="Search" value="${esc(query)}"></label>
+          <label class="psearch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="pQ" placeholder="${curF() ? 'Search in ' + esc(curF().name) : 'Search ' + cnt}" aria-label="Search" value="${esc(query)}"></label>
+          <button type="button" class="pill round" id="shView" title="Order and view" aria-label="Order and view"><svg viewBox="0 0 24 24"><path d="M4 7h10M4 12h7M4 17h4M17 5v14M14 16l3 3 3-3"/></svg></button>
           <div class="pseg" role="group" aria-label="Order">${opt('sort', 'recent', 'Recent')}${opt('sort', 'name', 'Name')}${opt('sort', 'made', 'Created')}</div>
           <div class="pseg" role="group" aria-label="View">${opt('view', 'grid', 'Tiles', '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>')}${opt('view', 'list', 'List', '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/>')}</div>
           ${folders && !curF() ? `<button type="button" class="pill" id="shFold" title="A folder for one person: put their characters in it"><svg viewBox="0 0 24 24">${IC.folderPlus}</svg><span class="w">New folder</span></button>` : ''}
@@ -2822,26 +2877,32 @@ async function openSheets(first){
   // Move to a folder: a small menu by the project's folder button
   /* a menu stands on a clear veil (Alex, 20 Nov: "I press Thumbnail and it takes me into the project"): a tap that misses the
      menu, or lands as it closes, can never reach the card under it; and for a moment after a menu closes no card opens */
-  let menuShutAt = 0, ctxAt = 0, sw = null;
+  let menuShutAt = 0, ctxAt = 0, sw = null, swAt = 0, pr = null;
+  const shutSwipes = keep => { let n = 0; m.querySelectorAll('.pswopen').forEach(c => { if(c !== keep){ c.classList.remove('pswopen'); n++; } }); return n; };
   const shutMenu = () => { const o = m.querySelector('.pmenu'), sc = m.querySelector('.pscrim'); if(o || sc) menuShutAt = Date.now();
     if(o) o.remove(); if(sc) sc.remove(); m.querySelectorAll('.pheld').forEach(n => n.classList.remove('pheld')); };
-  const veil = () => { const sc = document.createElement('div'); sc.className = 'pscrim'; sc.onclick = e => { e.stopPropagation(); shutMenu(); }; m.appendChild(sc); };
+  // the click iOS sends as the finger lifts from a long press lands on the veil: it must not close the menu just opened
+  const veil = () => { const sc = document.createElement('div'); sc.className = 'pscrim'; sc.onclick = e => { e.stopPropagation(); if(Date.now() - ctxAt < 700) return; shutMenu(); }; m.appendChild(sc); };
+  let lastPt = null;
+  const placeCtx = (o, card, pt) => { const w = o.offsetWidth, h = o.offsetHeight, r = card.getBoundingClientRect();
+    if(pt){ o.style.left = Math.max(10, Math.min(innerWidth - w - 10, pt.x - w / 2)) + 'px'; // by the finger, never under it
+      o.style.top = (pt.y + 30 + h < innerHeight - 10 ? pt.y + 30 : Math.max(10, pt.y - h - 30)) + 'px'; return; }
+    o.style.left = Math.max(10, Math.min(innerWidth - w - 10, r.left + r.width / 2 - w / 2)) + 'px';
+    const below = r.top + r.height * 0.45;
+    o.style.top = (below + h < innerHeight - 10 ? below : Math.max(10, Math.min(innerHeight - h - 10, r.top + r.height * 0.45 - h))) + 'px'; };
   // the small menu of a held character: by the card, under it when there is room, else over it
-  const openCtx = (card, id, step) => { shutMenu(); const x = sheets.list.find(y => y.id === id); if(!x) return;
+  const openCtx = (card, id, step, pt) => { pt = pt || (step ? lastPt : null); shutMenu(); const x = sheets.list.find(y => y.id === id); if(!x) return;
     const o = document.createElement('div'); o.className = 'pmenu pctx'; o.dataset.sheet = id;
     o.innerHTML = step === 'del'
       ? `<p>Delete ${esc(x.name)}?</p><button type="button" data-cx="keep"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>Keep it</span></button>
-         <button type="button" class="pdanger" data-cx="sure"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete, with its photos</span></button>`
+         <button type="button" class="pdanger" data-cx="sure"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete (30 days in the bin)</span></button>`
       : `<p>${esc(x.name)}</p>${folders ? `<button type="button" data-cx="move"><svg viewBox="0 0 24 24">${IC.folderGo}</svg><span>Move</span></button>
          <button type="button" data-cx="newf"><svg viewBox="0 0 24 24">${IC.folderPlus}</svg><span>Create a folder</span></button>` : ''}
          <button type="button" data-cx="thumb"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8"/></svg><span>Thumbnail</span></button><hr>
          <button type="button" class="pdanger" data-cx="del"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete</span></button>`;
-    card.classList.add('pheld'); veil(); m.appendChild(o); const r = card.getBoundingClientRect(), w = o.offsetWidth, h = o.offsetHeight;
-    o.style.left = Math.max(10, Math.min(innerWidth - w - 10, r.left + r.width / 2 - w / 2)) + 'px';
-    const below = r.top + r.height * 0.45;
-    o.style.top = (below + h < innerHeight - 10 ? below : Math.max(10, Math.min(innerHeight - h - 10, r.top + r.height * 0.45 - h))) + 'px'; };
+    card.classList.add('pheld'); veil(); m.appendChild(o); placeCtx(o, card, pt); };
   // a folder's own small menu: Open, Rename, Delete (asks; its characters go back to Home)
-  const openFctx = (card, fid, step) => { shutMenu(); const f = fOf(fid); if(!f) return;
+  const openFctx = (card, fid, step, pt) => { pt = pt || (step ? lastPt : null); shutMenu(); const f = fOf(fid); if(!f) return;
     const o = document.createElement('div'); o.className = 'pmenu pctx'; o.dataset.folder = fid;
     o.innerHTML = step === 'del'
       ? `<p>Delete the folder ${esc(f.name)}?</p><button type="button" data-fx="keep"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>Keep it</span></button>
@@ -2850,10 +2911,55 @@ async function openSheets(first){
          <button type="button" data-fx="ren"><svg viewBox="0 0 24 24">${IC.pen}</svg><span>Rename</span></button>
          <button type="button" data-fx="thumb"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8"/></svg><span>Thumbnail</span></button><hr>
          <button type="button" class="pdanger" data-fx="del"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete</span></button>`;
-    card.classList.add('pheld'); veil(); m.appendChild(o); const r = card.getBoundingClientRect(), w = o.offsetWidth, h = o.offsetHeight;
+    card.classList.add('pheld'); veil(); m.appendChild(o); placeCtx(o, card, pt); };
+  const popAt = (btn, html, cls) => { shutMenu(); const o = document.createElement('div'); o.className = 'pmenu' + (cls ? ' ' + cls : ''); o.innerHTML = html;
+    veil(); m.appendChild(o); ctxAt = 0; const r = btn.getBoundingClientRect(), w = o.offsetWidth, h = o.offsetHeight;
     o.style.left = Math.max(10, Math.min(innerWidth - w - 10, r.left + r.width / 2 - w / 2)) + 'px';
-    const below = r.top + r.height * 0.45;
-    o.style.top = (below + h < innerHeight - 10 ? below : Math.max(10, Math.min(innerHeight - h - 10, r.top + r.height * 0.45 - h))) + 'px'; };
+    o.style.top = (r.bottom + 8 + h > innerHeight - 10 ? Math.max(10, r.top - h - 8) : r.bottom + 8) + 'px'; return o; };
+  const tick = '<svg class="ptick" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>';
+  /* Recently deleted (Alex, 20 Nov: "somewhere a bin with the deleted ones, for safety"): what was deleted in the last 30
+     days, each with Restore and Delete for good; Empty the bin; older than 30 days goes by itself when the bin is opened */
+  const openTrash = async () => {
+    const w = document.createElement('div'); w.className = 'modal ptm ptr';
+    w.innerHTML = `<div class="card ptmcard"><div class="row"><h2 style="flex:1">Recently deleted</h2><button type="button" class="pill round" data-tr="x" aria-label="Close" title="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <p>Deleted characters wait here 30 days, then go for good. Restore one to have it back with its photos.</p>
+      <div class="ptrlist"><p class="pnone">Reading…</p></div><div class="row ptmfoot"><button type="button" class="pill danger" data-tr="empty" hidden><svg viewBox="0 0 24 24">${IC.trash}</svg>Empty the bin</button></div></div>`;
+    document.body.appendChild(w); const urls = [];
+    const shut = () => { w.remove(); urls.forEach(u => URL.revokeObjectURL(u)); document.removeEventListener('keydown', escB, true); };
+    const escB = e => { if(e.key === 'Escape'){ e.stopPropagation(); shut(); } }; document.addEventListener('keydown', escB, true);
+    const box = w.querySelector('.ptrlist'); let items = [];
+    const read = async () => {
+      const { data, error } = await sb.from('roarref_sheets').select('id,name,thumb,deleted_at').not('deleted_at', 'is', null).order('deleted_at', {ascending:false});
+      if(error){ box.innerHTML = '<p class="pnone">The bin could not be read. Check the connection.</p>'; return; }
+      const old = (data || []).filter(r => Date.now() - new Date(r.deleted_at) > 30 * 864e5);
+      for(const r of old) await purgeSheet(r.id).catch(() => {});
+      items = (data || []).filter(r => !old.includes(r)); draw2(); };
+    const left = t => { const d = 30 - Math.floor((Date.now() - new Date(t)) / 864e5); return d <= 1 ? 'goes tomorrow' : `goes in ${d} days`; };
+    const draw2 = () => { w.querySelector('[data-tr="empty"]').hidden = !items.length;
+      box.innerHTML = items.length ? items.map(r => `<div class="ptri" data-id="${r.id}"><span class="ptrt"></span><div class="ptrm"><b>${esc(r.name)}</b><small>${left(r.deleted_at)}</small></div>
+        <button type="button" class="pill" data-tr="back" data-id="${r.id}"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/></svg>Restore</button>
+        <button type="button" class="pill round danger" data-tr="gone" data-id="${r.id}" title="Delete for good" aria-label="Delete for good"><svg viewBox="0 0 24 24">${IC.trash}</svg></button></div>`).join('')
+        : '<p class="pnone">The bin is empty.</p>';
+      items.forEach(async r => { if(!r.thumb) return; try{ const hit = await dbGet('pic:' + r.thumb).catch(() => null); const b = hit ? hit.blob : await store.get(r.thumb);
+        const u = URL.createObjectURL(b); urls.push(u); const t = box.querySelector(`.ptri[data-id="${r.id}"] .ptrt`); if(t) t.innerHTML = `<img src="${u}" alt="">`; }catch{} }); };
+    w.onclick = async e => { if(e.target === w) return shut(); const b = e.target.closest('[data-tr]'); if(!b || w.classList.contains('busy')) return; const k = b.dataset.tr, id = b.dataset.id;
+      if(k === 'x') return shut();
+      if(k === 'back'){ if(sheets.list.length >= MAX_SHEETS) return toast(`Up to ${MAX_SHEETS} characters: delete one to make room.`);
+        w.classList.add('busy'); const { error } = await sb.from('roarref_sheets').update({deleted_at:null}).eq('id', id); w.classList.remove('busy');
+        if(error) return toast('It could not be restored. Check the connection.');
+        items = items.filter(r => r.id !== id); draw2(); sheets.list = await listSheets(); await draw(); toast('Restored'); return; }
+      if(k === 'gone'){ const row = b.closest('.ptri'); row.querySelector('.ptrm small').textContent = 'Delete for good?'; b.dataset.tr = 'gone2'; b.classList.add('sure'); return; }
+      if(k === 'gone2'){ w.classList.add('busy'); await purgeSheet(id); w.classList.remove('busy'); items = items.filter(r => r.id !== id); draw2(); return; }
+      if(k === 'empty'){ b.dataset.tr = 'empty2'; b.innerHTML = `<svg viewBox="0 0 24 24">${IC.trash}</svg>Delete all ${items.length} for good`; return; }
+      if(k === 'empty2'){ w.classList.add('busy'); for(const r of items) await purgeSheet(r.id).catch(() => {}); w.classList.remove('busy'); items = []; draw2(); } };
+    read(); };
+  const openAcct = btn => { const day = t => { try{ return new Date(t).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}); }catch{ return ''; } };
+    popAt(btn, `<p>${esc(me.email || '')}</p><div class="pacline">${pro.pro ? `<span class="probadge">PRO</span>${pro.until ? 'until ' + day(pro.until) : 'for life'}` : `Free · ${sheets.list.length} of ${MAX_SHEETS} characters`}</div><hr>
+      ${pro.admin ? `<button type="button" data-ac="admin"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Admin</span></button>` : ''}
+      <button type="button" data-ac="trash"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Recently deleted</span></button>
+      <button type="button" data-ac="out"><svg viewBox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span>Sign out</span></button>`, 'pacm'); };
+  const openView = btn => { const it = (k, v, l) => `<button type="button" data-vw="${k}:${v}"${pv[k] === v ? ' aria-pressed="true"' : ''}><span>${l}</span>${pv[k] === v ? tick : ''}</button>`;
+    popAt(btn, `<p>Order</p>${it('sort', 'recent', 'Recent')}${it('sort', 'name', 'Name')}${it('sort', 'made', 'Created')}<hr><p>View</p>${it('view', 'grid', 'Tiles')}${it('view', 'list', 'List')}`); };
   const openMenu = (btn, id) => { shutMenu(); const x = sheets.list.find(y => y.id === id); if(!x) return;
     const tick = '<svg class="ptick" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>', cur = fOf(x.folder) ? x.folder : '';
     const it = (to, label, ic) => `<button type="button" data-to="${to}"${to === cur ? ' aria-pressed="true"' : ''}><svg viewBox="0 0 24 24">${ic}</svg><span>${label}</span>${to === cur ? tick : ''}</button>`;
@@ -2883,6 +2989,7 @@ async function openSheets(first){
      characters to leave its folder ("drag projects into the folders on the phone too"). A quick move first is a scroll. */
   let td = null;
   const tEnd = () => { if(!td) return; clearTimeout(td.t); cancelAnimationFrame(td.raf); if(td.ghost) td.ghost.remove();
+    if(td.on === 'swipe'){ td.card.classList.remove('pswiping'); if(td.sp) td.sp.style.transform = ''; }
     if(td.on === true) td.card.classList.remove('plift');
     m.querySelectorAll('.pdrop').forEach(n => n.classList.remove('pdrop')); m.classList.remove('ptdrag'); td = null; };
   const under = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.closest('.pfold, #pBack'); };
@@ -2898,25 +3005,47 @@ async function openSheets(first){
     td.ghost = g; document.body.appendChild(g); c.classList.add('plift'); m.classList.add('ptdrag');
     tPlace(); td.raf = requestAnimationFrame(tScroll); };
   m.addEventListener('touchstart', e => { tEnd();
+    if(!e.target.closest('.pswp') && shutSwipes()){ swAt = Date.now(); return; } // an open card's buttons close; nothing else happens
     if(e.touches.length !== 1 || m.classList.contains('busy')) return;
     // the whole card answers, a folder's too, except its title and its buttons (Alex, 20 Nov)
-    const c = e.target.closest('.sh[data-id], .sh.pfold'); if(!c || e.target.closest('.sh-acts, .sh-meta b, input, .pmenu')) return;
+    const c = e.target.closest('.sh[data-id], .sh.pfold'); if(!c || e.target.closest('.sh-acts, .sh-meta b, input, .pmenu, .pswp')) return;
     const fid = c.dataset.fid || '';
-    const t0 = e.touches[0]; td = {id:c.dataset.id || '', fid, card:c, x0:t0.clientX, y0:t0.clientY, x:t0.clientX, y:t0.clientY, on:false};
-    td.t = setTimeout(() => { if(!td) return; td.on = 'menu'; td.x0 = td.x; td.y0 = td.y; ctxAt = Date.now(); if(sw) sw.used = true; if(fid) openFctx(c, fid); else openCtx(c, td.id);
+    const t0 = e.touches[0], cr = c.getBoundingClientRect();
+    td = {id:c.dataset.id || '', fid, card:c, x0:t0.clientX, y0:t0.clientY, x:t0.clientX, y:t0.clientY, on:false,
+      rx:isPhone() && !!c.querySelector('.pswp') && t0.clientX > cr.left + cr.width * 0.55}; // from the card's right side a slide to the left shows its buttons
+    td.t = setTimeout(() => { if(!td) return; td.on = 'menu'; td.x0 = td.x; td.y0 = td.y; ctxAt = Date.now(); if(sw) sw.used = true; if(pr) pr = null;
+      lastPt = {x:td.x, y:td.y}; if(fid) openFctx(c, fid, null, lastPt); else openCtx(c, td.id, null, lastPt);
       try{ navigator.vibrate && navigator.vibrate(12); }catch{} }, 420); }, {passive:true});
   m.addEventListener('touchmove', e => { if(!td) return; const t0 = e.touches[0]; td.x = t0.clientX; td.y = t0.clientY;
-    if(!td.on){ if(Math.hypot(td.x - td.x0, td.y - td.y0) > 10) tEnd(); return; }
+    if(!td.on){ const dx = td.x - td.x0, dy = td.y - td.y0;
+      if(td.rx && dx < -8 && Math.abs(dx) > Math.abs(dy) * 1.2){ clearTimeout(td.t); td.on = 'swipe'; if(sw) sw.used = true; if(pr) pr = null;
+        td.sp = td.card.querySelector('.pswp'); td.sw = td.sp.offsetWidth; td.card.classList.add('pswiping'); shutSwipes(td.card); }
+      else { if(Math.hypot(dx, dy) > 10) tEnd(); return; } }
     e.preventDefault();
+    if(td.on === 'swipe'){ const v = Math.min(td.sw, Math.max(0, td.x0 - td.x)); td.sp.style.transform = `translateX(${td.sw - v}px)`; return; }
     if(td.on === 'menu'){ if(!td.fid && folders && Math.hypot(td.x - td.x0, td.y - td.y0) > 12) startDrag(); return; }
     tPlace(); }, {passive:false});
   m.addEventListener('touchend', async e => { if(!td) return; if(!td.on) return tEnd();
     e.preventDefault(); // the tap of this same press opens nothing
     if(td.on === 'menu'){ td = null; return; } // the finger lifts: the menu stays for a tap
+    if(td.on === 'swipe'){ const c = td.card, open = td.x0 - td.x > td.sw * 0.35; c.classList.remove('pswiping'); td.sp.style.transform = ''; c.classList.toggle('pswopen', open); swAt = Date.now(); td = null; return; }
     const d = under(td.x, td.y), id = td.id; tEnd(); if(!d) return;
     const to = d.id === 'pBack' ? '' : d.dataset.fid, x = sheets.list.find(y => y.id === id); if(!x || (fOf(x.folder) ? x.folder : '') === to) return;
     if(await setFolder(id, to)){ paintList(); const f = fOf(to); toast(f ? `Moved to ${f.name}` : 'Moved to Home'); } }, {passive:false});
   m.addEventListener('touchcancel', tEnd);
+  /* pull to refresh (Alex, 20 Nov: "swipe down: refresh"): at the top of Home a pull down shows a round arrow that fills;
+     let go past it and the characters and folders are read again */
+  const refresh = async () => { const ind = m.querySelector('.pptr'); if(ind){ ind.classList.add('spin'); ind.style.transform = 'translate(-50%,64px)'; }
+    try{ sheets.list = await listSheets(); const f = await listFolders(); if(f) folders = f; await readPro(); await draw(); }catch{ toast('It could not be read. Check the connection.'); }
+    const i2 = m.querySelector('.pptr'); if(i2){ i2.classList.remove('spin'); i2.style.transform = ''; i2.style.opacity = ''; } };
+  m.addEventListener('touchstart', e => { pr = null; if(e.touches.length !== 1 || m.scrollTop > 0 || m.querySelector('.pmenu, .sh-meta input') || m.classList.contains('busy')) return;
+    pr = {x0:e.touches[0].clientX, y0:e.touches[0].clientY, d:0}; }, {passive:true});
+  m.addEventListener('touchmove', e => { if(!pr) return; const t0 = e.touches[0], dy = t0.clientY - pr.y0, dx = t0.clientX - pr.x0, ind = m.querySelector('.pptr');
+    if(m.scrollTop > 0 || dy <= 0 || Math.abs(dx) > dy){ if(pr.d && ind){ ind.style.transform = ''; ind.style.opacity = ''; } if(dy < -6 || Math.abs(dx) > 14) pr = null; else pr.d = 0; return; }
+    e.preventDefault(); pr.d = Math.min(120, dy * 0.55);
+    if(ind){ ind.style.transform = `translate(-50%,${pr.d}px) rotate(${pr.d * 3}deg)`; ind.style.opacity = Math.min(1, pr.d / 60); ind.classList.toggle('ready', pr.d >= 64); } }, {passive:false});
+  m.addEventListener('touchend', () => { if(!pr) return; const d = pr.d; pr = null; const ind = m.querySelector('.pptr');
+    if(d >= 64) refresh(); else if(ind){ ind.style.transform = ''; ind.style.opacity = ''; } }, {passive:true});
   /* swipes (Alex, 20 Nov: "the right and left swipes for getting about"): in a folder a swipe to the right goes back to All
      characters; a swipe that became a long press or a drag does nothing */
   const slide = dir => { const w = m.querySelector('.pwrap'); if(!w) return; w.classList.remove('pslide-l', 'pslide-r'); void w.offsetWidth; w.classList.add(dir); };
@@ -3010,14 +3139,27 @@ async function openSheets(first){
     if(!t || m.classList.contains('busy')) return;
     // the tap that closed a menu opens nothing, nor the finger lifting from a long press (Alex, 20 Nov: "the menu comes, then it
     // goes into the folder; we want to choose from the menu"), nor anything while a menu is open
-    if((t.dataset.open || t.dataset.fold) && (m.querySelector('.pmenu') || Date.now() - menuShutAt < 450 || Date.now() - ctxAt < 900)) return;
+    if((t.dataset.open || t.dataset.fold) && (m.querySelector('.pmenu') || Date.now() - menuShutAt < 450 || Date.now() - ctxAt < 900 || Date.now() - swAt < 450)) return;
+    if((t.dataset.cx || t.dataset.fx || t.dataset.to != null) && Date.now() - ctxAt < 450) return; // a menu's row under the lifting finger is not chosen
+    if(t.dataset.sw){ const card = t.closest('.sh'), k = t.dataset.sw; if(card) card.classList.remove('pswopen');
+      if(card && card.dataset.fid){ const fid = card.dataset.fid; if(k === 'edit') return renameFolder(fid); if(k === 'del') return openFctx(card, fid, 'del'); return; }
+      const id = card && card.dataset.id; if(!id) return;
+      if(k === 'edit'){ const rb = card.querySelector('[data-ren]'); if(rb) rb.click(); return; }
+      if(k === 'move') return openMenu(t, id);
+      if(k === 'del') return openCtx(card, id, 'del'); return; }
     // while the page is still being brought up to date, only what leaves it waits (shown at once as busy); the pencil,
     // the bin, the order and the view answer at the first click (Alex, 16 Nov: "I press it once and it does not take")
     if(m._sync && (t.dataset.open || t.dataset.dup || t.dataset.sure || t.id === 'shNew' || t.id === 'shNew2' || t.id === 'shOut')){
       const pick = t.id ? '#' + t.id : ['open','dup','sure'].map(k => t.dataset[k] != null ? `[data-${k}="${t.dataset[k]}"]` : '').find(Boolean);
       busy(true); await m._sync; busy(false); t = pick && m.querySelector(pick); if(!t || !document.body.contains(m)) return; }
-    if(t.id === 'shOut'){ close(); await save(); await sb.auth.signOut(); return; }
-    if(t.id === 'shAdmin'){ openAdmin(() => paint()); return; }
+    if(t.id === 'shAcct') return openAcct(t);
+    if(t.id === 'shView') return openView(t);
+    if(t.id === 'shTrash') return openTrash();
+    if(t.dataset.ac){ const k = t.dataset.ac; shutMenu();
+      if(k === 'out'){ close(); await save(); await sb.auth.signOut(); return; }
+      if(k === 'admin') return openAdmin(() => paint());
+      if(k === 'trash') return openTrash(); return; }
+    if(t.dataset.vw){ const [k, v] = t.dataset.vw.split(':'); shutMenu(); pv[k] = v; keep(); m.querySelectorAll(`[data-pv^="${k}:"]`).forEach(x => x.setAttribute('aria-pressed', x.dataset.pv === k + ':' + v)); paintList(); return; }
     if(t.dataset.pv){ const [k, v] = t.dataset.pv.split(':'); pv[k] = v; keep(); m.querySelectorAll(`[data-pv^="${k}:"]`).forEach(x => x.setAttribute('aria-pressed', x === t)); paintList(); return; }
     if(t.id === 'shNew' || t.id === 'shNew2'){ if(sheets.list.length >= MAX_SHEETS) return; const cf = curF(); busy(true); await newSheet(false, cf && cf.id); busy(false); return close(); }
     // folders (Alex, 20 Nov)
@@ -3143,7 +3285,7 @@ function openProject(){
       <p class="plabel">Name</p><input class="field" id="pmName" maxlength="40" value="${esc(c.name)}" aria-label="Project name" autocomplete="off">
       ${folders ? `<p class="plabel">Folder</p><select class="field" id="pmFolder" aria-label="Folder"><option value="">Home, no folder</option>${folders.map(f => `<option value="${f.id}"${f.id === c.folder ? ' selected' : ''}>${esc(f.name)}</option>`).join('')}</select>` : ''}
       <div class="pinfo"><div><b>${n} of ${wins}</b><small>windows filled</small></div><div><b>${pool.length}</b><small>in the pool</small></div><div><b>${esc(S.ratio || '16:9')}</b><small>sheet shape</small></div><div><b>${esc(when(c.updated_at))}</b><small>last change</small></div></div>
-      ${sure ? `<div class="row"><p style="flex:1;margin:0;color:var(--fg);font-size:14px">Delete this project with its photos and its pool? This cannot be taken back.</p><button type="button" class="pill" id="pmKeep">Keep</button><button type="button" class="pill main" id="pmSure">Delete</button></div>`
+      ${sure ? `<div class="row"><p style="flex:1;margin:0;color:var(--fg);font-size:14px">Delete this project? It waits 30 days in Recently deleted, on Home, before it goes for good.</p><button type="button" class="pill" id="pmKeep">Keep</button><button type="button" class="pill main" id="pmSure">Delete</button></div>`
         : `<div class="row"><button type="button" class="pill${full ? ' off' : ''}" id="pmDup" title="${full ? `All ${MAX_SHEETS} places are taken` : 'A copy of this project, as a new one'}"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Duplicate</button>
           <button type="button" class="pill danger" id="pmDel"><svg viewBox="0 0 24 24">${IC.trash}</svg>Delete</button><span style="flex:1"></span>
           <button type="button" class="pill" id="pmNo">Cancel</button><button type="submit" class="pill main" id="pmSave">Save</button></div>`}</form>`;
