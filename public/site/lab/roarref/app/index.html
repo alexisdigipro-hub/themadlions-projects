@@ -2562,7 +2562,9 @@ async function listSheets(){
 /* Folders on Home (Alex, 20 Nov: "folders on Home, each about one person, with that person's projects in it"): table
    roarref_folders {id, name}; a sheet's column folder points at one or none. null here = the database has no folders yet. */
 async function listFolders(){
-  try{ const { data, error } = await sb.from('roarref_folders').select('id,name,created_at').order('created_at'); return error ? null : (data || []); }catch{ return null; }
+  try{ let { data, error } = await sb.from('roarref_folders').select('id,name,created_at,thumb').order('created_at');
+    if(error) ({ data, error } = await sb.from('roarref_folders').select('id,name,created_at').order('created_at'));
+    return error ? null : (data || []); }catch{ return null; }
 }
 async function makeFolder(name){
   const { data, error } = await sb.from('roarref_folders').insert({name}).select('id,name,created_at').single();
@@ -2683,7 +2685,7 @@ async function openSheets(first){
   const fActs = f => `<div class="sh-acts">
       <button type="button" class="ico" data-fren="${f.id}" title="Rename folder" aria-label="Rename folder"><svg viewBox="0 0 24 24">${IC.pen}</svg></button>
       <button type="button" class="ico del" data-fdel="${f.id}" title="Delete folder (its characters stay, back on Home)" aria-label="Delete folder"><svg viewBox="0 0 24 24">${IC.trash}</svg></button></div>`;
-  const mosaic = f => { const us = rows.filter(r => r.x.folder === f.id && r.u).slice(0, 4).map(r => r.u);
+  const mosaic = f => { if(f._u) return `<span class="pmos"><img src="${f._u}" alt=""></span>`; const us = rows.filter(r => r.x.folder === f.id && r.u).slice(0, 4).map(r => r.u);
     return us.length ? `<span class="pmos n${us.length}">${us.map(u => `<img src="${u}" alt="">`).join('')}</span>` : `<span class="pblank pfempty"><svg viewBox="0 0 24 24">${IC.folder}</svg><em>Empty folder</em></span>`; };
   const paintList = () => {
     const box = m.querySelector('#pList'); if(!box) return;
@@ -2756,6 +2758,11 @@ async function openSheets(first){
           if(!data){ data = await store.get(x.thumb, at); if(data) dbPut('pic:' + x.thumb, {at, blob:data}).catch(() => {}); }
           if(data){ u = URL.createObjectURL(data); urls.push(u); } }catch{} }
       return {x, u}; }));
+    // a folder's own picture (Alex, 20 Nov), when one was picked; each pick has a path of its own, so the path is the key
+    await Promise.all((folders || []).map(async f => { f._u = ''; if(!f.thumb) return;
+      try{ const hit = await dbGet('pic:' + f.thumb).catch(() => null); let data = hit ? hit.blob : null;
+        if(!data){ data = await store.get(f.thumb); if(data) dbPut('pic:' + f.thumb, {at:'f', blob:data}).catch(() => {}); }
+        if(data){ f._u = URL.createObjectURL(data); urls.push(f._u); } }catch{} }));
     rows = next; homeUrls = urls; homeRows = new Map(next.map(r => [r.x.id, r]));
     if(m.querySelector('.sh-meta input')) return; // a name is being typed: the page is not drawn under it
     if(m.querySelector('#pList') && !!curF() === !!m.querySelector('#pBack')) paintList(); else paint();
@@ -2795,7 +2802,8 @@ async function openSheets(first){
       ? `<p>Delete the folder ${esc(f.name)}?</p><button type="button" data-fx="keep"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>Keep it</span></button>
          <button type="button" class="pdanger" data-fx="sure"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete, its characters stay</span></button>`
       : `<p>${esc(f.name)}</p><button type="button" data-fx="open"><svg viewBox="0 0 24 24">${IC.folder}</svg><span>Open</span></button>
-         <button type="button" data-fx="ren"><svg viewBox="0 0 24 24">${IC.pen}</svg><span>Rename</span></button><hr>
+         <button type="button" data-fx="ren"><svg viewBox="0 0 24 24">${IC.pen}</svg><span>Rename</span></button>
+         <button type="button" data-fx="thumb"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8"/></svg><span>Thumbnail</span></button><hr>
          <button type="button" class="pdanger" data-fx="del"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete</span></button>`;
     card.classList.add('pheld'); m.appendChild(o); const r = card.getBoundingClientRect(), w = o.offsetWidth, h = o.offsetHeight;
     o.style.left = Math.max(10, Math.min(innerWidth - w - 10, r.left + r.width / 2 - w / 2)) + 'px';
@@ -2869,40 +2877,54 @@ async function openSheets(first){
   /* Thumbnail (Alex, 20 Nov: "it opens the pool of photos, you pick one, or upload one"): the picture a character shows on
      Home. Its sheet's photos and its pool, or a photo from the device; made into a 960 x 540 JPEG, kept as the row's thumb,
      and S.pick says it was picked, so saving the sheet does not draw over it. Use the sheet goes back to the drawn one. */
-  const pickThumb = async id => {
-    const x = sheets.list.find(y => y.id === id); if(!x) return;
+  const pickThumb = async (id, fid) => {
+    // fid: a folder's picture, from the photos of every character in it (Alex, 20 Nov)
+    const x = fid ? fOf(fid) : sheets.list.find(y => y.id === id); if(!x) return;
     const w = document.createElement('div'); w.className = 'modal ptm';
     w.innerHTML = `<div class="card ptmcard"><div class="row"><h2 style="flex:1">Thumbnail</h2><button type="button" class="pill round" data-tm="x" aria-label="Close" title="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-      <p>The picture <b>${esc(x.name)}</b> shows on Home. Pick one of its photos, or upload one.</p>
+      <p>The picture on Home for ${fid ? 'the folder ' : ''}<b>${esc(x.name)}</b>. Pick one of ${fid ? 'its characters\' photos' : 'its photos'}, or upload one.</p>
       <div class="ptmgrid"><p class="pnone">Reading the photos…</p></div>
       <div class="row ptmfoot"><button type="button" class="pill main" data-tm="up"><svg viewBox="0 0 24 24"><path d="M12 19V7M7 12l5-5 5 5M5 4h14"/></svg>Upload a photo</button>
-        <button type="button" class="pill" data-tm="sheet" hidden><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M9 5v14M15 5v14"/></svg>Use the sheet</button></div>
+        <button type="button" class="pill" data-tm="sheet" hidden><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M9 5v14M15 5v14"/></svg>${fid ? 'Use its characters' : 'Use the sheet'}</button></div>
       <input type="file" accept="image/*" hidden></div>`;
     document.body.appendChild(w);
     const urls = [];
     const shut = () => { w.remove(); urls.forEach(u => URL.revokeObjectURL(u)); document.removeEventListener('keydown', escT, true); };
     const escT = e => { if(e.key === 'Escape'){ e.stopPropagation(); shut(); } }; document.addEventListener('keydown', escT, true);
-    if(id === sheets.cur){ clearTimeout(st); await save(); }
-    const { data:row, error } = await sb.from('roarref_sheets').select('data,thumb').eq('id', id).single();
     const grid = w.querySelector('.ptmgrid');
-    if(error || !row){ grid.innerHTML = '<p class="pnone">The photos could not be read. Check the connection.</p>'; return; }
-    const d = row.data || {}, dS = d.S || {};
-    if(dS.pick && row.thumb === dS.pick) w.querySelector('[data-tm="sheet"]').hidden = false;
+    if(id === sheets.cur || (fid && (curSheet() || {}).folder === fid)){ clearTimeout(st); await save(); }
+    let row = null, d = {}, dS = {}, datas = [];
+    if(fid){ const { data, error } = await sb.from('roarref_sheets').select('data').eq('folder', fid);
+      if(error){ grid.innerHTML = '<p class="pnone">The photos could not be read. Check the connection.</p>'; return; }
+      datas = (data || []).map(r => r.data || {}); if(x.thumb) w.querySelector('[data-tm="sheet"]').hidden = false; }
+    else { const r = await sb.from('roarref_sheets').select('data,thumb').eq('id', id).single(); row = r.data;
+      if(r.error || !row){ grid.innerHTML = '<p class="pnone">The photos could not be read. Check the connection.</p>'; return; }
+      d = row.data || {}; dS = d.S || {}; datas = [d];
+      if(dS.pick && row.thumb === dS.pick) w.querySelector('[data-tm="sheet"]').hidden = false; }
     const items = [];
-    (d.photos || []).forEach(q => { if(q && q.path) items.push({show:q.ppath || q.path, full:q.ppath || q.path}); });
-    (d.pool || []).forEach(q => { if(q && q.path && !items.some(i => i.full === (q.ppath || q.path))) items.push({show:q.tpath || q.ppath || q.path, full:q.ppath || q.path}); });
+    datas.forEach(dd => {
+      (dd.photos || []).forEach(q => { if(q && q.path && !items.some(i => i.full === (q.ppath || q.path))) items.push({show:q.ppath || q.path, full:q.ppath || q.path}); });
+      (dd.pool || []).forEach(q => { if(q && q.path && !items.some(i => i.full === (q.ppath || q.path))) items.push({show:q.tpath || q.ppath || q.path, full:q.ppath || q.path}); }); });
     grid.innerHTML = items.length ? items.map((it, i) => `<button type="button" class="ptmi" data-tm="i${i}" aria-label="Use this photo"><span class="pblank"></span></button>`).join('')
-      : '<p class="pnone">This character has no photos yet. Upload one.</p>';
+      : `<p class="pnone">${fid ? 'Its characters have no photos yet.' : 'This character has no photos yet.'} Upload one.</p>`;
     items.forEach(async (it, i) => { try{ const b = await getBlob(it.show); const u = URL.createObjectURL(b); urls.push(u);
       const btn = grid.querySelector(`[data-tm="i${i}"]`); if(btn) btn.innerHTML = `<img src="${u}" alt="">`; }catch{} });
-    const make = async blob => { // a 16:9 picture, a little above the middle so a face stays in it
+    const make = async blob => { // a 16:9 picture, cut near the top so a face stays in it
       const bm = await createImageBitmap(blob); const W = 960, H = 540, r = W / H;
       let sw = bm.width, sh = bm.height, sx = 0, sy = 0;
-      if(sw / sh > r){ sw = sh * r; sx = (bm.width - sw) / 2; } else { sh = sw / r; sy = (bm.height - sh) * 0.28; }
+      if(sw / sh > r){ sw = sh * r; sx = (bm.width - sw) / 2; } else { sh = sw / r; sy = (bm.height - sh) * 0.15; }
       const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
       g.drawImage(bm, sx, sy, sw, sh, 0, 0, W, H); if(bm.close) bm.close();
       return await new Promise(res => c.toBlob(res, 'image/jpeg', 0.86)); };
     const apply = async (blob, back) => { w.classList.add('busy');
+      if(fid) try{ // a folder: its own row keeps the path; back to the mosaic of its characters
+        let path = null;
+        if(!back){ const pic = await make(blob); const r = await store.put(`${me.id}/${fid}/pick-${newId()}.jpg`, pic, 'image/jpeg');
+          if(r.error) throw r.error; path = r.path; dbPut('pic:' + path, {at:'f', blob:pic}).catch(() => {}); }
+        const { error:e3 } = await sb.from('roarref_folders').update({thumb:path}).eq('id', fid); if(e3) throw e3;
+        if(x.thumb) store.remove([x.thumb]).catch(() => {});
+        x.thumb = path; shut(); await draw(); toast(path ? 'Folder thumbnail changed' : 'The folder shows its characters again'); return;
+      }catch{ w.classList.remove('busy'); toast('The thumbnail could not be saved. Check the connection.'); return; }
       try{
         let path = null; const at = Date.now();
         if(!back){ const pic = await make(blob); const r = await store.put(`${me.id}/${id}/pick-${newId()}.jpg`, pic, 'image/jpeg');
@@ -2950,18 +2972,19 @@ async function openSheets(first){
     if(t.dataset.fsure){ const id = t.dataset.fsure; busy(true);
       const { error } = await sb.from('roarref_folders').delete().eq('id', id); busy(false);
       if(error){ toast('The folder could not be deleted. Check the connection.'); return paintList(); }
-      folders = folders.filter(f => f.id !== id); sheets.list.forEach(x => { if(x.folder === id) x.folder = null; });
+      { const fo = fOf(id); if(fo && fo.thumb) store.remove([fo.thumb]).catch(() => {}); } folders = folders.filter(f => f.id !== id); sheets.list.forEach(x => { if(x.folder === id) x.folder = null; });
       if(pv.folder === id){ pv.folder = ''; keep(); } paint(); toast('Folder deleted: its characters are on Home'); return; }
     if(t.dataset.move){ openMenu(t, t.dataset.move); return; }
     if(t.dataset.fx){ const o = m.querySelector('.pmenu'), fid = o && o.dataset.folder, k = t.dataset.fx; if(!fid) return;
       const card = m.querySelector(`[data-fid="${fid}"]`);
       if(k === 'open'){ shutMenu(); pv.folder = fid; query = ''; keep(); paint(); m.scrollTop = 0; return; }
       if(k === 'ren'){ shutMenu(); return renameFolder(fid); }
+      if(k === 'thumb'){ shutMenu(); return pickThumb(null, fid); }
       if(k === 'del') return card ? openFctx(card, fid, 'del') : shutMenu();
       if(k === 'keep') return shutMenu();
       if(k === 'sure'){ shutMenu(); busy(true); const { error } = await sb.from('roarref_folders').delete().eq('id', fid); busy(false);
         if(error){ toast('The folder could not be deleted. Check the connection.'); return; }
-        folders = folders.filter(f => f.id !== fid); sheets.list.forEach(x => { if(x.folder === fid) x.folder = null; });
+        { const fo = fOf(fid); if(fo && fo.thumb) store.remove([fo.thumb]).catch(() => {}); } folders = folders.filter(f => f.id !== fid); sheets.list.forEach(x => { if(x.folder === fid) x.folder = null; });
         if(pv.folder === fid){ pv.folder = ''; keep(); } paint(); toast('Folder deleted: its characters are on Home'); return; } }
     if(t.dataset.cx){ const o = m.querySelector('.pmenu'), id = o && o.dataset.sheet, card = id && m.querySelector(`.sh[data-id="${id}"]`); if(!id) return;
       const k = t.dataset.cx;
