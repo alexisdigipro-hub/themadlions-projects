@@ -461,6 +461,15 @@ a.pill{text-decoration:none}
 @keyframes pslideL{from{opacity:.3;transform:translateX(36px)}to{opacity:1;transform:none}}
 @keyframes pslideR{from{opacity:.3;transform:translateX(-36px)}to{opacity:1;transform:none}}
 .pscrim{position:fixed;inset:0;z-index:89;background:transparent;touch-action:none}
+.poolview{position:fixed;inset:0;z-index:95;background:#050506;display:grid;place-items:center;animation:fade .2s;touch-action:manipulation;overscroll-behavior:none}
+.poolview img{width:100%;height:100%;object-fit:contain;display:block;-webkit-user-drag:none;-webkit-touch-callout:none}
+.poolview .pvbar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px;background:linear-gradient(180deg,rgba(0,0,0,.55),transparent)}
+.poolview .pvn{color:rgba(255,255,255,.8);font:500 13px var(--body);padding-left:6px}
+.poolview .pill.round{width:44px;height:44px;padding:0;justify-content:center;background:rgba(30,30,32,.7);border-color:rgba(255,255,255,.18);color:#fff}
+.poolview .pill.round svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+.poolview .pvp,.poolview .pvnx{position:absolute;top:50%;transform:translateY(-50%)}.poolview .pvp{left:14px}.poolview .pvnx{right:14px}
+@media (max-width:820px){.poolview .pvp,.poolview .pvnx{display:none}}
+.pth{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .pctx{min-width:220px;transform-origin:50% 0;animation:ptpop .2s cubic-bezier(.2,1.3,.4,1)}
 .pcardm select.field{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9a97' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:16px;padding-right:40px}
 @media (max-width:820px){.ptools{gap:6px}.ptools #shFold .w{display:none}.ptools #shFold,.ptools #shNew2{width:40px;padding:0;justify-content:center}.pfbadge{height:22px;font-size:10.5px;padding:0 8px}
@@ -2171,9 +2180,73 @@ $('poolBox').addEventListener('click', e => {
   if(e.target.closest('#poolAdd')){ $('poolFile').click(); return; }
   if(e.target.closest('#poolAll')){ downloadPoolAll(); return; }
   const t = e.target.closest('.pth'); if(!t) return; const it = pool.find(x => x.id === t.dataset.id); if(!it) return;
+  if(Date.now() - poolCtxAt < 700) return; // the tap of the finger lifting from a long press places nothing
   if(e.target.closest('.pget')) downloadPoolOne(it); else if(e.target.closest('.pdel')) removeFromPool(it); else placeFromPool(it, -1);
 });
 $('poolBox').addEventListener('keydown', e => { if(e.key !== 'Enter' && e.key !== ' ') return; const t = e.target.closest('.pth'); if(!t || e.target.closest('.pdel, .pget')) return; e.preventDefault(); placeFromPool(pool.find(x => x.id === t.dataset.id), -1); });
+/* a long press on a photo of the pool (Alex, 20 Nov: "a long press on the photos gives a menu: full screen, with a close;
+   and Delete"): View (the whole screen, X to close, a slide to the next one or down to close), Put on the sheet, Save, Delete.
+   A right click on a computer opens the same menu. */
+let poolCtxAt = 0, poolTd = null;
+function poolShut(){ document.querySelectorAll('.pmenu.poolm, .pscrim.poolv').forEach(n => n.remove()); }
+function poolMenu(it, x, y, step){
+  poolShut(); const veil = document.createElement('div'); veil.className = 'pscrim poolv';
+  veil.onclick = e => { e.stopPropagation(); if(Date.now() - poolCtxAt < 700) return; poolShut(); };
+  const o = document.createElement('div'); o.className = 'pmenu pctx poolm';
+  o.innerHTML = step === 'del'
+    ? `<p>Delete this photo from the pool?</p><button type="button" data-pm="keep"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>Keep it</span></button>
+       <button type="button" class="pdanger" data-pm="sure"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete</span></button>`
+    : `<p>${esc(it.name || 'Photo')}</p>
+       <button type="button" data-pm="view"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>View full screen</span></button>
+       <button type="button" data-pm="place"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 9v6M9 12h6"/></svg><span>Put on the sheet</span></button>
+       <button type="button" data-pm="save"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span>Save</span></button><hr>
+       <button type="button" class="pdanger" data-pm="del"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete</span></button>`;
+  document.body.append(veil, o);
+  const w = o.offsetWidth, h = o.offsetHeight;
+  o.style.left = Math.max(10, Math.min(innerWidth - w - 10, x - w / 2)) + 'px';
+  o.style.top = (y + 30 + h < innerHeight - 10 ? y + 30 : Math.max(10, y - h - 30)) + 'px';
+  o.onclick = e => { const b = e.target.closest('[data-pm]'); if(!b || Date.now() - poolCtxAt < 450) return; const k = b.dataset.pm;
+    if(k === 'del') return poolMenu(it, x, y, 'del');
+    poolShut();
+    if(k === 'view') return poolView(it);
+    if(k === 'place') return placeFromPool(it, -1);
+    if(k === 'save') return downloadPoolOne(it);
+    if(k === 'sure'){ removeFromPool(it); toast('Deleted from the pool'); } };
+}
+function poolView(it){
+  const v = document.createElement('div'); v.className = 'poolview';
+  v.innerHTML = `<img alt=""><div class="pvbar"><span class="pvn"></span><button type="button" class="pill round pvx" aria-label="Close" title="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <button type="button" class="pill round pvp" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button type="button" class="pill round pvnx" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>`;
+  document.body.appendChild(v);
+  const img = v.querySelector('img'); let cur = it, url = '';
+  const show = async x => { cur = x; const list = pool.filter(q => q.path || q.turl), i = list.indexOf(x);
+    v.querySelector('.pvn').textContent = list.length > 1 ? `${i + 1} of ${list.length}` : '';
+    if(x.turl) img.src = x.turl; // the little one at once, the big one as it comes
+    try{ const b = x.view || await getBlob(x.ppath || x.path); if(cur !== x) return; if(url) URL.revokeObjectURL(url); url = URL.createObjectURL(b); img.src = url; }catch{} };
+  const step = d => { const list = pool.filter(q => q.path || q.turl), i = list.indexOf(cur); const n = list[(i + d + list.length) % list.length]; if(n && n !== cur) show(n); };
+  const close = () => { v.remove(); if(url) URL.revokeObjectURL(url); document.removeEventListener('keydown', key, true); };
+  const key = e => { if(e.key === 'Escape'){ e.stopPropagation(); close(); } else if(e.key === 'ArrowRight') step(1); else if(e.key === 'ArrowLeft') step(-1); };
+  document.addEventListener('keydown', key, true);
+  v.querySelector('.pvx').onclick = close; v.querySelector('.pvp').onclick = () => step(-1); v.querySelector('.pvnx').onclick = () => step(1);
+  let sx = 0, sy = 0;
+  v.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, {passive:true});
+  v.addEventListener('touchmove', e => { if(!e.target.closest('button')) e.preventDefault(); }, {passive:false}); // the page behind does not scroll
+  v.addEventListener('touchend', e => { const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if(dy > 90 && Math.abs(dy) > Math.abs(dx) * 1.4) return close(); // down: close
+    if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.4) step(dx < 0 ? 1 : -1); }, {passive:true});
+  show(it);
+}
+$('poolBox').addEventListener('touchstart', e => { poolTd = null; const t = e.target.closest('.pth'); if(!t || e.target.closest('.pdel, .pget') || e.touches.length !== 1) return;
+  const it = pool.find(x => x.id === t.dataset.id); if(!it) return; const t0 = e.touches[0];
+  poolTd = {it, x:t0.clientX, y:t0.clientY, on:false, t:setTimeout(() => { if(!poolTd) return; poolTd.on = true; poolCtxAt = Date.now();
+    try{ navigator.vibrate && navigator.vibrate(12); }catch{} poolMenu(it, poolTd.x, poolTd.y); }, 420)}; }, {passive:true});
+$('poolBox').addEventListener('touchmove', e => { if(!poolTd || poolTd.on) return; const t0 = e.touches[0];
+  if(Math.hypot(t0.clientX - poolTd.x, t0.clientY - poolTd.y) > 10){ clearTimeout(poolTd.t); poolTd = null; } }, {passive:true});
+$('poolBox').addEventListener('touchend', e => { if(!poolTd) return; clearTimeout(poolTd.t); if(poolTd.on) e.preventDefault(); poolTd = null; }, {passive:false});
+$('poolBox').addEventListener('touchcancel', () => { if(poolTd){ clearTimeout(poolTd.t); poolTd = null; } });
+$('poolBox').addEventListener('contextmenu', e => { const t = e.target.closest('.pth'); if(!t) return; e.preventDefault();
+  if(poolTd || isPhone()) return; const it = pool.find(x => x.id === t.dataset.id); if(it){ poolCtxAt = 0; poolMenu(it, e.clientX, e.clientY); } });
 $('poolFile').onchange = e => { addToPool([...e.target.files]); e.target.value = ''; };
 function setOver(el){ if(overEl===el) return; overEl?.classList.remove('over'); overEl=el; el?.classList.add('over'); }
 window.addEventListener('dragover', e => { e.preventDefault(); setOver(e.target.closest?.('.frame') || null);
