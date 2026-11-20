@@ -126,3 +126,35 @@ begin
 end $$;
 revoke execute on function roarref_admin_set(uuid, text) from public, anon;
 grant execute on function roarref_admin_set(uuid, text) to authenticated;
+
+-- ---------------------------------------------------------------------------------------------------------------
+-- Folders on Home (Alex, 20 Nov 2026: "folders on Home, each about one person, with that person's projects in it").
+-- A folder is only a name; a sheet points at one (or none). Deleting a folder keeps its sheets: they go back to Home.
+-- Folders do not count toward the 10 sheets. Safe to re-run.
+create table if not exists roarref_folders (
+  id         uuid primary key default gen_random_uuid(),
+  owner      uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  name       text not null default 'Folder',
+  created_at timestamptz not null default now(),
+  constraint roarref_folders_name check (char_length(name) between 1 and 60)
+);
+create index if not exists roarref_folders_owner on roarref_folders (owner, created_at);
+alter table roarref_folders enable row level security;
+drop policy if exists roarref_folders_own on roarref_folders;
+create policy roarref_folders_own on roarref_folders for all to authenticated
+  using (owner = (select auth.uid())) with check (owner = (select auth.uid()));
+
+alter table roarref_sheets add column if not exists folder uuid references roarref_folders(id) on delete set null;
+create index if not exists roarref_sheets_folder on roarref_sheets (folder);
+
+-- a sheet may only point at its owner's own folder
+create or replace function roarref_folder_own() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.folder is not null and not exists (select 1 from roarref_folders f where f.id = new.folder and f.owner = new.owner) then
+    raise exception 'roarref_folder: not your folder' using errcode = 'P0001';
+  end if;
+  return new;
+end $$;
+revoke execute on function roarref_folder_own() from public, anon, authenticated;
+drop trigger if exists roarref_folder_own on roarref_sheets;
+create trigger roarref_folder_own before insert or update of folder on roarref_sheets for each row execute function roarref_folder_own();
