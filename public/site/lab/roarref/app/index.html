@@ -337,6 +337,7 @@ a.pill{text-decoration:none}
 .pcount i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.16)}
 .pcount i.on{background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
 .pcount span{margin-left:8px;font-variant-numeric:tabular-nums}
+.pnolim{font-style:normal}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:16px}
 .ptools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .psearch{flex:1;min-width:200px;display:flex;align-items:center;gap:10px;height:42px;padding:0 16px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
@@ -534,8 +535,15 @@ a.pill{text-decoration:none}
 /* the phone made even (Alex, 20 Nov: "make everything more symmetrical on the phone"): every row runs edge to edge,
    what stands side by side shares the width, and like things line up under each other */
 @media (max-width:820px){
-  .phero{gap:14px}.phero > div:first-child{flex:1 1 100%}
-  .pcount{flex:1 1 100%;justify-content:space-between;box-sizing:border-box}.pcount span{margin-left:0}
+  /* the title row in one line on a phone (Alex, 20 Nov: "make these one line and take out what is not needed"): the title, and at
+     its end how many; no line over it, no dots, no "no limit"; in a folder the way back is a round arrow before the name */
+  .phero{flex-wrap:nowrap;align-items:center;gap:10px}
+  .phero > div:first-child{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:10px}
+  .phero .pkick{display:none}
+  .phero h1{font-size:28px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .phero .pfh .pfi{display:none}.phero h1.pfh{display:block}
+  .pback{width:40px;height:40px;padding:0;margin:0;justify-content:center;flex:none}.pback{font-size:0;gap:0}.pback svg{width:18px;height:18px}
+  .pcount{flex:none;height:34px;padding:0 13px;font-size:12.5px}.pcount i,.pcount .pnolim{display:none}.pcount span{margin-left:0;white-space:nowrap}
   .ptools .pseg:first-of-type{flex:1}.ptools .pseg:first-of-type .pill{flex:1;justify-content:center}
   .pcard .pbody .sh-acts{margin-left:0;flex:1 1 100%;display:flex;gap:6px}
   .pcard .pbody .sh-acts .ico{flex:1;width:auto;height:34px;border-radius:999px;opacity:1}
@@ -2739,7 +2747,7 @@ async function openSheets(first){
       <div class="pwrap">
         <div class="phero"><div>${curF() ? `<button type="button" class="pill pback" id="pBack" title="Back to all your characters"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>All characters</button><h1 class="pfh">${fIcon}${esc(curF().name)}</h1>`
             : '<p class="pkick">Character sheets for AI</p><h1>Your characters</h1>'}</div>
-          ${pro.pro ? `<div class="pcount" title="Pro: as many characters as you like"><span style="margin-left:0">${sheets.list.length} character${sheets.list.length === 1 ? '' : 's'} · no limit</span></div>`
+          ${pro.pro ? `<div class="pcount" title="Pro: as many characters as you like"><span style="margin-left:0">${sheets.list.length} character${sheets.list.length === 1 ? '' : 's'}<em class="pnolim"> · no limit</em></span></div>`
             : `<div class="pcount" title="${sheets.list.length} of ${MAX_SHEETS} projects">${Array.from({length:MAX_SHEETS}, (_, i) => `<i class="${i < sheets.list.length ? 'on' : ''}"></i>`).join('')}<span>${sheets.list.length} of ${MAX_SHEETS}</span></div>`}</div>
         <div class="ptools">
           <label class="psearch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="pQ" placeholder="${curF() ? 'Search in ' + esc(curF().name) : folders ? 'Search characters and folders' : 'Search your characters'}" aria-label="Search" value="${esc(query)}"></label>
