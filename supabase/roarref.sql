@@ -158,3 +158,7 @@ end $$;
 revoke execute on function roarref_folder_own() from public, anon, authenticated;
 drop trigger if exists roarref_folder_own on roarref_sheets;
 create trigger roarref_folder_own before insert or update of folder on roarref_sheets for each row execute function roarref_folder_own();
+
+-- A folder's own picture on Home (Alex, 20 Nov 2026: "Thumbnail for the folders too"): the storage path of a 960 x 540
+-- JPEG picked from its characters' photos or uploaded (<user id>/<folder id>/pick-*.jpg); null = the mosaic of its characters.
+alter table roarref_folders add column if not exists thumb text;
