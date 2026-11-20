@@ -421,7 +421,8 @@ a.pill{text-decoration:none}
 .pdrop{outline:2px solid var(--accent);outline-offset:3px;box-shadow:0 0 0 6px rgba(212,0,0,.18),0 0 30px var(--accent-glow)!important}
 .pdragging{opacity:.45}
 .spage .sh[data-id] .pthumb img{-webkit-touch-callout:none;-webkit-user-drag:none}
-.spage .sh[data-id]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.spage .sh[data-id],.spage .sh.pfold{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.spage .pfold .pthumb img{-webkit-touch-callout:none;-webkit-user-drag:none}
 .plift{opacity:.4;transform:scale(.96)!important;transition:transform .2s,opacity .2s}
 .ptdrag .pfold{transition:transform .2s,box-shadow .2s}.ptdrag .pfold.pdrop{transform:scale(1.04)}
 .ptdrag .pcard:hover{transform:none}
@@ -2787,6 +2788,19 @@ async function openSheets(first){
     o.style.left = Math.max(10, Math.min(innerWidth - w - 10, r.left + r.width / 2 - w / 2)) + 'px';
     const below = r.top + r.height * 0.45;
     o.style.top = (below + h < innerHeight - 10 ? below : Math.max(10, Math.min(innerHeight - h - 10, r.top + r.height * 0.45 - h))) + 'px'; };
+  // a folder's own small menu: Open, Rename, Delete (asks; its characters go back to Home)
+  const openFctx = (card, fid, step) => { shutMenu(); const f = fOf(fid); if(!f) return;
+    const o = document.createElement('div'); o.className = 'pmenu pctx'; o.dataset.folder = fid;
+    o.innerHTML = step === 'del'
+      ? `<p>Delete the folder ${esc(f.name)}?</p><button type="button" data-fx="keep"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>Keep it</span></button>
+         <button type="button" class="pdanger" data-fx="sure"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete, its characters stay</span></button>`
+      : `<p>${esc(f.name)}</p><button type="button" data-fx="open"><svg viewBox="0 0 24 24">${IC.folder}</svg><span>Open</span></button>
+         <button type="button" data-fx="ren"><svg viewBox="0 0 24 24">${IC.pen}</svg><span>Rename</span></button><hr>
+         <button type="button" class="pdanger" data-fx="del"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete</span></button>`;
+    card.classList.add('pheld'); m.appendChild(o); const r = card.getBoundingClientRect(), w = o.offsetWidth, h = o.offsetHeight;
+    o.style.left = Math.max(10, Math.min(innerWidth - w - 10, r.left + r.width / 2 - w / 2)) + 'px';
+    const below = r.top + r.height * 0.45;
+    o.style.top = (below + h < innerHeight - 10 ? below : Math.max(10, Math.min(innerHeight - h - 10, r.top + r.height * 0.45 - h))) + 'px'; };
   const openMenu = (btn, id) => { shutMenu(); const x = sheets.list.find(y => y.id === id); if(!x) return;
     const tick = '<svg class="ptick" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>', cur = fOf(x.folder) ? x.folder : '';
     const it = (to, label, ic) => `<button type="button" data-to="${to}"${to === cur ? ' aria-pressed="true"' : ''}><svg viewBox="0 0 24 24">${ic}</svg><span>${label}</span>${to === cur ? tick : ''}</button>`;
@@ -2831,14 +2845,16 @@ async function openSheets(first){
     tPlace(); td.raf = requestAnimationFrame(tScroll); };
   m.addEventListener('touchstart', e => { tEnd();
     if(e.touches.length !== 1 || m.classList.contains('busy')) return;
-    const c = e.target.closest('.sh[data-id]'); if(!c || e.target.closest('.sh-acts, input, .pmenu')) return;
-    const t0 = e.touches[0]; td = {id:c.dataset.id, card:c, x0:t0.clientX, y0:t0.clientY, x:t0.clientX, y:t0.clientY, on:false};
-    td.t = setTimeout(() => { if(!td) return; td.on = 'menu'; td.x0 = td.x; td.y0 = td.y; openCtx(c, td.id);
+    // the whole card answers, a folder's too, except its title and its buttons (Alex, 20 Nov)
+    const c = e.target.closest('.sh[data-id], .sh.pfold'); if(!c || e.target.closest('.sh-acts, .sh-meta b, input, .pmenu')) return;
+    const fid = c.dataset.fid || '';
+    const t0 = e.touches[0]; td = {id:c.dataset.id || '', fid, card:c, x0:t0.clientX, y0:t0.clientY, x:t0.clientX, y:t0.clientY, on:false};
+    td.t = setTimeout(() => { if(!td) return; td.on = 'menu'; td.x0 = td.x; td.y0 = td.y; if(fid) openFctx(c, fid); else openCtx(c, td.id);
       try{ navigator.vibrate && navigator.vibrate(12); }catch{} }, 420); }, {passive:true});
   m.addEventListener('touchmove', e => { if(!td) return; const t0 = e.touches[0]; td.x = t0.clientX; td.y = t0.clientY;
     if(!td.on){ if(Math.hypot(td.x - td.x0, td.y - td.y0) > 10) tEnd(); return; }
     e.preventDefault();
-    if(td.on === 'menu'){ if(folders && Math.hypot(td.x - td.x0, td.y - td.y0) > 12) startDrag(); return; }
+    if(td.on === 'menu'){ if(!td.fid && folders && Math.hypot(td.x - td.x0, td.y - td.y0) > 12) startDrag(); return; }
     tPlace(); }, {passive:false});
   m.addEventListener('touchend', async e => { if(!td) return; if(!td.on) return tEnd();
     e.preventDefault(); // the tap of this same press opens nothing
@@ -2847,9 +2863,9 @@ async function openSheets(first){
     const to = d.id === 'pBack' ? '' : d.dataset.fid, x = sheets.list.find(y => y.id === id); if(!x || (fOf(x.folder) ? x.folder : '') === to) return;
     if(await setFolder(id, to)){ paintList(); const f = fOf(to); toast(f ? `Moved to ${f.name}` : 'Moved to Home'); } }, {passive:false});
   m.addEventListener('touchcancel', tEnd);
-  m.addEventListener('contextmenu', e => { const c = e.target.closest('.sh[data-id]');
+  m.addEventListener('contextmenu', e => { const c = e.target.closest('.sh[data-id], .sh.pfold');
     if(td || (isPhone() && c)){ e.preventDefault(); return; }
-    if(c && !e.target.closest('input')){ e.preventDefault(); openCtx(c, c.dataset.id); } }); // on a computer the same menu comes with a right click
+    if(c && !e.target.closest('input')){ e.preventDefault(); if(c.dataset.fid) openFctx(c, c.dataset.fid); else openCtx(c, c.dataset.id); } }); // on a computer the same menu comes with a right click
   /* Thumbnail (Alex, 20 Nov: "it opens the pool of photos, you pick one, or upload one"): the picture a character shows on
      Home. Its sheet's photos and its pool, or a photo from the device; made into a 960 x 540 JPEG, kept as the row's thumb,
      and S.pick says it was picked, so saving the sheet does not draw over it. Use the sheet goes back to the drawn one. */
@@ -2937,6 +2953,16 @@ async function openSheets(first){
       folders = folders.filter(f => f.id !== id); sheets.list.forEach(x => { if(x.folder === id) x.folder = null; });
       if(pv.folder === id){ pv.folder = ''; keep(); } paint(); toast('Folder deleted: its characters are on Home'); return; }
     if(t.dataset.move){ openMenu(t, t.dataset.move); return; }
+    if(t.dataset.fx){ const o = m.querySelector('.pmenu'), fid = o && o.dataset.folder, k = t.dataset.fx; if(!fid) return;
+      const card = m.querySelector(`[data-fid="${fid}"]`);
+      if(k === 'open'){ shutMenu(); pv.folder = fid; query = ''; keep(); paint(); m.scrollTop = 0; return; }
+      if(k === 'ren'){ shutMenu(); return renameFolder(fid); }
+      if(k === 'del') return card ? openFctx(card, fid, 'del') : shutMenu();
+      if(k === 'keep') return shutMenu();
+      if(k === 'sure'){ shutMenu(); busy(true); const { error } = await sb.from('roarref_folders').delete().eq('id', fid); busy(false);
+        if(error){ toast('The folder could not be deleted. Check the connection.'); return; }
+        folders = folders.filter(f => f.id !== fid); sheets.list.forEach(x => { if(x.folder === fid) x.folder = null; });
+        if(pv.folder === fid){ pv.folder = ''; keep(); } paint(); toast('Folder deleted: its characters are on Home'); return; } }
     if(t.dataset.cx){ const o = m.querySelector('.pmenu'), id = o && o.dataset.sheet, card = id && m.querySelector(`.sh[data-id="${id}"]`); if(!id) return;
       const k = t.dataset.cx;
       if(k === 'move'){ const r = o.getBoundingClientRect(); shutMenu(); const a = document.createElement('i'); a.style.cssText = `position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:0`;
