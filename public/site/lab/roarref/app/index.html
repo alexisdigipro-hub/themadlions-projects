@@ -420,6 +420,17 @@ a.pill{text-decoration:none}
 .pfh{display:flex;align-items:center;gap:12px}.pfh .pfi{width:clamp(26px,3vw,38px);height:clamp(26px,3vw,38px);margin:0;stroke-width:1.6}
 .pdrop{outline:2px solid var(--accent);outline-offset:3px;box-shadow:0 0 0 6px rgba(212,0,0,.18),0 0 30px var(--accent-glow)!important}
 .pdragging{opacity:.45}
+.spage .sh[data-id] .pthumb img{-webkit-touch-callout:none;-webkit-user-drag:none}
+.spage .sh[data-id]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.plift{opacity:.4;transform:scale(.96)!important;transition:transform .2s,opacity .2s}
+.ptdrag .pfold{transition:transform .2s,box-shadow .2s}.ptdrag .pfold.pdrop{transform:scale(1.04)}
+.ptdrag .pcard:hover{transform:none}
+.ptghost{position:fixed;left:0;top:0;z-index:95;width:132px;pointer-events:none;border-radius:16px;overflow:hidden;background:#232325;border:1px solid rgba(255,255,255,.22);
+  box-shadow:0 24px 50px rgba(0,0,0,.65),0 0 0 1px rgba(212,0,0,.35);animation:ptpop .22s cubic-bezier(.2,1.4,.4,1)}
+.ptghost img,.ptghost .ptgb{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#1d1d1f}
+.ptghost .ptgb{display:grid;place-items:center}.ptghost .ptgb svg{width:26px;height:26px;stroke:var(--muted);fill:none;stroke-width:1.5}
+.ptghost b{display:block;padding:7px 10px;font:600 12.5px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@keyframes ptpop{from{opacity:0;scale:.8}to{opacity:1;scale:1}}
 .pmenu{position:fixed;z-index:90;min-width:220px;max-width:min(300px,calc(100vw - 20px));max-height:min(60vh,420px);overflow:auto;padding:6px;border-radius:18px;background:#232325;border:1px solid rgba(255,255,255,.12);
   box-shadow:0 24px 60px rgba(0,0,0,.6);animation:fade .15s}
 .pmenu p{margin:6px 10px 6px;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2673,7 +2684,7 @@ async function openSheets(first){
     const drag = folders && !isPhone() ? ' draggable="true"' : '';
     box.className = pv.view === 'list' ? 'plist' : 'pgrid';
     const none = q && !list.length && !fl.length ? `<p class="pnone">Nothing is called like that.</p>`
-      : cf && !q && !list.length ? `<p class="pnone">This folder is empty. Make a new character here, or move one in with its folder button${isPhone() ? '' : ' or by dragging it onto the folder'}.</p>` : '';
+      : cf && !q && !list.length ? `<p class="pnone">This folder is empty. Make a new character here, or move one in with its folder button or by ${isPhone() ? 'holding it and dragging it' : 'dragging it'} onto the folder.</p>` : '';
     const nw = cf ? `New character in ${esc(cf.name)}` : 'New character';
     if(pv.view === 'list') box.innerHTML = none
       + fl.map(f => `<div class="sh prow pfold" data-fid="${f.id}">
@@ -2769,6 +2780,37 @@ async function openSheets(first){
   m.addEventListener('drop', async e => { const d = dropOn(e); if(!d) return; e.preventDefault(); const id = dragId, to = d.id === 'pBack' ? '' : d.dataset.fid; dragId = '';
     const x = sheets.list.find(y => y.id === id); if(!x || (fOf(x.folder) ? x.folder : '') === to) return;
     if(await setFolder(id, to)){ paintList(); const f = fOf(to); toast(f ? `Moved to ${f.name}` : 'Moved to Home'); } });
+  /* on a phone too (Alex, 20 Nov: "I want to drag projects into the folders on the phone too"): hold a character a moment
+     until it lifts, then drag it onto a folder, or onto All characters to take it out; a quick move first is a scroll as before */
+  let td = null;
+  const tEnd = () => { if(!td) return; clearTimeout(td.t); cancelAnimationFrame(td.raf); if(td.ghost) td.ghost.remove(); td.card.classList.remove('plift');
+    m.querySelectorAll('.pdrop').forEach(n => n.classList.remove('pdrop')); m.classList.remove('ptdrag'); td = null; };
+  const under = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.closest('.pfold, #pBack'); };
+  const tPlace = () => { if(!td || !td.on) return; td.ghost.style.transform = `translate3d(${td.x}px,${td.y}px,0) translate(-50%,-112%)`;
+    const d = under(td.x, td.y); m.querySelectorAll('.pdrop').forEach(n => { if(n !== d) n.classList.remove('pdrop'); }); if(d) d.classList.add('pdrop'); };
+  const tScroll = () => { if(!td || !td.on) return; const edge = 80, h = innerHeight;
+    const v = td.y < edge ? -(edge - td.y) / 4 : td.y > h - edge ? (td.y - (h - edge)) / 4 : 0;
+    if(v){ m.scrollTop += v; tPlace(); } td.raf = requestAnimationFrame(tScroll); };
+  m.addEventListener('touchstart', e => { tEnd();
+    if(!folders || !folders.length || e.touches.length !== 1 || m.classList.contains('busy')) return;
+    const c = e.target.closest('.sh[data-id]'); if(!c || e.target.closest('.sh-acts, input')) return;
+    const t0 = e.touches[0]; td = {id:c.dataset.id, card:c, x0:t0.clientX, y0:t0.clientY, x:t0.clientX, y:t0.clientY, on:false};
+    td.t = setTimeout(() => { if(!td) return; td.on = true; shutMenu();
+      const g = document.createElement('div'); g.className = 'ptghost'; const img = c.querySelector('.pthumb img');
+      const x = sheets.list.find(y => y.id === td.id);
+      g.innerHTML = (img ? `<img src="${img.src}" alt="">` : `<span class="ptgb"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/></svg></span>`) + `<b>${esc(x ? x.name : '')}</b>`;
+      td.ghost = g; document.body.appendChild(g); c.classList.add('plift'); m.classList.add('ptdrag');
+      try{ navigator.vibrate && navigator.vibrate(12); }catch{}
+      tPlace(); td.raf = requestAnimationFrame(tScroll); }, 380); }, {passive:true});
+  m.addEventListener('touchmove', e => { if(!td) return; const t0 = e.touches[0]; td.x = t0.clientX; td.y = t0.clientY;
+    if(!td.on){ if(Math.hypot(td.x - td.x0, td.y - td.y0) > 10) tEnd(); return; }
+    e.preventDefault(); tPlace(); }, {passive:false});
+  m.addEventListener('touchend', async e => { if(!td) return; if(!td.on) return tEnd();
+    e.preventDefault(); const d = under(td.x, td.y), id = td.id; tEnd(); if(!d) return;
+    const to = d.id === 'pBack' ? '' : d.dataset.fid, x = sheets.list.find(y => y.id === id); if(!x || (fOf(x.folder) ? x.folder : '') === to) return;
+    if(await setFolder(id, to)){ paintList(); const f = fOf(to); toast(f ? `Moved to ${f.name}` : 'Moved to Home'); } }, {passive:false});
+  m.addEventListener('touchcancel', tEnd);
+  m.addEventListener('contextmenu', e => { if(td || (isPhone() && e.target.closest('.sh[data-id]'))) e.preventDefault(); });
   m.onclick = async e => {
     let t = e.target.closest('button');
     if(!t || m.classList.contains('busy')) return;
