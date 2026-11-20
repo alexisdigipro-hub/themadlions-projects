@@ -162,3 +162,18 @@ create trigger roarref_folder_own before insert or update of folder on roarref_s
 -- A folder's own picture on Home (Alex, 20 Nov 2026: "Thumbnail for the folders too"): the storage path of a 960 x 540
 -- JPEG picked from its characters' photos or uploaded (<user id>/<folder id>/pick-*.jpg); null = the mosaic of its characters.
 alter table roarref_folders add column if not exists thumb text;
+
+-- Recently deleted (Alex, 20 Nov 2026: "somewhere a bin with the deleted ones, for safety"): a deleted sheet keeps its row and
+-- files for 30 days with deleted_at set; the page lists, restores or deletes it for good (and clears those past 30 days).
+-- Only sheets not in the bin count toward the 10. Applied 20 Nov by Claude. Safe to re-run.
+alter table roarref_sheets add column if not exists deleted_at timestamptz;
+create index if not exists roarref_sheets_deleted on roarref_sheets (owner, deleted_at);
+create or replace function roarref_limit() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if roarref_is_pro(new.owner) then return new; end if;
+  if (select count(*) from roarref_sheets where owner = new.owner and deleted_at is null) >= 10 then
+    raise exception 'roarref_limit: up to 10 sheets' using errcode = 'P0001';
+  end if;
+  return new;
+end $$;
+revoke execute on function roarref_limit() from public, anon, authenticated;
