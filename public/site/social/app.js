@@ -2195,21 +2195,43 @@ async function posts(rows, refresh) {
 }
 // a post as Instagram shows one (Alex, 4 Nov: "more Instagram"): who, the picture edge to edge (swipe when there are
 // several), icons, the bravos, the caption under the name, the comments behind a line, the time
-// the arrow under a post: send it to people on Roardino, in Roardino's own chat (Alex, 16 Nov: no tie to RoarMe at all);
-// the people I follow first, anyone else by name or @username; each gets a message with a link that opens this post
+// the arrow under a post: a sheet from the foot, as Instagram's (Alex, 21 Nov): a search, the people as round faces
+// three to a row (the ones I follow first), a tap picks one (more than one too); with nobody picked the foot holds the
+// ways out (copy the link, the phone's own share, WhatsApp, Messages, email), with someone picked it holds a message
+// and Send. Each one picked gets the post in Roardino's own chat.
+const SHARE_I = {
+  share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8"/><path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12"/></svg>',
+  whatsapp: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2a9.7 9.7 0 0 0-8.4 14.6L2.3 21.7l5-1.3A9.7 9.7 0 1 0 12 2.2Zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9Zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.1 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.4 1 2.5.1.2 1.7 2.7 4.3 3.8 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.6-.4Z"/></svg>',
+  sms: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a8 8 0 0 1-11.7 7.1L4 20l1.4-4.1A8 8 0 1 1 20 11.5Z"/></svg>',
+};
 async function sendToRoarMe(r, p) {
   const meId = session.user.id;
   const url = `${location.origin}${location.pathname}#/post/${r.id}`;
   const picked = new Map();
-  const list = h('div', { class: 'stm-list' }, h('p', { class: 'wait' }, t('Loading…')));
-  const note = h('input', { class: 'input', placeholder: t('Write a message…'), maxlength: 500 });
-  const sendBtn = h('button', { type: 'button', class: 'btn main', disabled: true }, icon('send'), t('Send'));
-  let rdPeople = [], rdFollow = [], found = null;
-  const row = (x) => h('button', { type: 'button', class: 'stm-row' + (picked.has(x.key) ? ' on' : ''), onclick: () => { if (picked.has(x.key)) picked.delete(x.key); else picked.set(x.key, x); sendBtn.disabled = !picked.size; draw(); } },
-    avatar({ name: x.name, avatar: x.avatar }), h('span', { class: 'stm-who' }, h('b', {}, x.name), x.sub ? h('small', {}, x.sub) : null), h('span', { class: 'stm-tick', html: ICON.check }));
-  const draw = () => { const rows = found || rdFollow; put(list, ...(rows.length ? rows.map(row) : [h('p', { class: 'hint' }, found ? t('Nobody by that name.') : t('Search for someone above.'))])); };
-  const search = h('input', { class: 'input', type: 'search', placeholder: t('Search people'), oninput: (e) => { const q = e.target.value.trim(); found = q ? rdPeople.filter((x) => matches(x._k, q)).slice(0, 30) : null; draw(); } });
-  const close = openWin(t('Send'), h('div', { class: 'stm' }, search, list, note), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Cancel')), sendBtn]);
+  let people = [], q = '';
+  const grid = h('div', { class: 'ss-grid' }, h('p', { class: 'wait' }, t('Loading…')));
+  const search = h('input', { class: 'ss-search', type: 'search', placeholder: t('Search'), 'aria-label': t('Search'), oninput: (e) => { q = e.target.value.trim(); draw(); } });
+  const note = h('input', { class: 'ss-note', placeholder: t('Write a message…'), maxlength: 500 });
+  const sendBtn = h('button', { type: 'button', class: 'ss-send' }, t('Send'));
+  const foot = h('div', { class: 'ss-foot' });
+  const close = () => { back.classList.add('out'); setTimeout(() => back.remove(), 260); };
+  const sheet = h('div', { class: 'ss' }, h('i', { class: 'ss-grab' }), h('div', { class: 'ss-head' }, h('span', { class: 'ss-find', html: ICON.search }), search), grid, foot);
+  const back = h('div', { class: 'ss-back', onclick: (e) => { if (e.target === back) close(); } }, sheet);
+  const action = (ic, label, fn, cls = '') => h('button', { type: 'button', class: 'ss-act ' + cls, onclick: fn }, h('span', { class: 'ss-act-ic', html: ic }), h('small', {}, label));
+  const drawFoot = () => {
+    if (picked.size) { put(foot, note, sendBtn); sendBtn.textContent = picked.size > 1 ? t('Send separately') : t('Send'); return; }
+    put(foot, h('div', { class: 'ss-acts' },
+      action(ICON.link, t('Copy link'), async () => { try { await navigator.clipboard.writeText(url); toast(t('Link copied')); } catch { prompt(t('Copy link'), url); } }),
+      navigator.share ? action(SHARE_I.share, t('Share to…'), async () => { try { await navigator.share({ title: p.name || 'Roardino', url }); } catch { /* closed */ } }) : null,
+      action(SHARE_I.whatsapp, 'WhatsApp', () => { window.open(`https://wa.me/?text=${encodeURIComponent(url)}`, '_blank'); }, 'wa'),
+      action(SHARE_I.sms, t('Messages'), () => { location.href = `sms:&body=${encodeURIComponent(url)}`; }),
+      action(ICON.mail, t('Email'), () => { location.href = `mailto:?subject=${encodeURIComponent(p.name || 'Roardino')}&body=${encodeURIComponent(url)}`; })));
+  };
+  const draw = () => {
+    const rows = q ? people.filter((x) => matches(x._k, q)) : [...people.filter((x) => x.fol), ...people.filter((x) => !x.fol)];
+    put(grid, ...(rows.length ? rows.slice(0, 60).map((x) => h('button', { type: 'button', class: 'ss-p' + (picked.has(x.id) ? ' on' : ''), onclick: () => { if (picked.has(x.id)) picked.delete(x.id); else picked.set(x.id, x); draw(); drawFoot(); } },
+      h('span', { class: 'ss-av' }, avatar({ name: x.name, avatar: x.avatar }), h('i', { class: 'ss-tick', html: ICON.check })), h('small', {}, x.name))) : [h('p', { class: 'hint' }, q ? t('Nobody by that name.') : t('Nobody here yet'))]));
+  };
   sendBtn.onclick = async () => {
     sendBtn.disabled = true;
     const text = (note.value.trim() ? note.value.trim() + '\n' : '') + `${p.name || 'Roardino'} · ${url}`;
@@ -2226,12 +2248,18 @@ async function sendToRoarMe(r, p) {
     close(); chatRooms = null;
     toast(ok ? (ok === 1 ? t('Sent') : t('Sent to {n} people', { n: ok })) : t('Could not send. Try again.'));
   };
+  // a pull down on the grab closes it
+  let sy = null;
+  sheet.querySelector('.ss-grab').parentElement.addEventListener('touchstart', (e) => { if (e.target.closest('.ss-grab,.ss-head') && !e.target.closest('input')) sy = e.touches[0].clientY; }, { passive: true });
+  sheet.addEventListener('touchmove', (e) => { if (sy == null) return; const dy = Math.max(0, e.touches[0].clientY - sy); sheet.style.transform = `translateY(${dy}px)`; }, { passive: true });
+  sheet.addEventListener('touchend', (e) => { if (sy == null) return; const dy = (e.changedTouches[0]?.clientY || sy) - sy; sy = null; if (dy > 90) close(); else sheet.style.transform = ''; });
+  document.body.append(back);
+  drawFoot();
   try {
     const { data: ppl } = await sb.from('roardino_people').select('id,name,handle,avatar,kinds,owner,minor').eq('visible', true).eq('minor', false).neq('owner', meId).order('created_at').limit(1500);
     const seen = new Set();
     await sign((ppl || []).map((x) => x.avatar));
-    rdPeople = (ppl || []).filter((x) => !seen.has(x.owner) && seen.add(x.owner)).map((x) => ({ key: 'u:' + x.owner, id: x.owner, pid: x.id, name: x.name, sub: x.handle ? '@' + x.handle : (x.kinds || []).map(kindName).slice(0, 2).join(' · '), avatar: urlOf(x.avatar) || '', _k: ' ' + fold(`${x.name} ${x.handle || ''}`) + ' ' }));
-    rdFollow = rdPeople.filter((x) => follows.has(x.pid)).slice(0, 30);
+    people = (ppl || []).filter((x) => !seen.has(x.owner) && seen.add(x.owner)).map((x) => ({ id: x.owner, pid: x.id, name: x.name, avatar: urlOf(x.avatar) || '', fol: follows.has(x.id), _k: ' ' + fold(`${x.name} ${x.handle || ''}`) + ' ' }));
   } catch (e) { console.warn('Roardino people', e); }
   draw();
 }
