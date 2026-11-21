@@ -5191,14 +5191,62 @@ function jobOffer(who) {
     } }, icon('send'), t('Send'))]);
 }
 // a still frame of a video, for the chat's small picture of it
+// PINCH TO ZOOM in the feed, as Instagram's (Alex, 21 Nov): two fingers on a post's picture or video lift it above the
+// page and zoom and move it with the fingers, the page dimmed behind; let go and it settles back into its place
+(() => {
+  let z = null;
+  const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  const mid = (a, b) => ({ x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 });
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 2 || z) return;
+    const m = e.target.closest?.('.post.ig .ig-media'); if (!m) return;
+    const art = m.closest('.post.ig');
+    const veil = h('div', { class: 'zoom-veil' }); document.body.append(veil);
+    art.classList.add('zooming'); document.documentElement.classList.add('zooming-on');
+    z = { m, art, veil, d: dist(e.touches[0], e.touches[1]), c: mid(e.touches[0], e.touches[1]) };
+    m.style.transition = 'none';
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!z) return;
+    if (e.touches.length < 2) return;
+    e.preventDefault();
+    const s = Math.max(1, Math.min(4, dist(e.touches[0], e.touches[1]) / z.d));
+    const c = mid(e.touches[0], e.touches[1]);
+    z.m.style.transform = `translate(${c.x - z.c.x}px,${c.y - z.c.y}px) scale(${s})`;
+    z.veil.style.opacity = String(Math.min(0.75, (s - 1) * 0.9));
+  }, { passive: false });
+  const end = (e) => {
+    if (!z || e.touches.length >= 2) return;
+    const { m, art, veil } = z; z = null;
+    m.style.transition = 'transform .32s cubic-bezier(.25,1.1,.45,1)'; m.style.transform = '';
+    veil.style.transition = 'opacity .3s ease'; veil.style.opacity = '0';
+    setTimeout(() => { art.classList.remove('zooming'); document.documentElement.classList.remove('zooming-on'); m.style.transition = ''; veil.remove(); }, 330);
+  };
+  document.addEventListener('touchend', end); document.addEventListener('touchcancel', end);
+})();
 function videoCover(file) {
+  // the cover a video gets when none is chosen: not its first instant, which is often a black fade-in (Alex, 21 Nov: the
+  // feed showed a black video until it played), but the first of a few moments through it that has light in it
   return new Promise((ok) => {
     const v = document.createElement('video'); const url = URL.createObjectURL(file);
     const done = (b) => { URL.revokeObjectURL(url); ok(b); };
     v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
-    v.onloadeddata = () => { v.currentTime = Math.min(0.5, (v.duration || 1) / 2); };
-    v.onseeked = () => { try { const k = Math.min(1, 640 / Math.max(v.videoWidth, v.videoHeight)); const c = document.createElement('canvas'); c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k); c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); c.toBlob((b) => done(b), 'image/jpeg', 0.72); } catch { done(null); } };
-    v.onerror = () => done(null); setTimeout(() => done(null), 8000);
+    let tries = [], best = null, bestL = -1;
+    const probe = h('canvas'); probe.width = probe.height = 24;
+    const shot = () => { const k = Math.min(1, 640 / Math.max(v.videoWidth, v.videoHeight)); const c = document.createElement('canvas'); c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k); c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); return c; };
+    const finish = (c) => { try { c.toBlob((b) => done(b), 'image/jpeg', 0.72); } catch { done(null); } };
+    v.onloadeddata = () => { const d = v.duration || 1; tries = [0.12, 0.3, 0.5, 0.7].map((f) => Math.max(0.2, Math.min(d - 0.05, d * f))); v.currentTime = tries.shift(); };
+    v.onseeked = () => {
+      try {
+        const g = probe.getContext('2d', { willReadFrequently: true }); g.drawImage(v, 0, 0, 24, 24);
+        const px = g.getImageData(0, 0, 24, 24).data; let L = 0; for (let i = 0; i < px.length; i += 4) L += 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
+        L /= px.length / 4;
+        if (L > bestL) { bestL = L; best = shot(); }
+        if (L > 45 || !tries.length) return finish(best);
+        v.currentTime = tries.shift();
+      } catch { if (best) finish(best); else done(null); }
+    };
+    v.onerror = () => done(null); setTimeout(() => (best ? finish(best) : done(null)), 9000);
   });
 }
 // Message on a profile (Alex, 5 Nov): the conversation with the profile's account (a child's: the parent's)
