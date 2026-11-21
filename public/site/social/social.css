@@ -4619,3 +4619,12 @@ html[data-theme=light][data-theme] body .pf-thread .pf-modes button.on{backgroun
 .ed-ty-size::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .ed-ty-size::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:#fff}
 .st-veil:has(.ed-typing-on) .st-x,.st-veil:has(.ed-dragging) .st-x{opacity:0;pointer-events:none}
+
+/* pinch to zoom in the feed (Alex, 21 Nov) */
+.zoom-veil{position:fixed;inset:0;z-index:290;background:#000;opacity:0;pointer-events:none}
+.post.ig.zooming{position:relative;z-index:300!important;overflow:visible!important}
+.post.ig.zooming .mwrap{overflow:visible!important;clip-path:none!important;-webkit-mask-image:none!important;mask-image:none!important;transform:none!important;isolation:auto!important}
+.post.ig.zooming .ig-media{position:relative;z-index:301;transform-origin:center center;will-change:transform;border-radius:0}
+.post.ig.zooming :is(.post-head,.ig-bar,.ig-tagged,.ig-dots){opacity:0;transition:opacity .15s}
+html.zooming-on body{overflow:hidden}
+.post.ig .ig-media{touch-action:pan-x pan-y}
