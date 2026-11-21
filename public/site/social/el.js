@@ -988,5 +988,9 @@ window.RD_EL = {
 "One per post": "Ένα σε κάθε post",
 "Tagged people": "Άτομα στο post",
 "Already tagged": "Υπάρχει ήδη",
-"Size": "Μέγεθος"
+"Size": "Μέγεθος",
+"Share to…": "Κοινοποίηση σε…",
+"Email": "Email",
+"Send separately": "Αποστολή χωριστά",
+"Sent to {n} people": "Στάλθηκε σε {n} άτομα"
 };

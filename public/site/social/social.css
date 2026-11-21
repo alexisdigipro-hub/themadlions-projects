@@ -4628,3 +4628,47 @@ html[data-theme=light][data-theme] body .pf-thread .pf-modes button.on{backgroun
 .post.ig.zooming :is(.post-head,.ig-bar,.ig-tagged,.ig-dots){opacity:0;transition:opacity .15s}
 html.zooming-on body{overflow:hidden}
 .post.ig .ig-media{touch-action:pan-x pan-y}
+
+/* SEND, AS INSTAGRAM'S SHEET (Alex, 21 Nov) */
+.ss-back{position:fixed;inset:0;z-index:160;background:rgba(0,0,0,.32);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s ease both}
+.ss-back.out{opacity:0;transition:opacity .25s ease}
+.ss-back.out .ss{transform:translateY(40px)!important;transition:transform .25s ease}
+.ss{width:100%;max-width:560px;max-height:min(78vh,720px);display:flex;flex-direction:column;border-radius:30px 30px 0 0;padding:8px 0 calc(env(safe-area-inset-bottom) + 10px);box-sizing:border-box;
+  background:linear-gradient(160deg,rgba(255,255,255,.97),rgba(246,247,250,.95));box-shadow:0 -10px 40px rgba(0,0,0,.18),inset 0 1px 0 #fff;color:var(--ink);
+  animation:ss-up .32s cubic-bezier(.2,.9,.25,1) both;transition:transform .2s ease}
+@keyframes ss-up{from{transform:translateY(100%)}}
+html[data-theme=dark] .ss,html.rl-open .ss{background:linear-gradient(160deg,rgba(44,47,54,.98),rgba(30,32,38,.97));color:#f2f3f5;box-shadow:0 -10px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08)}
+.ss-grab{display:block;width:40px;height:5px;border-radius:3px;margin:4px auto 10px;background:rgba(128,134,148,.4)}
+.ss-head{display:flex;align-items:center;gap:8px;margin:0 16px 12px;height:44px;padding:0 14px;border-radius:999px;background:rgba(128,134,148,.12)}
+.ss-find{width:20px;height:20px;display:grid;place-items:center;opacity:.55}
+.ss-find svg{width:19px;height:19px}
+.ss-search{flex:1;min-width:0;border:0;outline:0;background:none;font:inherit;font-size:16px;color:inherit;-webkit-text-fill-color:currentColor}
+.ss-search::placeholder{color:rgba(128,134,148,.9);-webkit-text-fill-color:rgba(128,134,148,.9)}
+.ss-grid{flex:1;min-height:180px;overflow-y:auto;overscroll-behavior:contain;display:grid;grid-template-columns:repeat(3,1fr);gap:18px 8px;padding:6px 14px 14px;align-content:start}
+.ss-grid .wait,.ss-grid .hint{grid-column:1/-1;text-align:center}
+.ss-p{display:flex;flex-direction:column;align-items:center;gap:7px;border:0;background:none;padding:0;cursor:pointer;color:inherit;font:inherit;min-width:0}
+.ss-av{position:relative;display:block}
+.ss-av .av{width:76px!important;height:76px!important;font-size:22px;transition:transform .18s ease}
+.ss-p:active .ss-av .av{transform:scale(.94)}
+.ss-tick{position:absolute;right:-1px;bottom:1px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#0a84ff;color:#fff;box-shadow:0 0 0 3px #fff;transform:scale(0);transition:transform .2s cubic-bezier(.25,1.5,.45,1)}
+html[data-theme=dark] .ss-tick,html.rl-open .ss-tick{box-shadow:0 0 0 3px #2c2f36}
+.ss-tick svg{width:15px;height:15px;stroke-width:2.6}
+.ss-p.on .ss-tick{transform:scale(1)}
+.ss-p small{font-size:13px;line-height:1.25;max-width:100%;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.ss-foot{border-top:1px solid rgba(128,134,148,.18);padding:12px 14px 0;display:flex;flex-direction:column;gap:10px}
+.ss-acts{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px}
+.ss-acts::-webkit-scrollbar{display:none}
+.ss-act{flex:none;width:72px;display:flex;flex-direction:column;align-items:center;gap:7px;border:0;background:none;padding:0;cursor:pointer;color:inherit;font:inherit}
+.ss-act-ic{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;background:rgba(128,134,148,.14)}
+.ss-act-ic svg{width:25px;height:25px}
+.ss-act.wa .ss-act-ic{background:#25d366;color:#fff}
+.ss-act small{font-size:12.5px;white-space:nowrap}
+.ss-note{height:46px;border:0;outline:0;border-radius:14px;padding:0 14px;font:inherit;font-size:16px;color:inherit;-webkit-text-fill-color:currentColor;background:rgba(128,134,148,.12)}
+.ss-send{height:48px;border:0;border-radius:14px;font:inherit;font-size:16px;font-weight:600;color:#fff;background:#0a84ff;cursor:pointer}
+.ss-send:disabled{opacity:.6}
+@media (min-width:861px){.ss-back{align-items:center}.ss{border-radius:30px;padding-bottom:16px}}
+/* the keyboard rule: the sheet rides up with the keyboard */
+html.kb-rise .ss-back .ss{translate:0 calc(-1 * var(--kbup,0px) + env(safe-area-inset-bottom,0px));transition:translate .27s cubic-bezier(.17,.59,.4,.99)}
+html.kb-fall-from .ss-back .ss{translate:0 calc(-1 * var(--kbup,0px) + env(safe-area-inset-bottom,0px));transition:none}
+html.kb-fall .ss-back .ss{translate:0 0;transition:translate .25s cubic-bezier(.17,.59,.4,.99)}
+.ss-back{z-index:400!important}
