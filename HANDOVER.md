@@ -38,6 +38,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (22 Nov 2026: RoarMe writes locations into the hub)
+
+### 22 Nov, late: the hub's cover, locations' photos and songs reach RoarMe
+hub-bridge v5 (deployed): project.get also returns the project's cover (coverThumb), its music with a link good for a day (pCloud songs as a signed address of the pcloud function, same key as its own signed links; stored ones from the audio bucket), and the library's photos of a location that has none of its own (libPhotos, shown in RoarMe only, never written back). Nothing for Alex to run.
+
 - Alex: "a key from the hub, put in RoarMe, and every location made there goes straight into the hub", step 1 of selling the hub one day as an empty, monthly product that RoarMe (and other apps) connect to.
 - **supabase/roarme-bridge.sql** (run 22 Nov by Claude): hub_keys (only SHA-256 kept, admins of the workspace read their own), hub_key_create(label) returns the key once (tmlhub_ + 48 hex), hub_key_revoke(id).
 - **supabase/functions/hub-bridge** (deployed 22 Nov, verify_jwt off; the key in x-hub-key is the check): hello, location.put { ext, loc, photos, from } (library row kind 'location', id 'rm' + 12 hex of sha256(ws|ext), so the same place updates; photos fetched only from RoarMe's storage, at most 2 MB, copied into the public thumbs bucket; data.source { app, project, ext }), location.delete (only rows with data.source).
