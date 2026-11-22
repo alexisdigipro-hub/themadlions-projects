@@ -4687,4 +4687,6 @@ html.kb-fall .ss-back .ss{translate:0 0;transition:translate .25s cubic-bezier(.
    same"): a thread's glass pane had 14px more under it than a photo or video has. */
 @media (max-width:820px){
   html[data-theme][data-theme] body .feed-mid > .post.ig:not(.has-media){margin-bottom:0!important}
+  /* and the same 6px at a thread's sides as above and below it (Alex, 22 Nov: the pane touched the screen's edges) */
+  html[data-theme][data-theme] body .feed-mid > .post.ig:not(.has-media){margin-left:-10px!important;margin-right:-10px!important;width:auto!important}
 }
