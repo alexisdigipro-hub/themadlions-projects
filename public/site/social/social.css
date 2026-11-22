@@ -4682,3 +4682,9 @@ html.kb-fall .ss-back .ss{translate:0 0;transition:translate .25s cubic-bezier(.
   html[data-theme][data-theme] body .igm-n+.igm-n{border-left:1px solid var(--line)}
   html[data-theme][data-theme] body .igm-n small{font-size:12.5px}
 }
+
+/* The same gap after every post in the feed on a phone (Alex, 22 Nov: "different gaps between the posts, make them the
+   same"): a thread's glass pane had 14px more under it than a photo or video has. */
+@media (max-width:820px){
+  html[data-theme][data-theme] body .feed-mid > .post.ig:not(.has-media){margin-bottom:0!important}
+}
