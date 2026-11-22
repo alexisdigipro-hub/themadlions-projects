@@ -161,6 +161,8 @@ const ADD_ICONS = {
   more: <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="18.5" cy="12" r="1.4" /></svg>,
 }
 
+// two links pulled apart, for Unlink from RoarMe
+const UNLINK_I = <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9.5 14.5 7.3 16.7a3 3 0 0 1-4.2-4.2l2.2-2.2" /><path d="m14.5 9.5 2.2-2.2a3 3 0 0 1 4.2 4.2l-2.2 2.2" /><path d="M8 3v2M3 8h2M16 21v-2M21 16h-2" /></svg>
 const ROAR_I = <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 18.5V7a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H8.5z" /><path d="M9 9.5h6M9 12.5h4" /></svg>
 
 export default function Overview() {
@@ -312,7 +314,11 @@ export default function Overview() {
                 {/* Create PROject (Alex, 22 Nov): an active project asks RoarMe for its group; RoarMe makes it within a
                     minute (roar-hub cron) and ties it, then this shows In RoarMe */}
                 {remote && hubApp && (project.roarme?.room
-                  ? <a className="add-pill ov-roar on" href="https://roarme.app/" target="_blank" rel="noopener noreferrer" title="This project's group in RoarMe">{ROAR_I}<span>In Ro<b>ar</b>Me</span></a>
+                  ? <>
+                      <a className="add-pill ov-roar on" href="https://roarme.app/" target="_blank" rel="noopener noreferrer" title="This project's group in RoarMe">{ROAR_I}<span>In Ro<b>ar</b>Me</span></a>
+                      {/* Unlink (Alex, 22 Nov): the project and the group both stay, they stop following each other */}
+                      {can(user, 'projects', 'edit') && <button type="button" className="add-pill ov-unlink" title="Unlink from RoarMe" onClick={() => { if (!window.confirm('Unlink this project from RoarMe? The project here and the group in RoarMe both stay; they just stop following each other.')) return; edit((p) => { p.roarme = { unlinked: new Date().toISOString() } }); toast('Unlinked from RoarMe', 'ok') }}>{UNLINK_I}<span>Unlink</span></button>}
+                    </>
                   : project.status !== 'Delivered' && can(user, 'projects', 'edit') && (project.roarme?.request
                     ? <span className="add-pill ov-roar wait">{ROAR_I}<span>Creating <b>PRO</b>ject…</span></span>
                     : <button type="button" className="add-pill ov-roar" onClick={() => { edit((p) => { p.roarme = { request: new Date().toISOString(), by: user?.name || '' } }); toast('The group is being made in RoarMe', 'ok') }}>{ROAR_I}<span>Create <b>PRO</b>ject</span></button>))}
