@@ -445,7 +445,7 @@ const SB_KEY = 'sb_publishable_7mQ3e0NH5lCmdoIKx2-FUA_EgCoXx9X';
 // Inside RoarMe (the clip's Ordino tile opens /roardino/?embed=1 in a frame): no sign-in here, RoarMe posts the
 // user's short-lived access token and Roardino acts as that user. The refresh token never leaves RoarMe.
 const EMBED = new URLSearchParams(location.search).has('embed');
-const ROARME_ORIGINS = ['https://alexisdigipro-hub.github.io'];
+const ROARME_ORIGINS = ['https://roarme.app', 'https://www.roarme.app', 'https://alexisdigipro-hub.github.io'];
 const okParent = o => ROARME_ORIGINS.includes(o) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o);
 let embedToken = null, parentOrigin = null;
 const sb = !window.supabase ? null : EMBED
