@@ -9,7 +9,9 @@
 //                                 (so a change updates it), new photos copied into the public thumbs bucket
 //   location.delete { ext }    -> takes that entry away, only if it came from an app
 //   projects.list              -> every project: id, title, status, startDate, code, createdAt, the RoarMe group it is tied to
-//   project.get { id }         -> the project's title, status, startDate, category, client, tasks, locations
+//   project.get { id }         -> the project's title, status, startDate, category, client, artist, tasks, locations (with
+//                                 libPhotos, the library's photos, when a location has none of its own), cover (coverThumb) and
+//                                 music (each song with a link good for a day: pCloud through the pcloud function, or audio)
 //   project.create { title, status, startDate, category, room } -> a new project with the next TML-YYYY-NNN code
 //   project.put { id, set, tasks?, locations? } -> sets title / status / startDate / category / roarme and, when sent,
 //                                 replaces the project's tasks and locations (the caller merged them; Production Hub,
@@ -27,6 +29,20 @@ const CORS = {
 const json = (body: any, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 const PHOTO_HOSTS = ['bzmjhbnwhdwmncxkqkdl.supabase.co']
 const TYPES = ['Interior', 'Exterior', 'Both']
+
+// a link to a pCloud file that plays without signing in, made the same way as the pcloud function's own (supabase/functions/pcloud,
+// sig / signed): that function passes the file on, since a pCloud link works only from the address that asked for it
+const FULL = Deno.env.get('PCLOUD_FULL_TOKEN') || ''
+let signKey: CryptoKey | null = null
+async function pcloudSigned(fileid: number | string, hours = 24) {
+  if (!FULL) return ''
+  const enc = new TextEncoder()
+  signKey ||= await crypto.subtle.importKey('raw', await crypto.subtle.digest('SHA-256', enc.encode('pcloud-stream:' + FULL)), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const t = `file.${fileid}.${Math.floor(Date.now() / 1000) + hours * 3600}`
+  const b = new Uint8Array(await crypto.subtle.sign('HMAC', signKey, enc.encode(t)))
+  const sig = btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '').slice(0, 32)
+  return `${Deno.env.get('SUPABASE_URL')}/functions/v1/pcloud?s=${t}.${sig}`
+}
 
 const hex = async (s: string) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, '0')).join('')
 const str = (v: any, n = 300) => (typeof v === 'string' ? v.slice(0, n) : v == null ? '' : String(v).slice(0, n))
@@ -60,7 +76,28 @@ Deno.serve(async (req) => {
     const { data: row } = await db.from('projects').select('data, updated_at').eq('id', pid).eq('workspace_id', ws).maybeSingle()
     if (!row) return json({ error: 'That project is not in the hub any more.' }, 404)
     const d = row.data || {}
-    if (action === 'project.get') return json({ ok: true, project: { id: pid, title: d.title || '', status: d.status || '', startDate: d.startDate || '', category: d.category || '', client: d.client || '', code: d.code || '', tasks: d.tasks || [], locations: d.locations || [], roarme: d.roarme || null, updatedAt: row.updated_at } })
+    if (action === 'project.get') {
+      // a location tied to the library with no photos of its own shows the library's (RoarMe's Location Scout shows them)
+      const locs: any[] = Array.isArray(d.locations) ? d.locations : []
+      const libIds = locs.filter((l) => l.libraryId && !(l.photos || []).length).map((l) => l.libraryId)
+      const lib: Record<string, any[]> = {}
+      if (libIds.length) {
+        const { data: rows } = await db.from('library').select('id, data').eq('workspace_id', ws).in('id', libIds)
+        for (const r of rows || []) lib[r.id] = (r.data?.photos || [])
+      }
+      // the project's songs, each with a link that plays for a day (Alex, 22 Nov: "the song should be in RoarMe too")
+      const music: any[] = []
+      for (const t of ((d.music?.tracks || []) as any[]).slice(0, 30)) {
+        let url = ''
+        if (t.fileid) url = await pcloudSigned(t.fileid)
+        else if (t.path) { const { data: su } = await db.storage.from('audio').createSignedUrl(t.path, 86400); url = su?.signedUrl || '' }
+        if (!url) continue
+        const pk: number[] = Array.isArray(t.peaks) ? t.peaks : []
+        const peaks = pk.length > 240 ? Array.from({ length: 240 }, (_, i) => pk[Math.floor(i * pk.length / 240)]) : pk
+        music.push({ id: t.id, name: `${t.name || 'Song'}.${t.ext || 'mp3'}`, ext: t.ext || '', kind: t.kind || '', bytes: t.bytes || 0, duration: t.duration || 0, peaks, url, addedAt: t.addedAt || '', until: Date.now() + 86000 * 1000 })
+      }
+      return json({ ok: true, project: { id: pid, title: d.title || '', status: d.status || '', startDate: d.startDate || '', category: d.category || '', client: d.client || '', artist: d.artist || '', code: d.code || '', tasks: d.tasks || [], locations: locs.map((l) => (lib[l.libraryId] ? { ...l, libPhotos: lib[l.libraryId] } : l)), cover: d.coverThumb || '', music, roarme: d.roarme || null, updatedAt: row.updated_at } })
+    }
     const set = body?.set || {}
     const next: any = { ...d, updatedAt: new Date().toISOString() }
     for (const k of ['title', 'status', 'startDate', 'category']) if (typeof set[k] === 'string') next[k] = set[k].slice(0, 300)
