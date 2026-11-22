@@ -10010,3 +10010,10 @@ html[data-theme] body .song-map-panel .toolbar.song-map-head { margin-top: 0; }
 .pjh-panel.shut .pjh-fold svg { transform: rotate(180deg); }
 .pjh-fold:hover { background: color-mix(in srgb, var(--text) 12%, transparent); }
 .pjh-fold:active { transform: scale(.92); }
+
+/* Settings > Integrations > Connected apps (Alex, 22 Nov 2026) */
+.hubkey-fresh { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 16px; background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.hubkey-code { display: block; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--text, currentColor) 6%, transparent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; word-break: break-all; user-select: all; }
+.hubkey-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.hubkey-list li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--text, currentColor) 4%, transparent); }
+.hubkey-list .grow { flex: 1; min-width: 0; }
