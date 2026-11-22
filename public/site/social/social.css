@@ -4690,3 +4690,18 @@ html.kb-fall .ss-back .ss{translate:0 0;transition:translate .25s cubic-bezier(.
   /* and the same 6px at a thread's sides as above and below it (Alex, 22 Nov: the pane touched the screen's edges) */
   html[data-theme][data-theme] body .feed-mid > .post.ig:not(.has-media){margin-left:-10px!important;margin-right:-10px!important;width:auto!important}
 }
+
+/* The stories' glass card on a phone set right (Alex, 22 Nov: "not set up right in the stories"): the rings stood on
+   the card's edge (their ring cut at the top, the first one touching the left side) and the eye to hide them hung over
+   the top-right corner. Now 10px of glass round the rings, the eye a small round button inside the corner, and the row
+   leaves room at its right so the last ring never slides under it. */
+@media (max-width:820px){
+  html[data-theme][data-theme] body .stories{padding:10px 42px 8px 10px!important;overflow:hidden}
+  html[data-theme][data-theme] body .stories .ring-row{padding:2px 2px 0!important;margin:0!important;overflow-x:auto;scrollbar-width:none}
+  html[data-theme][data-theme] body .stories .ring-row::-webkit-scrollbar{display:none}
+  html[data-theme][data-theme] body .stories .ring-row{gap:12px!important}
+  html[data-theme][data-theme] body .stories .ring-row>.ring{flex:none!important;width:66px!important;min-width:66px!important}
+  html[data-theme][data-theme] body .stories .ring-row>.ring em{max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  html[data-theme][data-theme] body .stories .st-hide{top:8px!important;right:8px!important;width:28px;height:28px;border-radius:50%;opacity:.7;background:var(--g1-bg);box-shadow:var(--g1-rim)}
+  html[data-theme][data-theme] body .stories .st-hide svg{width:15px;height:15px}
+}

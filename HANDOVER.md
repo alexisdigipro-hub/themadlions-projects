@@ -2069,3 +2069,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 21 Nov: Roardino's profile head on a phone is back as before (Alex took the centred layout back); only the three numbers beside the picture stay as one glass strip. Last block of social.css; version 20261121d.
 - 22 Nov: Roardino feed on a phone: the same 6px gap after every post (a thread's pane had 14px more under it). Last block of social.css; version 20261122a.
 - 22 Nov: Roardino feed on a phone: a thread's pane leaves 6px at its sides too, as above and below. Version 20261122b.
+- 22 Nov: Roardino stories card on a phone set right: 10px of glass round the rings, rings 66px with 12px between them (they were squeezed onto each other), the eye a small round button inside the top-right corner with its own room so no ring slides under it; the row scrolls sideways. Version 20261122c.
