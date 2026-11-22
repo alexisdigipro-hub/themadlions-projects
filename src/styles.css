@@ -10017,3 +10017,10 @@ html[data-theme] body .song-map-panel .toolbar.song-map-head { margin-top: 0; }
 .hubkey-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .hubkey-list li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--text, currentColor) 4%, transparent); }
 .hubkey-list .grow { flex: 1; min-width: 0; }
+
+/* Create PROject, a project's group in RoarMe (Alex, 22 Nov) */
+.ov-acts .add-pill.ov-roar b { font-weight: 800; }
+.ov-acts .add-pill.ov-roar { color: #b8862b; }
+.ov-acts .add-pill.ov-roar.wait { opacity: .6; cursor: default; }
+.ov-acts .add-pill.ov-roar.on { color: inherit; text-decoration: none; }
+html[data-theme='dark'] .ov-acts .add-pill.ov-roar:not(.on), .soft-dark .ov-acts .add-pill.ov-roar:not(.on) { color: #e0ad45; }

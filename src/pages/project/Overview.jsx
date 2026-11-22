@@ -161,11 +161,16 @@ const ADD_ICONS = {
   more: <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="18.5" cy="12" r="1.4" /></svg>,
 }
 
+const ROAR_I = <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 18.5V7a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H8.5z" /><path d="M9 9.5h6M9 12.5h4" /></svg>
+
 export default function Overview() {
   const { project, edit, canEdit, user, sections = [] } = useProject()
   // Share with collaborators (Alex, 18 Nov): the window, and the open link following the project
   const [sharing, setSharing] = useState(false)
   useProjectShareSync(project)
+  // is RoarMe linked to this hub (a Connected-apps key that was used)? Then active projects offer Create PROject
+  const [hubApp, setHubApp] = useState(false)
+  useEffect(() => { if (!supabase) return; supabase.rpc('hub_has_app').then(({ data }) => setHubApp(data === true), () => {}) }, [])
   const [ordinoOpen, setOrdinoOpen] = useState(false)
   const [receiptOpen, setReceiptOpen] = useState(false)
   const myReceipts = (project.budget?.lines || []).filter((l) => l.receipt && l.receipt.addedBy === user?.id).length
@@ -304,6 +309,13 @@ export default function Overview() {
               {/* the project's few actions, always in the same place (Alex, 28 Oct: "I was looking for Edit"):
                   + Add (everything that can be added, in groups), Edit, and ⋯ for Duplicate and Lock */}
               <span className="ov-acts">
+                {/* Create PROject (Alex, 22 Nov): an active project asks RoarMe for its group; RoarMe makes it within a
+                    minute (roar-hub cron) and ties it, then this shows In RoarMe */}
+                {remote && hubApp && (project.roarme?.room
+                  ? <a className="add-pill ov-roar on" href="https://roarme.app/" target="_blank" rel="noopener noreferrer" title="This project's group in RoarMe">{ROAR_I}<span>In Ro<b>ar</b>Me</span></a>
+                  : project.status !== 'Delivered' && can(user, 'projects', 'edit') && (project.roarme?.request
+                    ? <span className="add-pill ov-roar wait">{ROAR_I}<span>Creating <b>PRO</b>ject…</span></span>
+                    : <button type="button" className="add-pill ov-roar" onClick={() => { edit((p) => { p.roarme = { request: new Date().toISOString(), by: user?.name || '' } }); toast('The group is being made in RoarMe', 'ok') }}>{ROAR_I}<span>Create <b>PRO</b>ject</span></button>))}
                 {(adds.length > 0 || sections.includes('people')) && (
                   <span className="ov-menu-wrap">
                     <button type="button" className={`add-pill ov-add${menu === 'add' ? ' on' : ''}`} onClick={() => setMenu(menu === 'add' ? '' : 'add')} aria-expanded={menu === 'add'}>{ADD_ICONS.plus}<span>Add</span></button>
