@@ -8,12 +8,14 @@
 //                              -> one entry of the library's locations, the same id for the same ext every time
 //                                 (so a change updates it), new photos copied into the public thumbs bucket
 //   location.delete { ext }    -> takes that entry away, only if it came from an app
-//   projects.list              -> every project: id, title, status, startDate, code, createdAt, the RoarMe group it is tied to
+//   projects.list              -> every project: id, title, status, startDate, code, createdAt, the RoarMe group it is tied to,
+//                                 whether it was unlinked (from either side; Alex, 22 Nov: a delete or Unlink only unties)
 //   project.get { id }         -> the project's title, status, startDate, category, client, artist, tasks, locations (with
 //                                 libPhotos, the library's photos, when a location has none of its own), cover (coverThumb) and
 //                                 music (each song with a link good for a day: pCloud through the pcloud function, or audio)
 //   project.create { title, status, startDate, category, room } -> a new project with the next TML-YYYY-NNN code
-//   project.put { id, set, tasks?, locations? } -> sets title / status / startDate / category / roarme and, when sent,
+//   project.put { id, set, tasks?, locations? } -> sets title / status / startDate / category / roarme ({ room } or
+//                                 { unlinked: true }) and, when sent,
 //                                 replaces the project's tasks and locations (the caller merged them; Production Hub,
 //                                 Alex 22 Nov: every group in RoarMe's PROJECTS is a project of the hub, both ways)
 // Photos are fetched only from RoarMe's own storage. Deploy with verify_jwt off (the key is the check).
@@ -69,7 +71,7 @@ Deno.serve(async (req) => {
   if (action === 'projects.list') {
     const { data: rows, error } = await db.from('projects').select('id, data, updated_at').eq('workspace_id', ws)
     if (error) return json({ error: error.message }, 500)
-    return json({ ok: true, projects: (rows || []).map((r: any) => ({ id: r.id, title: r.data?.title || '', status: r.data?.status || '', startDate: r.data?.startDate || '', code: r.data?.code || '', createdAt: r.data?.createdAt || '', room: r.data?.roarme?.room || '', request: r.data?.roarme?.request || '', delivered: r.data?.status === 'Delivered', updatedAt: r.updated_at })) })
+    return json({ ok: true, projects: (rows || []).map((r: any) => ({ id: r.id, title: r.data?.title || '', status: r.data?.status || '', startDate: r.data?.startDate || '', code: r.data?.code || '', createdAt: r.data?.createdAt || '', room: r.data?.roarme?.room || '', request: r.data?.roarme?.request || '', unlinked: !!r.data?.roarme?.unlinked, delivered: r.data?.status === 'Delivered', updatedAt: r.updated_at })) })
   }
   if (action === 'project.get' || action === 'project.put') {
     const pid = str(body?.id, 40)
@@ -101,7 +103,7 @@ Deno.serve(async (req) => {
     const set = body?.set || {}
     const next: any = { ...d, updatedAt: new Date().toISOString() }
     for (const k of ['title', 'status', 'startDate', 'category']) if (typeof set[k] === 'string') next[k] = set[k].slice(0, 300)
-    if (set.roarme && typeof set.roarme === 'object') next.roarme = { room: str(set.roarme.room, 60) }
+    if (set.roarme && typeof set.roarme === 'object') next.roarme = set.roarme.unlinked ? { unlinked: new Date().toISOString() } : { room: str(set.roarme.room, 60) }
     if (Array.isArray(body?.tasks)) next.tasks = body.tasks.slice(0, 2000)
     if (Array.isArray(body?.locations)) next.locations = body.locations.slice(0, 500)
     const { error } = await db.from('projects').update({ data: next }).eq('id', pid).eq('workspace_id', ws)

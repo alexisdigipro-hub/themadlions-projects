@@ -39,6 +39,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 ## Where we stopped (22 Nov 2026: RoarMe writes locations into the hub)
 
+### 22 Nov, late: Unlink from RoarMe
+The project Overview has Unlink beside In RoarMe (data.roarme = { unlinked }): the project and the RoarMe group both stay and stop following each other. A project deleted here no longer deletes its RoarMe group (RoarMe only unties it). hub-bridge v6 (deployed): projects.list says unlinked, project.put takes roarme { unlinked: true }. Nothing for Alex to run.
+
+
 ### 22 Nov, late: the hub's cover, locations' photos and songs reach RoarMe
 hub-bridge v5 (deployed): project.get also returns the project's cover (coverThumb), its music with a link good for a day (pCloud songs as a signed address of the pcloud function, same key as its own signed links; stored ones from the audio bucket), and the library's photos of a location that has none of its own (libPhotos, shown in RoarMe only, never written back). Nothing for Alex to run.
 
