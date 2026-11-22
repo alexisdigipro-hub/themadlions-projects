@@ -8,6 +8,12 @@
 //                              -> one entry of the library's locations, the same id for the same ext every time
 //                                 (so a change updates it), new photos copied into the public thumbs bucket
 //   location.delete { ext }    -> takes that entry away, only if it came from an app
+//   projects.list              -> every project: id, title, status, startDate, code, createdAt, the RoarMe group it is tied to
+//   project.get { id }         -> the project's title, status, startDate, category, client, tasks, locations
+//   project.create { title, status, startDate, category, room } -> a new project with the next TML-YYYY-NNN code
+//   project.put { id, set, tasks?, locations? } -> sets title / status / startDate / category / roarme and, when sent,
+//                                 replaces the project's tasks and locations (the caller merged them; Production Hub,
+//                                 Alex 22 Nov: every group in RoarMe's PROJECTS is a project of the hub, both ways)
 // Photos are fetched only from RoarMe's own storage. Deploy with verify_jwt off (the key is the check).
 
 // deno-lint-ignore-file no-explicit-any
@@ -42,6 +48,50 @@ Deno.serve(async (req) => {
   if (action === 'hello') {
     const { data: w } = await db.from('workspaces').select('name').eq('id', ws).maybeSingle()
     return json({ ok: true, workspace: w?.name || 'Hub' })
+  }
+
+  if (action === 'projects.list') {
+    const { data: rows, error } = await db.from('projects').select('id, data, updated_at').eq('workspace_id', ws)
+    if (error) return json({ error: error.message }, 500)
+    return json({ ok: true, projects: (rows || []).map((r: any) => ({ id: r.id, title: r.data?.title || '', status: r.data?.status || '', startDate: r.data?.startDate || '', code: r.data?.code || '', createdAt: r.data?.createdAt || '', room: r.data?.roarme?.room || '', updatedAt: r.updated_at })) })
+  }
+  if (action === 'project.get' || action === 'project.put') {
+    const pid = str(body?.id, 40)
+    const { data: row } = await db.from('projects').select('data, updated_at').eq('id', pid).eq('workspace_id', ws).maybeSingle()
+    if (!row) return json({ error: 'That project is not in the hub any more.' }, 404)
+    const d = row.data || {}
+    if (action === 'project.get') return json({ ok: true, project: { id: pid, title: d.title || '', status: d.status || '', startDate: d.startDate || '', category: d.category || '', client: d.client || '', code: d.code || '', tasks: d.tasks || [], locations: d.locations || [], roarme: d.roarme || null, updatedAt: row.updated_at } })
+    const set = body?.set || {}
+    const next: any = { ...d, updatedAt: new Date().toISOString() }
+    for (const k of ['title', 'status', 'startDate', 'category']) if (typeof set[k] === 'string') next[k] = set[k].slice(0, 300)
+    if (set.roarme && typeof set.roarme === 'object') next.roarme = { room: str(set.roarme.room, 60) }
+    if (Array.isArray(body?.tasks)) next.tasks = body.tasks.slice(0, 2000)
+    if (Array.isArray(body?.locations)) next.locations = body.locations.slice(0, 500)
+    const { error } = await db.from('projects').update({ data: next }).eq('id', pid).eq('workspace_id', ws)
+    if (error) return json({ error: error.message }, 500)
+    return json({ ok: true })
+  }
+  if (action === 'project.create') {
+    const { data: rows } = await db.from('projects').select('data').eq('workspace_id', ws)
+    const { data: w } = await db.from('workspaces').select('settings').eq('id', ws).maybeSingle()
+    const prefix = String(w?.settings?.projectCodePrefix ?? 'TML').trim()
+    const year = new Date().getFullYear()
+    const re = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-${year}-(\\d+)$`, 'i')
+    const used = (rows || []).map((r: any) => re.exec(r.data?.code || '')).filter(Boolean).map((m: any) => Number(m[1]))
+    const code = prefix ? `${prefix}-${year}-${String(Math.max(0, ...used) + 1).padStart(3, '0')}` : ''
+    const id = Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('')
+    const now = new Date().toISOString()
+    const data = {
+      id, title: str(body?.title, 300) || 'Untitled project', category: str(body?.category, 60) || 'Music Video', status: str(body?.status, 60) || 'Development',
+      client: '', director: '', producer: '', startDate: str(body?.startDate, 20), endDate: '', notes: '', code, color: '#C8503F', createdAt: now, updatedAt: now,
+      script: { text: '', fileName: '', format: '', importedAt: '' }, scenes: [], shootingDays: [], locations: [], contacts: [], shots: [], tasks: [],
+      budget: { lines: [], contingencyPct: 10, currency: 'EUR', cap: '' }, gear: [], vendors: [], post: { cuts: [], deliverables: [] }, scriptVersions: [],
+      music: { tracks: [], activeTrackId: '', sections: [], notes: '' }, breakdownStatus: 'none', hiddenTabs: [],
+      roarme: { room: str(body?.room, 60) },
+    }
+    const { error } = await db.from('projects').insert({ id, workspace_id: ws, data })
+    if (error) return json({ error: error.message }, 500)
+    return json({ ok: true, id, code })
   }
 
   const ext = str(body?.ext, 200)
