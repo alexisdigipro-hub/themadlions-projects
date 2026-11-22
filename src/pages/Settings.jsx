@@ -490,6 +490,14 @@ export default function Settings() {
           </section>
         )}
 
+        {isAdmin && remote && (
+          <section className="panel" data-tab="integrations" data-k="apps">
+            <h2>Connected apps</h2>
+            <p className="muted small">A key lets another app write into this hub. Put it in a RoarMe project (Project Settings, TML Hub) and every place in that project&rsquo;s Location Scout goes into Locations here by itself, with its photos. Remove a key and the app can write no more.</p>
+            <ConnectedAppsPanel toast={toast} />
+          </section>
+        )}
+
         {isAdmin && (
           <section className="panel" data-tab="integrations" data-k="maps">
             <h2>Google Maps</h2>
@@ -1157,6 +1165,65 @@ function CalendarFeedsPanel({ toast }) {
       ) : (
         <div className="row-actions"><Button variant="primary" onClick={() => setDraft({ name: '', url: '', color: PALETTE[feeds.length % PALETTE.length] })}>Add a calendar</Button></div>
       )}
+    </div>
+  )
+}
+
+/* Keys for apps that write into the hub (Alex, 22 Nov 2026; supabase/roarme-bridge.sql, Edge Function hub-bridge).
+   A new key is shown once, here, with Copy; the hub keeps only its SHA-256. */
+function ConnectedAppsPanel({ toast }) {
+  const [keys, setKeys] = useState(null)
+  const [label, setLabel] = useState('RoarMe')
+  const [fresh, setFresh] = useState('')
+  const [busy, setBusy] = useState(false)
+  const load = async () => {
+    const { data, error } = await supabase.from('hub_keys').select('id, label, last4, created_at, last_used_at').is('revoked_at', null).order('created_at', { ascending: false })
+    setKeys(error ? [] : data || [])
+  }
+  useEffect(() => { load() }, [])
+  const make = async () => {
+    setBusy(true)
+    const { data, error } = await supabase.rpc('hub_key_create', { p_label: label })
+    setBusy(false)
+    if (error) { toast(error.message, 'error'); return }
+    setFresh(data); load()
+  }
+  const remove = async (id) => {
+    const { error } = await supabase.rpc('hub_key_revoke', { p_id: id })
+    if (error) toast(error.message, 'error'); else { toast('Key removed', 'ok'); load() }
+  }
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(fresh); toast('Copied', 'ok') } catch { toast('Select it and copy by hand.', 'error') }
+  }
+  const when = (d) => (d ? new Date(d).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }) : '')
+  return (
+    <div className="stack">
+      {fresh && (
+        <div className="hubkey-fresh">
+          <span className="small">Your new key. Copy it now: it is not shown again.</span>
+          <code className="hubkey-code">{fresh}</code>
+          <div className="row-actions">
+            <Button variant="primary" onClick={copy}>Copy</Button>
+            <Button variant="ghost" onClick={() => setFresh('')}>Done</Button>
+          </div>
+        </div>
+      )}
+      {keys === null ? <p className="muted small">Loading…</p> : keys.length > 0 && (
+        <ul className="hubkey-list">
+          {keys.map((k) => (
+            <li key={k.id}>
+              <span className="grow"><b>{k.label}</b><span className="muted small"> · ends {k.last4} · made {when(k.created_at)}{k.last_used_at ? ` · last used ${when(k.last_used_at)}` : ' · not used yet'}</span></span>
+              <Confirm onConfirm={() => remove(k.id)} label="Remove">Remove</Confirm>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Field label="Name of the new key">
+        <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="RoarMe" maxLength={60} />
+      </Field>
+      <div className="row-actions">
+        <Button variant="primary" onClick={make} disabled={busy}>{busy ? 'Making…' : 'Make a Key'}</Button>
+      </div>
     </div>
   )
 }

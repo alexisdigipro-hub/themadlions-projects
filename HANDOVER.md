@@ -37,6 +37,15 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (22 Nov 2026: RoarMe writes locations into the hub)
+- Alex: "a key from the hub, put in RoarMe, and every location made there goes straight into the hub", step 1 of selling the hub one day as an empty, monthly product that RoarMe (and other apps) connect to.
+- **supabase/roarme-bridge.sql** (run 22 Nov by Claude): hub_keys (only SHA-256 kept, admins of the workspace read their own), hub_key_create(label) returns the key once (tmlhub_ + 48 hex), hub_key_revoke(id).
+- **supabase/functions/hub-bridge** (deployed 22 Nov, verify_jwt off; the key in x-hub-key is the check): hello, location.put { ext, loc, photos, from } (library row kind 'location', id 'rm' + 12 hex of sha256(ws|ext), so the same place updates; photos fetched only from RoarMe's storage, at most 2 MB, copied into the public thumbs bucket; data.source { app, project, ext }), location.delete (only rows with data.source).
+- Settings > Integrations > **Connected apps** (administrators): Make a Key (shown once with Copy), the list with last used, Remove.
+- RoarMe side: Project Settings > TML Hub (roar_hub_links, Edge Function roar-hub in RoarMe's project). Proved end to end through pg_net on 22 Nov (hello, put, delete); photos copying not yet seen with a real RoarMe photo.
+- Next (agreed with Alex): tasks and budget the same way, then both ways, then the hub as a product with many workspaces and a subscription.
+- Alex has nothing to run.
+
 ## Where we stopped (22 Nov 2026: Motion Library)
 - Alex: "a sample book of the animations used in apps, web and desktop apps, starting with Liquid Glass and glass morphs, with names so we understand each other; I want everything, pop-ups too".
 - **public/motion/index.html** = https://hub.themadlions.com/motion/ (static, no login, no build step: plain HTML/CSS/JS, fonts from Google). 134 live animations, each with a code: LG Liquid Glass (12: Lensing, Specular Highlight, Glass Merge, Morphing Menu, Sliding Lens, Jelly Press, Materialize, Tab Bar Minimize, Scroll Edge Effect, Concentric Morph, Liquid Toggle, Adaptive Tint), GM Glass & Materials (12), PU Pop-ups (19), PT Page Transitions (12), MI Micro-interactions (25), LD Loading (12), TX Text (12), SC Scroll (7), D3 3D (5), BG Backgrounds (8), EZ Easing (10 rows in one tile). When Alex names a code, build that one.
