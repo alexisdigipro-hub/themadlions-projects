@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
   if (action === 'projects.list') {
     const { data: rows, error } = await db.from('projects').select('id, data, updated_at').eq('workspace_id', ws)
     if (error) return json({ error: error.message }, 500)
-    return json({ ok: true, projects: (rows || []).map((r: any) => ({ id: r.id, title: r.data?.title || '', status: r.data?.status || '', startDate: r.data?.startDate || '', code: r.data?.code || '', createdAt: r.data?.createdAt || '', room: r.data?.roarme?.room || '', updatedAt: r.updated_at })) })
+    return json({ ok: true, projects: (rows || []).map((r: any) => ({ id: r.id, title: r.data?.title || '', status: r.data?.status || '', startDate: r.data?.startDate || '', code: r.data?.code || '', createdAt: r.data?.createdAt || '', room: r.data?.roarme?.room || '', request: r.data?.roarme?.request || '', delivered: r.data?.status === 'Delivered', updatedAt: r.updated_at })) })
   }
   if (action === 'project.get' || action === 'project.put') {
     const pid = str(body?.id, 40)

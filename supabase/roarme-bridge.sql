@@ -42,3 +42,11 @@ begin
 end $$;
 revoke all on function hub_key_revoke(uuid) from public, anon;
 grant execute on function hub_key_revoke(uuid) to authenticated;
+
+-- does this workspace have an app linked (a key that was used)? For the project's Create PROject button, any member
+create or replace function hub_has_app() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from hub_keys where workspace_id = my_ws() and revoked_at is null and last_used_at is not null)
+$$;
+revoke all on function hub_has_app() from public, anon;
+grant execute on function hub_has_app() to authenticated;

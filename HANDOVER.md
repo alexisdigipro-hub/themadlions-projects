@@ -44,6 +44,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Settings > Integrations > **Connected apps** (administrators): Make a Key (shown once with Copy), the list with last used, Remove.
 - RoarMe side: Project Settings > TML Hub (roar_hub_links, Edge Function roar-hub in RoarMe's project). Proved end to end through pg_net on 22 Nov (hello, put, delete); photos copying not yet seen with a real RoarMe photo.
 - Since the evening of 22 Nov the key goes in RoarMe's Settings > Production Hub, per account, and every group in RoarMe's PROJECTS is a project here, both ways (hub-bridge v2, deployed: projects.list, project.get, project.create with the next TML code, project.put; a project tied to RoarMe carries data.roarme.room). Title, status, startDate, category, tasks and locations are kept the same; a project made here after linking brings a new group there.
+- **Create PROject** (Alex, 22 Nov): an active project's Overview has Create PROject (only while a Connected-apps key has been used: hub_has_app() in supabase/roarme-bridge.sql, run 22 Nov). It writes data.roarme.request; RoarMe's pg_cron (every minute) makes the group, ties it and the button turns into In RoarMe. hub-bridge v3 lists request and delivered.
 - Next (agreed with Alex): Merge two projects here (a duplicate made on both sides), then PROJECTS as a subscription in RoarMe (30-day trial counted in days used, 5 projects; free with the hub), then payments (Stripe, with RevenueCat for Apple).
 - Alex has nothing to run.
 
