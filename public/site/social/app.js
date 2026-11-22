@@ -1924,12 +1924,36 @@ async function postFlow(opts = {}) {
   const LIB_EXT = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', heic: 'image/heic', heif: 'image/heif', gif: 'image/gif', webp: 'image/webp', mov: 'video/quicktime', mp4: 'video/mp4', m4v: 'video/x-m4v' };
   // the whole photo or video of the library as a File: read through the shell's own file address, or, if the page may
   // not fetch that, through the Filesystem plugin
+  const hasChunks = () => { try { const fs = (shell?.PluginHeaders || []).find((x) => x?.name === 'Filesystem'); return !!fs?.methods?.some((m) => m?.name === 'readFileInChunks'); } catch { return false; } };
+  const unb64 = (d) => { const bin = atob(d); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
+  function chunked(path, type) {
+    if (!hasChunks() || !shell.nativeCallback) return Promise.reject(new Error('video'));
+    return new Promise((ok, no) => {
+      const parts = []; let quiet = null; let done = false;
+      const end = () => { if (done) return; done = true; clearTimeout(quiet); parts.length ? ok(new Blob(parts, { type })) : no(new Error('video')); };
+      const wait = (ms) => { clearTimeout(quiet); quiet = setTimeout(end, ms); };
+      wait(20000);
+      try {
+        shell.nativeCallback('Filesystem', 'readFileInChunks', { path, chunkSize: 1024 * 1024 }, (res, err) => {
+          if (done) return;
+          if (err) { done = true; clearTimeout(quiet); return no(err); }
+          const d = res?.data;
+          if (!d) return end();
+          parts.push(unb64(d)); wait(4000);
+        });
+      } catch (e) { done = true; clearTimeout(quiet); no(e); }
+    });
+  }
   async function libFile(a) {
     const r = await libCall()('getMediaByIdentifier', { identifier: a.identifier });
     const ext = (/\.([a-z0-9]+)(?:\?|$)/i.exec(r.path || '')?.[1] || (a.duration ? 'mov' : 'jpg')).toLowerCase();
     const type = LIB_EXT[ext] || (a.duration ? 'video/quicktime' : 'image/jpeg');
     let blob = null;
     try { const src = shell.convertFileSrc ? shell.convertFileSrc(r.path) : r.path; const res = await fetch(src); if (res.ok) blob = await res.blob(); } catch { /* next way */ }
+    // a video is never read in one piece (Alex, 22 Nov: the app closed itself on a video from the library): the plugin
+    // turns the whole file into one string in the app's own memory, and iOS ends an app that takes that much. It is read
+    // a megabyte at a time where the app has readFileInChunks; where it does not, a video goes through the Gallery button.
+    if ((!blob || !blob.size) && a.duration) blob = await chunked(r.path, type);
     if (!blob || !blob.size) { const d = await shell.nativePromise('Filesystem', 'readFile', { path: r.path }); const bin = atob(d.data); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); blob = new Blob([u], { type }); }
     let file = new File([blob], `${a.duration ? 'VID' : 'IMG'}_${Date.now()}.${ext}`, { type });
     if (/^image\/hei[cf]$/.test(type)) { try { file = await shrink(file); } catch { /* as it is */ } }
@@ -1945,13 +1969,13 @@ async function postFlow(opts = {}) {
     if (old) old.replaceWith(libGrid()); else if (layer.isConnected && layer.querySelector('.pf-one')) stepOne();
   }
   async function libTap(a) {
-    if (st.mode === 'story') { if (lib.busy.size) return; lib.busy.add(a.identifier); stepOne(); try { const f = await libFile(a); lib.busy.delete(a.identifier); return toStory(f); } catch { lib.busy.delete(a.identifier); toast(t('This one could not be opened. Try the Gallery button.')); return stepOne(); } }
+    if (st.mode === 'story') { if (lib.busy.size) return; lib.busy.add(a.identifier); stepOne(); try { const f = await libFile(a); lib.busy.delete(a.identifier); return toStory(f); } catch { lib.busy.delete(a.identifier); toast(a.duration ? t('Open this video with the Gallery button.') : t('This one could not be opened. Try the Gallery button.')); return stepOne(); } }
     const at = st.items.findIndex((x) => x.lib === a.identifier);
     if (at >= 0) { const [gone] = st.items.splice(at, 1); if (gone?.url) URL.revokeObjectURL(gone.url); st.cur = Math.min(st.cur, Math.max(0, st.items.length - 1)); return stepOne(); }
     if (lib.busy.has(a.identifier)) return;
     lib.busy.add(a.identifier); stepOne();
     try { const f = await libFile(a); st.items.forEach((x) => x.url && URL.revokeObjectURL(x.url)); st.items = [{ file: f, cover: null, lib: a.identifier }]; st.cur = 0; }
-    catch { toast(t('This one could not be opened. Try the Gallery button.')); }
+    catch { toast(a.duration ? t('Open this video with the Gallery button.') : t('This one could not be opened. Try the Gallery button.')); }
     lib.busy.delete(a.identifier); stepOne();
   }
   const libGrid = () => {

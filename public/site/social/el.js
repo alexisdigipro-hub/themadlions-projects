@@ -949,6 +949,7 @@ window.RD_EL = {
 "Comments": "Σχόλια",
 "Take a photo": "Λήψη φωτογραφίας",
 "This one could not be opened. Try the Gallery button.": "Αυτό δεν άνοιξε. Δοκίμασε το κουμπί Gallery.",
+"Open this video with the Gallery button.": "Άνοιξε αυτό το βίντεο από το κουμπί Gallery.",
 "Thread": "Thread",
 "New thread": "Νέο thread",
 "New story": "Νέο story",
