@@ -10027,3 +10027,6 @@ html[data-theme='dark'] .ov-acts .add-pill.ov-roar:not(.on), .soft-dark .ov-acts
 /* Unlink from RoarMe beside In RoarMe (Alex, 22 Nov) */
 .ov-acts .add-pill.ov-unlink { color: inherit; opacity: .75; }
 .ov-acts .add-pill.ov-unlink:hover { opacity: 1; }
+/* PROjects in RoarMe's gold (Alex, 22 Nov: "PROjects, gold, everywhere"): the words of Create PROjects in the same gold fall */
+.ov-acts .add-pill.ov-roar .ov-gold { background: linear-gradient(135deg, #d9a93a 0%, #a8761f 45%, #d4a03a 70%, #8a5e14 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+html[data-theme='dark'] .ov-acts .add-pill.ov-roar .ov-gold, .soft-dark .ov-acts .add-pill.ov-roar .ov-gold { background-image: linear-gradient(135deg, #ffe08a 0%, #e0ad45 45%, #ffd56e 70%, #c18a2b 100%); }

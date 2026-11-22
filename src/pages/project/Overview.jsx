@@ -170,7 +170,7 @@ export default function Overview() {
   // Share with collaborators (Alex, 18 Nov): the window, and the open link following the project
   const [sharing, setSharing] = useState(false)
   useProjectShareSync(project)
-  // is RoarMe linked to this hub (a Connected-apps key that was used)? Then active projects offer Create PROject
+  // is RoarMe linked to this hub (a Connected-apps key that was used)? Then active projects offer Create PROjects
   const [hubApp, setHubApp] = useState(false)
   useEffect(() => { if (!supabase) return; supabase.rpc('hub_has_app').then(({ data }) => setHubApp(data === true), () => {}) }, [])
   const [ordinoOpen, setOrdinoOpen] = useState(false)
@@ -311,7 +311,7 @@ export default function Overview() {
               {/* the project's few actions, always in the same place (Alex, 28 Oct: "I was looking for Edit"):
                   + Add (everything that can be added, in groups), Edit, and ⋯ for Duplicate and Lock */}
               <span className="ov-acts">
-                {/* Create PROject (Alex, 22 Nov): an active project asks RoarMe for its group; RoarMe makes it within a
+                {/* Create PROjects (Alex, 22 Nov): an active project asks RoarMe for its group; RoarMe makes it within a
                     minute (roar-hub cron) and ties it, then this shows In RoarMe */}
                 {remote && hubApp && (project.roarme?.room
                   ? <>
@@ -320,8 +320,8 @@ export default function Overview() {
                       {can(user, 'projects', 'edit') && <button type="button" className="add-pill ov-unlink" title="Unlink from RoarMe" onClick={() => { if (!window.confirm('Unlink this project from RoarMe? The project here and the group in RoarMe both stay; they just stop following each other.')) return; edit((p) => { p.roarme = { unlinked: new Date().toISOString() } }); toast('Unlinked from RoarMe', 'ok') }}>{UNLINK_I}<span>Unlink</span></button>}
                     </>
                   : project.status !== 'Delivered' && can(user, 'projects', 'edit') && (project.roarme?.request
-                    ? <span className="add-pill ov-roar wait">{ROAR_I}<span>Creating <b>PRO</b>ject…</span></span>
-                    : <button type="button" className="add-pill ov-roar" onClick={() => { edit((p) => { p.roarme = { request: new Date().toISOString(), by: user?.name || '' } }); toast('The group is being made in RoarMe', 'ok') }}>{ROAR_I}<span>Create <b>PRO</b>ject</span></button>))}
+                    ? <span className="add-pill ov-roar wait">{ROAR_I}<span className="ov-gold">Creating <b>PRO</b>jects…</span></span>
+                    : <button type="button" className="add-pill ov-roar" onClick={() => { edit((p) => { p.roarme = { request: new Date().toISOString(), by: user?.name || '' } }); toast('The group is being made in RoarMe', 'ok') }}>{ROAR_I}<span className="ov-gold">Create <b>PRO</b>jects</span></button>))}
                 {(adds.length > 0 || sections.includes('people')) && (
                   <span className="ov-menu-wrap">
                     <button type="button" className={`add-pill ov-add${menu === 'add' ? ' on' : ''}`} onClick={() => setMenu(menu === 'add' ? '' : 'add')} aria-expanded={menu === 'add'}>{ADD_ICONS.plus}<span>Add</span></button>
