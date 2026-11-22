@@ -158,6 +158,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
   - **View as**: look at the app exactly as one of your people sees it, with a red bar at the top and a Stop button. It is a preview only: nothing can be saved, posted or logged while you are wearing their face. Start it from Settings > Team, or from the person's own profile with **See what Maria sees** (administrators only, not offered for another administrator or someone whose access is off); **Stop** takes you back to the page you started from.
   - A module added to the app after someone joined starts at no access for them, rather than being handed out to everyone the day it ships.
 - Backup and restore as JSON
+- **Motion Library** (https://hub.themadlions.com/motion/, a single static page, public/motion/index.html): a live sample book of interface animations so Alex and Claude can name them the same way. 134 animations in 11 groups (Liquid Glass, Glass & Materials, Pop-ups & Overlays, Page Transitions, Micro-interactions, Loading & Progress, Text, Scroll, 3D & Depth, Backgrounds & Ambient, Easing Curves), each with a code (LG-05, PU-08, EZ-07...), a name, other names it goes by, what it does, where it is used, Replay and Copy. Search box and a category bar on top; tiles play only while on screen.
 
 ## Run locally
 
