@@ -37,6 +37,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (22 Nov 2026: Motion Library)
+- Alex: "a sample book of the animations used in apps, web and desktop apps, starting with Liquid Glass and glass morphs, with names so we understand each other; I want everything, pop-ups too".
+- **public/motion/index.html** = https://hub.themadlions.com/motion/ (static, no login, no build step: plain HTML/CSS/JS, fonts from Google). 134 live animations, each with a code: LG Liquid Glass (12: Lensing, Specular Highlight, Glass Merge, Morphing Menu, Sliding Lens, Jelly Press, Materialize, Tab Bar Minimize, Scroll Edge Effect, Concentric Morph, Liquid Toggle, Adaptive Tint), GM Glass & Materials (12), PU Pop-ups (19), PT Page Transitions (12), MI Micro-interactions (25), LD Loading (12), TX Text (12), SC Scroll (7), D3 3D (5), BG Backgrounds (8), EZ Easing (10 rows in one tile). When Alex names a code, build that one.
+- Source is one file; each demo is an add({...}) entry with its own html, css and init. Lensing is a scaled copy of the pattern (works in Safari, no SVG backdrop filter); glass merge uses the SVG filter #lgGoo.
+- Alex has nothing to run.
+
 ## Where we stopped (18 Nov 2026: a project shared with outside collaborators; Song map fresh)
 - Alex: "a link to the project for outside collaborators: they see the progress and what we have put in, they may leave comments, otherwise they can do nothing; and safe".
 - **Overview > ⋯ > Share with collaborators** (components/ProjectShare.jsx, Share edit permission, online only): one link per project (shares kind 'project', ref project:<id>, page /pj/<token> = pages/PublicProject.jsx, short link go.themadlions.com/?pj/...). Sections to show (Progress, Schedule, Tasks, Team, Locations, Scenes), Copy link, a code (Add a code, newPin), Closes on, Close / Open again, Delete, Update now, and the comments list. lib/projectShare.js projectSnapshot writes only those sections and never money, phones, emails, notes, files, chat or the script's text; while the link is open, Overview re-writes the snapshot 4 s after any change (useProjectShareSync).
