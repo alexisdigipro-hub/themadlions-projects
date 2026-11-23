@@ -10035,7 +10035,7 @@ html[data-theme='dark'] .ov-acts .add-pill.ov-roar .ov-gold, .soft-dark .ov-acts
    each, so the five never run off the card (Alex, 23 Nov: "what is going on here"). Desktop untouched. */
 @media (max-width: 820px) {
   html[data-theme] body .overview .ov-acts { flex-wrap: wrap; row-gap: 8px; min-width: 0; }
-  html[data-theme] body .overview .ov-acts > .ov-roar, html[data-theme] body .overview .ov-acts > .ov-unlink { order: 5; flex: 1 1 0; min-width: 0; justify-content: center; white-space: nowrap; }
+  html[data-theme] body .overview .ov-acts > .ov-roar, html[data-theme] body .overview .ov-acts > .ov-unlink { order: 5; flex: 1 0 calc(50% - 4px); min-width: 0; justify-content: center; white-space: nowrap; }
   html[data-theme] body .overview .ov-acts > .ov-roar span { white-space: nowrap; }
   html[data-theme] body .overview .progress-main { min-width: 0; }
 }
