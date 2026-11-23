@@ -37,6 +37,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (23 Nov 2026: duplicate an estimate)
+- Alex: "I want to be able to duplicate these" (Outbox, the cost estimations). Each estimate row has **Duplicate** (copy icon, administrators, Deliveries.jsx duplicateEstimate): it opens the estimation window with the same content, title + " (copy)", no version, a new id; nothing exists until Publish, which makes a new link. The original and its replies stay as they are.
+
 ## Where we stopped (22 Nov 2026: RoarMe writes locations into the hub)
 
 **23 Nov 2026 (RoarMe's PROjects and the hub):** hub-bridge is at v10. project.get now also gives photoLinks (whole photos of a project's locations, pCloud links valid for a month window), ordinos (the project's published Roardino ordinos with the crew's go link) and music[].keep (song links for two to three months). New actions pay.meta / pay.job / pay.receipt: RoarMe's $ in a project's chat sends My Payment (a worklog job in that person's My Finance, source "roarme", plus a "From My work" budget line, refused when the budget already pays them) and Expenses (a receipt line with its photo or PDF in the files bucket, notes "From RoarMe"; paid by the person, a refund job in My Finance). The person is matched by their RoarMe email against members.email (LIKE wildcards escaped). Nothing to run by hand.

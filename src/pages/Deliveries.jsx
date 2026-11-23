@@ -103,6 +103,7 @@ const ICO = {
   unlock: ico(<><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 7.5-2" /></>),
   trash: ico(<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />),
   plus: ico(<path d="M12 5v14M5 12h14" />),
+  copy: ico(<><rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2.5" /><path d="M15.5 8.5V6A2 2 0 0 0 13.5 4H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5" /></>),
   eye: ico(<><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></>),
   // held until paid (Alex, 10 Nov): a coin with a lock's bar; paid: a check in a circle
   hold: ico(<><circle cx="12" cy="12" r="8.5" /><path d="M14.5 9.2a3 3 0 0 0-2.5-1.2c-1.5 0-2.6.8-2.6 2s1.1 1.7 2.6 2 2.6.8 2.6 2-1.1 2-2.6 2a3 3 0 0 1-2.6-1.3M12 6.5v1.5M12 16v1.5" /></>),
@@ -560,6 +561,13 @@ export default function Deliveries() {
       look: d.look || {},
     })
   }
+  /* Duplicate (Alex, 23 Nov: "I want to duplicate these"): the estimate's content in a new one, a new link once
+     published; the original and its replies stay as they are. */
+  const duplicateEstimate = async (r) => {
+    await openEstimate(r)
+    setEdraft((d) => d && ({ ...d, ref: undefined, baseAt: '', id: uid(), title: d.title ? `${d.title} (copy)` : '', version: '' }))
+    toast('A copy: change what you need and publish it as a new estimate', 'ok')
+  }
   const pickEstimateProject = (projectId) => {
     const p = state.projects.find((x) => x.id === projectId)
     // Title, client and nothing else. The project's budget is a different thing and stays out of this.
@@ -756,6 +764,7 @@ export default function Deliveries() {
                     ? <button className="deliv-tool deliv-tool-paid" title="Paid: open the files" aria-label="Paid: open the files" onClick={() => setPayLock(r, false)}>{tool(ICO.paid, 'Paid · open files')}</button>
                     : <button className="deliv-tool" title="Hold the files until paid" aria-label="Hold the files until paid" onClick={() => setPayLock(r, true)}>{tool(ICO.hold, 'Hold until paid')}</button>)}
                   {editable && isAdmin && r.isEstimate && singleTarget && <button className="deliv-tool" title="Update" aria-label="Update" onClick={() => openEstimate(r)}>{tool(ICO.edit, 'Update')}</button>}
+                  {editable && isAdmin && r.isEstimate && singleTarget && <button className="deliv-tool" title="Duplicate" aria-label="Duplicate" onClick={() => duplicateEstimate(r)}>{tool(ICO.copy, 'Duplicate')}</button>}
                   {editable && r.opens !== undefined && (
                     <button className="deliv-tool" title={g.shut ? 'Reopen' : 'Close the link'} aria-label={g.shut ? 'Reopen' : 'Close the link'} onClick={() => setShut(g.key, !g.shut)}>{tool(g.shut ? ICO.unlock : ICO.lock, g.shut ? 'Reopen all' : one ? 'Close' : 'Close all')}</button>
                   )}
