@@ -20,10 +20,10 @@
 // The Lab's way around (Alex, 29 Oct: "from an app's page you can't get anywhere: put the other apps and the home page"):
 // a round button in the top bar opens the menu: The Mad Lions, the Lab, and every app with its icon, this one marked.
 ;(() => {
-  const SITE = /themadlions\.com$/.test(location.hostname) || location.hostname === 'roartransfer.com' ? 'https://themadlions.com/' : new URL('../'.repeat(location.pathname.includes('/lab/') ? 2 : 1), location.href).href
+  const SITE = /themadlions\.com$/.test(location.hostname) || location.hostname === 'roartransfer.com' || location.hostname === 'roarme.app' ? 'https://themadlions.com/' : new URL('../'.repeat(location.pathname.includes('/lab/') ? 2 : 1), location.href).href
   const isEl = () => document.documentElement.lang === 'el' || /\/el\//.test(location.pathname)
   const APPS = [
-    ['roarme', 'RoarMe', 'roarme/', 'The messenger for crews', 'Το chat για συνεργεία'],
+    ['roarme', 'RoarMe', 'https://roarme.app/', 'The messenger for crews', 'Το chat για συνεργεία'],
     ['roardino', 'Roardino', 'lab/roardino/', 'The call sheet, in one link', 'Το ορντίνο, σε ένα link'],
     ['roarmail', 'RoarMail', 'lab/roarmail/', 'Every mailbox, one inbox', 'Όλα τα mail, ένα inbox'],
     ['roarlist', 'RoarList', 'lab/roarlist/', 'The shot list', 'Η λίστα πλάνων'],
@@ -34,7 +34,7 @@
     ['roarmorph', 'RoarMorph', 'lab/roarmorph/', 'Convert and compress', 'Μετατροπή και συμπίεση'],
     ['roarplay', 'RoarPlay', 'lab/roarplay/', 'Plays everything', 'Παίζει τα πάντα'],
   ]
-  const here = (APPS.find(([k]) => location.pathname.includes('/' + k + '/') || (k === 'roartransfer' && location.hostname === 'roartransfer.com')) || [])[0]
+  const here = (APPS.find(([k]) => location.pathname.includes('/' + k + '/') || (k === 'roartransfer' && location.hostname === 'roartransfer.com') || (k === 'roarme' && location.hostname === 'roarme.app')) || [])[0]
   const bar = document.querySelector('header.bar, .bar')
   if (!bar) return
   const href = (p) => (/^https?:/.test(p) ? p : SITE + p)
