@@ -12,7 +12,8 @@
 //                                 whether it was unlinked (from either side; Alex, 22 Nov: a delete or Unlink only unties)
 //   project.get { id }         -> the project's title, status, startDate, category, client, artist, tasks, locations (with
 //                                 libPhotos, the library's photos, when a location has none of its own), cover (coverThumb) and
-//                                 music (each song with a link good for a day: pCloud through the pcloud function, or audio)
+//                                 music (each song with a link good for a day: pCloud through the pcloud function, or audio),
+//                                 photoLinks (whole photos of the places) and ordinos (the published ones, with the crew's link)
 //   project.create { title, status, startDate, category, room } -> a new project with the next TML-YYYY-NNN code
 //   project.put { id, set, tasks?, locations? } -> sets title / status / startDate / category / roarme ({ room } or
 //                                 { unlinked: true }) and, when sent,
@@ -37,10 +38,13 @@ const TYPES = ['Interior', 'Exterior', 'Both']
 const FULL = Deno.env.get('PCLOUD_FULL_TOKEN') || ''
 let signKey: CryptoKey | null = null
 async function pcloudSigned(fileid: number | string, hours = 24) {
+  return pcloudSignedAt(fileid, Math.floor(Date.now() / 1000) + hours * 3600)
+}
+async function pcloudSignedAt(fileid: number | string, until: number) {
   if (!FULL) return ''
   const enc = new TextEncoder()
   signKey ||= await crypto.subtle.importKey('raw', await crypto.subtle.digest('SHA-256', enc.encode('pcloud-stream:' + FULL)), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-  const t = `file.${fileid}.${Math.floor(Date.now() / 1000) + hours * 3600}`
+  const t = `file.${fileid}.${until}`
   const b = new Uint8Array(await crypto.subtle.sign('HMAC', signKey, enc.encode(t)))
   const sig = btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '').slice(0, 32)
   return `${Deno.env.get('SUPABASE_URL')}/functions/v1/pcloud?s=${t}.${sig}`
@@ -96,9 +100,27 @@ Deno.serve(async (req) => {
         if (!url) continue
         const pk: number[] = Array.isArray(t.peaks) ? t.peaks : []
         const peaks = pk.length > 240 ? Array.from({ length: 240 }, (_, i) => pk[Math.floor(i * pk.length / 240)]) : pk
-        music.push({ id: t.id, name: `${t.name || 'Song'}.${t.ext || 'mp3'}`, ext: t.ext || '', kind: t.kind || '', bytes: t.bytes || 0, duration: t.duration || 0, peaks, url, addedAt: t.addedAt || '', until: Date.now() + 86000 * 1000 })
+        // keep: a link that lasts two to three months (changing once a month), for a song sent on into another chat
+        const keepUntil = (Math.floor(Date.now() / 1000 / 2592000) + 3) * 2592000
+        let keep = ''
+        if (t.fileid) keep = await pcloudSignedAt(t.fileid, keepUntil)
+        else if (t.path) { const { data: sk } = await db.storage.from('audio').createSignedUrl(t.path, keepUntil - Math.floor(Date.now() / 1000)); keep = sk?.signedUrl || '' }
+        music.push({ id: t.id, name: `${t.name || 'Song'}.${t.ext || 'mp3'}`, ext: t.ext || '', kind: t.kind || '', bytes: t.bytes || 0, duration: t.duration || 0, peaks, url, keep, addedAt: t.addedAt || '', until: Date.now() + 86000 * 1000 })
       }
-      return json({ ok: true, project: { id: pid, title: d.title || '', status: d.status || '', startDate: d.startDate || '', category: d.category || '', client: d.client || '', artist: d.artist || '', code: d.code || '', tasks: d.tasks || [], locations: locs.map((l) => (lib[l.libraryId] ? { ...l, libPhotos: lib[l.libraryId] } : l)), cover: d.coverThumb || '', music, roarme: d.roarme || null, updatedAt: row.updated_at } })
+      // the whole photos of the places, for RoarMe's viewer (Alex, 22 Nov: "the photos are very small"): pCloud links that
+      // last a month and change only once a month, so the scouts kept in RoarMe do not change on every sync
+      const photoLinks: Record<string, string> = {}
+      const until = (Math.floor(Date.now() / 1000 / 2592000) + 2) * 2592000
+      for (const l of locs) for (const p of [...(l.photos || []), ...(lib[l.libraryId] || [])].slice(0, 80)) {
+        if (p?.id && p.fileid && !photoLinks[p.id]) photoLinks[p.id] = await pcloudSignedAt(p.fileid, until)
+      }
+      // the project's published ordinos (Roardino in the hub), each with the crew's link (Alex, 22 Nov)
+      const { data: ords } = await db.from('roardino_ordinos').select('token, published, published_at').eq('workspace_id', ws).eq('project_id', pid).not('published_at', 'is', null).order('published_at', { ascending: false }).limit(10)
+      const ordinos = (ords || []).filter((o: any) => o.token).map((o: any) => {
+        const pb = o.published || {}, dy = pb.day || {}, lc = pb.loc || {}
+        return { token: o.token, url: `https://go.themadlions.com/?o/${o.token}`, label: str(dy.label, 60) || 'Ordino', title: str(pb.project?.title, 200).trim(), artist: str(pb.project?.artist, 200).trim(), date: str(dy.date, 20), call: str(dy.callTime, 10), place: str(lc.name, 200).trim(), accent: str(pb.look?.accent, 20), hub: true }
+      })
+      return json({ ok: true, project: { ordinos, photoLinks, id: pid, title: d.title || '', status: d.status || '', startDate: d.startDate || '', category: d.category || '', client: d.client || '', artist: d.artist || '', code: d.code || '', tasks: d.tasks || [], locations: locs.map((l) => (lib[l.libraryId] ? { ...l, libPhotos: lib[l.libraryId] } : l)), cover: d.coverThumb || '', music, roarme: d.roarme || null, updatedAt: row.updated_at } })
     }
     const set = body?.set || {}
     const next: any = { ...d, updatedAt: new Date().toISOString() }
