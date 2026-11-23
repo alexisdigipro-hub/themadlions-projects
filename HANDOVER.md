@@ -39,6 +39,8 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 ## Where we stopped (22 Nov 2026: RoarMe writes locations into the hub)
 
+**23 Nov 2026 (RoarMe's PROjects and the hub):** hub-bridge is at v10. project.get now also gives photoLinks (whole photos of a project's locations, pCloud links valid for a month window), ordinos (the project's published Roardino ordinos with the crew's go link) and music[].keep (song links for two to three months). New actions pay.meta / pay.job / pay.receipt: RoarMe's $ in a project's chat sends My Payment (a worklog job in that person's My Finance, source "roarme", plus a "From My work" budget line, refused when the budget already pays them) and Expenses (a receipt line with its photo or PDF in the files bucket, notes "From RoarMe"; paid by the person, a refund job in My Finance). The person is matched by their RoarMe email against members.email (LIKE wildcards escaped). Nothing to run by hand.
+
 ### 22 Nov, late: Unlink from RoarMe
 The project Overview has Unlink beside In RoarMe (data.roarme = { unlinked }): the project and the RoarMe group both stay and stop following each other. A project deleted here no longer deletes its RoarMe group (RoarMe only unties it). hub-bridge v6 (deployed): projects.list says unlinked, project.put takes roarme { unlinked: true }. Nothing for Alex to run.
 
