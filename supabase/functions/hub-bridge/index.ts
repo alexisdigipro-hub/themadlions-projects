@@ -32,6 +32,13 @@ const CORS = {
 const json = (body: any, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 const PHOTO_HOSTS = ['bzmjhbnwhdwmncxkqkdl.supabase.co']
 const TYPES = ['Interior', 'Exterior', 'Both']
+// the budget's categories when Settings holds none (as src/lib/budgetCats.js DEFAULT_GROUPS)
+const DEFAULT_CATS = [
+  { cats: ['Story & rights', 'Producer', 'Director', 'Cast', 'Casting'].map((name) => ({ name })) },
+  { cats: ['Production staff', 'Extras', 'Camera', 'Lighting', 'Grip', 'Sound', 'Art & set', 'Props', 'Wardrobe', 'Makeup & hair', 'Locations', 'Studio', 'Transport', 'Catering', 'Equipment rental', 'Production office', 'Travel & accommodation'].map((name) => ({ name })) },
+  { cats: ['Editing', 'Color', 'Sound post', 'Music', 'VFX', 'Titles & graphics', 'Deliverables', 'Subtitles'].map((name) => ({ name })) },
+  { cats: ['Insurance', 'Legal & accounting', 'Marketing', 'Festival & distribution', 'Contingency', 'Misc'].map((name) => ({ name })) },
+]
 
 // a link to a pCloud file that plays without signing in, made the same way as the pcloud function's own (supabase/functions/pcloud,
 // sig / signed): that function passes the file on, since a pCloud link works only from the address that asked for it
@@ -77,6 +84,99 @@ Deno.serve(async (req) => {
     if (error) return json({ error: error.message }, 500)
     return json({ ok: true, projects: (rows || []).map((r: any) => ({ id: r.id, title: r.data?.title || '', status: r.data?.status || '', startDate: r.data?.startDate || '', code: r.data?.code || '', createdAt: r.data?.createdAt || '', room: r.data?.roarme?.room || '', request: r.data?.roarme?.request || '', unlinked: !!r.data?.roarme?.unlinked, delivered: r.data?.status === 'Delivered', updatedAt: r.updated_at })) })
   }
+  // ---------- payments from RoarMe (Alex, 22 Nov: "My Payment and Expenses go straight to the hub") ----------
+  //   pay.meta { id, email }                 -> who that email is in this hub, the budget's categories, the project
+  //   pay.job { id, email, job }              -> a job in that member's My Finance (worklog) and, as the hub's own Add job
+  //                                             does, a line paying them in the project's budget ("From My work")
+  //   pay.receipt { id, email, receipt }     -> a receipt line in the project's budget with its photo or PDF (fetched only
+  //                                             from RoarMe's storage, kept in the files bucket); paid by the member, a
+  //                                             refund owed to them in My Finance
+  if (action === 'pay.meta' || action === 'pay.job' || action === 'pay.receipt') {
+    const pid = str(body?.id, 40)
+    const { data: row } = await db.from('projects').select('data').eq('id', pid).eq('workspace_id', ws).maybeSingle()
+    if (!row) return json({ error: 'That project is not in the hub any more.' }, 404)
+    const d = row.data || {}
+    const email = str(body?.email, 200).trim().toLowerCase()
+    const { data: mem } = email ? await db.from('members').select('user_id, name, email, active').eq('workspace_id', ws).ilike('email', email.replace(/[\\%_]/g, (c) => `\\${c}`)).maybeSingle() : { data: null }
+    const member = mem && mem.active !== false ? { id: mem.user_id, name: mem.name || email } : null
+    const { data: w } = await db.from('workspaces').select('settings').eq('id', ws).maybeSingle()
+    const g = Array.isArray(w?.settings?.budgetCategories) && w.settings.budgetCategories.length ? w.settings.budgetCategories : DEFAULT_CATS
+    const categories: string[] = g.flatMap((x: any) => (x?.cats || []).map((c: any) => str(c?.name, 80))).filter(Boolean)
+    const lines: any[] = Array.isArray(d.budget?.lines) ? d.budget.lines : []
+    const paysYou = member ? lines.find((l: any) => l.memberId === member.id) : null
+    if (action === 'pay.meta') return json({ ok: true, member, categories, project: { title: d.title || '', client: d.client || d.artist || '', startDate: d.startDate || '' }, paysYou: paysYou ? { amount: Number(paysYou.estimate) || 0, description: paysYou.description || '' } : null })
+    const now = new Date().toISOString()
+    const today = now.slice(0, 10)
+    const rid = () => Array.from(crypto.getRandomValues(new Uint8Array(10)), (b) => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('')
+    const saveLines = async (next: any[]) => {
+      const nd = { ...d, budget: { ...(d.budget || {}), lines: next }, updatedAt: now }
+      const { error } = await db.from('projects').update({ data: nd }).eq('id', pid).eq('workspace_id', ws)
+      if (error) throw new Error(error.message)
+    }
+    try {
+      if (action === 'pay.job') {
+        if (!member) return json({ error: 'Your email is not a member of this hub, so a payment cannot reach your My Finance.' }, 403)
+        const j = body?.job || {}
+        const amount = Math.max(0, Number(j.amount) || 0)
+        const date = /^\d{4}-\d{2}-\d{2}$/.test(str(j.date, 10)) ? str(j.date, 10) : (d.startDate || today)
+        const paid = j.status === 'paid'
+        if (paysYou) return json({ error: `This project already pays you in its budget${paysYou.description ? ` ("${paysYou.description}")` : ''}. Edit that one in My Finance.` }, 409)
+        let budgetLineId = ''
+        if (amount > 0) {
+          const role = categories.includes(str(j.role, 80)) ? str(j.role, 80) : 'Production staff'
+          const line = { id: rid(), category: role, description: str(j.description, 300) || member.name, qty: 1, unit: 'flat', rate: 0, estimate: amount, actual: '', vendor: member.name, memberId: member.id, date, notes: 'From My work' }
+          await saveLines([...lines, line])
+          budgetLineId = line.id
+        }
+        const id = rid()
+        const job = { id, userId: member.id, date, client: d.client || d.artist || d.title || '', description: str(j.description, 300), amount, status: paid ? 'paid' : 'pending', paidDate: paid ? today : '', method: 'Cash', notes: str(j.notes, 2000), projectId: pid, createdAt: now, ...(budgetLineId ? { budgetLineId } : {}), source: 'roarme' }
+        const { error } = await db.from('worklog').insert({ id, workspace_id: ws, user_id: member.id, data: job })
+        if (error) throw new Error(error.message)
+        return json({ ok: true, id })
+      }
+      // pay.receipt
+      const r = body?.receipt || {}
+      const total = Math.max(0, Number(r.total) || 0)
+      if (!(total > 0)) return json({ error: 'Type the total paid.' }, 400)
+      const vat = Math.max(0, Number(r.vatPct) || 0)
+      const net = Math.round((total / (1 + vat / 100)) * 100) / 100
+      const id = rid()
+      let receipt: any = null
+      if (r.file?.url) {
+        let u: URL
+        try { u = new URL(str(r.file.url, 2000)) } catch { return json({ error: 'The receipt file is not right.' }, 400) }
+        if (u.protocol !== 'https:' || !PHOTO_HOSTS.includes(u.hostname)) return json({ error: 'The receipt file is not right.' }, 400)
+        const fr = await fetch(u)
+        if (!fr.ok) return json({ error: 'The receipt could not be read.' }, 400)
+        const type = fr.headers.get('content-type') || str(r.file.type, 80) || 'application/octet-stream'
+        const buf = new Uint8Array(await fr.arrayBuffer())
+        if (buf.byteLength > 25_000_000) return json({ error: 'The receipt is too big.' }, 400)
+        const name = (str(r.file.name, 120) || 'Receipt').replace(/[^\wͰ-Ͽἀ-῿ .-]+/g, '').trim() || 'Receipt'
+        const path = `${pid}/${id}-${name}`
+        const up = await db.storage.from('files').upload(path, buf, { contentType: type, upsert: true })
+        if (up.error) throw new Error(up.error.message)
+        receipt = { id, name, type, size: buf.byteLength, path, thumb: '', addedAt: now, addedBy: member?.id || '', addedByName: member?.name || '' }
+      }
+      const byMe = r.payer === 'me' && member
+      const shop = str(r.shop, 200).trim()
+      const description = str(r.description, 300).trim() || str(r.category, 80) || 'Expense'
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(str(r.date, 10)) ? str(r.date, 10) : today
+      const line = {
+        id, category: categories.includes(str(r.category, 80)) ? str(r.category, 80) : 'Misc', description, qty: 1, unit: 'flat', rate: 0,
+        estimate: net, vatPct: vat || '', actual: '', vendor: byMe ? member!.name : shop, memberId: byMe ? member!.id : '', contactId: '', locationId: '',
+        date, notes: [byMe && shop ? `Receipt from ${shop}` : '', str(r.notes, 2000).trim(), 'From RoarMe'].filter(Boolean).join(' · '),
+        ...(receipt ? { receipt } : {}), ...(byMe ? { reimburse: true } : {}),
+      }
+      await saveLines([...lines, line])
+      if (byMe) {
+        const wid = rid()
+        const job = { id: wid, createdAt: now, userId: member!.id, budgetLineId: id, projectId: pid, date, client: d.client || d.title || '', description: `Refund · ${d.client ? `${d.title} · ${description}` : description}`, amount: total, notes: '', method: 'Bank transfer', status: 'pending', paidDate: '' }
+        await db.from('worklog').insert({ id: wid, workspace_id: ws, user_id: member!.id, data: job })
+      }
+      return json({ ok: true, id })
+    } catch (e) { return json({ error: (e as Error).message }, 500) }
+  }
+
   if (action === 'project.get' || action === 'project.put') {
     const pid = str(body?.id, 40)
     const { data: row } = await db.from('projects').select('data, updated_at').eq('id', pid).eq('workspace_id', ws).maybeSingle()
