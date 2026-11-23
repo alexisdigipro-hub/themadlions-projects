@@ -239,7 +239,7 @@ ${full ? `\n## Ερωτήσεις (Greek)\n${faqEl}\n` : ''}
 ## Other pages
 - [Aibsent Studios](${BASE}aibsent/): the studio's post-production and AI studio, for its films and for others'
 - [The Mad Lions Lab](${BASE}lab/): the tools and apps the studio builds between films
-- [RoarMe](${BASE}roarme/): the messenger for teams by The Mad Lions
+- [RoarMe](https://roarme.app/): the messenger for teams by The Mad Lions
 - [Roardino App](${BASE}lab/roardino/): the shoot's call sheet in one link, with directions, weather, sunrise and sunset, calls by department and the day in the crew's calendar
 - [RoarMail](${BASE}lab/roarmail/): the private mail app for Mac and Windows
 - [RoarList](${BASE}lab/roarlist/): the shot list with a frame for every shot
@@ -257,7 +257,7 @@ ${full ? `\n## Ερωτήσεις (Greek)\n${faqEl}\n` : ''}
 // SoftwareApplication JSON-LD between <!--seo:app--> markers (added before </head> the first time), its own
 // screen as the link preview when it has one, and the Lab page an ItemList of them all. All free (each page says so).
 const APPS = [
-  { path: 'roarme/', name: 'RoarMe', cat: 'CommunicationApplication', os: 'macOS, Windows, Web, iOS, Android', shot: 'lab/roarme.jpg' },
+  { path: 'roarme/', url: 'https://roarme.app/', name: 'RoarMe', cat: 'CommunicationApplication', os: 'macOS, Windows, Web, iOS, Android', shot: 'lab/roarme.jpg' },
   { path: 'lab/roardino/', name: 'Roardino App', cat: 'BusinessApplication', os: 'Web' },
   { path: 'lab/roarmail/', name: 'RoarMail', cat: 'CommunicationApplication', os: 'macOS, Windows', shot: 'lab/roarmail.jpg' },
   { path: 'lab/roarlist/', name: 'RoarList', cat: 'MultimediaApplication', os: 'macOS, Windows, Web' },
@@ -280,7 +280,7 @@ function apps() {
     const desc = attr(html, /<meta name="description" content="([^"]*)"/)
     const img = `${BASE}${a.shot || 'og-image.png'}`
     a.desc = desc
-    html = putBlock(html, ld({ '@type': 'SoftwareApplication', name: a.name, url: `${BASE}${a.path}`, description: desc,
+    html = putBlock(html, ld({ '@type': 'SoftwareApplication', name: a.name, url: a.url || `${BASE}${a.path}`, description: desc,
       applicationCategory: a.cat, operatingSystem: a.os, image: img, ...(a.shot ? { screenshot: img } : {}),
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' }, isAccessibleForFree: true, inLanguage: ['en', 'el'],
       author: { '@id': `${BASE}#org` }, publisher: { '@type': 'Organization', '@id': `${BASE}#org`, name: 'The Mad Lions', url: BASE } }))
@@ -293,7 +293,7 @@ function apps() {
     writeFileSync(lab, putBlock(html, ld({ '@type': 'CollectionPage', name: 'The Mad Lions Lab', url: `${BASE}lab/`, description: attr(html, /<meta name="description" content="([^"]*)"/),
       publisher: { '@type': 'Organization', '@id': `${BASE}#org`, name: 'The Mad Lions', url: BASE },
       mainEntity: { '@type': 'ItemList', itemListElement: [...APPS.filter((a) => a.desc != null), { name: 'RoarTransfer', path: null }].map((a, i) => ({ '@type': 'ListItem', position: i + 1,
-        item: { '@type': 'SoftwareApplication', name: a.name, url: a.path ? `${BASE}${a.path}` : 'https://roartransfer.com/about/', applicationCategory: a.cat || 'UtilitiesApplication', operatingSystem: a.os || 'Web' } })) } })))
+        item: { '@type': 'SoftwareApplication', name: a.name, url: a.url || (a.path ? `${BASE}${a.path}` : 'https://roartransfer.com/about/'), applicationCategory: a.cat || 'UtilitiesApplication', operatingSystem: a.os || 'Web' } })) } })))
     done.push('Lab')
   } catch (e) {}
   console.log(`apps: ${done.join(', ')}`)
@@ -316,7 +316,7 @@ if (live) {
     <xhtml:link rel="alternate" hreflang="x-default" href="${BASE}"/>` : ''}</url>`
   writeFileSync(join(dir, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${[u('', '1.0', 'weekly', true), u('el/', '1.0', 'weekly', true), u('aibsent/', '0.8', 'monthly'), u('lab/', '0.6', 'monthly'), u('roarme/', '0.6', 'monthly'), u('roardino/', '0.6', 'monthly'), u('lab/roardino/', '0.6', 'monthly'), u('lab/roarmail/', '0.6', 'monthly'), u('lab/roarlist/', '0.6', 'monthly'), u('lab/roarwriter/', '0.6', 'monthly'), u('lab/roarkit/', '0.6', 'monthly'), u('lab/roarmorph/', '0.6', 'monthly'), u('lab/roarplay/', '0.6', 'monthly'), u('lab/roarref/', '0.6', 'monthly'), u('lab/roarstudio/', '0.6', 'monthly'), ...['', 'roarmail/', 'roarlist/', 'roarwriter/', 'roarkit/', 'roarmorph/', 'roardino/', 'site/'].map((p) => u(`legal/${p}`, '0.3', 'yearly'))].join('\n')}
+${[u('', '1.0', 'weekly', true), u('el/', '1.0', 'weekly', true), u('aibsent/', '0.8', 'monthly'), u('lab/', '0.6', 'monthly'), u('roardino/', '0.6', 'monthly'), u('lab/roardino/', '0.6', 'monthly'), u('lab/roarmail/', '0.6', 'monthly'), u('lab/roarlist/', '0.6', 'monthly'), u('lab/roarwriter/', '0.6', 'monthly'), u('lab/roarkit/', '0.6', 'monthly'), u('lab/roarmorph/', '0.6', 'monthly'), u('lab/roarplay/', '0.6', 'monthly'), u('lab/roarref/', '0.6', 'monthly'), u('lab/roarstudio/', '0.6', 'monthly'), ...['', 'roarmail/', 'roarlist/', 'roarwriter/', 'roarkit/', 'roarmorph/', 'roardino/', 'site/'].map((p) => u(`legal/${p}`, '0.3', 'yearly'))].join('\n')}
 </urlset>
 `)
   console.log('wrote llms.txt, llms-full.txt, sitemap.xml')
