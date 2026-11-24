@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8">
+<html lang="en" class="booting"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="RoarMask: draw pixel-exact masks for LED screens in the browser. Boxes, rounds, lines, arcs and pen shapes on a grid with rulers, snapping and the screen's LED cabinets, a reference picture to trace, folders, rotation and Combine, any colour or transparent, exported as a PNG or SVG at the screen's exact size. Free with a Roar Account, your masks on any computer.">
 <link rel="canonical" href="https://themadlions.com/lab/roarmask/">
@@ -275,6 +275,11 @@ select.sel{background:var(--panel-2);border:1px solid var(--line);border-radius:
 .gate .gerr{color:#ff7b74}
 .gate .grow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .acct{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:rgba(58,167,232,.16);color:var(--accent);font:700 15px var(--f-ui);cursor:pointer;display:grid;place-items:center}
+.boot-v{display:none}
+html.booting .app,html.booting .home{visibility:hidden}
+html.booting .boot-v{display:grid;position:fixed;inset:0;place-items:center;background:var(--bg);z-index:90}
+.boot-v .brand{font-size:24px;animation:bpulse 1.4s ease-in-out infinite}
+@keyframes bpulse{50%{opacity:.45}}
 .toast{position:fixed;left:50%;bottom:calc(46px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#24272d;border:1px solid var(--line);padding:9px 16px;border-radius:18px;font-size:12.5px;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.4);pointer-events:none;animation:pop .2s}
 
 @media (max-width:820px){
@@ -380,6 +385,7 @@ select.sel{background:var(--panel-2);border:1px solid var(--line);border-radius:
     </aside>
   </div>
 </div>
+<div class="boot-v" aria-hidden="true"><div class="brand">ROAR<b>MASK</b></div></div>
 <div id="gate" class="gate" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <input type="file" id="fileIn" accept=".json,application/json" hidden>
@@ -1918,8 +1924,11 @@ function openHome() {
       </div>
       <div id="hList"></div>
     </div>`;
-  const paint = () => {
+  let painted = '';
+  const paint = force => {
     const lib = libRead(), qq = q.trim().toLowerCase();
+    const sig = JSON.stringify([qq, pv, Object.values(lib).map(p => p && p.doc ? [p.doc.id, p.doc.name, p.t, (p.thumb || '').length] : 0)]);
+    if (!force && sig === painted) return; painted = sig;
     let list = Object.values(lib).filter(p => p && p.doc && (!qq || (p.doc.name || '').toLowerCase().includes(qq)));
     if (pv.sort === 'name') list.sort((a, b) => (a.doc.name || '').localeCompare(b.doc.name || '', undefined, { numeric: true, sensitivity: 'base' }));
     else if (pv.sort === 'size') list.sort((a, b) => b.doc.w * b.doc.h - a.doc.w * a.doc.h);
@@ -1942,7 +1951,7 @@ function openHome() {
         if (a === 'ren') {
           const b = c.querySelector('b'), inp = document.createElement('input'); inp.className = 'hrename'; inp.value = p.doc.name || '';
           b.replaceWith(inp); inp.focus(); inp.select(); let over = false;
-          const done = ok => { if (over) return; over = true; const v = inp.value.trim(); if (ok && v) { const l = libRead(); if (l[p.doc.id]) { l[p.doc.id].doc.name = v; l[p.doc.id].t = Date.now(); libWrite(l); cloudMark(p.doc.id); } if (isCur) { S.doc.name = v; $('#docName').value = v; } } paint(); };
+          const done = ok => { if (over) return; over = true; const v = inp.value.trim(); if (ok && v) { const l = libRead(); if (l[p.doc.id]) { l[p.doc.id].doc.name = v; l[p.doc.id].t = Date.now(); libWrite(l); cloudMark(p.doc.id); } if (isCur) { S.doc.name = v; $('#docName').value = v; } } paint(true); };
           inp.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') done(true); if (ev.key === 'Escape') done(false); });
           inp.addEventListener('blur', () => done(true)); return;
         }
@@ -1981,7 +1990,7 @@ function openHome() {
   });
   if (me) cloudSync().then(() => { if (m.isConnected) paint(); });
   m.addEventListener('keydown', e => { if (e.key === 'Escape' && !S.ghost && !$('.modal-back')) { e.stopPropagation(); close(); } });
-  document.body.appendChild(m); paint();
+  document.body.appendChild(m); paint(); booted();
 }
 function newMaskWindow() {
   const m = openModal(`<h2>New mask<button class="round sm" data-close title="Close"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h2>
@@ -2059,8 +2068,7 @@ async function cloudSync() {
       });
       Object.keys(lib).forEach(id => { if (!seen.has(id) && !dirty[id]) delete lib[id]; }); // deleted on another computer
       libWrite(lib);
-      // the mask open here changed on another computer and not here: take the newer one
-      if (S.doc && !S.ghost && lib[S.doc.id] && !dirty[S.doc.id] && (lib[S.doc.id].t || 0) > (S.loadedT || 0) + 1000 && !$('.home')) { S.loadedT = lib[S.doc.id].t; loadProject({ doc: lib[S.doc.id].doc, shapes: lib[S.doc.id].shapes }, true); }
+      // the mask open here is never reloaded under your hands; a newer copy from another computer opens the next time you open it from Home
       cloudState = cloudState === 'off' ? '' : cloudState; await cloudFlush();
     } catch (e) { cloudState = 'off'; draw(); }
   })().finally(() => { syncing = null; });
@@ -2071,8 +2079,9 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 /* the door: on themadlions.com RoarMask opens with a Roar Account (the same as RoarMe, RoarRef and every Roar app) */
 let gateMode = 'in', mfaFactor = null;
+function booted() { document.documentElement.classList.remove('booting'); }
 function drawGate(msg, err) {
-  const g = $('#gate'); g.hidden = false;
+  const g = $('#gate'); g.hidden = false; booted();
   const keep = $('#gEmail') ? $('#gEmail').value : '';
   const T = { in: ['Sign in to RoarMask', 'Use your Roar Account: the same one as RoarMe, RoarRef and every Roar app. Your masks wait for you on any computer.'], up: ['Create your Roar Account', 'Free. One account for RoarMask and every Roar app.'], mfa: ['One more step', 'Type the 6-digit code from your authenticator app.'] }[gateMode];
   g.innerHTML = `<form class="gate-card" id="gateForm" novalidate>
@@ -2107,7 +2116,12 @@ function drawGate(msg, err) {
   };
   setTimeout(() => { const i = $('#gCode') || ($('#gEmail') && $('#gEmail').value ? $('#gPass') : $('#gEmail')); if (i) i.focus(); }, 30);
 }
+let signing = false;
 async function afterSignIn() {
+  if (signing) return; signing = true;
+  try { await afterSignIn2(); } finally { signing = false; }
+}
+async function afterSignIn2() {
   const aal = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
   if (aal.data && aal.data.nextLevel === 'aal2' && aal.data.currentLevel !== 'aal2') {
     const f = await sb.auth.mfa.listFactors(); const t = f.data && f.data.totp && f.data.totp.find(x => x.status === 'verified');
@@ -2175,7 +2189,7 @@ $('#docName').addEventListener('change', () => commit('Rename mask'));
   new ResizeObserver(() => { const keep = W && H; const cx = keep ? (W / 2 - S.ox) / S.z : 0, cy = keep ? (H / 2 - S.oy) / S.z : 0; sizeCanvases(); if (keep) { S.ox = W / 2 - cx * S.z; S.oy = H / 2 - cy * S.z; draw(); } else fit(); }).observe($('#stageBox'));
   if (document.fonts) document.fonts.ready.then(draw);
   if (!CLOUD) { openStart(); return; }
-  if (!sb) { const g = $('#gate'); g.hidden = false; g.innerHTML = '<div class="gate-card"><div class="brand">ROAR<b>MASK</b></div><h2>RoarMask could not start</h2><p>The sign-in could not load. Check the connection and reload the page.</p></div>'; return; }
+  if (!sb) { booted(); const g = $('#gate'); g.hidden = false; g.innerHTML = '<div class="gate-card"><div class="brand">ROAR<b>MASK</b></div><h2>RoarMask could not start</h2><p>The sign-in could not load. Check the connection and reload the page.</p></div>'; return; }
   sb.auth.getSession().then(({ data }) => { if (data && data.session) afterSignIn(); else drawGate(); }).catch(() => drawGate('No connection. Check the internet and try again.', true));
   sb.auth.onAuthStateChange(ev => {
     if (ev === 'SIGNED_OUT') { me = null; LIB = OLD_LIB; CUR = 'roarmask-cur'; cloudState = ''; const hm = $('.home'); if (hm) hm.remove(); closeModal(); S.ghost = true; loadProject(blank(), true); gateMode = 'in'; drawGate(); }
