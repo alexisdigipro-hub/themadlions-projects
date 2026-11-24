@@ -72,7 +72,30 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stro
 .status b{color:var(--fg);font-weight:500}
 
 .side{border-left:1px solid var(--line);background:var(--panel);overflow:auto;min-height:0}
-.sec{padding:14px 14px 16px;border-bottom:1px solid var(--line)}
+.sec{border-bottom:1px solid var(--line)}
+.sec-head{display:flex;align-items:center;gap:8px;width:100%;height:40px;padding:0 10px 0 14px;border:0;background:transparent;cursor:pointer;font:600 11px/1 var(--f-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--fg)}
+.sec-head:hover{background:rgba(255,255,255,.03)}
+.sec-head .cnt{margin-left:auto;font:500 11px var(--f-num);color:var(--muted);letter-spacing:0}
+.chev{width:14px;height:14px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;flex:none}
+.folded>.sec-head .chev,.folded>.sub-head .chev{transform:rotate(-90deg)}
+.sec-body{padding:2px 14px 16px}
+.sec.folded>.sec-body,.sub.folded>.sub-body{display:none}
+.sub{margin-top:12px}
+.sub-head{display:flex;align-items:center;gap:6px;width:100%;padding:4px 0 8px;border:0;background:transparent;cursor:pointer;font:600 11px/1 var(--f-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.sub-head:hover{color:var(--fg)}
+.sub.folded>.sub-head{padding-bottom:2px}
+.lfoot{display:flex;gap:6px;justify-content:center;padding-top:10px;margin-top:8px;border-top:1px solid var(--line)}
+.layer.drop-above{box-shadow:inset 0 2px 0 var(--accent)}
+.layer.drop-below{box-shadow:inset 0 -2px 0 var(--accent)}
+.layer .nm input{width:100%;background:var(--panel-2);border:1px solid var(--accent);border-radius:6px;padding:2px 6px;outline:none}
+.hlist{display:flex;flex-direction:column;gap:2px;max-height:240px;overflow:auto}
+.hrow{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:9px;cursor:pointer;border:0;background:transparent;text-align:left;font-size:12.5px;color:var(--fg)}
+.hrow:hover{background:rgba(255,255,255,.05)}
+.hrow.cur{background:rgba(58,167,232,.15)}
+.hrow.fut{opacity:.38}
+.hrow .hn{font:500 10.5px var(--f-num);color:var(--muted);min-width:22px}
+.body.no-side{grid-template-columns:56px 1fr 0}
+.body.no-side .side{display:none}
 .sec h3{margin:0 0 10px;font:600 11px/1 var(--f-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
 .sec h3 .end{margin-left:auto;display:flex;gap:4px}
 .row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
@@ -146,7 +169,7 @@ select.sel{background:var(--panel-2);border:1px solid var(--line);border-radius:
   .tools .sep{width:1px;height:24px;margin:0 4px}
   .side{border-left:0;border-top:1px solid var(--line);overflow:visible}
   .docname{flex:1 1 140px}
-  .top .hide-sm{display:none}
+  .body.no-side{grid-template-rows:auto 62vh 0}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -167,10 +190,11 @@ select.sel{background:var(--panel-2);border:1px solid var(--line);border-radius:
       <button class="round sm" id="zoomIn" title="Zoom in (+)"><svg class="i" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></svg></button>
       <button class="pill sm" id="fitBtn" title="Fit the screen in the window (0)">Fit</button>
     </div>
-    <div class="grp hide-sm">
+    <div class="grp">
       <button class="round sm" id="undoBtn" title="Undo (Ctrl/Cmd+Z)"><svg class="i" viewBox="0 0 24 24"><path d="M9 7L4 12l5 5"/><path d="M4 12h10a6 6 0 0 1 0 12h-2" transform="translate(0 -6)"/></svg></button>
       <button class="round sm" id="redoBtn" title="Redo (Shift+Ctrl/Cmd+Z)"><svg class="i" viewBox="0 0 24 24"><path d="M15 7l5 5-5 5"/><path d="M20 12H10a6 6 0 0 0 0 12h2" transform="translate(0 -6)"/></svg></button>
     </div>
+    <button class="round sm on" id="sideBtn" title="Show or hide the panels (Tab)"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M14.5 4.5v15"/></svg></button>
     <button class="pill" id="saveJson" title="Save the mask as a project file (.json)">Save</button>
     <button class="pill main" id="exportPng" title="Export the mask as a PNG at its exact pixel size">
       <svg class="i" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 19h14"/></svg>Export PNG</button>
@@ -200,12 +224,16 @@ select.sel{background:var(--panel-2);border:1px solid var(--line);border-radius:
     </main>
 
     <aside class="side">
-      <section class="sec" id="selSec"></section>
-      <section class="sec" id="docSec"></section>
-      <section class="sec">
-        <h3>Layers <span class="end"><span class="readout" id="layerCount"></span></span></h3>
-        <div class="layers" id="layers"></div>
-      </section>
+      <section class="sec" data-fold="sel"><button class="sec-head" type="button"><svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><span id="selTitle">Selection</span></button><div class="sec-body" id="selSec"></div></section>
+      <section class="sec" data-fold="layers"><button class="sec-head" type="button"><svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Layers<span class="cnt" id="layerCount"></span></button><div class="sec-body"><div class="layers" id="layers"></div>
+        <div class="lfoot">
+          <button class="round sm" id="lDup" title="Duplicate (Ctrl/Cmd+J)"><svg class="i" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
+          <button class="round sm" id="lUp" title="Move up"><svg class="i" viewBox="0 0 24 24"><path d="M12 19V6M6 12l6-6 6 6"/></svg></button>
+          <button class="round sm" id="lDown" title="Move down"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v13M6 12l6 6 6-6"/></svg></button>
+          <button class="round sm danger" id="lDel" title="Delete (Del)"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg></button>
+        </div></div></section>
+      <section class="sec" data-fold="hist"><button class="sec-head" type="button"><svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>History<span class="cnt" id="histCount"></span></button><div class="sec-body"><div class="hlist" id="hlist"></div></div></section>
+      <section class="sec" data-fold="doc"><button class="sec-head" type="button"><svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>LED screen</button><div class="sec-body" id="docSec"></div></section>
     </aside>
   </div>
 </div>
@@ -292,22 +320,39 @@ function persist() {
 
 /* ---------- history ---------- */
 function snap() { return JSON.stringify({ doc: S.doc, shapes: S.shapes }); }
-function commit() {
+function commit(label) {
   const s = snap();
-  if (hist[hi] === s) return;
-  hist = hist.slice(0, hi + 1); hist.push(s);
+  if (hist[hi] && hist[hi].s === s) return;
+  hist = hist.slice(0, hi + 1); hist.push({ s, label: hist.length ? (label || 'Change') : 'Open' });
   if (hist.length > 200) hist.shift();
   hi = hist.length - 1;
   persist(); refreshUndo();
 }
-function restore(s) {
-  const o = JSON.parse(s); S.doc = o.doc; S.shapes = o.shapes;
+function restore(h) {
+  const o = JSON.parse(h.s); S.doc = o.doc; S.shapes = o.shapes;
   S.sel = S.sel.filter(id => S.shapes.some(x => x.id === id));
   persist(); renderDoc(); renderAll();
 }
 function undo() { if (hi > 0) { hi--; restore(hist[hi]); refreshUndo(); } }
 function redo() { if (hi < hist.length - 1) { hi++; restore(hist[hi]); refreshUndo(); } }
-function refreshUndo() { $('#undoBtn').disabled = hi <= 0; $('#redoBtn').disabled = hi >= hist.length - 1; }
+function refreshUndo() { $('#undoBtn').disabled = hi <= 0; $('#redoBtn').disabled = hi >= hist.length - 1; renderHistory(); }
+function goHist(i) { if (i < 0 || i >= hist.length || i === hi) return; hi = i; restore(hist[hi]); refreshUndo(); }
+function renderHistory() {
+  const el = $('#hlist'); if (!el) return;
+  $('#histCount').textContent = hist.length > 1 ? (hist.length - 1) + '' : '';
+  el.innerHTML = '';
+  hist.forEach((h, i) => {
+    const b = document.createElement('button'); b.type = 'button';
+    b.className = 'hrow' + (i === hi ? ' cur' : i > hi ? ' fut' : '');
+    b.innerHTML = '<span class="hn"></span><span class="ht"></span>';
+    b.querySelector('.hn').textContent = i ? i : '';
+    b.querySelector('.ht').textContent = h.label;
+    b.title = i > hi ? 'Redo to this step' : 'Go back to this step';
+    b.addEventListener('click', () => goHist(i));
+    el.appendChild(b);
+  });
+  const cur = el.querySelector('.cur'); if (cur) cur.scrollIntoView({ block: 'nearest' });
+}
 
 /* ---------- geometry ---------- */
 const byId = id => S.shapes.find(s => s.id === id);
@@ -671,7 +716,7 @@ function endPointer(e) {
   if (d.mode === 'guide') {
     const r = stage.getBoundingClientRect();
     if (d.axis === 'v' ? e.clientX < r.left : e.clientY < r.top) S.doc.guides[d.axis].splice(d.i, 1);
-    commit(); draw(); return;
+    commit('Guide'); draw(); return;
   }
   if (d.mode === 'create') {
     const s = byId(d.id);
@@ -681,7 +726,7 @@ function endPointer(e) {
     }
     setTool('select');
   }
-  S.dragging = false; renderDoc(); commit(); renderAll(); draw();
+  S.dragging = false; renderDoc(); commit(d.mode === 'create' ? 'Draw ' + TYPE_NAME[(byId(d.id) || {}).type || 'rect'].toLowerCase() : d.mode === 'resize' ? 'Resize' : 'Move'); renderAll(); draw();
 }
 stage.addEventListener('pointerup', endPointer);
 stage.addEventListener('pointercancel', endPointer);
@@ -794,7 +839,7 @@ for (const [cv, axis] of [[rT, 'h'], [rL, 'v']]) {
       cv.removeEventListener('pointermove', move); cv.removeEventListener('pointerup', up);
       const r = stage.getBoundingClientRect();
       if (axis === 'v' ? ev.clientX < r.left : ev.clientY < r.top) S.doc.guides[axis].splice(i, 1);
-      commit(); draw();
+      commit('Guide'); draw();
     };
     cv.addEventListener('pointermove', move); cv.addEventListener('pointerup', up);
   });
@@ -802,8 +847,8 @@ for (const [cv, axis] of [[rT, 'h'], [rL, 'v']]) {
 
 /* ---------- actions ---------- */
 function setTool(t) { S.tool = t; document.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t)); stage.style.cursor = t === 'select' ? 'default' : t === 'hand' ? 'grab' : 'crosshair'; }
-function nudge(dx, dy) { selShapes().filter(s => !s.lock).forEach(s => { s.x += dx; s.y += dy; }); renderDoc(); commit(); syncGeom(); draw(); }
-function deleteSel() { if (!S.sel.length) return; S.shapes = S.shapes.filter(s => !S.sel.includes(s.id)); S.sel = []; renderDoc(); commit(); renderAll(); draw(); }
+function nudge(dx, dy) { selShapes().filter(s => !s.lock).forEach(s => { s.x += dx; s.y += dy; }); renderDoc(); commit('Nudge'); syncGeom(); draw(); }
+function deleteSel() { if (!S.sel.length) return; S.shapes = S.shapes.filter(s => !S.sel.includes(s.id)); S.sel = []; renderDoc(); commit('Delete'); renderAll(); draw(); }
 function cloneShape(s, dx, dy) { const c = JSON.parse(JSON.stringify(s)); c.id = uid(); c.x += dx; c.y += dy; c.lock = false; c.name = copyName(s.name); return c; }
 function copyName(n) { const m = /^(.*?)(?: (\d+))?$/.exec(n); const base = m[1]; let k = 2; const used = new Set(S.shapes.map(s => s.name)); while (used.has(base + ' ' + k)) k++; return base + ' ' + k; }
 function duplicateSel(off = 10, silent) {
@@ -811,7 +856,7 @@ function duplicateSel(off = 10, silent) {
   const copies = ss.map(s => cloneShape(s, off, off));
   const top = Math.max(...ss.map(s => S.shapes.indexOf(s)));
   S.shapes.splice(top + 1, 0, ...copies); S.sel = copies.map(c => c.id);
-  if (!silent) { renderDoc(); commit(); renderAll(); draw(); }
+  if (!silent) { renderDoc(); commit('Duplicate'); renderAll(); draw(); }
 }
 function selectAll() { S.sel = S.shapes.filter(s => s.vis && !s.lock).map(s => s.id); renderAll(); draw(); }
 function order(where) {
@@ -821,7 +866,7 @@ function order(where) {
   else if (where === 'back') S.shapes = [...arr.filter(s => ids.has(s.id)), ...arr.filter(s => !ids.has(s.id))];
   else if (where === 'fwd') { for (let i = arr.length - 2; i >= 0; i--) if (ids.has(arr[i].id) && !ids.has(arr[i + 1].id)) [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]]; }
   else if (where === 'bwd') { for (let i = 1; i < arr.length; i++) if (ids.has(arr[i].id) && !ids.has(arr[i - 1].id)) [arr[i], arr[i - 1]] = [arr[i - 1], arr[i]]; }
-  renderDoc(); commit(); renderAll(); draw();
+  renderDoc(); commit('Order'); renderAll(); draw();
 }
 function align(how) {
   const ss = selShapes().filter(s => !s.lock); if (!ss.length) return;
@@ -832,7 +877,7 @@ function align(how) {
     if (how === 'T') dy = ref.y - b.y; if (how === 'B') dy = ref.y + ref.h - (b.y + b.h); if (how === 'M') dy = Math.round(ref.y + ref.h / 2 - b.h / 2) - b.y;
     s.x += dx; s.y += dy;
   });
-  renderDoc(); commit(); renderAll(); draw();
+  renderDoc(); commit('Align'); renderAll(); draw();
 }
 function distribute(axis) {
   const ss = selShapes().filter(s => !s.lock); if (ss.length < 3) return;
@@ -843,7 +888,7 @@ function distribute(axis) {
   const gap = (span - total) / (list.length - 1);
   let pos = first[k[0]];
   list.forEach(o => { const t = Math.round(pos); o.s[k[0]] += t - o.b[k[0]]; pos += o.b[k[1]] + gap; });
-  renderDoc(); commit(); renderAll(); draw();
+  renderDoc(); commit('Space evenly'); renderAll(); draw();
 }
 function repeatSel(nx, ny, gx, gy) {
   const ss = selShapes(); if (!ss.length) return;
@@ -853,11 +898,24 @@ function repeatSel(nx, ny, gx, gy) {
     ss.forEach(s => out.push(cloneShape(s, i * (b.w + gx), j * (b.h + gy))));
   }
   S.shapes.push(...out); S.sel = [...S.sel, ...out.map(c => c.id)];
-  renderDoc(); commit(); renderAll(); draw(); toast(`Made ${out.length} copies`);
+  renderDoc(); commit('Repeat'); renderAll(); draw(); toast(`Made ${out.length} copies`);
 }
 
 /* ---------- panels ---------- */
 let geomRefs = {};
+const FOLD = 'roarmask-fold';
+let folds = {}; try { folds = JSON.parse(localStorage.getItem(FOLD) || '{}') || {}; } catch (e) {}
+const saveFolds = () => { try { localStorage.setItem(FOLD, JSON.stringify(folds)); } catch (e) {} };
+const CHEV = '<svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
+function sub(key, title, html) { return `<div class="sub ${folds['s:' + key] ? 'folded' : ''}" data-sub="${key}"><button class="sub-head" type="button">${CHEV}${esc(title)}</button><div class="sub-body">${html}</div></div>`; }
+document.addEventListener('click', e => {
+  const sh = e.target.closest('.sub-head');
+  if (sh) { const g = sh.parentElement, k = 's:' + g.dataset.sub; g.classList.toggle('folded'); folds[k] = g.classList.contains('folded'); saveFolds(); return; }
+  const hd = e.target.closest('.sec-head');
+  if (hd) { const g = hd.parentElement, k = g.dataset.fold; g.classList.toggle('folded'); folds[k] = g.classList.contains('folded'); saveFolds(); }
+});
+function applyFolds() { document.querySelectorAll('.sec[data-fold]').forEach(g => g.classList.toggle('folded', !!folds[g.dataset.fold])); }
+function setSide(on) { $('.body').classList.toggle('no-side', !on); $('#sideBtn').classList.toggle('on', on); folds._side = !on; saveFolds(); }
 function fld(label, id, val, attrs = '') { return `<label class="fld"><span>${label}</span><input id="${id}" type="number" step="1" value="${val}" ${attrs}></label>`; }
 function seg(id, opts, cur) { return `<div class="seg" data-seg="${id}">${opts.map(([v, t]) => `<button type="button" data-v="${v}" class="${v === cur ? 'on' : ''}">${t}</button>`).join('')}</div>`; }
 function colourRow(key, p) {
@@ -870,8 +928,9 @@ function colourRow(key, p) {
 }
 function renderSel() {
   const ss = selShapes(), el = $('#selSec');
+  $('#selTitle').textContent = ss.length > 1 ? 'Selection · ' + ss.length : 'Selection';
   if (!ss.length) {
-    el.innerHTML = `<h3>Selection</h3><p class="hint">Pick a shape on the left and drag on the screen, or click a shape to select it.<br>
+    el.innerHTML = `<p class="hint">Pick a shape on the left and drag on the screen, or click a shape to select it.<br>
       <kbd>V</kbd> select · <kbd>R</kbd> box · <kbd>P</kbd> rounded · <kbd>E</kbd> round · <kbd>L</kbd> line · <kbd>A</kbd> arc<br>
       Arrows move 1 px, <kbd>Shift</kbd> 10 px · <kbd>Alt</kbd> + drag copies · Space + drag pans · Ctrl/Cmd + wheel zooms</p>`;
     geomRefs = {}; return;
@@ -891,29 +950,28 @@ function renderSel() {
   if (isRect) h += `<div class="row"><label class="fld wide"><span>Corner</span><input id="gR" type="number" min="0" step="1" value="${Math.min(s.r, Math.floor(Math.min(s.w, s.h) / 2))}"></label><button class="pill sm" id="rMax" title="Fully rounded ends">Pill</button><button class="pill sm" id="r0">Square</button></div>`;
   if (isArc) h += `<div class="g2">${fld('From°', 'gA0', s.a0)}${fld('To°', 'gA1', s.a1)}</div>
     <div class="row">${[['Left', 135, 225], ['Right', 315, 45], ['Top', 225, 315], ['Bottom', 45, 135], ['Half', 180, 360]].map(([t, a, c]) => `<button class="pill sm" data-arc="${a},${c}">${t}</button>`).join('')}</div>`;
-  if (hasFill) h += `<h3 style="margin-top:16px">Fill</h3><div class="row">${seg('fillM', [['none', 'None'], ['color', 'Colour'], ['cut', 'Transparent']], s.fill.m)}</div>${s.fill.m === 'color' ? colourRow('f', s.fill) : s.fill.m === 'cut' ? `<p class="hint">Cuts a see-through hole in everything under it. <label class="fld" style="width:96px;display:inline-flex;margin-left:6px;vertical-align:middle"><span>%</span><input id="fO" type="number" min="0" max="100" step="1" value="${s.fill.o}"></label></p>` : ''}`;
-  h += `<h3 style="margin-top:16px">${isLine || isArc ? 'Line' : 'Outline'}</h3><div class="row">${seg('strokeM', [['none', 'None'], ['color', 'Colour'], ['cut', 'Transparent']], s.stroke.m)}</div>`;
+  if (hasFill) h += sub('fill', 'Fill', `<div class="row">${seg('fillM', [['none', 'None'], ['color', 'Colour'], ['cut', 'Transparent']], s.fill.m)}</div>${s.fill.m === 'color' ? colourRow('f', s.fill) : s.fill.m === 'cut' ? `<p class="hint">Cuts a see-through hole in everything under it. <label class="fld" style="width:96px;display:inline-flex;margin-left:6px;vertical-align:middle"><span>%</span><input id="fO" type="number" min="0" max="100" step="1" value="${s.fill.o}"></label></p>` : ''}`);
+  let o = `<div class="row">${seg('strokeM', [['none', 'None'], ['color', 'Colour'], ['cut', 'Transparent']], s.stroke.m)}</div>`;
   if (s.stroke.m !== 'none') {
-    h += `<div class="row"><label class="fld" style="width:120px"><span>Width</span><input id="sW" type="number" min="1" step="1" value="${s.stroke.w}"></label>
+    o += `<div class="row"><label class="fld" style="width:120px"><span>Width</span><input id="sW" type="number" min="1" step="1" value="${s.stroke.w}"></label>
       ${!isLine ? seg('strokeAl', [['in', 'Inside'], ['center', 'Center'], ['out', 'Outside']], s.stroke.al) : ''}</div>
       <div class="row">${[1, 2, 4, 8, 16, 32].map(v => `<button class="pill sm" data-sw="${v}">${v}</button>`).join('')}</div>`;
-    h += s.stroke.m === 'color' ? colourRow('s', s.stroke) : `<p class="hint">The line cuts a see-through gap. <label class="fld" style="width:96px;display:inline-flex;margin-left:6px;vertical-align:middle"><span>%</span><input id="sO" type="number" min="0" max="100" step="1" value="${s.stroke.o}"></label></p>`;
+    o += s.stroke.m === 'color' ? colourRow('s', s.stroke) : `<p class="hint">The line cuts a see-through gap. <label class="fld" style="width:96px;display:inline-flex;margin-left:6px;vertical-align:middle"><span>%</span><input id="sO" type="number" min="0" max="100" step="1" value="${s.stroke.o}"></label></p>`;
   }
-  h += `<h3 style="margin-top:16px">Align ${one ? 'to the screen' : 'to each other'}</h3>
-    <div class="row">${[['L', 'aL', 'Left'], ['C', 'aC', 'Centre'], ['R', 'aR', 'Right'], ['T', 'aT', 'Top'], ['M', 'aM', 'Middle'], ['B', 'aB', 'Bottom']].map(([k, ic, t]) => `<button class="round sm" data-align="${k}" title="${t}">${ICON[ic]}</button>`).join('')}
-    ${ss.length >= 3 ? `<button class="round sm" data-dist="x" title="Space evenly across">${ICON.dH}</button><button class="round sm" data-dist="y" title="Space evenly down">${ICON.dV}</button>` : ''}</div>
-    <h3 style="margin-top:16px">Order</h3>
-    <div class="row"><button class="round sm" data-order="front" title="To front">${ICON.front}</button><button class="round sm" data-order="fwd" title="Forward">${ICON.fwd}</button><button class="round sm" data-order="bwd" title="Backward">${ICON.bwd}</button><button class="round sm" data-order="back" title="To back">${ICON.back}</button></div>
-    <h3 style="margin-top:16px">Repeat</h3>
-    <div class="g2">${fld('Across', 'rpX', 4, 'min="1"')}${fld('Down', 'rpY', 1, 'min="1"')}${fld('Gap X', 'rpGX', 10)}${fld('Gap Y', 'rpGY', 10)}</div>
-    <div class="row"><button class="pill sm" id="rpGo">Make copies</button><span class="readout">gaps in px</span></div>`;
+  h += sub('outline', isLine || isArc ? 'Line' : 'Outline', o);
+  h += sub('align', 'Align ' + (one ? 'to the screen' : 'to each other'), `<div class="row">${[['L', 'aL', 'Left'], ['C', 'aC', 'Centre'], ['R', 'aR', 'Right'], ['T', 'aT', 'Top'], ['M', 'aM', 'Middle'], ['B', 'aB', 'Bottom']].map(([k, ic, t]) => `<button class="round sm" data-align="${k}" title="${t}">${ICON[ic]}</button>`).join('')}
+    ${ss.length >= 3 ? `<button class="round sm" data-dist="x" title="Space evenly across">${ICON.dH}</button><button class="round sm" data-dist="y" title="Space evenly down">${ICON.dV}</button>` : ''}</div>`)
+    + sub('order', 'Order', `<div class="row"><button class="round sm" data-order="front" title="To front">${ICON.front}</button><button class="round sm" data-order="fwd" title="Forward">${ICON.fwd}</button><button class="round sm" data-order="bwd" title="Backward">${ICON.bwd}</button><button class="round sm" data-order="back" title="To back">${ICON.back}</button></div>`)
+    + sub('repeat', 'Repeat', `<div class="g2">${fld('Across', 'rpX', 4, 'min="1"')}${fld('Down', 'rpY', 1, 'min="1"')}${fld('Gap X', 'rpGX', 10)}${fld('Gap Y', 'rpGY', 10)}</div>
+    <div class="row"><button class="pill sm" id="rpGo">Make copies</button><span class="readout">gaps in px</span></div>`);
   el.innerHTML = h;
   wireSel(ss);
 }
+const FIELD = { sName: 'name', gX: 'position', gY: 'position', gW: 'size', gH: 'size', gX1: 'line', gY1: 'line', gX2: 'line', gY2: 'line', gR: 'corner', gA0: 'arc', gA1: 'arc', fC: 'fill colour', fHex: 'fill colour', fO: 'fill opacity', sC: 'outline colour', sHex: 'outline colour', sO: 'outline opacity', sW: 'outline width' };
 function wireSel(ss) {
   const el = $('#selSec'), q = id => el.querySelector('#' + id);
   const live = () => { renderDoc(); draw(); renderLayers(); };
-  const on = (id, fn) => { const i = q(id); if (!i) return; i.addEventListener('input', () => { fn(i.value); live(); }); i.addEventListener('change', () => { commit(); renderSel(); }); };
+  const on = (id, fn) => { const i = q(id); if (!i) return; i.addEventListener('input', () => { fn(i.value); live(); }); i.addEventListener('change', () => { commit('Edit ' + (FIELD[id] || 'shape')); renderSel(); }); };
   const num = v => { const n = Math.round(parseFloat(v)); return isFinite(n) ? n : null; };
   geomRefs = { gX: q('gX'), gY: q('gY'), gW: q('gW'), gH: q('gH'), gX1: q('gX1'), gY1: q('gY1'), gX2: q('gX2'), gY2: q('gY2'), len: q('lenOut') };
   on('sName', v => { ss[0].name = v; });
@@ -929,15 +987,15 @@ function wireSel(ss) {
   on('gX2', v => { const n = num(v), s = ss[0]; if (n !== null) s.w = n - s.x; });
   on('gY2', v => { const n = num(v), s = ss[0]; if (n !== null) s.h = n - s.y; });
   on('gR', v => { const n = num(v); if (n !== null) ss.forEach(s => s.r = Math.max(0, n)); });
-  q('rMax') && q('rMax').addEventListener('click', () => { ss.forEach(s => s.r = Math.floor(Math.min(s.w, s.h) / 2)); renderDoc(); commit(); renderSel(); draw(); });
-  q('r0') && q('r0').addEventListener('click', () => { ss.forEach(s => s.r = 0); renderDoc(); commit(); renderSel(); draw(); });
+  q('rMax') && q('rMax').addEventListener('click', () => { ss.forEach(s => s.r = Math.floor(Math.min(s.w, s.h) / 2)); renderDoc(); commit('Edit shape'); renderSel(); draw(); });
+  q('r0') && q('r0').addEventListener('click', () => { ss.forEach(s => s.r = 0); renderDoc(); commit('Edit shape'); renderSel(); draw(); });
   on('gA0', v => { const n = num(v); if (n !== null) ss[0].a0 = n; });
   on('gA1', v => { const n = num(v); if (n !== null) ss[0].a1 = n; });
   el.querySelectorAll('[data-arc]').forEach(b => b.addEventListener('click', () => { const [a, c] = b.dataset.arc.split(',').map(Number); ss[0].a0 = a; ss[0].a1 = c; renderDoc(); commit(); renderSel(); draw(); }));
   el.querySelectorAll('[data-seg]').forEach(g => g.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
     const v = b.dataset.v, k = g.dataset.seg;
     ss.forEach(s => { if (k === 'fillM') { if (s.type !== 'line' && s.type !== 'arc') s.fill.m = v; } else if (k === 'strokeM') { s.stroke.m = v; if (v !== 'none' && !(s.stroke.w > 0)) s.stroke.w = 1; } else if (k === 'strokeAl') s.stroke.al = v; });
-    renderDoc(); commit(); renderSel(); renderLayers(); draw();
+    renderDoc(); commit('Edit shape'); renderSel(); renderLayers(); draw();
   })));
   for (const [key, part] of [['f', 'fill'], ['s', 'stroke']]) {
     const setC = c => ss.forEach(s => { if (part === 'fill' && (s.type === 'line' || s.type === 'arc')) return; s[part].c = c; });
@@ -945,7 +1003,7 @@ function wireSel(ss) {
     on(key + 'Hex', v => { const t = v.replace(/[^0-9a-f]/gi, ''); if (t.length === 6 || t.length === 3) { const c = '#' + (t.length === 3 ? t.split('').map(x => x + x).join('') : t).toLowerCase(); setC(c); const ci = q(key + 'C'); if (ci) ci.value = c; ci.previousElementSibling.style.background = c; } });
     on(key + 'O', v => { const n = num(v); if (n !== null) ss.forEach(s => { s[part].o = clamp(n, 0, 100); }); });
   }
-  el.querySelectorAll('[data-dot]').forEach(b => b.addEventListener('click', () => { const part = b.dataset.dot === 'f' ? 'fill' : 'stroke'; ss.forEach(s => { if (part === 'fill' && (s.type === 'line' || s.type === 'arc')) return; s[part].c = b.dataset.c; }); renderDoc(); commit(); renderSel(); renderLayers(); draw(); }));
+  el.querySelectorAll('[data-dot]').forEach(b => b.addEventListener('click', () => { const part = b.dataset.dot === 'f' ? 'fill' : 'stroke'; ss.forEach(s => { if (part === 'fill' && (s.type === 'line' || s.type === 'arc')) return; s[part].c = b.dataset.c; }); renderDoc(); commit('Edit shape'); renderSel(); renderLayers(); draw(); }));
   on('sW', v => { const n = num(v); if (n !== null) ss.forEach(s => s.stroke.w = Math.max(1, n)); });
   el.querySelectorAll('[data-sw]').forEach(b => b.addEventListener('click', () => { ss.forEach(s => s.stroke.w = +b.dataset.sw); renderDoc(); commit(); renderSel(); draw(); }));
   el.querySelectorAll('[data-align]').forEach(b => b.addEventListener('click', () => align(b.dataset.align)));
@@ -965,34 +1023,45 @@ function syncGeom() {
 function renderDocPanel() {
   const d = S.doc, el = $('#docSec');
   const pre = PRESETS.findIndex(p => p[1] === d.w && p[2] === d.h);
-  el.innerHTML = `<h3>LED screen</h3>
+  el.innerHTML = `
     <div class="g2">${fld('W', 'dW', d.w, 'min="1" max="16384"')}${fld('H', 'dH', d.h, 'min="1" max="16384"')}</div>
     <div class="row"><select class="sel" id="dPre" aria-label="Screen size preset"><option value="-1">Custom size</option>${PRESETS.map((p, i) => `<option value="${i}" ${i === pre ? 'selected' : ''}>${p[0]}</option>`).join('')}</select></div>
     <div class="row"><span class="lbl">Background</span>${seg('bg', [['color', 'Colour'], ['none', 'Transparent']], d.bgOn ? 'color' : 'none')}</div>
     ${d.bgOn ? `<div class="row"><div class="colour" style="flex:1"><label class="sw"><i style="background:${esc(d.bg)}"></i><input type="color" id="dBg" value="${esc(d.bg)}"></label>
       <div class="dots">${['#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff'].map(c => `<button type="button" class="dot" data-bgdot="${c}" style="background:${c}" title="${c}"></button>`).join('')}</div></div></div>` : ''}
-    <h3 style="margin-top:16px">Grid and snapping</h3>
-    <div class="row"><label class="fld" style="width:130px"><span>Grid</span><input id="dGrid" type="number" min="1" step="1" value="${d.grid}"></label>
+    ${sub('grid', 'Grid and snapping', `<div class="row"><label class="fld" style="width:130px"><span>Grid</span><input id="dGrid" type="number" min="1" step="1" value="${d.grid}"></label>
       <div class="dots" style="gap:4px">${[1, 5, 10, 16, 32, 64].map(v => `<button class="pill sm" data-grid="${v}" style="padding:0 8px">${v}</button>`).join('')}</div></div>
     ${[['showGrid', 'Show grid'], ['snapGrid', 'Snap to grid'], ['snapObj', 'Snap to shapes, edges and guides'], ['pxGrid', 'Pixel grid when zoomed in'], ['hard', 'Hard pixel edges (no smoothing)']].map(([k, t]) => `<div class="chk"><span>${t}</span><button class="tg ${d[k] ? 'on' : ''}" data-tg="${k}" role="switch" aria-checked="${d[k]}" aria-label="${t}"></button></div>`).join('')}
-    <div class="row" style="margin-top:8px"><button class="pill sm" id="clrGuides" ${d.guides.v.length + d.guides.h.length ? '' : 'disabled'}>Clear guides</button><span class="readout">${d.guides.v.length + d.guides.h.length} guides</span></div>`;
+    <div class="row" style="margin-top:8px"><button class="pill sm" id="clrGuides" ${d.guides.v.length + d.guides.h.length ? '' : 'disabled'}>Clear guides</button><span class="readout">${d.guides.v.length + d.guides.h.length} guides</span></div>`)}`;
   const q = id => el.querySelector('#' + id);
-  const resize = () => { const w = clamp(Math.round(+q('dW').value) || 1, 1, 16384), h = clamp(Math.round(+q('dH').value) || 1, 1, 16384); if (w === d.w && h === d.h) return; d.w = w; d.h = h; renderDoc(); commit(); renderAll(); fit(); };
+  const resize = () => { const w = clamp(Math.round(+q('dW').value) || 1, 1, 16384), h = clamp(Math.round(+q('dH').value) || 1, 1, 16384); if (w === d.w && h === d.h) return; d.w = w; d.h = h; renderDoc(); commit('Screen'); renderAll(); fit(); };
   q('dW').addEventListener('change', resize); q('dH').addEventListener('change', resize);
-  q('dPre').addEventListener('change', e => { const p = PRESETS[+e.target.value]; if (!p) return; d.w = p[1]; d.h = p[2]; renderDoc(); commit(); renderAll(); fit(); });
-  el.querySelectorAll('[data-seg="bg"] button').forEach(b => b.addEventListener('click', () => { d.bgOn = b.dataset.v === 'color'; renderDoc(); commit(); renderDocPanel(); draw(); }));
-  const bg = q('dBg'); if (bg) { bg.addEventListener('input', () => { d.bg = bg.value; bg.previousElementSibling.style.background = bg.value; renderDoc(); draw(); }); bg.addEventListener('change', commit); }
-  el.querySelectorAll('[data-bgdot]').forEach(b => b.addEventListener('click', () => { d.bg = b.dataset.bgdot; renderDoc(); commit(); renderDocPanel(); draw(); }));
-  q('dGrid').addEventListener('change', () => { d.grid = Math.max(1, Math.round(+q('dGrid').value) || 1); commit(); renderDocPanel(); draw(); });
-  el.querySelectorAll('[data-grid]').forEach(b => b.addEventListener('click', () => { d.grid = +b.dataset.grid; commit(); renderDocPanel(); draw(); }));
+  q('dPre').addEventListener('change', e => { const p = PRESETS[+e.target.value]; if (!p) return; d.w = p[1]; d.h = p[2]; renderDoc(); commit('Screen'); renderAll(); fit(); });
+  el.querySelectorAll('[data-seg="bg"] button').forEach(b => b.addEventListener('click', () => { d.bgOn = b.dataset.v === 'color'; renderDoc(); commit('Screen'); renderDocPanel(); draw(); }));
+  const bg = q('dBg'); if (bg) { bg.addEventListener('input', () => { d.bg = bg.value; bg.previousElementSibling.style.background = bg.value; renderDoc(); draw(); }); bg.addEventListener('change', () => commit('Screen')); }
+  el.querySelectorAll('[data-bgdot]').forEach(b => b.addEventListener('click', () => { d.bg = b.dataset.bgdot; renderDoc(); commit('Screen'); renderDocPanel(); draw(); }));
+  q('dGrid').addEventListener('change', () => { d.grid = Math.max(1, Math.round(+q('dGrid').value) || 1); commit('Screen'); renderDocPanel(); draw(); });
+  el.querySelectorAll('[data-grid]').forEach(b => b.addEventListener('click', () => { d.grid = +b.dataset.grid; commit('Screen'); renderDocPanel(); draw(); }));
   el.querySelectorAll('[data-tg]').forEach(b => b.addEventListener('click', () => toggle(b.dataset.tg)));
-  q('clrGuides').addEventListener('click', () => { d.guides = { v: [], h: [] }; commit(); renderDocPanel(); draw(); });
+  q('clrGuides').addEventListener('click', () => { d.guides = { v: [], h: [] }; commit('Screen'); renderDocPanel(); draw(); });
 }
-function toggle(k) { S.doc[k] = !S.doc[k]; if (k === 'hard') renderDoc(); commit(); renderDocPanel(); refreshRail(); draw(); }
+function toggle(k) { S.doc[k] = !S.doc[k]; if (k === 'hard') renderDoc(); commit('Settings'); renderDocPanel(); refreshRail(); draw(); }
 function refreshRail() { $('#tgGrid').classList.toggle('on', S.doc.showGrid); $('#tgSnap').classList.toggle('on', S.doc.snapGrid); }
+let dragId = null;
+function startRename(id) {
+  const s = byId(id), row = document.querySelector('#layers .layer[data-id="' + id + '"]'); if (!s || !row) return;
+  const nm = row.querySelector('.nm'), inp = document.createElement('input');
+  inp.value = s.name; nm.textContent = ''; nm.appendChild(inp); inp.focus(); inp.select(); row.draggable = false;
+  let over = false;
+  const done = ok => { if (over) return; over = true; if (ok && inp.value.trim() && inp.value.trim() !== s.name) { s.name = inp.value.trim(); commit('Rename layer'); } renderAll(); };
+  inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') done(true); if (ev.key === 'Escape') done(false); ev.stopPropagation(); });
+  inp.addEventListener('blur', () => done(true));
+  inp.addEventListener('click', ev => ev.stopPropagation());
+}
 function renderLayers() {
   const el = $('#layers');
   $('#layerCount').textContent = S.shapes.length ? S.shapes.length + '' : '';
+  const none = !S.sel.length; ['lDup', 'lUp', 'lDown', 'lDel'].forEach(id => { const b = $('#' + id); if (b) b.disabled = none; });
   if (!S.shapes.length) { el.innerHTML = '<div class="empty">No shapes yet. Draw one with the tools on the left.</div>'; return; }
   el.innerHTML = '';
   [...S.shapes].reverse().forEach(s => {
@@ -1003,12 +1072,28 @@ function renderLayers() {
       <button class="round" data-k="vis" title="${s.vis ? 'Hide' : 'Show'}">${s.vis ? ICON.eye : ICON.eyeOff}</button>
       <button class="round" data-k="lock" title="${s.lock ? 'Unlock' : 'Lock'}" style="${s.lock ? 'opacity:1;color:var(--accent)' : ''}">${s.lock ? ICON.lock : ICON.unlock}</button>`;
     row.querySelector('.nm').textContent = s.name || TYPE_NAME[s.type];
+    row.draggable = true; row.dataset.id = s.id;
+    row.addEventListener('dragstart', e => { dragId = s.id; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', s.id); } catch (er) {} });
+    row.addEventListener('dragover', e => { if (!dragId || dragId === s.id) return; e.preventDefault(); const r = row.getBoundingClientRect(), above = e.clientY < r.top + r.height / 2; row.classList.toggle('drop-above', above); row.classList.toggle('drop-below', !above); });
+    row.addEventListener('dragleave', () => row.classList.remove('drop-above', 'drop-below'));
+    row.addEventListener('drop', e => {
+      e.preventDefault(); const above = row.classList.contains('drop-above'); row.classList.remove('drop-above', 'drop-below');
+      if (!dragId || dragId === s.id) return;
+      const moving = S.sel.includes(dragId) ? S.shapes.filter(x => S.sel.includes(x.id)) : [byId(dragId)];
+      if (moving.some(x => x.id === s.id)) return;
+      const rest = S.shapes.filter(x => !moving.includes(x)), at = rest.indexOf(s);
+      rest.splice(above ? at + 1 : at, 0, ...moving); S.shapes = rest; dragId = null;
+      renderDoc(); commit('Reorder layers'); renderAll(); draw();
+    });
+    row.addEventListener('dragend', () => { dragId = null; });
     row.addEventListener('click', e => {
       const k = e.target.closest('button') && e.target.closest('button').dataset.k;
-      if (k) { s[k] = !s[k]; if (k === 'lock' && s.lock) S.sel = S.sel.filter(i => i !== s.id); renderDoc(); commit(); renderAll(); draw(); return; }
+      if (k) { s[k] = !s[k]; if (k === 'lock' && s.lock) S.sel = S.sel.filter(i => i !== s.id); renderDoc(); commit(k === 'vis' ? (s.vis ? 'Show ' : 'Hide ') + s.name : (s.lock ? 'Lock ' : 'Unlock ') + s.name); renderAll(); draw(); return; }
+      if (e.detail >= 2 && e.target.closest('.nm')) { startRename(s.id); return; }
+      const before = S.sel.join();
       if (e.shiftKey || e.metaKey || e.ctrlKey) S.sel = S.sel.includes(s.id) ? S.sel.filter(i => i !== s.id) : [...S.sel, s.id];
       else S.sel = [s.id];
-      renderAll(); draw();
+      if (S.sel.join() !== before) { renderAll(); draw(); }
     });
     el.appendChild(row);
   });
@@ -1028,10 +1113,11 @@ window.addEventListener('keydown', e => {
   if (k === ' ') { if (!spaceDown) { spaceDown = true; stage.style.cursor = 'grab'; } e.preventDefault(); return; }
   if (mod && k.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if (mod && k.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
-  if (mod && k.toLowerCase() === 'd') { e.preventDefault(); duplicateSel(); return; }
+  if (mod && (k.toLowerCase() === 'd' || k.toLowerCase() === 'j')) { e.preventDefault(); duplicateSel(); return; }
+  if (k === 'Tab' && !mod) { e.preventDefault(); setSide($('.body').classList.contains('no-side')); return; }
   if (mod && k.toLowerCase() === 'a') { e.preventDefault(); selectAll(); return; }
   if (mod && k.toLowerCase() === 'c') { const ss = selShapes(); if (ss.length) { clip = JSON.parse(JSON.stringify(ss)); toast(`Copied ${ss.length}`); } return; }
-  if (mod && k.toLowerCase() === 'v') { if (clip) { const c = clip.map(s => cloneShape(s, 10, 10)); clip = c.map(x => JSON.parse(JSON.stringify(x))); S.shapes.push(...c); S.sel = c.map(x => x.id); renderDoc(); commit(); renderAll(); draw(); } return; }
+  if (mod && k.toLowerCase() === 'v') { if (clip) { const c = clip.map(s => cloneShape(s, 10, 10)); clip = c.map(x => JSON.parse(JSON.stringify(x))); S.shapes.push(...c); S.sel = c.map(x => x.id); renderDoc(); commit('Paste'); renderAll(); draw(); } return; }
   if (mod && k.toLowerCase() === 's') { e.preventDefault(); saveJson(); return; }
   if (mod && (k === '=' || k === '+')) { e.preventDefault(); zoomAt(1.25, W / 2, H / 2); return; }
   if (mod && k === '-') { e.preventDefault(); zoomAt(.8, W / 2, H / 2); return; }
@@ -1160,11 +1246,17 @@ $('#zoomVal').addEventListener('click', actual);
 $('#fitBtn').addEventListener('click', fit);
 $('#undoBtn').addEventListener('click', undo);
 $('#redoBtn').addEventListener('click', redo);
+$('#sideBtn').addEventListener('click', () => setSide($('.body').classList.contains('no-side')));
+$('#lDup').addEventListener('click', () => duplicateSel());
+$('#lDel').addEventListener('click', deleteSel);
+$('#lUp').addEventListener('click', () => order('fwd'));
+$('#lDown').addEventListener('click', () => order('bwd'));
+applyFolds(); if (folds._side) setSide(false);
 $('#exportPng').addEventListener('click', exportPng);
 $('#saveJson').addEventListener('click', saveJson);
 $('#btnProjects').addEventListener('click', openProjects);
 $('#docName').addEventListener('input', e => { S.doc.name = e.target.value; });
-$('#docName').addEventListener('change', commit);
+$('#docName').addEventListener('change', () => commit('Rename mask'));
 
 /* ---------- boot ---------- */
 (function boot() {
