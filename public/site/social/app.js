@@ -1353,12 +1353,17 @@ async function viewFront() {
   setTimeout(() => typeof shellCall === 'function' && shellCall('StatusBar', 'setStyle', { style: 'LIGHT' }));
   document.title = 'Roardino · ' + t('The whole crew in one place');
   let mode = 'in';
-  const f = { name: '', email: '', password: '' };
+  const f = { name: '', email: '', password: '', agree: false, news: false };
   const msg = h('p', { class: 'msg' });
   const say = (s, k = '') => { msg.textContent = s; msg.className = 'msg' + (k ? ' ' + k : ''); };
   const card = h('form', { class: 'auth', novalidate: true });
   // the sign-in card as RoarTransfer's (Alex, 15 Nov, from its screenshot): the fields, one red button, the Terms and
   // the Privacy Policy under it, and a row of pills (Sign up / Sign in, Forgot password?, Roar Account)
+  const check = (on, set, words, key = '') => {
+    const box = h('input', { type: 'checkbox' }); box.checked = on;
+    box.addEventListener('change', () => set(box.checked));
+    return h('label', { class: 'auth-check', 'data-k': key }, box, h('span', { class: 'auth-box', 'aria-hidden': 'true' }), h('span', { class: 'auth-check-t' }, ...words));
+  };
   const pill = (label, fn, ic) => h('button', { type: 'button', class: 'auth-pill', onclick: fn }, ic ? h('span', { html: ICON[ic] }) : null, label);
   const draw = () => {
     const up = mode === 'up';
@@ -1367,8 +1372,12 @@ async function viewFront() {
       up ? input(f.name, { class: 'input auth-in', placeholder: t('Full name'), autocomplete: 'name', 'aria-label': t('Full name'), oninput: (e) => { f.name = e.target.value; } }) : null,
       input(f.email, { class: 'input auth-in', type: 'email', placeholder: t('Email'), autocomplete: 'email', inputmode: 'email', 'aria-label': t('Email'), oninput: (e) => { f.email = e.target.value; } }),
       input(f.password, { class: 'input auth-in', type: 'password', placeholder: up ? t('Password (at least 6 characters)') : t('Password'), autocomplete: up ? 'new-password' : 'current-password', 'aria-label': t('Password'), oninput: (e) => { f.password = e.target.value; } }),
+      // the two boxes on sign-up (Alex, 24 Nov: "with ticks, to be sure"): the Terms must be ticked, the emails may be
+      up ? h('div', { class: 'auth-checks' },
+        check(f.agree, (v) => { f.agree = v; if (v) say(''); }, [t('I agree to the'), ' ', h('a', { href: '#/legal/terms', target: '_blank', rel: 'noreferrer' }, t('Terms of Service')), ' ', t('and the'), ' ', h('a', { href: '#/legal/privacy', target: '_blank', rel: 'noreferrer' }, t('Privacy Policy')), '.'], 'agree'),
+        check(f.news, (v) => { f.news = v; }, [t('Send me news and updates from Roardino by email.')])) : null,
       h('button', { type: 'submit', class: 'auth-go' }, up ? t('Create account') : t('Sign in')),
-      h('p', { class: 'auth-legal' }, t('By continuing you accept the'), ' ', h('a', { href: '#/legal/terms' }, t('Terms')), ' ', t('and the'), ' ', h('a', { href: '#/legal/privacy' }, t('Privacy Policy')), '.'),
+      up ? null : h('p', { class: 'auth-legal' }, t('By continuing you accept the'), ' ', h('a', { href: '#/legal/terms' }, t('Terms')), ' ', t('and the'), ' ', h('a', { href: '#/legal/privacy' }, t('Privacy Policy')), '.'),
       msg,
       h('div', { class: 'auth-pills' },
         up ? pill(t('Sign in'), () => { mode = 'in'; say(''); draw(); }) : pill(t('Sign up'), () => { mode = 'up'; say(''); draw(); }),
@@ -1386,8 +1395,9 @@ async function viewFront() {
     if (!email || !f.password) return say(t('Fill in email and password.'), 'err');
     if (mode === 'up') {
       if (!f.name.trim()) return say(t('Write your name.'), 'err');
+      if (!f.agree) { const l = card.querySelector('.auth-check[data-k="agree"]'); if (l) { l.classList.remove('nudge'); void l.offsetWidth; l.classList.add('nudge'); } return say(t('Please agree to the Terms of Service and the Privacy Policy to continue.'), 'err'); }
       say(t('Creating…'));
-      const { data, error } = await sb.auth.signUp({ email, password: f.password, options: { emailRedirectTo: location.origin + location.pathname, data: { name: f.name.trim() } } });
+      const { data, error } = await sb.auth.signUp({ email, password: f.password, options: { emailRedirectTo: location.origin + location.pathname, data: { name: f.name.trim(), terms_at: new Date().toISOString(), news: f.news } } });
       if (error) return say(errText(error), 'err');
       // an email that already has an account: Supabase sends no email then and says nothing
       // (Alex, 15 Nov: a member signed up and no email came), so we say it and point to Forgot password
