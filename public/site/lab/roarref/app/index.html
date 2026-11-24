@@ -736,6 +736,16 @@ html,body{overscroll-behavior:none}
   .fback svg{width:18px;height:18px}
 }
 .fback[hidden]{display:none!important}
+/* the small reset beside every slider (Alex, 24 Nov) */
+.rst{flex:none;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:none;color:var(--muted);opacity:.55;display:grid;place-items:center;cursor:pointer;transition:opacity .2s,background .2s}
+.rst svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rst:hover{opacity:1;background:rgba(255,255,255,.08)}
+.rst.spun svg{animation:rstSpin .45s cubic-bezier(.2,.85,.25,1)}
+@keyframes rstSpin{from{transform:rotate(0)}to{transform:rotate(-360deg)}}
+.arow{grid-template-columns:1fr auto auto!important}
+.arow > input{grid-column:1 / -1}
+.cdock .csl{grid-template-columns:92px 1fr auto!important}
+@media (max-width:820px){.rst{width:30px;height:30px}.rst svg{width:16px;height:16px}}
 /* a field never makes the iPhone zoom in (Alex, 24 Nov: "I tap the search and it stays zoomed"): iOS zooms on a field whose
    letters are under 16px, so on a phone every field writes at 16px */
 @media (max-width:820px){input,select,textarea,.field,.psearch input{font-size:16px!important}}
@@ -2128,7 +2138,8 @@ function drawCovers(){
       const h = document.createElement('div'); h.className='rs'; h.title='Drag to stretch · Shift keeps its proportions'; d.appendChild(h);
       const t = document.createElement('div'); t.className='tools'; t.onpointerdown = e => e.stopPropagation();
       const slider = (label, min, max, val, set) => { const l = document.createElement('label'); l.className = 'csl'; l.innerHTML = `${label}<input type="range" min="${min}" max="${max}" step="1" value="${val}" aria-label="${label}">`;
-        const inp = l.querySelector('input'); inp.oninput = () => { set(+inp.value); paintFill(); saveSoon(); }; return l; };
+        const inp = l.querySelector('input'); inp.oninput = () => { set(+inp.value); paintFill(); saveSoon(); };
+        const def = label === 'Size' ? Math.round(Math.min(BW, BH)/12) : grid ? 70 : 100; inp.ondblclick = () => { inp.value = def; set(def); paintFill(); save(); }; return l; };
       if(!grid) t.append(pbtn(c.shape==='circle' ? 'square' : 'circle', c.shape==='circle' ? 'Make it a square' : 'Make it a circle', () => { c.shape = c.shape==='circle' ? 'square' : 'circle'; render(); save(); }));
       COVER_COLORS.forEach(col => { const b = document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=col; b.title=col;
         b.setAttribute('aria-pressed', c.color===col); b.onclick = () => { c.color = col; render(); save(); }; t.appendChild(b); });
@@ -3063,6 +3074,19 @@ new MutationObserver(ms => { if(!isPhone()) return; ms.forEach(m => m.removedNod
   let g = null; if(n.classList.contains('modal') && !n.classList.contains('lq')) g = ghostOf(n, 'mdg'); else if(n.classList.contains('pmenu')) g = ghostOf(n, 'pmg');
   if(!g) return; g.classList.add('ios-ghost', g.classList.contains('mdg') ? 'ios-sink' : 'ios-fade'); g.style.animation = ''; document.body.appendChild(g); setTimeout(() => g.remove(), 300); })); })
   .observe(document.body, {childList:true, subtree:true});
+
+/* a small reset on every setting (Alex, 24 Nov: "every setting with a small minimal reset icon"): beside each slider that has a
+   value to go back to (the double-click it always had), a faint round arrow does the same with one tap */
+{ const RST = '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>';
+  const addRst = root => { if(!root.querySelectorAll) return; root.querySelectorAll('input[type=range]').forEach(inp => {
+    if(inp.dataset.rst || !inp.ondblclick) return; inp.dataset.rst = '1';
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'rst'; b.title = 'Reset'; b.setAttribute('aria-label', 'Reset'); b.innerHTML = RST;
+    b.onpointerdown = e => e.stopPropagation();
+    b.onclick = e => { e.preventDefault(); e.stopPropagation(); inp.ondblclick(e); b.classList.remove('spun'); void b.offsetWidth; b.classList.add('spun'); };
+    const row = inp.parentNode; if(row.classList.contains('arow')) row.insertBefore(b, inp); else row.appendChild(b); }); };
+  addRst(document.body);
+  new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if(n.nodeType === 1 && !n.classList.contains('ios-ghost')) addRst(n); })))
+    .observe(document.body, {childList:true, subtree:true}); }
 let pushBack = false; // Home comes back in from the left, as an iPhone's previous page
 function goHome(){ if(document.querySelector('.spage')) return; pushBack = isPhone(); const f = homeFolder(); homeAt(f ? f.id : '');
   if(history.state && history.state.rr === 'edit'){ history.back(); return; } // the popstate below opens Home
