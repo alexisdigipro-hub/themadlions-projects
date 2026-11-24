@@ -471,6 +471,22 @@ a.pill{text-decoration:none}
 .poolview .pvp,.poolview .pvnx{position:absolute;top:50%;transform:translateY(-50%)}.poolview .pvp{left:14px}.poolview .pvnx{right:14px}
 @media (max-width:820px){.poolview .pvp,.poolview .pvnx{display:none}}
 .pth{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.tcrop{position:fixed;inset:0;z-index:97;background:#0b0b0c;display:flex;flex-direction:column;animation:fade .2s;touch-action:manipulation;
+  padding:calc(env(safe-area-inset-top,0px) + 10px) 14px calc(env(safe-area-inset-bottom,0px) + 14px)}
+.tch{display:flex;align-items:center;gap:10px}.tch b{flex:1;text-align:center;font:600 16px var(--display)}
+.tch .pill.round{width:42px;height:42px;padding:0;justify-content:center}.tch .pill svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2}
+.tcs{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.tcf{position:relative;width:min(100%,760px,calc((100vh - 280px) * 16 / 9));aspect-ratio:16/9;overflow:hidden;border-radius:14px;background:#1d1d1f;cursor:grab;touch-action:none;
+  box-shadow:0 0 0 1px rgba(255,255,255,.25),0 20px 60px rgba(0,0,0,.6)}
+.tcf:active{cursor:grabbing}
+.tcf img{position:absolute;left:50%;top:50%;max-width:none;transform-origin:50% 50%;pointer-events:none;-webkit-user-drag:none;user-select:none}
+.tcg{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent calc(33.33% - .5px),rgba(255,255,255,.35) calc(33.33% - .5px),rgba(255,255,255,.35) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.35) calc(66.66% - .5px),rgba(255,255,255,.35) calc(66.66% + .5px),transparent calc(66.66% + .5px)),
+  linear-gradient(0deg,transparent calc(33.33% - .5px),rgba(255,255,255,.35) calc(33.33% - .5px),rgba(255,255,255,.35) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.35) calc(66.66% - .5px),rgba(255,255,255,.35) calc(66.66% + .5px),transparent calc(66.66% + .5px))}
+.tchint{margin:0;color:var(--muted);font-size:12.5px}
+.tct{display:flex;flex-direction:column;gap:12px;width:min(100%,560px);margin:0 auto}
+.tcz{display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;border-radius:999px;background:var(--panel);border:1px solid var(--line)}
+.tcz input{flex:1;accent-color:var(--accent)}.tcz svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:1.8;flex:none}
+.tcb{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.tcb .pill{justify-content:center;height:44px;gap:7px}.tcb .pill svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8}
 .pctx{min-width:220px;transform-origin:50% 0;animation:ptpop .2s cubic-bezier(.2,1.3,.4,1)}
 .pcardm select.field{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9a97' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:16px;padding-right:40px}
 @media (max-width:820px){.ptools{gap:6px}.ptools #shFold .w{display:none}.ptools #shFold,.ptools #shNew2{width:40px;padding:0;justify-content:center}.pfbadge{height:22px;font-size:10.5px;padding:0 8px}
@@ -2818,6 +2834,69 @@ async function deleteSheet(id){ // into the bin for 30 days; for good only where
 }
 /* the window with every sheet: open one, rename, duplicate, delete (asks first), new; who is signed in, and Sign out */
 // the pictures of the projects page stay between visits, so Home opens at once with what it showed last
+/* the thumbnail's own crop (Alex, 24 Nov: "crop, move and all the tools"): the photo in the 16:9 frame Home shows; a finger
+   (or the mouse) moves it, two fingers (or the wheel, or the slider) zoom, Turn goes 90 degrees, Flip mirrors it, Reset puts it
+   back; Use this makes the 960 x 540 JPEG from exactly what the frame holds. Resolves to the picture, or null on Cancel. */
+function cropThumb(blob){
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(blob), img = new Image();
+    const v = document.createElement('div'); v.className = 'tcrop';
+    v.innerHTML = `<div class="tch"><button type="button" class="pill round" data-tc="x" aria-label="Cancel" title="Cancel"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <b>Thumbnail</b><button type="button" class="pill main" data-tc="ok">Use this</button></div>
+      <div class="tcs"><div class="tcf"><img alt=""><i class="tcg"></i></div><p class="tchint">Drag to move · pinch or slide to zoom</p></div>
+      <div class="tct"><label class="tcz"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M8.5 11h5"/></svg>
+          <input type="range" min="100" max="500" value="100" aria-label="Zoom"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M8.5 11h5M11 8.5v5"/></svg></label>
+        <div class="tcb"><button type="button" class="pill" data-tc="rot"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 3 6.2M4 20v-5h5"/></svg>Turn</button>
+          <button type="button" class="pill" data-tc="flip"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 7l-5 5 5 5V7zM16 7l5 5-5 5V7z"/></svg>Flip</button>
+          <button type="button" class="pill" data-tc="reset"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/></svg>Reset</button></div></div>`;
+    document.body.appendChild(v);
+    const f = v.querySelector('.tcf'), im = v.querySelector('.tcf img'), zr = v.querySelector('.tcz input');
+    let z = 1, ox = 0, oy = 0, rot = 0, flip = false, W = 0, H = 0;
+    const dims = () => rot % 180 ? [img.naturalHeight, img.naturalWidth] : [img.naturalWidth, img.naturalHeight];
+    const base = () => { const [rw, rh] = dims(); return Math.max(W / rw, H / rh); };
+    const clamp = () => { const [rw, rh] = dims(), S = base() * z, mx = Math.max(0, (rw * S - W) / 2), my = Math.max(0, (rh * S - H) / 2);
+      ox = Math.max(-mx, Math.min(mx, ox)); oy = Math.max(-my, Math.min(my, oy)); return [mx, my]; };
+    const draw = () => { clamp(); const S = base() * z;
+      im.style.width = img.naturalWidth + 'px'; im.style.height = img.naturalHeight + 'px';
+      im.style.transform = `translate(-50%,-50%) translate(${ox}px,${oy}px) rotate(${rot}deg) scale(${S * (flip ? -1 : 1)},${S})`; zr.value = Math.round(z * 100); };
+    const fit = () => { const r = f.getBoundingClientRect(); W = r.width; H = r.height; };
+    const reset = () => { z = 1; rot = 0; flip = false; ox = 0; const [, my] = (oy = 0, clamp()); oy = my * 0.7; draw(); }; // a face is usually near the top
+    const done = out => { v.remove(); URL.revokeObjectURL(url); removeEventListener('resize', onR); document.removeEventListener('keydown', key, true); resolve(out); };
+    const onR = () => { const k = W; fit(); if(k){ ox *= W / k; oy *= W / k; } draw(); };
+    const key = e => { if(e.key === 'Escape'){ e.stopPropagation(); done(null); } else if(e.key === 'Enter') v.querySelector('[data-tc="ok"]').click(); };
+    img.onload = () => { fit(); im.src = url; reset(); addEventListener('resize', onR); };
+    img.onerror = () => { toast('That photo could not be opened.'); done(null); };
+    img.src = url; document.addEventListener('keydown', key, true);
+    zr.oninput = () => { z = zr.value / 100; draw(); };
+    // moving and zooming: pointers (one moves, two pinch), the wheel zooms
+    const pts = new Map(); let last = null, pinch = null;
+    f.addEventListener('pointerdown', e => { f.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]);
+      if(pts.size === 2){ const [a, b] = [...pts.values()]; pinch = {d:Math.hypot(a[0] - b[0], a[1] - b[1]), z}; } last = [e.clientX, e.clientY]; });
+    f.addEventListener('pointermove', e => { if(!pts.has(e.pointerId)) return; pts.set(e.pointerId, [e.clientX, e.clientY]);
+      if(pts.size >= 2 && pinch){ const [a, b] = [...pts.values()]; z = Math.max(1, Math.min(5, pinch.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d)); draw(); return; }
+      if(last){ ox += e.clientX - last[0]; oy += e.clientY - last[1]; last = [e.clientX, e.clientY]; draw(); } });
+    const up = e => { pts.delete(e.pointerId); if(pts.size < 2) pinch = null; const r = [...pts.values()][0]; last = r ? [...r] : null; };
+    f.addEventListener('pointerup', up); f.addEventListener('pointercancel', up);
+    f.addEventListener('wheel', e => { e.preventDefault(); z = Math.max(1, Math.min(5, z * (e.deltaY < 0 ? 1.08 : 1 / 1.08))); draw(); }, {passive:false});
+    v.addEventListener('touchmove', e => { if(!e.target.closest('input')) e.preventDefault(); }, {passive:false});
+    v.onclick = async e => { const b = e.target.closest('[data-tc]'); if(!b) return; const k = b.dataset.tc;
+      if(k === 'x') return done(null);
+      if(k === 'rot'){ rot = (rot + 90) % 360; draw(); return; }
+      if(k === 'flip'){ flip = !flip; draw(); return; }
+      if(k === 'reset') return reset();
+      if(k === 'ok'){ // exactly what the frame shows, at 960 x 540
+        const c = document.createElement('canvas'), K = 960 / W; c.width = 960; c.height = 540; const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+        const S = base() * z; g.translate(480 + ox * K, 270 + oy * K); g.rotate(rot * Math.PI / 180); g.scale(S * K * (flip ? -1 : 1), S * K);
+        g.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+        c.toBlob(b2 => done(b2), 'image/jpeg', 0.88); } };
+  });
+}
+/* turning the phone: iOS can keep a zoom after landscape and back, so the page's scale is set anew each time (Alex, 24 Nov) */
+{ const vp = document.querySelector('meta[name=viewport]'), want = 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover';
+  const unzoom = () => { if(!vp) return; vp.setAttribute('content', 'width=device-width, initial-scale=1.01, maximum-scale=1.01, viewport-fit=cover');
+    setTimeout(() => vp.setAttribute('content', want), 60); };
+  addEventListener('orientationchange', () => setTimeout(unzoom, 250));
+  matchMedia('(orientation: portrait)').addEventListener('change', () => setTimeout(unzoom, 250)); }
 let homeUrls = [], homeRows = new Map();
 /* getting about (Alex, 20 Nov: "a back button from the project to its folder; navigation on every tab and page"): the editor's
    first button goes back to the project's folder (or Home); the browser's and the phone's Back walk the same way back
@@ -3199,7 +3278,7 @@ async function openSheets(first){
     const apply = async (blob, back) => { w.classList.add('busy');
       if(fid) try{ // a folder: its own row keeps the path; back to the mosaic of its characters
         let path = null;
-        if(!back){ const pic = await make(blob); const r = await store.put(`${me.id}/${fid}/pick-${newId()}.jpg`, pic, 'image/jpeg');
+        if(!back){ w.classList.remove('busy'); const pic = await cropThumb(blob); if(!pic) return; w.classList.add('busy'); const r = await store.put(`${me.id}/${fid}/pick-${newId()}.jpg`, pic, 'image/jpeg');
           if(r.error) throw r.error; path = r.path; dbPut('pic:' + path, {at:'f', blob:pic}).catch(() => {}); }
         const { error:e3 } = await sb.from('roarref_folders').update({thumb:path}).eq('id', fid); if(e3) throw e3;
         if(x.thumb) store.remove([x.thumb]).catch(() => {});
@@ -3207,7 +3286,7 @@ async function openSheets(first){
       }catch{ w.classList.remove('busy'); toast('The thumbnail could not be saved. Check the connection.'); return; }
       try{
         let path = null; const at = Date.now();
-        if(!back){ const pic = await make(blob); const r = await store.put(`${me.id}/${id}/pick-${newId()}.jpg`, pic, 'image/jpeg');
+        if(!back){ w.classList.remove('busy'); const pic = await cropThumb(blob); if(!pic) return; w.classList.add('busy'); const r = await store.put(`${me.id}/${id}/pick-${newId()}.jpg`, pic, 'image/jpeg');
           if(r.error) throw r.error; path = r.path; dbPut('pic:' + path, {at:String(at), blob:pic}).catch(() => {}); }
         const old = dS.pick && row.thumb === dS.pick ? dS.pick : null;
         const auto = old ? (dS.autoThumb || null) : row.thumb;
