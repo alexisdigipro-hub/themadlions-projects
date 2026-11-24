@@ -496,7 +496,7 @@ a.pill{text-decoration:none}
 .sheets-card{max-width:620px}
 .sheets{display:flex;flex-direction:column;gap:8px;max-height:min(60vh,520px);overflow:auto;padding:2px}
 .sh{display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center;padding:8px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
-.sh.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 18px var(--accent-glow)}
+.sh.on{border-color:var(--line)} /* the last opened card is not ringed in red: it looked chosen and stuck (Alex, 24 Nov) */
 .sh-open{padding:0;border:0;background:#2a2a2c;border-radius:9px;overflow:hidden;width:120px;aspect-ratio:16/9;cursor:pointer;display:grid;place-items:center}
 .sh-open img{width:100%;height:100%;object-fit:contain;display:block}
 .sh-empty{width:40%;height:40%;border:1.5px dashed rgba(255,255,255,.25);border-radius:6px}
