@@ -159,6 +159,49 @@ select.sel{background:var(--panel-2);border:1px solid var(--line);border-radius:
 .pcard .pf{display:flex;align-items:center;gap:6px}
 .pcard .pf .readout{flex:1}
 .preview-img{max-width:100%;border-radius:10px;background:conic-gradient(#2a2a2a 25%,#3a3a3a 0 50%,#2a2a2a 0 75%,#3a3a3a 0) 0 0/16px 16px;display:block;margin:0 auto 12px}
+.home{position:fixed;inset:0;z-index:40;overflow:auto;background:var(--bg);padding:max(18px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) 60px max(20px,env(safe-area-inset-left,0px));animation:hin .22s ease-out}
+@keyframes hin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.hhead{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;max-width:1180px;margin:0 auto 22px;min-height:40px}
+.hhead .brand{justify-self:center;font-size:22px;margin:0}
+.hhead .hl{justify-self:start}.hhead .hr{justify-self:end;display:flex;gap:8px}
+.hwrap{max-width:1180px;margin:0 auto}
+.htools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.hsearch{flex:1 1 220px;display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;border-radius:19px;background:var(--panel-2);border:1px solid var(--line);min-width:0}
+.hsearch:focus-within{border-color:var(--accent)}
+.hsearch svg{width:16px;height:16px;fill:none;stroke:var(--muted);stroke-width:1.8;flex:none}
+.hsearch input{flex:1;min-width:0;background:transparent;border:0;outline:none;height:100%}
+.htools .pill,.htools .round{height:38px}.htools .round{width:38px}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.hcard{position:relative;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;cursor:pointer;transition:border-color .15s,transform .15s;min-width:0}
+.hcard:hover{border-color:#3d434c;transform:translateY(-2px)}
+.hcard.cur{border-color:var(--accent)}
+.hthumb{aspect-ratio:16/10;display:grid;place-items:center;padding:12px;background:conic-gradient(#202226 25%,#2a2c31 0 50%,#202226 0 75%,#2a2c31 0) 0 0/14px 14px;position:relative}
+.hthumb img{max-width:100%;max-height:100%;box-shadow:0 4px 18px rgba(0,0,0,.45)}
+.hthumb .hblank{font:500 12px var(--f-num);color:var(--muted)}
+.hnow{position:absolute;left:10px;top:10px;font:600 10px var(--f-ui);letter-spacing:.06em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);padding:3px 8px;border-radius:9px;font-style:normal}
+.hmeta{display:flex;align-items:center;gap:6px;padding:10px 10px 10px 14px}
+.hmeta .t{flex:1;min-width:0}
+.hmeta b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hmeta small{display:block;font:500 11.5px var(--f-num);color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hmeta .round{width:30px;height:30px;border:0;background:transparent;opacity:.6}
+.hmeta .round:hover{opacity:1;background:rgba(255,255,255,.08)}
+.hmeta .round svg.i{width:16px;height:16px}
+.hnew{border-style:dashed;background:transparent;align-items:center;justify-content:center;gap:8px;min-height:200px;color:var(--muted)}
+.hnew .plus{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(58,167,232,.14);color:var(--accent)}
+.hnew .plus svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.hnew b{color:var(--fg)}
+.hlist2{display:flex;flex-direction:column;gap:6px}
+.hlist2 .hcard{flex-direction:row;align-items:center;border-radius:14px}
+.hlist2 .hcard:hover{transform:none}
+.hlist2 .hthumb{width:120px;flex:none;aspect-ratio:16/10;padding:6px}
+.hlist2 .hmeta{flex:1}
+.hlist2 .hnow{display:none}
+.hlist2 .hnew{min-height:64px;flex-direction:row;justify-content:flex-start;padding-left:14px}
+.hlist2 .hnew .plus{width:38px;height:38px}
+.hnone{color:var(--muted);padding:30px 0;text-align:center;grid-column:1/-1}
+.hrename{width:100%;background:var(--panel-2);border:1px solid var(--accent);border-radius:8px;padding:3px 8px;outline:none;font-weight:600}
+@media (max-width:820px){.hhead{grid-template-columns:auto 1fr auto}.htools .w{display:none}}
+@media (max-width:560px){.hgrid{grid-template-columns:1fr;gap:10px}.hnew{min-height:120px}}
 .toast{position:fixed;left:50%;bottom:calc(46px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#24272d;border:1px solid var(--line);padding:9px 16px;border-radius:18px;font-size:12.5px;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.4);pointer-events:none;animation:pop .2s}
 
 @media (max-width:820px){
@@ -302,20 +345,22 @@ function nameFor(type) {
 function libRead() { try { return JSON.parse(localStorage.getItem(LIB) || '{}') || {}; } catch (e) { return {}; } }
 function libWrite(lib) { try { localStorage.setItem(LIB, JSON.stringify(lib)); return true; } catch (e) { return false; } }
 let thumbT = 0;
+function makeThumb() {
+  const k = Math.min(1, 480 / Math.max(S.doc.w, S.doc.h));
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(S.doc.w * k)); c.height = Math.max(1, Math.round(S.doc.h * k));
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(docCv, 0, 0, c.width, c.height);
+  return c.toDataURL('image/png');
+}
+function saveThumbNow() { if (S.ghost) return; const l = libRead(); if (!l[S.doc.id]) return; clearTimeout(thumbT); renderDoc(); l[S.doc.id].thumb = makeThumb(); libWrite(l); }
 function persist() {
+  if (S.ghost) return;
   const lib = libRead();
   const prev = lib[S.doc.id] || {};
   lib[S.doc.id] = { doc: S.doc, shapes: S.shapes, t: Date.now(), thumb: prev.thumb || '' };
   libWrite(lib);
   try { localStorage.setItem(CUR, S.doc.id); } catch (e) {}
   clearTimeout(thumbT);
-  thumbT = setTimeout(() => {
-    const l = libRead(); if (!l[S.doc.id]) return;
-    const k = Math.min(1, 320 / Math.max(S.doc.w, S.doc.h));
-    const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(S.doc.w * k)); c.height = Math.max(1, Math.round(S.doc.h * k));
-    const x = c.getContext('2d'); x.drawImage(docCv, 0, 0, c.width, c.height);
-    l[S.doc.id].thumb = c.toDataURL('image/png'); libWrite(l);
-  }, 1200);
+  thumbT = setTimeout(saveThumbNow, 1200);
 }
 
 /* ---------- history ---------- */
@@ -326,6 +371,7 @@ function commit(label) {
   hist = hist.slice(0, hi + 1); hist.push({ s, label: hist.length ? (label || 'Change') : 'Open' });
   if (hist.length > 200) hist.shift();
   hi = hist.length - 1;
+  if (S.ghost && hist.length > 1) S.ghost = false;
   persist(); refreshUndo();
 }
 function restore(h) {
@@ -1109,6 +1155,7 @@ window.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'select' || tag === 'textarea') { if (e.key === 'Escape') e.target.blur(); return; }
   if ($('.modal-back')) { if (e.key === 'Escape') closeModal(); return; }
+  if ($('.home')) return;
   const mod = e.metaKey || e.ctrlKey, k = e.key;
   if (k === ' ') { if (!spaceDown) { spaceDown = true; stage.style.cursor = 'grab'; } e.preventDefault(); return; }
   if (mod && k.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
@@ -1174,7 +1221,7 @@ function loadProject(o, keepId) {
 }
 $('#fileIn').addEventListener('change', e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  f.text().then(t => { try { loadProject(JSON.parse(t)); closeModal(); toast('Opened ' + f.name); } catch (err) { toast('That file is not a RoarMask project.'); } });
+  f.text().then(t => { try { S.ghost = false; loadProject(JSON.parse(t)); closeModal(); const hm = $('.home'); if (hm) hm.remove(); toast('Opened ' + f.name); } catch (err) { toast('That file is not a RoarMask project.'); } });
 });
 
 /* ---------- projects ---------- */
@@ -1186,49 +1233,108 @@ function openModal(html) {
   document.body.appendChild(b); return b;
 }
 function closeModal() { const m = $('.modal-back'); if (m) m.remove(); }
-function openProjects() {
-  persist();
-  const lib = libRead(), list = Object.values(lib).sort((a, b) => b.t - a.t);
-  const m = openModal(`<h2>Projects<button class="round sm" data-close title="Close"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h2>
-    <h4>New mask</h4>
+const HOMEV = 'roarmask-home';
+function whenText(t) { try { const d = new Date(t), days = Math.floor((Date.now() - d) / 864e5); return days < 1 ? 'today' : days < 2 ? 'yesterday' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); } catch (e) { return ''; } }
+function openHome() {
+  if ($('.home')) return;
+  closeModal();
+  if (!S.ghost) { persist(); saveThumbNow(); }
+  let pv = { view: 'grid', sort: 'recent' }; try { pv = Object.assign(pv, JSON.parse(localStorage.getItem(HOMEV) || '{}')); } catch (e) {}
+  const keep = () => { try { localStorage.setItem(HOMEV, JSON.stringify(pv)); } catch (e) {} };
+  let q = '';
+  const m = document.createElement('div'); m.className = 'home'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-label', 'Your masks');
+  const close = () => { m.remove(); draw(); };
+  m.innerHTML = `<header class="hhead">
+      <div class="hl">${S.ghost ? '' : `<button class="pill" id="hBack" title="Back to the mask you were on"><svg class="i" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span class="w">Back</span></button>`}</div>
+      <a class="brand" href="../" title="The Mad Lions Lab" style="color:inherit;text-decoration:none">ROAR<b>MASK</b></a>
+      <div class="hr"><button class="round" id="hOpen" title="Open a project file (.json)"><svg class="i" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></button></div>
+    </header>
+    <div class="hwrap">
+      <div class="htools">
+        <label class="hsearch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="hQ" placeholder="Search your masks" aria-label="Search" autocomplete="off"></label>
+        <div class="seg" data-k="sort">${['recent', 'name', 'size'].map(v => `<button type="button" data-v="${v}" class="${pv.sort === v ? 'on' : ''}">${{ recent: 'Recent', name: 'Name', size: 'Size' }[v]}</button>`).join('')}</div>
+        <div class="seg" data-k="view">${[['grid', '<svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>', 'Tiles'], ['list', '<svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M4 6h16M4 12h16M4 18h16"/></svg>', 'List']].map(([v, ic, t]) => `<button type="button" data-v="${v}" title="${t}" aria-label="${t}" class="${pv.view === v ? 'on' : ''}">${ic}</button>`).join('')}</div>
+        <button class="pill main" id="hNew"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="w">New mask</span></button>
+      </div>
+      <div id="hList"></div>
+    </div>`;
+  const paint = () => {
+    const lib = libRead(), qq = q.trim().toLowerCase();
+    let list = Object.values(lib).filter(p => p && p.doc && (!qq || (p.doc.name || '').toLowerCase().includes(qq)));
+    if (pv.sort === 'name') list.sort((a, b) => (a.doc.name || '').localeCompare(b.doc.name || '', undefined, { numeric: true, sensitivity: 'base' }));
+    else if (pv.sort === 'size') list.sort((a, b) => b.doc.w * b.doc.h - a.doc.w * a.doc.h);
+    else list.sort((a, b) => b.t - a.t);
+    const box = m.querySelector('#hList'); box.className = pv.view === 'list' ? 'hlist2' : 'hgrid'; box.innerHTML = '';
+    if (qq && !list.length) box.innerHTML = '<p class="hnone">No mask is called like that.</p>';
+    list.forEach(p => {
+      const c = document.createElement('div'); const isCur = !S.ghost && p.doc.id === S.doc.id;
+      c.className = 'hcard' + (isCur ? ' cur' : ''); c.tabIndex = 0;
+      const n = (p.shapes || []).length;
+      c.innerHTML = `<div class="hthumb">${p.thumb ? `<img alt="" src="${p.thumb}">` : `<span class="hblank">${p.doc.w} × ${p.doc.h}</span>`}${isCur ? '<i class="hnow">Last opened</i>' : ''}</div>
+        <div class="hmeta"><div class="t"><b></b><small>${p.doc.w} × ${p.doc.h} · ${n} shape${n === 1 ? '' : 's'} · ${whenText(p.t)}</small></div>
+          <button class="round" data-a="ren" title="Rename"><svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+          <button class="round" data-a="dup" title="Duplicate">${ICON.dup}</button>
+          <button class="round danger" data-a="del" title="Delete">${ICON.trash}</button></div>`;
+      c.querySelector('b').textContent = p.doc.name || 'Mask';
+      c.addEventListener('click', e => {
+        const btn = e.target.closest('button'), a = btn && btn.dataset.a;
+        if (e.target.closest('input')) return;
+        if (a === 'ren') {
+          const b = c.querySelector('b'), inp = document.createElement('input'); inp.className = 'hrename'; inp.value = p.doc.name || '';
+          b.replaceWith(inp); inp.focus(); inp.select(); let over = false;
+          const done = ok => { if (over) return; over = true; const v = inp.value.trim(); if (ok && v) { const l = libRead(); if (l[p.doc.id]) { l[p.doc.id].doc.name = v; libWrite(l); } if (isCur) { S.doc.name = v; $('#docName').value = v; } } paint(); };
+          inp.addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') done(true); if (ev.key === 'Escape') done(false); });
+          inp.addEventListener('blur', () => done(true)); return;
+        }
+        if (a === 'dup') { const o = JSON.parse(JSON.stringify(p)); o.doc.id = uid(); o.doc.name = (o.doc.name || 'Mask') + ' copy'; o.t = Date.now(); const l = libRead(); l[o.doc.id] = o; libWrite(l); paint(); toast('Duplicated'); return; }
+        if (a === 'del') {
+          if (!btn.dataset.sure) { btn.dataset.sure = '1'; btn.title = 'Tap again to delete'; btn.style.opacity = 1; btn.style.background = 'rgba(255,95,87,.18)'; toast('Tap the bin again to delete'); setTimeout(() => { if (btn.isConnected) { delete btn.dataset.sure; btn.style.background = ''; btn.style.opacity = ''; } }, 3000); return; }
+          const l = libRead(); delete l[p.doc.id]; libWrite(l);
+          if (isCur) { const b = blank(); S.ghost = true; loadProject(b, true); try { localStorage.removeItem(CUR); } catch (er) {} }
+          m.remove(); openHome(); return;
+        }
+        if (isCur) { close(); return; }
+        S.ghost = false; loadProject({ doc: p.doc, shapes: p.shapes }, true); close();
+      });
+      c.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target === c) c.click(); });
+      box.appendChild(c);
+    });
+    if (!qq) {
+      const nb = document.createElement('button'); nb.type = 'button'; nb.className = 'hcard hnew';
+      nb.innerHTML = '<span class="plus"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><b>New mask</b><small>Set the LED screen\'s size</small>';
+      nb.addEventListener('click', newMaskWindow); box.appendChild(nb);
+    }
+  };
+  m.querySelector('#hQ').addEventListener('input', e => { q = e.target.value; paint(); });
+  m.querySelectorAll('.seg[data-k]').forEach(g => g.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    pv[g.dataset.k] = b.dataset.v; keep(); g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); paint();
+  })));
+  m.querySelector('#hNew').addEventListener('click', newMaskWindow);
+  m.querySelector('#hOpen').addEventListener('click', () => $('#fileIn').click());
+  const back = m.querySelector('#hBack'); if (back) back.addEventListener('click', close);
+  m.addEventListener('keydown', e => { if (e.key === 'Escape' && !S.ghost && !$('.modal-back')) { e.stopPropagation(); close(); } });
+  document.body.appendChild(m); paint();
+}
+function newMaskWindow() {
+  const m = openModal(`<h2>New mask<button class="round sm" data-close title="Close"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h2>
     <div class="row"><label class="fld wide"><span>Name</span><input id="nName" type="text" value="LED mask" spellcheck="false"></label></div>
     <div class="row"><select class="sel" id="nPre">${PRESETS.map((p, i) => `<option value="${i}">${p[0]}</option>`).join('')}<option value="-1">Custom size</option></select></div>
     <div class="g2">${fld('W', 'nW', 1920, 'min="1" max="16384"')}${fld('H', 'nH', 1080, 'min="1" max="16384"')}</div>
     <div class="row"><span class="lbl">Background</span>${seg('nBg', [['#000000', 'Black'], ['#ffffff', 'White'], ['transparent', 'Transparent']], '#000000')}</div>
-    <div class="row"><button class="pill main" id="nGo">Create</button><button class="pill" id="nOpen">Open a project file</button></div>
-    <h4>Saved in this browser</h4>
-    <div class="plist" id="pList"></div>`);
+    <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="pill" data-close>Cancel</button><button class="pill main" id="nGo">Create</button></div>`);
   const q = id => m.querySelector('#' + id);
   let bg = '#000000';
   q('nPre').addEventListener('change', () => { const p = PRESETS[+q('nPre').value]; if (p) { q('nW').value = p[1]; q('nH').value = p[2]; } });
   const custom = () => { q('nPre').value = String(PRESETS.findIndex(p => p[1] === +q('nW').value && p[2] === +q('nH').value)); };
   q('nW').addEventListener('input', custom); q('nH').addEventListener('input', custom);
   m.querySelectorAll('[data-seg="nBg"] button').forEach(b => b.addEventListener('click', () => { bg = b.dataset.v; m.querySelectorAll('[data-seg="nBg"] button').forEach(x => x.classList.toggle('on', x === b)); }));
+  q('nName').select(); q('nName').focus();
   q('nGo').addEventListener('click', () => {
     const w = clamp(Math.round(+q('nW').value) || 1920, 1, 16384), h = clamp(Math.round(+q('nH').value) || 1080, 1, 16384);
+    if (!S.ghost) { persist(); saveThumbNow(); }
+    S.ghost = false;
     S.doc = newDoc(q('nName').value.trim() || 'LED mask', w, h, bg); S.shapes = []; S.sel = []; hist = []; hi = -1;
-    renderDoc(); commit(); renderAll(); closeModal(); fit();
-  });
-  q('nOpen').addEventListener('click', () => $('#fileIn').click());
-  const pl = q('pList');
-  if (!list.length) pl.innerHTML = '<div class="empty">Nothing saved yet.</div>';
-  list.forEach(p => {
-    const c = document.createElement('div'); c.className = 'pcard' + (p.doc.id === S.doc.id ? ' cur' : '');
-    c.innerHTML = `<div class="th">${p.thumb ? `<img alt="" src="${p.thumb}">` : ''}</div><div class="pn"></div>
-      <div class="pf"><span class="readout">${p.doc.w} × ${p.doc.h}</span><button class="round sm" data-a="dup" title="Duplicate">${ICON.dup}</button><button class="round sm danger" data-a="del" title="Delete">${ICON.trash}</button></div>`;
-    c.querySelector('.pn').textContent = p.doc.name;
-    c.addEventListener('click', e => {
-      const a = e.target.closest('button') && e.target.closest('button').dataset.a;
-      if (a === 'del') {
-        if (!c.dataset.sure) { c.dataset.sure = '1'; e.target.closest('button').title = 'Tap again to delete'; toast('Tap the bin again to delete'); return; }
-        const l = libRead(); delete l[p.doc.id]; libWrite(l);
-        if (p.doc.id === S.doc.id) { const s = blank(); S.doc = s.doc; S.shapes = s.shapes; S.sel = []; hist = []; hi = -1; renderDoc(); commit(); renderAll(); fit(); }
-        openProjects(); return;
-      }
-      if (a === 'dup') { const o = JSON.parse(JSON.stringify(p)); o.doc.id = uid(); o.doc.name += ' copy'; o.t = Date.now(); const l = libRead(); l[o.doc.id] = o; libWrite(l); openProjects(); return; }
-      loadProject({ doc: p.doc, shapes: p.shapes }, true); closeModal();
-    });
-    pl.appendChild(c);
+    renderDoc(); commit(); renderAll(); closeModal(); const hm = $('.home'); if (hm) hm.remove(); fit(); saveThumbNow();
   });
 }
 
@@ -1254,7 +1360,7 @@ $('#lDown').addEventListener('click', () => order('bwd'));
 applyFolds(); if (folds._side) setSide(false);
 $('#exportPng').addEventListener('click', exportPng);
 $('#saveJson').addEventListener('click', saveJson);
-$('#btnProjects').addEventListener('click', openProjects);
+$('#btnProjects').addEventListener('click', openHome);
 $('#docName').addEventListener('input', e => { S.doc.name = e.target.value; });
 $('#docName').addEventListener('change', () => commit('Rename mask'));
 
@@ -1268,12 +1374,13 @@ $('#docName').addEventListener('change', () => commit('Rename mask'));
     libWrite(lib);
     const cur = localStorage.getItem(CUR); if (cur && lib[cur]) start = lib[cur];
   } catch (e) {}
-  if (!start) start = blank();
+  if (!start) { start = blank(); S.ghost = true; }
   try { loadProject({ doc: start.doc, shapes: start.shapes }, true); } catch (e) { const s = blank(); S.doc = s.doc; S.shapes = s.shapes; renderDoc(); commit(); renderAll(); }
   setTool('select');
   sizeCanvases(); fit();
   new ResizeObserver(() => { const keep = W && H; const cx = keep ? (W / 2 - S.ox) / S.z : 0, cy = keep ? (H / 2 - S.oy) / S.z : 0; sizeCanvases(); if (keep) { S.ox = W / 2 - cx * S.z; S.oy = H / 2 - cy * S.z; draw(); } else fit(); }).observe($('#stageBox'));
   if (document.fonts) document.fonts.ready.then(draw);
+  openHome();
 })();
 })();
 </script>
