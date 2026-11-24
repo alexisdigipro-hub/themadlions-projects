@@ -2766,6 +2766,7 @@ async function openSheet(id){
   const { data, error } = await sb.from('roarref_sheets').select('id,name,data').eq('id', id).single();
   if(error){ toast('That sheet could not be opened. Check the connection.'); return; }
   sheets.cur = id; try{ localStorage.setItem('roarref-cur', id); }catch{}
+  mTab = 'pool'; // a project always opens on its Pool (Alex, 24 Nov)
   await loadSheet(data); placeControls();
 }
 async function bringLocal(){ // sheets made before sign-in, kept in this browser only, go into the account once
@@ -3392,7 +3393,7 @@ async function openSheets(first){
         if(pv.folder){ pv.folder = ''; keep(); paint(); } else paintList(); renameFolder(f.id); return; }
       const x = sheets.list.find(y => y.id === id); if(!x || (x.folder || '') === t.dataset.to) return;
       if(await setFolder(id, t.dataset.to)){ paintList(); const f = fOf(t.dataset.to); toast(f ? `Moved to ${f.name}` : 'Moved to Home'); } return; }
-    if(t.dataset.open){ if(t.dataset.open === sheets.cur) return close(); busy(true); await switchSheet(t.dataset.open); busy(false); return close(); }
+    if(t.dataset.open){ if(t.dataset.open === sheets.cur){ mTab = 'pool'; placeControls(); return close(); } busy(true); await switchSheet(t.dataset.open); busy(false); return close(); }
     if(t.dataset.dup){ busy(true); if(t.dataset.dup !== sheets.cur) await switchSheet(t.dataset.dup); await newSheet(true); busy(false); return close(); }
     if(t.dataset.ren){ const x = sheets.list.find(y => y.id === t.dataset.ren), row = t.closest('.sh'), b = row.querySelector('.sh-meta');
       b.innerHTML = `<input class="field" style="height:38px;font-size:14px" maxlength="40" value="${esc(x.name)}" aria-label="Sheet name">`;
@@ -3563,7 +3564,7 @@ async function restore(){
 }
 /* where each control lives: on a computer the top bar and the bar under the sheet, on a phone the top row and the tabs */
 const isPhone = () => matchMedia('(max-width:820px)').matches;
-let mTab = 'layout';
+let mTab = 'pool';
 function moveLens2(){ const b = $('mtabs').querySelector(`[data-t="${mTab}"]`); if(!b) return;
   $('mlens').style.left = b.offsetLeft+'px'; $('mlens').style.width = b.offsetWidth+'px';
   $('mtabs').querySelectorAll('.lay').forEach(x => x.setAttribute('aria-selected', x===b)); }
