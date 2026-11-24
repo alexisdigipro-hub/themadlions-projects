@@ -355,7 +355,7 @@ a.pill{text-decoration:none}
 .plist{display:flex;flex-direction:column;gap:8px}
 .prow.sh{display:flex;grid-template-columns:none;align-items:center;gap:14px;padding:8px 12px 8px 8px;border-radius:18px;background:rgba(255,255,255,.045);border:1px solid var(--line);transition:background .15s,border-color .15s}
 .prow:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)}
-.prow.on{border-color:rgba(212,0,0,.7)}
+.prow.on{border-color:var(--line)}
 .prow .pthumb{width:112px;flex:none;border-radius:12px}
 .prow .pthumb::after{display:none}
 .prow .pblank em{display:none}.prow .pblank svg{width:22px;height:22px}
@@ -370,7 +370,7 @@ a.pill{text-decoration:none}
 .pcard{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:24px;overflow:hidden;display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.16,1,.3,1),border-color .25s,box-shadow .35s;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .pcard.sh{display:flex;padding:0;gap:0;grid-template-columns:none;align-items:stretch}
 .pcard:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.22);box-shadow:0 26px 60px rgba(0,0,0,.5)}
-.pcard.on{border-color:rgba(212,0,0,.7);box-shadow:0 0 0 1px rgba(212,0,0,.7),0 18px 50px rgba(212,0,0,.22)}
+.pcard.on{border-color:var(--line)}
 .pthumb{position:relative;aspect-ratio:16/9;border:0;padding:0;background:#1d1d1f;cursor:pointer;display:block;width:100%;overflow:hidden}
 .pthumb > img,.pstrip{width:100%;height:100%;display:block;transition:transform .6s cubic-bezier(.16,1,.3,1)}
 .pthumb > img{object-fit:cover}
@@ -422,7 +422,7 @@ a.pill{text-decoration:none}
 .pdrop{outline:2px solid var(--accent);outline-offset:3px;box-shadow:0 0 0 6px rgba(212,0,0,.18),0 0 30px var(--accent-glow)!important}
 .pdragging{opacity:.45}
 .spage .sh[data-id] .pthumb img{-webkit-touch-callout:none;-webkit-user-drag:none}
-.spage .sh[data-id],.spage .sh.pfold{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.spage .sh[data-id],.spage .sh.pfold{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer}
 .spage .pfold .pthumb img{-webkit-touch-callout:none;-webkit-user-drag:none}
 .plift{opacity:.4;transform:scale(.96)!important;transition:transform .2s,opacity .2s}
 .ptdrag .pfold{transition:transform .2s,box-shadow .2s}.ptdrag .pfold.pdrop{transform:scale(1.04)}
@@ -3226,6 +3226,8 @@ async function openSheets(first){
   };
   m.onclick = async e => {
     let t = e.target.closest('button');
+    // a tap anywhere on a card opens it, not only on its picture (Alex, 24 Nov)
+    if(!t){ const c = e.target.closest('#pList > .sh'); if(c && !e.target.closest('input, .pswp')) t = c.querySelector(c.dataset.fid ? '[data-fold]' : '[data-open]'); }
     if(!t || m.classList.contains('busy')) return;
     // the tap that closed a menu opens nothing, nor the finger lifting from a long press (Alex, 20 Nov: "the menu comes, then it
     // goes into the folder; we want to choose from the menu"), nor anything while a menu is open
