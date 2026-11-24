@@ -865,7 +865,7 @@ function colourRow(key, p) {
   return `<div class="row"><div class="colour" style="flex:1;min-width:0">
       <label class="sw" title="Pick a colour"><i style="background:${esc(sw)};opacity:${p.o / 100}"></i><input type="color" id="${key}C" value="${esc(p.c)}"></label>
       <label class="fld wide"><span>#</span><input id="${key}Hex" type="text" value="${esc(p.c.replace('#', ''))}" maxlength="6" spellcheck="false"></label>
-      <label class="fld" style="width:78px"><span>%</span><input id="${key}O" type="number" min="0" max="100" step="1" value="${p.o}"></label></div></div>
+      <label class="fld" style="width:88px"><span>%</span><input id="${key}O" type="number" min="0" max="100" step="1" value="${p.o}"></label></div></div>
     <div class="row"><div class="dots">${['#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff'].map(c => `<button type="button" class="dot" data-dot="${key}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('')}</div></div>`;
 }
 function renderSel() {
