@@ -262,19 +262,7 @@ function mkShape(type, x, y, w, h, o = {}) {
   if (type === 'arc') { base.fill.m = 'none'; base.stroke.m = 'color'; base.stroke.w = 20; }
   return Object.assign(base, o, { fill: Object.assign(base.fill, o.fill || {}), stroke: Object.assign(base.stroke, o.stroke || {}) });
 }
-function sample() {
-  const d = newDoc('Sample · Stage mask', 2000, 800, '#000000');
-  const black = { m: 'color', c: '#000000', o: 100, al: 'in' };
-  const sh = [
-    mkShape('rect', 25, 22, 1960, 568, { name: 'Top band', r: 284 }),
-    mkShape('rect', 800, 560, 400, 240, { name: 'Stem' }),
-    mkShape('arc', 327, -96, 682, 682, { name: 'Arc left outer', a0: 147, a1: 221, stroke: Object.assign({ w: 40 }, black) }),
-    mkShape('arc', 627, -46, 742, 742, { name: 'Arc left inner', a0: 135, a1: 217, stroke: Object.assign({ w: 44 }, black) }),
-    mkShape('arc', 631, -46, 742, 742, { name: 'Arc right inner', a0: 323, a1: 45, stroke: Object.assign({ w: 44 }, black) }),
-    mkShape('arc', 991, -96, 682, 682, { name: 'Arc right outer', a0: 319, a1: 33, stroke: Object.assign({ w: 40 }, black) })
-  ];
-  return { doc: d, shapes: sh };
-}
+function blank() { return { doc: newDoc('LED mask', 1920, 1080, '#000000'), shapes: [] }; }
 function nameFor(type) {
   const base = TYPE_NAME[type]; let n = 1;
   const used = new Set(S.shapes.map(s => s.name));
@@ -1148,7 +1136,7 @@ function openProjects() {
       if (a === 'del') {
         if (!c.dataset.sure) { c.dataset.sure = '1'; e.target.closest('button').title = 'Tap again to delete'; toast('Tap the bin again to delete'); return; }
         const l = libRead(); delete l[p.doc.id]; libWrite(l);
-        if (p.doc.id === S.doc.id) { const s = sample(); S.doc = s.doc; S.shapes = s.shapes; S.sel = []; hist = []; hi = -1; renderDoc(); commit(); renderAll(); fit(); }
+        if (p.doc.id === S.doc.id) { const s = blank(); S.doc = s.doc; S.shapes = s.shapes; S.sel = []; hist = []; hi = -1; renderDoc(); commit(); renderAll(); fit(); }
         openProjects(); return;
       }
       if (a === 'dup') { const o = JSON.parse(JSON.stringify(p)); o.doc.id = uid(); o.doc.name += ' copy'; o.t = Date.now(); const l = libRead(); l[o.doc.id] = o; libWrite(l); openProjects(); return; }
@@ -1181,9 +1169,15 @@ $('#docName').addEventListener('change', commit);
 /* ---------- boot ---------- */
 (function boot() {
   let start = null;
-  try { const lib = libRead(), cur = localStorage.getItem(CUR); if (cur && lib[cur]) start = lib[cur]; } catch (e) {}
-  if (!start) start = sample();
-  try { loadProject({ doc: start.doc, shapes: start.shapes }, true); } catch (e) { const s = sample(); S.doc = s.doc; S.shapes = s.shapes; renderDoc(); commit(); renderAll(); }
+  try {
+    const lib = libRead();
+    // the sample mask of the first version is no longer offered: take it out of the saved list
+    Object.keys(lib).forEach(k => { if (lib[k] && lib[k].doc && lib[k].doc.name === 'Sample · Stage mask') delete lib[k]; });
+    libWrite(lib);
+    const cur = localStorage.getItem(CUR); if (cur && lib[cur]) start = lib[cur];
+  } catch (e) {}
+  if (!start) start = blank();
+  try { loadProject({ doc: start.doc, shapes: start.shapes }, true); } catch (e) { const s = blank(); S.doc = s.doc; S.shapes = s.shapes; renderDoc(); commit(); renderAll(); }
   setTool('select');
   sizeCanvases(); fit();
   new ResizeObserver(() => { const keep = W && H; const cx = keep ? (W / 2 - S.ox) / S.z : 0, cy = keep ? (H / 2 - S.oy) / S.z : 0; sizeCanvases(); if (keep) { S.ox = W / 2 - cx * S.z; S.oy = H / 2 - cy * S.z; draw(); } else fit(); }).observe($('#stageBox'));
