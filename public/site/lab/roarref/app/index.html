@@ -337,7 +337,7 @@ a.pill{text-decoration:none}
 .modal.busy{cursor:progress}.modal.busy .card{opacity:.7;pointer-events:none}
 .who{font-size:13px;color:var(--muted)}
 .card .off{opacity:.4;pointer-events:none}
-.spage{position:fixed;inset:0;z-index:60;overflow:auto;padding:max(18px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) 60px max(20px,env(safe-area-inset-left,0px));animation:fade .25s;
+.spage,.spage-ghost{position:fixed;inset:0;z-index:60;overflow:auto;padding:max(18px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) 60px max(20px,env(safe-area-inset-left,0px));animation:fade .25s;
   background:radial-gradient(1100px 520px at 18% -8%,rgba(212,0,0,.16),transparent 62%),radial-gradient(900px 600px at 100% 0%,rgba(255,255,255,.05),transparent 60%),var(--bg)}
 .phead{display:flex;align-items:center;gap:10px;max-width:1320px;margin:0 auto}
 .phead .mark{font-size:24px}
@@ -449,10 +449,10 @@ a.pill{text-decoration:none}
 .ptghost .ptgb{display:grid;place-items:center}.ptghost .ptgb svg{width:26px;height:26px;stroke:var(--muted);fill:none;stroke-width:1.5}
 .ptghost b{display:block;padding:7px 10px;font:600 12.5px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @keyframes ptpop{from{opacity:0;scale:.8}to{opacity:1;scale:1}}
-.pmenu{position:fixed;z-index:90;min-width:220px;max-width:min(300px,calc(100vw - 20px));max-height:min(60vh,420px);overflow:auto;padding:6px;border-radius:18px;background:#232325;border:1px solid rgba(255,255,255,.12);
+.pmenu,.pmg{position:fixed;z-index:90;min-width:220px;max-width:min(300px,calc(100vw - 20px));max-height:min(60vh,420px);overflow:auto;padding:6px;border-radius:18px;background:#232325;border:1px solid rgba(255,255,255,.12);
   box-shadow:0 24px 60px rgba(0,0,0,.6);animation:fade .15s}
-.pmenu p{margin:6px 10px 6px;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pmenu button{display:flex;align-items:center;gap:10px;width:100%;height:40px;padding:0 10px;border:0;border-radius:12px;background:none;color:var(--fg);font:500 14px var(--body);cursor:pointer;text-align:left}
+.pmenu p,.pmg p{margin:6px 10px 6px;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmenu button,.pmg button{display:flex;align-items:center;gap:10px;width:100%;height:40px;padding:0 10px;border:0;border-radius:12px;background:none;color:var(--fg);font:500 14px var(--body);cursor:pointer;text-align:left}
 .pmenu button:hover{background:rgba(255,255,255,.08)}
 .pmenu button[aria-pressed="true"]{background:rgba(212,0,0,.14)}
 .pmenu button span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -528,7 +528,7 @@ a.pill{text-decoration:none}
 @media (max-width:560px){.sh{grid-template-columns:84px 1fr}.sh-open{width:84px}.sh-acts{grid-column:1/-1;justify-content:flex-end}}
 .hint{position:absolute;bottom:-2px;left:0;right:0;text-align:center;font-size:12px;color:var(--muted);pointer-events:none}
 
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:grid;place-items:center;z-index:50;padding:16px;animation:fade .2s}
+.modal,.mdg{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:grid;place-items:center;z-index:50;padding:16px;animation:fade .2s}
 .card{background:rgba(32,32,34,.92);border:1px solid var(--line);border-radius:18px;padding:18px;max-width:min(980px,100%);width:100%;
   display:flex;flex-direction:column;gap:14px;animation:pop .28s cubic-bezier(.3,1.4,.5,1);box-shadow:0 30px 80px rgba(0,0,0,.6)}
 .card h2{margin:0;font:700 20px var(--display)}
@@ -687,6 +687,36 @@ html,body{overscroll-behavior:none}
 }
 @keyframes pushIn{from{transform:translateX(100%)}to{transform:none}}
 @keyframes pushBack{from{transform:translateX(-30%);opacity:.6}to{transform:none;opacity:1}}
+/* iPhone motion on a phone (Alex, 24 Nov): the curve and length of iOS's own push, sheet and menu */
+@media (max-width:820px){
+  .ios-ghost{pointer-events:none!important}
+  .ios-out-l{z-index:59!important;animation:iosOutL .38s cubic-bezier(.2,.85,.25,1) forwards}
+  .ios-out-r{z-index:61!important;animation:iosOutR .38s cubic-bezier(.2,.85,.25,1) forwards;box-shadow:-10px 0 30px rgba(0,0,0,.45)}
+  .ios-in-r{animation:iosInR .38s cubic-bezier(.2,.85,.25,1)!important;box-shadow:-10px 0 30px rgba(0,0,0,.45)}
+  .ios-in-l{animation:iosInL .38s cubic-bezier(.2,.85,.25,1)!important}
+  .app.ios-in-r{z-index:61;background:var(--bg)}
+  .app.ios-ghost{background:var(--bg)}
+  .modal{animation:iosVeil .3s ease-out}
+  .modal > .card,.modal > form.card{animation:iosSheet .42s cubic-bezier(.2,.9,.25,1)!important}
+  .mdg.ios-sink{z-index:49;animation:iosVeilOut .26s ease-in forwards}
+  .mdg.ios-sink > *{animation:iosSheetOut .26s cubic-bezier(.4,0,.8,.6) forwards!important}
+  .pctx,.pmenu{animation:iosMenu .34s cubic-bezier(.25,1.3,.45,1)!important}
+  .pmg.ios-fade{animation:iosMenuOut .18s ease-in forwards!important}
+  .poolview{animation:iosZoom .3s cubic-bezier(.2,.9,.25,1)!important}
+  .mpane.tabfade{animation:fade .18s ease-out}
+  button:active:not(:disabled){filter:brightness(.72)}
+}
+@keyframes iosOutL{to{transform:translateX(-30%);filter:brightness(.6)}}
+@keyframes iosOutR{to{transform:translateX(100%)}}
+@keyframes iosInR{from{transform:translateX(100%)}to{transform:none}}
+@keyframes iosInL{from{transform:translateX(-30%);filter:brightness(.6)}to{transform:none;filter:none}}
+@keyframes iosVeil{from{background:rgba(0,0,0,0);backdrop-filter:blur(0)}}
+@keyframes iosVeilOut{to{background:rgba(0,0,0,0);backdrop-filter:blur(0)}}
+@keyframes iosSheet{from{transform:translateY(70px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+@keyframes iosSheetOut{to{transform:translateY(60px) scale(.97);opacity:0}}
+@keyframes iosMenu{from{scale:.6;opacity:0}to{scale:1;opacity:1}}
+@keyframes iosMenuOut{to{scale:.9;opacity:0}}
+@keyframes iosZoom{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
 /* a field never makes the iPhone zoom in (Alex, 24 Nov: "I tap the search and it stays zoomed"): iOS zooms on a field whose
    letters are under 16px, so on a phone every field writes at 16px */
 @media (max-width:820px){input,select,textarea,.field,.psearch input{font-size:16px!important}}
@@ -2972,6 +3002,28 @@ let homeNav = null;
 const homeFolder = () => { const c = curSheet(); return c && c.folder && folders ? folders.find(f => f.id === c.folder) || null : null; };
 function homeAt(fid){ let pv = {}; try{ pv = JSON.parse(localStorage.getItem('roarref-projects') || '{}'); }catch{}
   pv.folder = fid || ''; try{ localStorage.setItem('roarref-projects', JSON.stringify(pv)); }catch{} }
+
+/* iPhone motion on a phone (Alex, 24 Nov: "the iPhone's navigation, I mean the animations"): a page pushed in comes from the right
+   while the one under it moves a third to the left and dims; going back is the same in reverse; windows rise as sheets and sink
+   when they close; menus spring out from the finger and fade away; a pressed button dims. Done with a still copy of what leaves
+   (a "ghost") laid over or under what comes, so the real page is ready at once. */
+const IOS_T = 380;
+function ghostOf(el, cls){ const c = el.cloneNode(true); if(cls) c.className = c.className.replace(/\b(spage|modal|pmenu)\b/g, cls);
+  c.style.pointerEvents = 'none'; c.setAttribute('aria-hidden', 'true');
+  const a = el.querySelectorAll('canvas'), b = c.querySelectorAll('canvas'); a.forEach((x, i) => { try{ b[i].getContext('2d').drawImage(x, 0, 0); }catch{} });
+  return c; }
+function iosNav(oldEl, newEl, back, cls){ // oldEl: what leaves (still on screen), newEl: what comes (may be added after)
+  if(!isPhone() || !oldEl) return; const g = ghostOf(oldEl, cls); const st = oldEl.scrollTop, inner = [...oldEl.querySelectorAll('.mpane')].map(x => x.scrollTop);
+  g.classList.add('ios-ghost', back ? 'ios-out-r' : 'ios-out-l'); document.body.appendChild(g); g.scrollTop = st; g.querySelectorAll('.mpane').forEach((x, i) => { x.scrollTop = inner[i] || 0; });
+  const come = () => { const n = typeof newEl === 'function' ? newEl() : newEl; if(n){ n.classList.remove('ios-in-r', 'ios-in-l'); void n.offsetWidth; n.classList.add(back ? 'ios-in-l' : 'ios-in-r');
+    setTimeout(() => n.classList.remove('ios-in-r', 'ios-in-l'), IOS_T + 40); } };
+  requestAnimationFrame(come); setTimeout(() => g.remove(), IOS_T + 40); }
+// windows sink and menus fade when they go: their copy plays it out
+new MutationObserver(ms => { if(!isPhone()) return; ms.forEach(m => m.removedNodes.forEach(n => {
+  if(n.nodeType !== 1 || n.classList.contains('ios-ghost')) return;
+  let g = null; if(n.classList.contains('modal') && !n.classList.contains('lq')) g = ghostOf(n, 'mdg'); else if(n.classList.contains('pmenu')) g = ghostOf(n, 'pmg');
+  if(!g) return; g.classList.add('ios-ghost', g.classList.contains('mdg') ? 'ios-sink' : 'ios-fade'); g.style.animation = ''; document.body.appendChild(g); setTimeout(() => g.remove(), 300); })); })
+  .observe(document.body, {childList:true, subtree:true});
 let pushBack = false; // Home comes back in from the left, as an iPhone's previous page
 function goHome(){ if(document.querySelector('.spage')) return; pushBack = isPhone(); const f = homeFolder(); homeAt(f ? f.id : '');
   if(history.state && history.state.rr === 'edit'){ history.back(); return; } // the popstate below opens Home
@@ -2985,7 +3037,7 @@ async function openSheets(first){
   if(document.querySelector('.spage')) return;
   clearTimeout(st);
   // a page of its own, not a window (Alex, 11 Nov: "an extra page with all the projects, not a pop-up")
-  const m = document.createElement('div'); m.className='spage'; if(pushBack){ m.classList.add('push-back'); pushBack = false; }
+  const m = document.createElement('div'); m.className='spage'; if(pushBack){ if(pushBack === true) iosNav(document.querySelector('.app'), m, true); else m.classList.add('ios-in-l'); setTimeout(() => m.classList.remove('ios-in-l'), IOS_T + 40); pushBack = false; }
   /* the page's own choices (Alex, 14 Nov: "smaller projects, also as a list, make it more of a program"): tiles or a list,
      the order, and a search by name; kept on this computer */
   let pv = {view:'grid', sort:'recent'}; try{ pv = Object.assign(pv, JSON.parse(localStorage.getItem('roarref-projects') || '{}')); }catch{}
@@ -3103,10 +3155,10 @@ async function openSheets(first){
   const close = () => { m.remove(); homeNav = null; mqH.removeEventListener('change', reflow); syncPanel();
     if(!(history.state && history.state.rr === 'edit')) try{ history.pushState({rr:'edit'}, ''); }catch{} };
   // Back on Home: out of a folder; a folder entered pushes a step, so Back comes out of it
-  const toFolder = fid => { pv.folder = fid; query = ''; keep(); paint(); slide('pslide-l'); m.scrollTop = 0; try{ history.pushState({rr:'fold', f:fid}, ''); }catch{} };
-  const outFolder = () => { if(history.state && history.state.rr === 'fold'){ history.back(); return; } pv.folder = ''; query = ''; keep(); paint(); slide('pslide-r'); };
+  const toFolder = fid => { pv.folder = fid; query = ''; keep(); const old_ = isPhone() ? m : null; if(old_) iosNav(old_, null, false, 'spage-ghost'); paint(); slide('pslide-l'); m.scrollTop = 0; try{ history.pushState({rr:'fold', f:fid}, ''); }catch{} };
+  const outFolder = () => { if(history.state && history.state.rr === 'fold'){ history.back(); return; } pv.folder = ''; query = ''; keep(); const old_ = isPhone() ? m : null; if(old_) iosNav(old_, null, false, 'spage-ghost'); paint(); slide('pslide-r'); };
   homeNav = st => { shutMenu(); const want = st.rr === 'fold' && fOf(st.f) ? st.f : '';
-    if((pv.folder || '') === want) return; const back = !want; pv.folder = want; query = ''; keep(); paint(); slide(back ? 'pslide-r' : 'pslide-l'); };
+    if((pv.folder || '') === want) return; const back = !want; pv.folder = want; query = ''; keep(); const old_ = isPhone() ? m : null; if(old_) iosNav(old_, null, false, 'spage-ghost'); paint(); slide(back ? 'pslide-r' : 'pslide-l'); };
   const busy = on => m.classList.toggle('busy', on);
   const freshName = () => { let n = (folders || []).length + 1; const has = v => (folders || []).some(f => f.name === v); while(has('Person ' + n)) n++; return 'Person ' + n; };
   // a folder's name is typed in place, as a project's: Enter or a click elsewhere keeps it, Escape leaves it
@@ -3291,7 +3343,9 @@ async function openSheets(first){
     if(d >= 64) refresh(); else if(ind){ ind.style.transform = ''; ind.style.opacity = ''; } }, {passive:true});
   /* swipes (Alex, 20 Nov: "the right and left swipes for getting about"): in a folder a swipe to the right goes back to All
      characters; a swipe that became a long press or a drag does nothing */
-  const slide = dir => { const w = m.querySelector('.pwrap'); if(!w) return; w.classList.remove('pslide-l', 'pslide-r'); void w.offsetWidth; w.classList.add(dir); };
+  const slide = dir => { if(isPhone()){ const g = [...document.querySelectorAll('.ios-ghost.spage-ghost')].pop(); if(g){ const back = dir === 'pslide-r'; g.classList.remove('ios-out-l', 'ios-out-r'); g.classList.add(back ? 'ios-out-r' : 'ios-out-l');
+      g.style.zIndex = back ? 61 : 59; m.classList.remove('ios-in-r', 'ios-in-l'); void m.offsetWidth; m.classList.add(back ? 'ios-in-l' : 'ios-in-r'); setTimeout(() => m.classList.remove('ios-in-r', 'ios-in-l'), IOS_T + 40); return; } }
+    const w = m.querySelector('.pwrap'); if(!w) return; w.classList.remove('pslide-l', 'pslide-r'); void w.offsetWidth; w.classList.add(dir); };
   m.addEventListener('touchstart', e => { sw = null; if(e.touches.length !== 1 || e.target.closest('input, .pmenu, .pscrim')) return;
     const t0 = e.touches[0]; sw = {x:t0.clientX, y:t0.clientY, t:Date.now(), used:false}; }, {passive:true});
   m.addEventListener('touchend', e => { if(!sw) return; const s0 = sw; sw = null;
@@ -3446,8 +3500,8 @@ async function openSheets(first){
         if(pv.folder){ pv.folder = ''; keep(); paint(); } else paintList(); renameFolder(f.id); return; }
       const x = sheets.list.find(y => y.id === id); if(!x || (x.folder || '') === t.dataset.to) return;
       if(await setFolder(id, t.dataset.to)){ paintList(); const f = fOf(t.dataset.to); toast(f ? `Moved to ${f.name}` : 'Moved to Home'); } return; }
-    if(t.dataset.open){ const push = () => { if(!isPhone()) return; const a = document.querySelector('.app'); a.classList.remove('push-in'); void a.offsetWidth; a.classList.add('push-in'); setTimeout(() => a.classList.remove('push-in'), 400); };
-      if(t.dataset.open === sheets.cur){ mTab = 'pool'; placeControls(); close(); return push(); } busy(true); await switchSheet(t.dataset.open); busy(false); close(); return push(); }
+    if(t.dataset.open){ const push = () => iosNav(m, document.querySelector('.app'), false, 'spage-ghost');
+      if(t.dataset.open === sheets.cur){ mTab = 'pool'; placeControls(); push(); return close(); } busy(true); await switchSheet(t.dataset.open); busy(false); push(); return close(); }
     if(t.dataset.dup){ busy(true); if(t.dataset.dup !== sheets.cur) await switchSheet(t.dataset.dup); await newSheet(true); busy(false); return close(); }
     if(t.dataset.ren){ const x = sheets.list.find(y => y.id === t.dataset.ren), row = t.closest('.sh'), b = row.querySelector('.sh-meta');
       b.innerHTML = `<input class="field" style="height:38px;font-size:14px" maxlength="40" value="${esc(x.name)}" aria-label="Sheet name">`;
@@ -3713,7 +3767,7 @@ function placeControls(){
   document.addEventListener('touchend', e => { if(!es) return; const s0 = es; es = null;
     if(s0.drag){ const fast = s0.dx > 40 && Date.now() - s0.t < 280, go = fast || s0.dx > innerWidth / 3;
       app.classList.remove('edge-drag'); app.classList.add('edge-out'); app.style.transform = go ? `translateX(${innerWidth}px)` : '';
-      setTimeout(() => { app.classList.remove('edge-out'); if(go){ goHome(); requestAnimationFrame(() => { app.style.transform = ''; }); } }, 260); return; }
+      setTimeout(() => { app.classList.remove('edge-out'); if(go){ goHome(); pushBack = pushBack && 'drag'; requestAnimationFrame(() => { app.style.transform = ''; }); } }, 260); return; }
     const t1 = e.changedTouches[0], dx = t1.clientX - s0.x, dy = t1.clientY - s0.y;
     if(Math.abs(dx) < 60 || Math.abs(dx) < 1.6 * Math.abs(dy) || Date.now() - s0.t > 700) return;
     if(s0.edge){ if(dx > 0) goHome(); return; }
@@ -3721,7 +3775,7 @@ function placeControls(){
       if(box && box.show && k >= 0 && k < A.length){ box.show(A[k]); box.classList.remove('pslide-l', 'pslide-r'); void box.offsetWidth; box.classList.add(dx < 0 ? 'pslide-l' : 'pslide-r'); } return; }
     const j = TABS.indexOf(mTab) + (dx < 0 ? 1 : -1); if(j < 0 || j >= TABS.length) return;
     mTab = TABS[j]; placeControls(); const p = $('mpane'); p.classList.remove('pslide-l', 'pslide-r'); void p.offsetWidth; p.classList.add(dx < 0 ? 'pslide-l' : 'pslide-r'); }, {passive:true}); }
-$('mtabs').onclick = e => { const b = e.target.closest('[data-t]'); if(!b) return; mTab = b.dataset.t; placeControls(); };
+$('mtabs').onclick = e => { const b = e.target.closest('[data-t]'); if(!b || b.dataset.t === mTab) return; mTab = b.dataset.t; placeControls(); const p = $('mpane'); p.classList.remove('tabfade', 'pslide-l', 'pslide-r'); void p.offsetWidth; p.classList.add('tabfade'); };
 matchMedia('(max-width:820px)').addEventListener('change', placeControls);
 buildPanel(); render(); placeControls(); restore();
 </script>
