@@ -1766,6 +1766,43 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 /* the door: on themadlions.com RoarMask opens with a Roar Account (the same as RoarMe, RoarRef and every Roar app) */
 let gateMode = 'in', mfaFactor = null;
+/* computer only (Alex, 24 Nov: "from a phone it says, in a fun tone, that it works only on a desktop"):
+   a phone or a tablet (no mouse or trackpad, or a small screen) gets a card instead of the editor */
+function onPhone() {
+  if (/[?&]desktop=1/.test(location.search)) return false;
+  const fine = matchMedia('(any-pointer: fine)').matches, small = Math.min(screen.width, screen.height) < 600;
+  return !fine || small;
+}
+function phoneCard() {
+  const link = 'https://themadlions.com/lab/roarmask/';
+  booted();
+  const g = $('#gate'); g.hidden = false;
+  g.innerHTML = `<div class="gate-card phone-card">
+    <svg class="pc-art" viewBox="0 0 220 150" aria-hidden="true">
+      <rect x="62" y="14" width="146" height="94" rx="9" fill="#1d1f24" stroke="#3aa7e8" stroke-width="3"/>
+      <rect x="74" y="26" width="122" height="70" rx="3" fill="#000"/>
+      <rect x="84" y="36" width="10" height="50" rx="5" fill="#fff"/><rect x="99" y="36" width="10" height="50" rx="5" fill="#fff"/><circle cx="135" cy="61" r="19" fill="#fff"/><rect x="116" y="59" width="38" height="4" fill="#000"/><rect x="161" y="36" width="10" height="50" rx="5" fill="#fff"/><rect x="176" y="36" width="10" height="50" rx="5" fill="#fff"/>
+      <path d="M120 108h30l6 18h-42z" fill="#2a2d33"/><rect x="104" y="126" width="62" height="6" rx="3" fill="#2a2d33"/>
+      <g class="pc-phone"><rect x="10" y="58" width="44" height="82" rx="9" fill="#16171b" stroke="#e9ebef" stroke-width="3"/>
+      <rect x="25" y="64" width="14" height="3" rx="1.5" fill="#e9ebef"/>
+      <circle cx="25" cy="96" r="3.2" fill="#e9ebef"/><circle cx="39" cy="96" r="3.2" fill="#e9ebef"/>
+      <path d="M24 112q8-7 16 0" fill="none" stroke="#e9ebef" stroke-width="3" stroke-linecap="round"/>
+      <path d="M33 80l-2 5" stroke="#3aa7e8" stroke-width="2.5" stroke-linecap="round" class="pc-drop"/></g>
+    </svg>
+    <div class="brand">ROAR<b>MASK</b></div>
+    <h2>This one needs a big screen</h2>
+    <p>LED masks are drawn to the exact pixel, with a mouse, a keyboard, rulers and a lot of room. Your phone is great at many things; this is not one of them. It tried, it really did.</p>
+    <p class="pc-note">Open RoarMask on a computer and everything is waiting for you there, your masks included.</p>
+    <div class="pc-link" id="pcLink">${link}</div>
+    <button type="button" class="pill main" id="pcCopy">Copy the link</button>
+    <a class="pill" href="../" style="text-decoration:none;color:var(--fg)">Back to the Lab</a>
+  </div>`;
+  $('#pcCopy').addEventListener('click', () => {
+    const done = () => { $('#pcCopy').textContent = 'Copied. Send it to your computer'; };
+    try { navigator.clipboard.writeText(link).then(done, () => sel()); } catch (e) { sel(); }
+    function sel() { const r = document.createRange(); r.selectNodeContents($('#pcLink')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('#pcCopy').textContent = 'Selected: copy it'; }
+  });
+}
 function booted() { document.documentElement.classList.remove('booting'); }
 function drawGate(msg, err) {
   const g = $('#gate'); g.hidden = false; booted();
@@ -1875,6 +1912,7 @@ $('#docName').addEventListener('change', () => commit('Rename mask'));
   sizeCanvases(); fit();
   new ResizeObserver(() => { const keep = W && H; const cx = keep ? (W / 2 - S.ox) / S.z : 0, cy = keep ? (H / 2 - S.oy) / S.z : 0; sizeCanvases(); if (keep) { S.ox = W / 2 - cx * S.z; S.oy = H / 2 - cy * S.z; draw(); } else fit(); }).observe($('#stageBox'));
   if (document.fonts) document.fonts.ready.then(draw);
+  if (onPhone()) { phoneCard(); return; }
   if (!CLOUD) { openStart(); return; }
   // never inside someone else's frame (a sign-in page must not be clickjacked)
   if (window.top !== window.self) { booted(); const g = $('#gate'); g.hidden = false; g.innerHTML = '<div class="gate-card"><div class="brand">ROAR<b>MASK</b></div><h2>Open RoarMask in its own tab</h2><p><a class="pill main" href="https://themadlions.com/lab/roarmask/" target="_blank" rel="noopener" style="text-decoration:none">Open RoarMask</a></p></div>'; return; }

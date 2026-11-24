@@ -284,3 +284,15 @@ html.booting .boot-v{display:grid;position:fixed;inset:0;place-items:center;back
   .body.no-side{grid-template-rows:auto 62vh}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* the phone card: RoarMask works on a computer only */
+.phone-card{gap:14px}
+.phone-card .pc-art{width:220px;max-width:80%;margin:0 auto}
+.phone-card .pc-phone{transform-origin:32px 140px;animation:pcSigh 3.2s ease-in-out infinite}
+.phone-card .pc-drop{animation:pcDrop 3.2s ease-in infinite}
+@keyframes pcSigh{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(3deg)}}
+@keyframes pcDrop{0%,40%{opacity:0;transform:translateY(0)}55%{opacity:1}90%{opacity:0;transform:translateY(14px)}100%{opacity:0}}
+.phone-card .pc-note{color:var(--fg);font-weight:500}
+.pc-link{font:500 12.5px var(--f-num);color:var(--accent);background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;word-break:break-all;user-select:all}
+.phone-card .pill{width:100%}
+@media (prefers-reduced-motion:reduce){.phone-card .pc-phone,.phone-card .pc-drop{animation:none}}
