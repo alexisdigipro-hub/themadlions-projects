@@ -756,13 +756,14 @@ function drawNow() {
     for (let y = y0; y <= y1; y++) { const v = px(sy(y)); ctx.moveTo(X, v); ctx.lineTo(X + DW, v); }
     ctx.stroke();
   }
-  const g = d.grid;
-  if (d.showGrid && g > 0 && g * z >= 5) {
+  const g = d.grid, gs = gridShown();
+  if (d.showGrid && g > 0) {
+    const maj = gs >= g * 10 ? gs * 5 : g * 10;
     for (const major of [false, true]) {
-      ctx.strokeStyle = major ? 'rgba(58,167,232,.55)' : 'rgba(58,167,232,.26)'; ctx.beginPath();
-      const step = major ? g * 10 : g;
-      for (let x = Math.floor(x0 / step) * step; x <= x1; x += step) { if (!major && x % (g * 10) === 0) continue; const v = px(sx(x)); ctx.moveTo(v, Y); ctx.lineTo(v, Y + DH); }
-      for (let y = Math.floor(y0 / step) * step; y <= y1; y += step) { if (!major && y % (g * 10) === 0) continue; const v = px(sy(y)); ctx.moveTo(X, v); ctx.lineTo(X + DW, v); }
+      ctx.strokeStyle = major ? 'rgba(58,167,232,.6)' : 'rgba(58,167,232,.3)'; ctx.beginPath();
+      const step = major ? maj : gs;
+      for (let x = Math.floor(x0 / step) * step; x <= x1; x += step) { if (!major && x % maj === 0) continue; const v = px(sx(x)); ctx.moveTo(v, Y); ctx.lineTo(v, Y + DH); }
+      for (let y = Math.floor(y0 / step) * step; y <= y1; y += step) { if (!major && y % maj === 0) continue; const v = px(sy(y)); ctx.moveTo(X, v); ctx.lineTo(X + DW, v); }
       ctx.stroke();
     }
   }
@@ -850,6 +851,8 @@ function drawNow() {
   drawRulers();
   status();
 }
+/* the grid as drawn: the grid's own step, or a multiple of it while zoomed out, so it never disappears (Alex, 24 Nov) */
+function gridShown() { const g = S.doc.grid; if (!(g > 0)) return 0; for (const k of [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000]) if (g * k * S.z >= 6) return g * k; return g * 1000; }
 function outline(s, col) {
   const z = S.z; ctx.strokeStyle = col; ctx.lineWidth = 1 / dpr;
   if (s.type === 'poly' || isRot(s)) {
@@ -911,7 +914,7 @@ function status() {
   $('#status').innerHTML =
     `<span>Cursor <b>${c ? `${Math.floor(c.x)}, ${Math.floor(c.y)}` : '–'}</b></span>` +
     `<span>Selection <b>${b ? `${b.w} × ${b.h} at ${b.x}, ${b.y}` : 'none'}</b></span>` +
-    `<span>Zoom <b>${fmtZoom()}</b></span><span>Grid <b>${S.doc.grid} px${S.doc.snapGrid ? ' · snap' : ''}</b></span>` +
+    `<span>Zoom <b>${fmtZoom()}</b></span><span>Grid <b>${S.doc.grid} px${S.doc.showGrid && gridShown() > S.doc.grid? ` (shown every ${gridShown()})` : ''}${S.doc.snapGrid ? ' · snap' : ''}</b></span>` +
     (me ? `<span style="margin-left:auto">${{ saving: 'Saving to your account…', saved: 'Saved to your account', off: 'Offline: saved on this computer, sent when back online' }[cloudState] || ''}</span>` : '');
   $('#zoomVal').textContent = fmtZoom();
 }
