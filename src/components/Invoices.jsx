@@ -165,7 +165,7 @@ export function InvoicesTab() {
         const inv = withCompany(emailing.inv)
         const total = money(invoiceTotals(inv).total, inv.currency)
         const keep = (v) => update((st) => { st.finance.settings = { ...st.finance.settings, invoiceEmail: invoiceEmailToSave(inv, total, v) }; return st })
-        return <EmailWindow title={`Email · Invoice #${inv.number || ''}`} start={invoiceEmailSaved(inv, total, state.finance.settings.invoiceEmail)} base={invoiceEmailStart(inv, total)} onKeep={keep} fields={INVOICE_FIELDS} link={emailing.url} build={(v) => invoiceEmail(inv, emailing.url, { ...v, company: state.workspace.name })} to={clients.find((c) => c.id === inv.clientId)?.email || ''} cc={profile.accountantEmail || ''} onClose={() => setEmailing(null)} />
+        return <EmailWindow title={`Email · Invoice #${inv.number || ''}`} start={invoiceEmailSaved(inv, total, state.finance.settings.invoiceEmail)} base={invoiceEmailStart(inv, total)} onKeep={keep} fields={INVOICE_FIELDS} link={emailing.url} build={(v) => invoiceEmail(inv, emailing.url, { ...v, company: state.workspace.name })} to={clients.find((c) => c.id === inv.clientId)?.email || ''} cc={[profile.accountantEmail || '', profile.ccAlso ?? 'anastasiap@themadlions.com', '']} ccHint="managers" onClose={() => setEmailing(null)} />
       })()}
     </>
   )
@@ -181,8 +181,7 @@ const INVOICE_FIELDS = [
   { k: 'button', label: 'Button' },
   { group: 'Invoice' },
   { k: 'number', label: 'Number', half: true },
-  { k: 'amount', label: 'Amount', half: true },
-  { k: 'due', label: 'Due' },
+  { k: 'due', label: 'Due', half: true },
   { group: 'Bank account' },
   { k: 'accountName', label: 'Account name' },
   { k: 'bank', label: 'Bank' },
@@ -385,6 +384,7 @@ export function InvoiceProfileForm({ onDone }) {
         <Field label="BIC / SWIFT"><Input value={p.bankBic} onChange={(e) => set('bankBic', e.target.value)} /></Field>
         <Field label="IBAN"><Input value={p.bankIban} onChange={(e) => set('bankIban', e.target.value)} /></Field>
         <Field label="Accountant's email" hint="In Cc on every invoice email"><Input type="email" value={p.accountantEmail ?? ''} onChange={(e) => set('accountantEmail', e.target.value)} placeholder="info@flexi.gr" /></Field>
+        <Field label="Also in Cc" hint="On every invoice email, after the accountant"><Input type="email" value={p.ccAlso ?? 'anastasiap@themadlions.com'} onChange={(e) => set('ccAlso', e.target.value)} placeholder="anastasiap@themadlions.com" /></Field>
       </div>
       <div className="row-3">
         <Field label="Default currency"><Select value={p.currency} onChange={(e) => set('currency', e.target.value)} options={['EUR', 'USD', 'GBP', 'BGN']} /></Field>

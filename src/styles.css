@@ -10066,3 +10066,23 @@ html[data-theme='dark'] .ov-acts .add-pill.ov-roar .ov-gold, .soft-dark .ov-acts
   html[data-theme] body .overview .stages .stage-pct { margin-left: 0; color: var(--ok); font-weight: 700; }
   html[data-theme] body .overview .stages li:not(.done):not(.part) .stage-pct { display: none; }
 }
+
+/* The email window, gathered and minimal (Alex, 24 Nov): Cc one field per address with a round +, the line between the
+   fields and the preview dragged to make either wider (EmailWindow --mail-form-w, kept on the device), the window
+   itself still resized from its corner, smaller quieter labels, the preview on a light ground */
+.mail-ccs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mail-ccs .input { flex: 1 1 150px; min-width: 0; }
+.mail-ccadd { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text); font: 600 18px/1 var(--font, inherit); cursor: pointer; }
+.mail-ccadd:hover { background: color-mix(in srgb, var(--text) 11%, transparent); }
+.mail-split { display: none; }
+.mail-subj { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deliv-email-frame { background: #f3f4f6; }
+.mail-form .field > label, .mail-form .field-label { font-size: 10.5px; letter-spacing: .08em; opacity: .8; }
+.mail-group { font-size: 10.5px; margin-top: 4px; opacity: .8; }
+@media (min-width: 821px) {
+  html[data-theme] body .modal.mail-win .deliv-email.with-form { grid-template-columns: var(--mail-form-w, 380px) 10px minmax(0, 1fr); gap: 8px; }
+  .mail-split { display: block; align-self: stretch; cursor: col-resize; border-radius: 6px; position: relative; touch-action: none; }
+  .mail-split::after { content: ''; position: absolute; top: 50%; left: 50%; width: 4px; height: 44px; margin: -22px 0 0 -2px; border-radius: 4px; background: color-mix(in srgb, var(--text) 22%, transparent); transition: background .15s, height .15s; }
+  .mail-split:hover::after { background: color-mix(in srgb, var(--text) 45%, transparent); height: 64px; margin-top: -32px; }
+  html[data-theme] body .modal.mail-win { min-width: 640px; }
+}
