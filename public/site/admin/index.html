@@ -1991,7 +1991,7 @@ $('ordRows').addEventListener('click', (e) => {
   toast(off.has(id) ? 'Off the home page and the menu' : 'Back on the home page')
 })
 /* Look > Lab order (Alex, 25 Oct): the Lab page's apps dragged into order, kept in site_settings.lab_order */
-const LAB_APPS = [['roarme', 'RoarMe'], ['roardino', 'Roardino'], ['roarmail', 'RoarMail'], ['roarlist', 'RoarList'], ['roartransfer', 'RoarTransfer'], ['roarwriter', 'RoarWriter'], ['roartwin', 'RoarKit'], ['roarverter', 'RoarMorph'], ['roarplay', 'RoarPlay'], ['roarref', 'RoarRef'], ['roarstudio', 'RoarTransfer Studio']]
+const LAB_APPS = [['roarme', 'RoarMe'], ['roardino', 'Roardino'], ['roarmail', 'RoarMail'], ['roarlist', 'RoarList'], ['roartransfer', 'RoarTransfer'], ['roarwriter', 'RoarWriter'], ['roartwin', 'RoarKit'], ['roarverter', 'RoarMorph'], ['roarplay', 'RoarPlay'], ['roarref', 'RoarRef'], ['roarstudio', 'RoarTransfer Studio'], ['roarmask', 'RoarMask']]
 let labOrder = []
 const labList = () => { const known = LAB_APPS.map((x) => x[0]); return [...labOrder.filter((id) => known.includes(id)), ...known.filter((id) => !labOrder.includes(id))] }
 function renderLab() {
@@ -2456,7 +2456,7 @@ document.addEventListener('click', (e) => { const c = e.target.closest('[data-co
 // the desktop apps: their installers are the files of their GitHub releases (public repositories; RoarGrab's own is private, its releases are in roargrab-releases)
 const APPS = [
   { id: 'roarmail', name: 'RoarMail', repo: 'roarmail', file: 'RoarMail', page: '../lab/roarmail/' },
-  { id: 'roarme', name: 'RoarMe', repo: 'roarme', file: 'RoarMe', page: '../roarme/', web: 'https://alexisdigipro-hub.github.io/roarme/' },
+  { id: 'roarme', name: 'RoarMe', repo: 'roarme', file: 'RoarMe', page: 'https://roarme.app/', web: 'https://roarme.app/app/' },
   { id: 'roarwriter', name: 'RoarWriter', repo: 'roarwriter', file: 'RoarWriter', page: '../lab/roarwriter/', web: 'https://alexisdigipro-hub.github.io/roarwriter/' },
   { id: 'roarlist', name: 'RoarList', repo: 'roarlist', file: 'RoarList', page: '../lab/roarlist/', web: '../roarlist/' },
   { id: 'roarkit', name: 'RoarKit', repo: 'roartwin', file: 'RoarKit', page: '../lab/roarkit/' },
@@ -2546,13 +2546,14 @@ $('appsRefresh').onclick = () => loadApps(true)
 
 // the apps that live in a browser, with how many opened their page in the last 30 days (site_events, themadlions.com only)
 const WEB = [
-  { id: 'roardino', icon: '../lab/icons/roardino-social.png', name: 'Roardino', line: 'The social place of film people', open: '../social/', path: '/social/' },
+  { id: 'roardino', icon: '../lab/icons/roardino-social.png', name: 'Roardino', line: 'The social place of film people, at roardino.com', open: 'https://roardino.com/', path: '/social/' },
   { id: 'roardino', name: 'Roardino App', line: 'The call sheet in one link', open: '../roardino/', path: '/roardino/' },
   { id: 'roarlist', name: 'RoarList', line: 'Shot lists in the browser (its visits are not counted)', open: '../roarlist/' },
   { id: 'roarcast', icon: '../lab/roarcast/icon.png', name: 'RoarCast', line: 'Jingle player and show planner', open: '../lab/roarcast/', path: '/lab/roarcast/' },
   { id: 'roarref', icon: '../lab/roarref/icon.png', name: 'RoarRef', line: 'Character sheets for AI', open: '../lab/roarref/app/', path: '/lab/roarref/app/' },
+  { id: 'roarmask', icon: '../lab/roarmask/icon.png', name: 'RoarMask', line: 'Pixel-exact masks for LED screens', open: '../lab/roarmask/', path: '/lab/roarmask/' },
   { id: 'roarwriter', name: 'RoarWriter', line: 'Write in the browser', open: 'https://alexisdigipro-hub.github.io/roarwriter/' },
-  { id: 'roarme', name: 'RoarMe', line: 'The messenger, in the browser', open: 'https://alexisdigipro-hub.github.io/roarme/' },
+  { id: 'roarme', name: 'RoarMe', line: 'The messenger, in the browser, at roarme.app', open: 'https://roarme.app/app/' },
   { id: 'roartransfer', name: 'RoarTransfer', line: 'Files up to 5 GB with one link', open: 'https://roartransfer.com/', admin: 'https://roartransfer.com/#admin' },
   { id: 'roarstudio', name: 'RoarTransfer Studio', line: 'Review and delivery for audio, video and pictures', open: 'https://studio.roartransfer.com/', admin: 'https://roartransfer.com/#admin' },
   { id: 'roarme', name: 'Roar Account', line: 'One sign-in for every Roar app', open: '../account/', path: '/account/' },
@@ -2571,7 +2572,7 @@ async function renderWebApps() {
   if (webViews) return
   try {
     const since = new Date(Date.now() - 30 * 864e5).toISOString()
-    const rows = await rest(`site_events?select=path&kind=eq.view&at=gte.${since}&or=(path.like.*roardino*,path.like.*roarcast*,path.like.*roarref*,path.like.*social*,path.like.*account*)`, { headers: { Range: '0-9999' } })
+    const rows = await rest(`site_events?select=path&kind=eq.view&at=gte.${since}&or=(path.like.*roardino*,path.like.*roarcast*,path.like.*roarref*,path.like.*roarmask*,path.like.*social*,path.like.*account*)`, { headers: { Range: '0-9999' } })
     webViews = rows.map((r) => normPath(r.path))
     draw()
   } catch (e) {}
@@ -2581,9 +2582,9 @@ async function renderWebApps() {
 // every page themadlions.com has, by name; a page whose visits are not counted says so
 const PAGES = [
   ['Home', '/'], ['Home, in Greek', '/el/'], ['Aibsent Studios', '/aibsent/'], ['The Lab', '/lab/'],
-  ['RoarMe', '/roarme/'], ['Lab · Roardino App', '/lab/roardino/'], ['Lab · RoarMail', '/lab/roarmail/'], ['Lab · RoarList', '/lab/roarlist/'], ['Lab · RoarWriter', '/lab/roarwriter/'],
-  ['Lab · RoarKit', '/lab/roarkit/'], ['Lab · RoarMorph', '/lab/roarmorph/'], ['Lab · RoarPlay', '/lab/roarplay/'], ['Lab · RoarRef', '/lab/roarref/'], ['Lab · RoarTransfer Studio', '/lab/roarstudio/'], ['Lab · RoarCast', '/lab/roarcast/'],
-  ['Roardino, the social place', '/social/'], ['Roardino App, the ordino maker', '/roardino/'], ['RoarRef, the app', '/lab/roarref/app/'], ['RoarList, the app', '/roarlist/', 'off'], ['Roar Account', '/account/'], ['Policies and terms', '/legal/', 'off'],
+  ['RoarMe (old address, to roarme.app)', '/roarme/'], ['Lab · Roardino App', '/lab/roardino/'], ['Lab · RoarMail', '/lab/roarmail/'], ['Lab · RoarList', '/lab/roarlist/'], ['Lab · RoarWriter', '/lab/roarwriter/'],
+  ['Lab · RoarKit', '/lab/roarkit/'], ['Lab · RoarMorph', '/lab/roarmorph/'], ['Lab · RoarPlay', '/lab/roarplay/'], ['Lab · RoarRef', '/lab/roarref/'], ['Lab · RoarTransfer Studio', '/lab/roarstudio/'], ['Lab · RoarMask', '/lab/roarmask/'], ['Lab · RoarCast', '/lab/roarcast/'],
+  ['Roardino (old address, to roardino.com)', '/social/'], ['Roardino App, the ordino maker', '/roardino/'], ['RoarRef, the app', '/lab/roarref/app/'], ['RoarList, the app', '/roarlist/', 'off'], ['Roar Account', '/account/'], ['Policies and terms', '/legal/', 'off'],
 ]
 function normPath(p) {
   p = (p || '/').replace(/^\/site(?=\/)/, '').replace(/index\.html$/, '')
@@ -2628,7 +2629,7 @@ function renderPlaces(visitors, social) {
     { name: 'qubi.gr', lg: 'Q', n: qubi ? num(qubi.views) : '', small: qubi ? `views on ${num(qubi.n)} videos` : 'Music videos, news, records, TV', admin: 'https://qubi.gr/admin', open: 'https://qubi.gr/' },
     { name: 'boulevart.gr', lg: 'B', small: 'Bookings, props, equipment: its own admin and sign-in', admin: 'https://boulevart.gr/admin/login', open: 'https://boulevart.gr/' },
     { name: 'roartransfer.com', lg: 'RT', img: '../lab/icons/roartransfer.png', small: 'Transfers, Pro accounts, backgrounds: Admin with your Roar Account', admin: 'https://roartransfer.com/#admin', open: 'https://roartransfer.com/' },
-    { name: 'Roardino', lg: 'RD', img: '../lab/icons/roardino-social.png', n: social ? num(social) : '', small: social ? `opens, last ${sDays} days · its admin is inside your profile` : 'The social place of film people; its admin is inside your profile', open: '../social/' },
+    { name: 'roardino.com', lg: 'RD', img: '../lab/icons/roardino-social.png', n: social ? num(social) : '', small: social ? `opens of the old address, last ${sDays} days · its admin is inside your profile` : 'Roardino, the social place of film people; its admin is inside your profile', open: 'https://roardino.com/' },
     { name: 'RoarTransfer Studio', lg: 'RS', img: '../lab/icons/roarstudio.png', small: 'Review and delivery: Studio Pro and the waiting list in RoarTransfer’s Admin', admin: 'https://roartransfer.com/#admin', open: 'https://studio.roartransfer.com/' },
     { name: 'THEMADLIONS Hub', lg: 'HUB', small: 'Projects, calendar, finance, the team', open: 'https://hub.themadlions.com/' },
     { name: 'Roar Accounts', lg: 'R', img: '../lab/icons/roarme.png', small: 'Every account of the Roar apps, sign-ups', go: 'accounts', label: 'Admin' },

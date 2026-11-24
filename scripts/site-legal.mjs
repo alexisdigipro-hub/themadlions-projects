@@ -2,7 +2,9 @@
 // every app, on each app's page and in the apps"). One page per app at legal/<id>/ with both texts (#privacy, #terms),
 // English and Greek with the site's switch, plus legal/ listing them all. RoarMe and RoarTransfer keep their own
 // (RoarMe ?legal=privacy, roartransfer.com/privacy); the list links to them.
-// Only what the code of each app does (RoarMail 0.15, RoarList 0.4, RoarWriter 0.5, RoarKit 0.4, Roardino, the site).
+// Only what the code of each app does (RoarMail 0.15, RoarList 0.4, RoarWriter 0.5, RoarKit 0.4, Roardino App, RoarRef and
+// RoarMask as of 24 Nov 2026, the site). RoarMorph and RoarPlay have hand-made pages in legal/ (listed in the index, not written
+// here); Roardino the social network (roardino.com) keeps its own texts. **words** in a text are shown bold.
 //
 //   node scripts/site-legal.mjs public/site      then copy legal/ into themadlions-site with the rest
 import { writeFileSync, mkdirSync } from 'node:fs'
@@ -44,8 +46,8 @@ const termsEnd = (app, mail) => ({
   ],
 })
 const account = {
-  en: ['Your account', ['The account is your Roar Account, one sign-in for every Roar app: the same email and password (or Sign in with Roar Account) sign you in to RoarMe, RoarMail, RoarList on the web, RoarWriter, Roardino and RoarTransfer. You must be 15 or older. Keep your password safe and tell us if you think someone else is using it.']],
-  el: ['Ο λογαριασμός σου', ['Ο λογαριασμός είναι ο Roar Account σου, μία σύνδεση για όλες τις εφαρμογές Roar: το ίδιο email και ο ίδιος κωδικός (ή το Sign in with Roar Account) σε βάζουν στο RoarMe, στο RoarMail, στο RoarList στον browser, στο RoarWriter, στο Roardino και στο RoarTransfer. Πρέπει να είσαι 15 ετών και άνω. Φύλαγε τον κωδικό σου και πες μας αν πιστεύεις ότι τον χρησιμοποιεί κάποιος άλλος.']],
+  en: ['Your account', ['The account is your Roar Account, one sign-in for every Roar app: the same email and password (or Sign in with Roar Account) sign you in to RoarMe, RoarMail, RoarList on the web, RoarWriter, Roardino App, Roardino (roardino.com), RoarRef, RoarMask and RoarTransfer. You must be 15 or older. Keep your password safe and tell us if you think someone else is using it.']],
+  el: ['Ο λογαριασμός σου', ['Ο λογαριασμός είναι ο Roar Account σου, μία σύνδεση για όλες τις εφαρμογές Roar: το ίδιο email και ο ίδιος κωδικός (ή το Sign in with Roar Account) σε βάζουν στο RoarMe, στο RoarMail, στο RoarList στον browser, στο RoarWriter, στο Roardino App, στο Roardino (roardino.com), στο RoarRef, στο RoarMask και στο RoarTransfer. Πρέπει να είσαι 15 ετών και άνω. Φύλαγε τον κωδικό σου και πες μας αν πιστεύεις ότι τον χρησιμοποιεί κάποιος άλλος.']],
 }
 const yours = (what) => ({
   en: ['What you make is yours', [`${what.en} belong to you. We keep them only to store them, sync them and show them to you and to the people you choose. We do not use them for anything else, and never to train AI.`, 'Do not use the app for anything illegal, or with material that breaks someone else\'s rights.']],
@@ -67,7 +69,7 @@ const join2 = (a, b) => ({ en: [...a.en, ...b.en], el: [...a.el, ...b.el] })
 
 const APPS = [
   {
-    id: 'roarmail', name: 'RoarMail', page: 'lab/roarmail/', what: { en: 'the mail app for Mac and Windows', el: 'η εφαρμογή email για Mac και Windows' },
+    id: 'roarmail', name: 'RoarMail', page: 'lab/roarmail/', updated: { en: '19 November 2026', el: '19 Νοεμβρίου 2026' }, what: { en: 'the mail app for Mac and Windows', el: 'η εφαρμογή email για Mac και Windows' },
     privacy: join2({
       en: [
         ['In short', ['RoarMail talks to your mail servers straight from your computer. There is no server of ours in between: we never see your mail, your contacts or your passwords, except the text you yourself send to RoarMail AI with the ✦ button.']],
@@ -86,8 +88,9 @@ const APPS = [
         ]],
         ['With your Roar Account (only if you sign in)', [
           'Your Roar Account is the same sign-in as RoarMe, for every Roar app. You manage it at themadlions.com/account.',
+          'Since November 2026: **Sign in with Roar Account** opens themadlions.com/account in your browser and, once you press Allow there, gives RoarMail its own sign-in (a one-time code, no password is passed). **Projects** you make in your account can carry senders, so RoarMail shows their mail together; the list of projects comes to RoarMail, your mail does not go to them. An **invitation you accept** in RoarMail goes into your Roar Calendar (its title, time, place and organiser). A **photo you give a contact** stays on your computer.',
           'Sync (on unless you turn it off in Settings > Roar Account): RoarMail\'s setup is kept in your account so your other computers get it: settings, signatures, templates, rules, blocked senders, your mail accounts\' addresses, servers and folder settings, and the contacts you marked (VIP, blocked, pictures allowed), with the name of each computer that synced. Never your mail, never your mail passwords or sign-in tokens. Only you can read it; deleting your Roar Account deletes it.',
-          'RoarMail AI (the ✦ button in a new message): only when you press it, what you asked for, the text you wrote or selected, the message you are answering and the recipients go through our RoarMe project to Anthropic (Claude) to write the text, and are not kept; the number of requests a day is counted. With your own Claude or ChatGPT key instead, the same goes straight from your computer to Anthropic or OpenAI under their policy; the key stays locked on your computer.',
+          'RoarMail AI (the ✦ button in a new message): RoarMail asks you once before anything is sent (Settings > Roar Account > AI takes it back); then, only when you press it, what you asked for, the text you wrote or selected, the message you are answering and the recipients go through our RoarMe project to Anthropic (Claude) to write the text, and are not kept; the number of requests a day is counted. With your own Claude or ChatGPT key instead, the same goes straight from your computer to Anthropic or OpenAI under their policy; the key stays locked on your computer.',
           'Signing in to RoarMe in RoarMail is optional. When you send an email to a RoarMe chat, the chat gets its subject, sender, date, a short extract (up to 600 characters) and the attachments you keep (up to 50 MB each). A task made from an email is saved in RoarMe with a link back to it.',
           'A large attachment sent as a link goes to RoarTransfer (Cloudflare R2) for the days shown, and is deleted after.',
           'These follow the RoarMe and RoarTransfer privacy policies.',
@@ -111,6 +114,7 @@ const APPS = [
         ]],
         ['Με το Roar Account (μόνο αν συνδεθείς)', [
           'Το Roar Account είναι η ίδια σύνδεση με το RoarMe, για όλα τα Roar apps. Το διαχειρίζεσαι στο themadlions.com/account.',
+          'Από τον Νοέμβριο 2026: το **Sign in with Roar Account** ανοίγει το themadlions.com/account στον browser και, μόλις πατήσεις Επιτρέπω, δίνει στο RoarMail δική του σύνδεση (κωδικός μίας χρήσης, χωρίς να περνάει κωδικός πρόσβασης). Τα **Projects** του λογαριασμού σου μπορούν να έχουν αποστολείς, ώστε το RoarMail να δείχνει τα mail τους μαζί· έρχεται στο RoarMail η λίστα των projects, τα mail σου δεν πάνε σε αυτά. Μια **πρόσκληση που δέχεσαι** στο RoarMail μπαίνει στο Roar Calendar σου (τίτλος, ώρα, τόπος, διοργανωτής). Η **φωτογραφία που δίνεις σε μια επαφή** μένει στον υπολογιστή σου. Το RoarMail AI ρωτάει μία φορά πριν στείλει οτιδήποτε.',
           'Συγχρονισμός (ανοιχτός, εκτός αν τον κλείσεις στις Ρυθμίσεις > Roar Account): οι ρυθμίσεις του RoarMail κρατιούνται στον λογαριασμό σου για να τις πάρουν οι άλλοι σου υπολογιστές: ρυθμίσεις, υπογραφές, πρότυπα, κανόνες, μπλοκαρισμένοι, οι διευθύνσεις, οι servers και οι ρυθμίσεις φακέλων των λογαριασμών σου, και οι επαφές που σημείωσες (VIP, μπλοκαρισμένες, εικόνες επιτρέπονται), με το όνομα κάθε υπολογιστή που συγχρονίστηκε. Ποτέ τα email σου, ποτέ οι κωδικοί ή τα tokens των email. Μόνο εσύ τα διαβάζεις· η διαγραφή του Roar Account τα σβήνει.',
           'RoarMail AI (το κουμπί ✦ στο νέο μήνυμα): μόνο όταν το πατάς, ό,τι ζήτησες, το κείμενο που έγραψες ή επέλεξες, το μήνυμα που απαντάς και οι παραλήπτες περνούν από το έργο μας του RoarMe στην Anthropic (Claude) για να γραφτεί το κείμενο, και δεν κρατιούνται· μετράμε πόσα αιτήματα κάνεις τη μέρα. Με δικό σου κλειδί Claude ή ChatGPT, τα ίδια πάνε απευθείας από τον υπολογιστή σου στην Anthropic ή στην OpenAI, με τη δική τους πολιτική· το κλειδί μένει κλειδωμένο στον υπολογιστή σου.',
           'Η σύνδεση στο RoarMe μέσα από το RoarMail είναι προαιρετική. Όταν στέλνεις ένα email σε συνομιλία του RoarMe, η συνομιλία παίρνει το θέμα, τον αποστολέα, την ημερομηνία, ένα μικρό απόσπασμα (ως 600 χαρακτήρες) και τα συνημμένα που κρατάς (ως 50 MB το καθένα). Ένα task από email αποθηκεύεται στο RoarMe με σύνδεσμο πίσω σε αυτό.',
@@ -305,7 +309,7 @@ const APPS = [
     }, termsEnd('RoarKit', LAB)),
   },
   {
-    id: 'roardino', name: 'Roardino', page: 'lab/roardino/', updated: { en: '8 November 2026', el: '8 Νοεμβρίου 2026' }, what: { en: 'the call sheet in one link', el: 'το πρόγραμμα γυρίσματος σε ένα link' },
+    id: 'roardino', name: 'Roardino App', page: 'lab/roardino/', updated: { en: '8 November 2026', el: '8 Νοεμβρίου 2026' }, what: { en: 'the call sheet in one link', el: 'το πρόγραμμα γυρίσματος σε ένα link' },
     privacy: join2({
       en: [
         ['In short', ['Roardino keeps your call sheets in your Roar Account. A call sheet becomes public only when you publish it, and then anyone with its link can open it.']],
@@ -349,7 +353,95 @@ const APPS = [
         ['Other people\'s details', ['A call sheet holds the names and phones of your cast and crew. Put them in only for the shoot, with their knowledge, and send the link only to the people who work on it. Anyone with a published link can see everything in it.']]],
       el: [account.el, yours({ en: 'Your call sheets', el: 'Τα προγράμματά σου' }).el,
         ['Τα στοιχεία των άλλων', ['Ένα πρόγραμμα έχει τα ονόματα και τα τηλέφωνα των ηθοποιών και του συνεργείου σου. Βάλ’ τα μόνο για το γύρισμα, εν γνώσει τους, και στείλε το link μόνο σε όσους δουλεύουν σε αυτό. Όποιος έχει ένα δημοσιευμένο link βλέπει ό,τι έχει μέσα.']]],
-    }, termsEnd('Roardino', LAB)),
+    }, termsEnd('Roardino App', LAB)),
+  },
+  {
+    id: 'roarref', name: 'RoarRef', page: 'lab/roarref/', updated: { en: '24 November 2026', el: '24 Νοεμβρίου 2026' }, what: { en: 'character sheets for AI', el: 'φύλλα χαρακτήρα για AI' },
+    privacy: join2({
+      en: [
+        ['In short', ['RoarRef keeps your characters and their photos in your Roar Account, so they wait for you on any computer or phone. Nobody else sees them, and we never use them to train AI.']],
+        ['What we keep', [
+          'Your account (name, email, password as a secure hash, from RoarMe).',
+          'Your characters and folders: names, the layout, the settings of every photo and window, the thumbnail you chose, and when each was made and changed.',
+          'Your photos, the pool of each character and the ones on its sheet, as you sent them, at full resolution.',
+          'A character you delete waits in Recently deleted for 30 days, so you can bring it back; then, or when you delete it for good, it is gone with its photos.',
+          'Whether your account has RoarRef Pro, and until when.',
+        ]],
+        ['On your device', [
+          'Face, Body and Hair find the face, the body and the hair in a photo on your own device, with Google\'s MediaPipe models downloaded from storage.googleapis.com and jsDelivr. Your photo is not sent to them.',
+          'Your browser keeps the last character you opened and how you like Home (grid or list, order, folder).',
+          'Code and fonts load from jsDelivr and Google Fonts, so they see your IP address.',
+        ]],
+        ['Where it is, and who sees it', [where.en, 'Photos are stored either with Supabase or with Cloudflare R2, Cloudflare\'s file storage, which also acts on our behalf; RoarRef gets short-lived addresses for them and no key ever reaches your browser.', 'The administrators of RoarRef can find an account by its email to give or take away Pro. They do not open your characters or photos.']],
+        ['How to delete it', [`Delete a character or a folder in the app, then empty Recently deleted. To delete everything, delete your Roar Account (themadlions.com/account > Delete account, or ${ROARME_DEL.en}).`]],
+      ],
+      el: [
+        ['Με λίγα λόγια', ['Το RoarRef κρατά τους χαρακτήρες σου και τις φωτογραφίες τους στον Roar Account σου, ώστε να σε περιμένουν σε κάθε υπολογιστή ή κινητό. Κανείς άλλος δεν τους βλέπει, και δεν τους χρησιμοποιούμε ποτέ για εκπαίδευση AI.']],
+        ['Τι κρατάμε', [
+          'Τον λογαριασμό σου (όνομα, email, κωδικό ως ασφαλές hash, από το RoarMe).',
+          'Τους χαρακτήρες και τους φακέλους σου: ονόματα, το στήσιμο, τις ρυθμίσεις κάθε φωτογραφίας και παραθύρου, τη μικρογραφία που διάλεξες, και πότε φτιάχτηκε και άλλαξε ο καθένας.',
+          'Τις φωτογραφίες σου, της δεξαμενής κάθε χαρακτήρα και όσες είναι στο φύλλο του, όπως τις έστειλες, στην πλήρη τους ανάλυση.',
+          'Ένας χαρακτήρας που σβήνεις περιμένει στα Πρόσφατα διαγραμμένα για 30 μέρες, για να τον επαναφέρεις· μετά, ή όταν τον σβήσεις οριστικά, φεύγει μαζί με τις φωτογραφίες του.',
+          'Αν ο λογαριασμός σου έχει RoarRef Pro, και ως πότε.',
+        ]],
+        ['Στη συσκευή σου', [
+          'Τα Face, Body και Hair βρίσκουν το πρόσωπο, το σώμα και τα μαλλιά σε μια φωτογραφία πάνω στη δική σου συσκευή, με τα μοντέλα MediaPipe της Google που κατεβαίνουν από το storage.googleapis.com και το jsDelivr. Η φωτογραφία σου δεν τους στέλνεται.',
+          'Ο browser σου κρατά τον τελευταίο χαρακτήρα που άνοιξες και πώς σου αρέσει η Αρχική (πλέγμα ή λίστα, σειρά, φάκελος).',
+          'Κώδικας και γραμματοσειρές φορτώνουν από το jsDelivr και το Google Fonts, οπότε βλέπουν τη διεύθυνση IP σου.',
+        ]],
+        ['Πού είναι, και ποιος τα βλέπει', [where.el, 'Οι φωτογραφίες φυλάσσονται είτε στη Supabase είτε στο Cloudflare R2, την αποθήκευση αρχείων της Cloudflare, που επίσης ενεργεί για λογαριασμό μας· το RoarRef παίρνει διευθύνσεις που λήγουν γρήγορα και κανένα κλειδί δεν φτάνει ποτέ στον browser σου.', 'Οι διαχειριστές του RoarRef μπορούν να βρουν έναν λογαριασμό από το email του για να δώσουν ή να αφαιρέσουν το Pro. Δεν ανοίγουν τους χαρακτήρες ή τις φωτογραφίες σου.']],
+        ['Πώς τα σβήνεις', [`Σβήσε έναν χαρακτήρα ή έναν φάκελο μέσα στην εφαρμογή, και μετά άδειασε τα Πρόσφατα διαγραμμένα. Για να σβήσεις τα πάντα, διάγραψε τον Roar Account σου (themadlions.com/account > Delete account, ή ${ROARME_DEL.el}).`]],
+      ],
+    }, rights(LAB)),
+    terms: join2({
+      en: [account.en, yours({ en: 'Your characters and photos', el: 'Οι χαρακτήρες και οι φωτογραφίες σου' }).en,
+        ['Photos of people', ['Use photos you have the right to use, of people who know what they are for. Do not make sheets that put a real person in a false, hurtful or sexual light.']],
+        ['RoarRef Pro', ['Without Pro an account keeps up to 10 characters. Pro has no limit; we give it for 3 months, 6 months or for life, and nothing is charged. When it ends, your characters stay; you add new ones again once you are under 10.']]],
+      el: [account.el, yours({ en: 'Your characters and photos', el: 'Οι χαρακτήρες και οι φωτογραφίες σου' }).el,
+        ['Φωτογραφίες ανθρώπων', ['Χρησιμοποίησε φωτογραφίες που έχεις δικαίωμα να χρησιμοποιείς, ανθρώπων που ξέρουν για τι είναι. Μη φτιάχνεις φύλλα που δείχνουν ένα υπαρκτό πρόσωπο ψεύτικα, προσβλητικά ή σεξουαλικά.']],
+        ['RoarRef Pro', ['Χωρίς Pro ένας λογαριασμός κρατά έως 10 χαρακτήρες. Το Pro δεν έχει όριο· το δίνουμε για 3 μήνες, 6 μήνες ή για πάντα, και δεν χρεώνεται τίποτα. Όταν λήξει, οι χαρακτήρες σου μένουν· προσθέτεις νέους ξανά όταν πέσεις κάτω από τους 10.']]],
+    }, termsEnd('RoarRef', LAB)),
+  },
+  {
+    id: 'roarmask', name: 'RoarMask', page: 'lab/roarmask/', updated: { en: '24 November 2026', el: '24 Νοεμβρίου 2026' }, what: { en: 'masks for LED screens', el: 'μάσκες για οθόνες LED' },
+    privacy: join2({
+      en: [
+        ['In short', ['RoarMask keeps your masks in your Roar Account, so they wait for you on any computer, with a copy in your browser for speed and for working offline. Nobody else sees them.']],
+        ['What we keep', [
+          'Your account (name, email, password as a secure hash, from RoarMe).',
+          'Your masks: the name, the screen\'s size and cabinets, every shape, folder and setting, a small picture of the mask for Home, and when it was changed.',
+          'The reference picture you put under a mask, if you add one. It is never part of the exported mask.',
+        ]],
+        ['In your browser', [
+          'A copy of your masks and their reference pictures, Home\'s view and which panels you folded. Masks you made in this browser before signing in go into your account, once.',
+          'PNG, SVG and project files you export or open stay on your computer; nothing is uploaded for them.',
+          'Code and fonts load from jsDelivr and Google Fonts, so they see your IP address.',
+        ]],
+        ['Where it is', [where.en]],
+        ['How to delete it', [`Delete a mask on Home. To delete everything, delete your Roar Account (themadlions.com/account > Delete account, or ${ROARME_DEL.en}), and clear the site\'s data in your browser for the copy there.`]],
+      ],
+      el: [
+        ['Με λίγα λόγια', ['Το RoarMask κρατά τις μάσκες σου στον Roar Account σου, ώστε να σε περιμένουν σε κάθε υπολογιστή, με ένα αντίγραφο στον browser σου για ταχύτητα και για δουλειά χωρίς internet. Κανείς άλλος δεν τις βλέπει.']],
+        ['Τι κρατάμε', [
+          'Τον λογαριασμό σου (όνομα, email, κωδικό ως ασφαλές hash, από το RoarMe).',
+          'Τις μάσκες σου: το όνομα, το μέγεθος της οθόνης και τα cabinets, κάθε σχήμα, φάκελο και ρύθμιση, μια μικρή εικόνα της μάσκας για την Αρχική, και πότε άλλαξε.',
+          'Την εικόνα αναφοράς που βάζεις κάτω από μια μάσκα, αν βάλεις. Δεν μπαίνει ποτέ στη μάσκα που βγάζεις.',
+        ]],
+        ['Στον browser σου', [
+          'Ένα αντίγραφο των μασκών σου και των εικόνων αναφοράς τους, πώς βλέπεις την Αρχική και ποια πάνελ δίπλωσες. Οι μάσκες που έφτιαξες σε αυτόν τον browser πριν συνδεθείς μπαίνουν στον λογαριασμό σου, μία φορά.',
+          'Τα αρχεία PNG, SVG και project που βγάζεις ή ανοίγεις μένουν στον υπολογιστή σου· τίποτα δεν ανεβαίνει γι’ αυτά.',
+          'Κώδικας και γραμματοσειρές φορτώνουν από το jsDelivr και το Google Fonts, οπότε βλέπουν τη διεύθυνση IP σου.',
+        ]],
+        ['Πού είναι', [where.el]],
+        ['Πώς τα σβήνεις', [`Σβήσε μια μάσκα στην Αρχική. Για να σβήσεις τα πάντα, διάγραψε τον Roar Account σου (themadlions.com/account > Delete account, ή ${ROARME_DEL.el}), και καθάρισε τα δεδομένα του site στον browser σου για το αντίγραφο εκεί.`]],
+      ],
+    }, rights(LAB)),
+    terms: join2({
+      en: [account.en, yours({ en: 'Your masks', el: 'Οι μάσκες σου' }).en,
+        ['Check before the show', ['RoarMask draws to the pixel, but a screen, a media server or a processor can scale, crop or map differently. Check every mask on the real screen before it goes live.']]],
+      el: [account.el, yours({ en: 'Your masks', el: 'Οι μάσκες σου' }).el,
+        ['Έλεγξέ το πριν το show', ['Το RoarMask σχεδιάζει στο pixel, αλλά μια οθόνη, ένας media server ή ένας processor μπορεί να κλιμακώνει, να κόβει ή να αντιστοιχίζει αλλιώς. Έλεγξε κάθε μάσκα στην πραγματική οθόνη πριν βγει live.']]],
+    }, termsEnd('RoarMask', LAB)),
   },
   {
     id: 'site', name: 'themadlions.com', page: '', what: { en: 'the company site and Aibsent Studios', el: 'το site της εταιρείας και η Aibsent Studios' },
@@ -395,14 +487,17 @@ const APPS = [
     },
   },
 ]
-// the two that keep their own texts
+// the ones that keep their own texts (RoarMorph and RoarPlay: hand-made pages in legal/, not written by this script)
 const OWN = [
-  { name: 'RoarMe', what: { en: 'the messenger for teams', el: 'το messenger για ομάδες' }, privacy: 'https://alexisdigipro-hub.github.io/roarme/?legal=privacy', terms: 'https://alexisdigipro-hub.github.io/roarme/?legal=terms' },
+  { name: 'RoarMe', what: { en: 'the messenger for teams', el: 'το messenger για ομάδες' }, privacy: 'https://roarme.app/app/?legal=privacy', terms: 'https://roarme.app/app/?legal=terms' },
+  { name: 'Roardino', what: { en: 'the social network, at roardino.com', el: 'το κοινωνικό δίκτυο, στο roardino.com' }, privacy: 'https://roardino.com/#/legal/privacy', terms: 'https://roardino.com/#/legal/terms' },
   { name: 'RoarTransfer', what: { en: 'large files with one link', el: 'μεγάλα αρχεία με ένα link' }, privacy: 'https://roartransfer.com/privacy/', terms: 'https://roartransfer.com/terms/' },
+  { name: 'RoarMorph', what: { en: 'the converter for Mac and Windows', el: 'η εφαρμογή μετατροπής για Mac και Windows' }, privacy: 'roarmorph/#privacy', terms: 'roarmorph/#terms' },
+  { name: 'RoarPlay', what: { en: 'the player for Mac and Windows', el: 'το player για Mac και Windows' }, privacy: 'roarplay/#privacy', terms: 'roarplay/#terms' },
 ]
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-const linkify = (s) => esc(s).replace(/([a-z]+@themadlions\.com)/g, '<a href="mailto:$1">$1</a>').replace(/\b(www\.dpa\.gr)\b/g, '<a href="https://www.dpa.gr/" target="_blank" rel="noopener">$1</a>')
+const linkify = (s) => esc(s).replace(/([a-z]+@themadlions\.com)/g, '<a href="mailto:$1">$1</a>').replace(/\b(www\.dpa\.gr)\b/g, '<a href="https://www.dpa.gr/" target="_blank" rel="noopener">$1</a>').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
 const doc = (d) => d.map(([h, ps]) => `<div class="tile"><h3>${esc(h)}</h3>${ps.map((p) => `<p>${linkify(p)}</p>`).join('')}</div>`).join('')
 
 const CSS = `

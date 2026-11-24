@@ -7,7 +7,8 @@
      own below). One frame of the app (a storyboard of a night shoot), the three things only RoarList does, what was
      made for the set, everything else as an index, where your lists live, downloads (releases/latest), questions.
      Only what is in the code of RoarList 0.4.3 (and the hub's copy). 29 Oct 2026: the Lab's fresh layer (../fresh.css,
-     ../fresh.js), the new icon (icon.png) and What's new. EN and GR, the same switch as the main page. -->
+     ../fresh.js), the new icon (icon.png) and What's new. EN and GR, the same switch as the main page.
+     24 Nov 2026: checked against RoarList 0.4.4 (the Lab's one family of icons). -->
 <title>RoarList · Shot lists and storyboards for shoots, with a frame for every shot · by The Mad Lions</title>
 <link rel="canonical" href="https://themadlions.com/lab/roarlist/">
 <meta name="description" content="RoarList, the shot list by The Mad Lions Lab. Scenes and shots with size, angle, movement and lens, a picture for every shot, shot numbers that read on set, and a PDF list or storyboard for the crew. For Mac, Windows and the browser, and it updates itself.">
@@ -456,7 +457,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <a class="pill" href="../../roarlist/"><span data-t="cta.browser">Make one in the browser</span></a>
     </div>
     <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · Mac, Windows, browser · updates itself ·</span> <a href="../../roarlist/#demo" data-t="cta.demo">see an example</a></p>
-    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.4.3</span></a></div>
+    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.4.4</span></a></div>
   </div>
   <div class="scene stack rv" style="--d:.18s">
     <figure class="scene-photo"><img src="photo-hero.jpg" alt="" width="1600" height="900" fetchpriority="high"><figcaption data-t="sc.cap">Location scout, Sounio, 18:50. Shot 4C found.</figcaption></figure>
@@ -572,7 +573,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       </div>
     </article>
     <article class="tile t-upd f-glass rv">
-      <span class="k" data-t="s3.k" data-html>Updates itself <em>0.4.3</em></span>
+      <span class="k" data-t="s3.k" data-html>Updates itself <em>0.4.4</em></span>
       <h3 data-t="s3.t" data-html>One tap, <b>newest version</b>.</h3>
       <p data-t="s3.p">The Mac and Windows apps look for a new version in the background and tell you when it is ready. Press Restart; if you quit instead, it installs on the way out.</p>
       <div class="upd-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg></i><span><b data-t="s3.c">New version ready</b><small>RoarList</small></span><s data-t="s3.btn">Restart</s></div>
@@ -712,8 +713,8 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <article class="f-card rv" style="--d:.05s">
       <span class="f-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5"/><path d="M8.5 15.5 12 8.5l3.5 7M9.8 13h4.4"/></svg></span>
       <h3 data-t="n5.t">A new icon</h3>
-      <p data-t="n5.p">RoarList wears the Lab's new look: a graphite glass tile with thin red lines, on the Dock, the taskbar and the browser tab.</p>
-      <span class="f-tag">v0.4.3</span>
+      <p data-t="n5.p">RoarList wears the Lab's one family of icons: an off-black rounded square with a plain white list mark, on the Dock, the taskbar, the browser tab and the home screen.</p>
+      <span class="f-tag">v0.4.4</span>
     </article>
     <article class="f-card wide rv">
       <span class="f-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5 3.5 8 12 12.5 20.5 8z"/><path d="m3.5 12 8.5 4.5 8.5-4.5M3.5 16l8.5 4.5 8.5-4.5"/></svg></span>
@@ -752,13 +753,13 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 (function () {
   var APP = 'RoarList', REPO = 'alexisdigipro-hub/roarlist', WEB = '../../roarlist/'
   var EL = {
-    'nav.new': 'Τι νέο', 'ver.b': 'Νέα', 'ver.t': 'στην 0.4.3', 'tk.10': 'Ένας Roar Account',
+    'nav.new': 'Τι νέο', 'ver.b': 'Νέα', 'ver.t': 'στην 0.4.4', 'tk.10': 'Ένας Roar Account',
     'new.title': 'Τι <b>νέο</b> έχει.', 'new.sub': 'Τι έμαθε το RoarList από την πρώτη λίστα ως σήμερα: τον λογαριασμό σου στον browser, το design του RoarMe, μια λίστα που δοκιμάζεις χωρίς λογαριασμό, και μια θέση στο δικό μας hub.',
     'n1.t': 'Το design του RoarMe, ολόκληρο', 'n1.p': 'Τα θέματα Simba και Pumba, μέρα και νύχτα με ένα κυκλικό σβήσιμο, δέκα χρώματα, οκτώ γραμματοσειρές, γωνίες, αποστάσεις και μέγεθος κειμένου, γυάλινα κουμπιά και ομαλή κίνηση. Η Εξοικονόμηση ενέργειας κλείνει το blur και την κίνηση.',
     'n2.t': 'Οι λίστες σου, σε κάθε συσκευή', 'n2.p': 'Στον browser συνδέεσαι με τον Roar Account σου, μία σύνδεση για όλες τις εφαρμογές Roar (Sign in with Roar Account ή email και κωδικός· η επαλήθευση σε δύο βήματα ζητά τον κωδικό της): λίστες, κάδρα και ρυθμίσεις μένουν εκεί. Ό,τι έφτιαξες πριν συνδεθείς μπαίνει μέσα.',
     'n3.t': '⌘K, ⌘/ και δεξί κλικ', 'n3.p': 'Το ⌘K βρίσκει κάθε λίστα, το ⌘/ δείχνει όλες τις συντομεύσεις, το δεξί κλικ ανοίγει, κάνει αντίγραφο, εξάγει ή σβήνει. Σύρε την άκρη της πλαϊνής στήλης για να τη φαρδύνεις.',
     'n4.t': 'Δοκίμασέ το, χωρίς λογαριασμό', 'n4.p': 'Ένα δείγμα νυχτερινού γυρίσματος με ζωγραφισμένα κάδρα ανοίγει στον browser, <a href="../../roarlist/#demo">εδώ</a>. Άλλαξε ό,τι θες· τίποτα δεν αποθηκεύεται.',
-    'n5.t': 'Νέο εικονίδιο', 'n5.p': 'Το RoarList φορά το νέο look του Lab: ένα γραφιτί γυάλινο πλακίδιο με λεπτές κόκκινες γραμμές, στο Dock, στη γραμμή εργασιών και στην καρτέλα του browser.',
+    'n5.t': 'Νέο εικονίδιο', 'n5.p': 'Το RoarList φορά την οικογένεια εικονιδίων του Lab: ένα σχεδόν μαύρο στρογγυλεμένο τετράγωνο με ένα απλό λευκό σημάδι λίστας, στο Dock, στη γραμμή εργασιών, στην καρτέλα του browser και στην αρχική οθόνη.',
     'n6.t': 'Μέσα στο hub του στούντιο', 'n6.p': 'Στους Mad Lions, το RoarList είναι και καρτέλα στο Office του δικού μας hub. Κάθε λίστα ανήκει σε ένα project: το διαλέγεις και συμπληρώνονται τίτλος, πελάτης, σκηνοθέτης, DoP και ημερομηνία, το breakdown ενός σεναρίου μπορεί να φτιάξει το πρώτο shot list, και το RoarList παίρνει τα χρώματα του hub.', 'n6.tag': 'THEMADLIONS hub · Οκτ 2026',
     'n7.t': 'Καθαρά για τα δεδομένα σου', 'n7.p': 'Η Πολιτική απορρήτου και οι Όροι χρήσης είναι ένα πάτημα μακριά, στις Ρυθμίσεις και στην εγγραφή, και όταν σβήνεις μια λίστα στον browser σου λέει καθαρά ότι φεύγει οριστικά, μαζί με τα κάδρα της.',
     'nav.only': 'Μόνο εδώ', 'nav.set': 'Για το γύρισμα', 'nav.all': 'Όλα', 'nav.yours': 'Δικά σου', 'nav.download': 'Λήψη', 'nav.faq': 'Ερωτήσεις',
@@ -778,7 +779,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     's1.k': 'Το επόμενο πλάνο', 's1.t': '⌘↵, <b>και συνεχίζεις</b>.', 's1.p': 'Ένα νέο πλάνο μπαίνει ακριβώς κάτω από εκείνο που είσαι, με τον ίδιο φακό, και ο κέρσορας είναι ήδη στην περιγραφή του. Νέα σκηνή με ⌘⇧↵. Στήνεις ολόκληρη σκηνή χωρίς να αγγίξεις το ποντίκι.',
     's1.r1': 'Η κουζίνα, πρωινό φως', 's1.r2': 'Διαβάζει το γράμμα',
     's2.k': 'Το format', 's2.t': 'Επτά formats, <b>ένα look</b>.', 's2.p': 'Διάλεξε το format του γυρίσματος και τα κάδρα, το storyboard και το PDF το ακολουθούν. Στα κάθετα formats το PDF βάζει πέντε κάδρα στη σειρά αντί για τρία.',
-    's3.k': 'Ενημερώνεται μόνο του <em>0.4.3</em>', 's3.t': 'Ένα πάτημα, <b>νέα έκδοση</b>.', 's3.p': 'Οι εφαρμογές για Mac και Windows ψάχνουν νέα έκδοση στο παρασκήνιο και σου λένε όταν είναι έτοιμη. Πατάς Επανεκκίνηση· κι αν κλείσεις την εφαρμογή, εγκαθίσταται φεύγοντας.',
+    's3.k': 'Ενημερώνεται μόνο του <em>0.4.4</em>', 's3.t': 'Ένα πάτημα, <b>νέα έκδοση</b>.', 's3.p': 'Οι εφαρμογές για Mac και Windows ψάχνουν νέα έκδοση στο παρασκήνιο και σου λένε όταν είναι έτοιμη. Πατάς Επανεκκίνηση· κι αν κλείσεις την εφαρμογή, εγκαθίσταται φεύγοντας.',
     's3.c': 'Νέα έκδοση έτοιμη', 's3.btn': 'Επανεκκίνηση',
     's4.k': 'Η εμφάνιση', 's4.t': 'Το look του RoarMe, <b>τα δικά σου χρώματα</b>.', 's4.p': 'Το ίδιο design με το RoarMe: τα θέματα Simba και Pumba, μέρα ή νύχτα ή όπως το σύστημα, δέκα χρώματα, οκτώ γραμματοσειρές, μέγεθος κειμένου, αποστάσεις και γωνίες, με ζωντανή προεπισκόπηση. Η Εξοικονόμηση ενέργειας κλείνει το blur και την κίνηση. Στο hub μας παίρνει το θέμα του ίδιου του hub.',
     'all.idx': '03 · Όλα', 'all.title': 'Και όλα όσα <b>θέλει ένα γύρισμα</b>.', 'all.sub': 'Τα υπόλοιπα του RoarList, με λίγα λόγια.',

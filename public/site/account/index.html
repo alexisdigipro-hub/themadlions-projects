@@ -565,13 +565,16 @@ footer a { color:var(--dim); }
     const [scripts, lists] = await Promise.all([count('roarwriter_scripts', 'owner'), count('roarlist_projects', 'owner')])
     const APPS = [
       ['roarmail', 'RoarMail', t.download, '../lab/roarmail/'],
-      ['roarme', 'RoarMe', t.open + ' ' + t.onWeb, 'https://alexisdigipro-hub.github.io/roarme/'],
+      ['roarme', 'RoarMe', t.open + ' ' + t.onWeb, 'https://roarme.app/app/'],
       ['roarwriter', 'RoarWriter', scripts != null ? t.scripts(scripts) : t.open, 'https://alexisdigipro-hub.github.io/roarwriter/'],
       ['roarlist', 'RoarList', lists != null ? t.projects(lists) : t.open, '../roarlist/'],
       ['roartransfer', 'RoarTransfer', t.open + ' ' + t.onWeb, 'https://roartransfer.com/'],
-      ['roardino', 'Roardino', t.open + ' ' + t.onWeb, '../roardino/'],
+      ['roardino', 'Roardino App', t.open + ' ' + t.onWeb, '../roardino/'],
+      ['roardino-social', 'Roardino', t.open + ' ' + t.onWeb, 'https://roardino.com/'],
+      ['roarref', 'RoarRef', t.open + ' ' + t.onWeb, '../lab/roarref/app/'],
+      ['roarmask', 'RoarMask', t.open + ' ' + t.onWeb, '../lab/roarmask/', '../lab/roarmask/icon.png'],
     ]
-    $('apps').innerHTML = APPS.map(([k, n, line, href]) => `<a class="tile app" href="${href}" ${href.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}><img src="../lab/icons/${k}.png" alt=""><span class="t"><b>${n}</b><span>${esc(line)}</span></span></a>`).join('')
+    $('apps').innerHTML = APPS.map(([k, n, line, href, ico]) => `<a class="tile app" href="${href}" ${href.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}><img src="${ico || `../lab/icons/${k}.png`}" alt=""><span class="t"><b>${n}</b><span>${esc(line)}</span></span></a>`).join('')
 
     // RoarMail: the synced setup, today's AI, the computers
     const { data: sync } = await sb.from('roarmail_sync').select('data, updated_at').eq('user_id', u.id).maybeSingle()
