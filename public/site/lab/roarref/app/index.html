@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <!-- RoarRef (Alex, 6 Nov 2026): a 16:9 character reference sheet for AI. Fixed windows in 2 to 8 panel layouts; photos are
      dropped in, moved and zoomed inside their window; Export writes a 3840x2160 PNG. Plain HTML, CSS and JS, everything stays
      in this browser (IndexedDB 'roarref'). Its small page is lab/roarref/ (Lab experiment 10); also in Studio > Apps > In the browser. -->
@@ -23,6 +23,7 @@
   color-scheme:dark;
 }
 html,body{height:100%}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overflow:hidden;
   background-image:radial-gradient(1200px 600px at 50% -10%,rgba(255,255,255,.05),transparent 60%)}
 .app{height:100%;display:flex;flex-direction:column;gap:12px;box-sizing:border-box;
@@ -2947,7 +2948,9 @@ async function openSheets(first){
     if(m.querySelector('#pList') && !!curF() === !!m.querySelector('#pBack')) paintList(); else paint();
     setTimeout(() => old.forEach(u => URL.revokeObjectURL(u)), 500);
   };
-  const close = () => { m.remove(); homeNav = null; syncPanel();
+  const reflow = () => { if(document.body.contains(m) && !m.querySelector('.sh-meta input')){ shutMenu(); paint(); } };
+  const mqH = matchMedia('(max-width:820px)'); mqH.addEventListener('change', reflow);
+  const close = () => { m.remove(); homeNav = null; mqH.removeEventListener('change', reflow); syncPanel();
     if(!(history.state && history.state.rr === 'edit')) try{ history.pushState({rr:'edit'}, ''); }catch{} };
   // Back on Home: out of a folder; a folder entered pushes a step, so Back comes out of it
   const toFolder = fid => { pv.folder = fid; query = ''; keep(); paint(); slide('pslide-l'); m.scrollTop = 0; try{ history.pushState({rr:'fold', f:fid}, ''); }catch{} };
