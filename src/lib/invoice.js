@@ -16,6 +16,7 @@ export const defaultInvoiceProfile = () => ({
   bankIban: 'BG85FINV91501016735912',
   // the accountant, in Cc on every invoice email (Alex, 28 Oct)
   accountantEmail: 'info@flexi.gr',
+  ccAlso: 'anastasiap@themadlions.com',
   vatNote: 'Reason for not charging VAT: Under Article 21 of the VAT Law',
   currency: 'EUR',
   showBgn: true,

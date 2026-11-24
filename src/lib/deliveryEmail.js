@@ -14,28 +14,29 @@ const sizeOf = (n) => (n > 1e9 ? `${(n / 1e9).toFixed(1)} GB` : n > 0 ? `${Math.
 /* The hub's look (Alex, 28 Oct: "the colours and the feel of the hub as it is now", everything centred): graphite with
    a warm glow, one glassy card, soft rounded tiles, the coral accent as a pill. Gradients where the mail program draws
    them (Apple Mail, iOS, Outlook.com), the plain colour under them everywhere else. */
-const C = { bg: '#1c1e22', card: '#2a2d33', tile: '#33363d', line: '#40444c', text: '#f4f4f5', muted: '#a3a8b0', accent: '#ffffff' } // white where coral was (Alex, 28 Oct)
+// light since 24 Nov (Alex: "when I send the emails I want them in light mode, not dark; brighter, minimal")
+const C = { bg: '#f3f4f6', card: '#ffffff', tile: '#f6f7f9', line: '#e6e8ec', text: '#17181c', muted: '#6b7079', accent: '#17181c' }
 const FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif"
-const BG = `background-color:${C.bg};background-image:radial-gradient(120% 60% at 50% 110%, rgba(255,255,255,.07), rgba(255,255,255,0) 60%),linear-gradient(180deg,#2b2e34 0%,#1c1e22 55%,#16171a 100%);`
-const CARD = `background-color:${C.card};background-image:linear-gradient(160deg,#363a41 0%,#2a2d33 45%,#212328 100%);border:1px solid ${C.line};border-radius:28px;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 24px 60px rgba(0,0,0,.35);`
-const TILE = `background-color:${C.tile};background-image:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid ${C.line};border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);`
+const BG = `background-color:${C.bg};`
+const CARD = `background-color:${C.card};border:1px solid ${C.line};border-radius:24px;box-shadow:0 18px 50px rgba(20,24,32,.08);`
+const TILE = `background-color:${C.tile};border:1px solid ${C.line};border-radius:16px;`
 const td = (style, inner) => `<tr><td align="center" style="font-family:${FONT};text-align:center;${style}">${inner}</td></tr>`
 
-const btnOf = (href, label, big = true) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td align="center" bgcolor="#ffffff" style="border-radius:999px;background-color:#ffffff;background-image:linear-gradient(180deg,#ffffff 0%,#eceef1 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 10px 26px rgba(255,255,255,.16);"><a href="${esc(href)}" target="_blank" style="display:inline-block;padding:${big ? '16px 40px' : '10px 24px'};font-family:${FONT};font-size:${big ? 16 : 13}px;font-weight:700;color:#17181c;text-decoration:none;border-radius:999px;">${esc(label)}</a></td></tr></table>`
+const btnOf = (href, label, big = true) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td align="center" bgcolor="#17181c" style="border-radius:999px;background-color:#17181c;box-shadow:0 8px 22px rgba(23,24,28,.18);"><a href="${esc(href)}" target="_blank" style="display:inline-block;padding:${big ? '15px 38px' : '10px 24px'};font-family:${FONT};font-size:${big ? 14 : 13}px;font-weight:700;letter-spacing:.8px;color:#ffffff;text-decoration:none;border-radius:999px;">${esc(label)}</a></td></tr></table>`
 const glassBtn = (href, label) => `<a href="${esc(href)}" target="_blank" style="display:inline-block;font-family:${FONT};font-size:13px;font-weight:700;color:${C.text};text-decoration:none;background-color:#3a3e45;border:1px solid #4a4f57;border-radius:999px;padding:9px 20px;">${esc(label)}</a>`
 const tileOf = (inner, pad = '18px 20px') => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.tile}" style="${TILE}"><tr><td align="center" style="padding:${pad};text-align:center;">${inner}</td></tr></table>`
 
 /* the frame every email shares: graphite, one glass card 600 wide, the wordmark on top, the company at the foot */
 function wrap(subject, rows, company) {
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${esc(subject)}</title></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>${esc(subject)}</title></head>
 <body style="margin:0;padding:0;background-color:${C.bg};">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.bg}" style="${BG}">
 <tr><td align="center" style="padding:64px 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.card}" style="max-width:600px;width:100%;${CARD}">
 <tr><td align="center" style="padding:34px 26px 30px;text-align:center;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-<tr><td align="center" style="padding:0 0 28px;"><img src="${HUB}site/wordmark-white.png" width="210" alt="${esc(company)}" style="display:block;margin:0 auto;width:210px;max-width:62%;height:auto;border:0;color:${C.text};font-family:${FONT};font-size:20px;font-weight:700;"></td></tr>
+<tr><td align="center" style="padding:0 0 28px;"><img src="${HUB}site/wordmark.png" width="190" alt="${esc(company)}" style="display:block;margin:0 auto;width:190px;max-width:58%;height:auto;border:0;color:${C.text};font-family:${FONT};font-size:20px;font-weight:700;"></td></tr>
 ${rows}
 </table>
 </td></tr>
@@ -194,7 +195,8 @@ export function invoiceEmail(inv, pageUrl, { company = 'THEMADLIONS', total = ''
   const subject = v.subject
   const project = v.title
   const bank = [['ACCOUNT NAME', v.accountName], ['BANK', v.bank], ['IBAN', v.iban], ['BIC / SWIFT', v.bic]].filter((r) => r[1])
-  const facts = [['Αριθμός', v.number], ['Ποσό', v.amount], ['Λήξη', v.due]].filter((r) => r[1])
+  // no amount in the email (Alex, 24 Nov: "the money does not need to show in there"); it is on the invoice itself
+  const facts = [['Αριθμός', v.number], ['Λήξη', v.due]].filter((r) => r[1])
   const message = v.message
   const closing = v.closing
   const msg = message
