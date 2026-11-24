@@ -24,7 +24,9 @@ alter table roarmask_masks enable row level security;
 drop policy if exists roarmask_own on roarmask_masks;
 create policy roarmask_own on roarmask_masks for all to authenticated
   using (owner = (select auth.uid())) with check (owner = (select auth.uid()));
-revoke all on roarmask_masks from anon;
+revoke all on roarmask_masks from anon, public;
+-- only the four the page uses (Supabase gives truncate / references / trigger by default; none is reachable through the API, taken away anyway, 24 Nov)
+revoke truncate, references, trigger on roarmask_masks from authenticated;
 grant select, insert, update, delete on roarmask_masks to authenticated;
 
 -- at most 500 masks a person, so nobody fills the database by accident
