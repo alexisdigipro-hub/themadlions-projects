@@ -104,6 +104,21 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .cover .tools .csl{display:flex;align-items:center;gap:6px;padding:0 8px;color:#ddd;font:600 10.5px var(--body);letter-spacing:.06em;text-transform:uppercase}
 .cover .tools .csl input{width:84px;accent-color:var(--accent)}
 @media (max-width:820px){.cover .tools{flex-wrap:wrap;justify-content:center;border-radius:20px;max-width:92vw;white-space:normal}.cover .tools .csl input{width:70px}}
+.cdock{display:none}
+@media (max-width:820px){
+  .cdock:not([hidden]){display:block;width:100%;box-sizing:border-box;animation:pslideIn .2s ease-out}
+  .cdock .tools{position:static;transform:none;display:flex;flex-direction:column;align-items:stretch;gap:14px;padding:16px 18px 18px;border-radius:26px;max-width:none;white-space:normal;
+    background:var(--panel);border:1px solid var(--line);backdrop-filter:none}
+  .cdock .cdhead{display:flex;align-items:center;justify-content:space-between;font:600 15px var(--body);color:var(--ink,#eee)}
+  .cdock .cdok{height:40px;padding:0 20px}
+  .cdock .cdsw{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+  .cdock .sw{width:44px!important;height:44px!important;margin:0!important}
+  .cdock .ico{width:48px;height:48px}
+  .cdock .ico svg{width:22px;height:22px}
+  .cdock .csl{display:grid;grid-template-columns:92px 1fr;align-items:center;gap:10px;padding:0 4px;color:var(--muted,#bbb);font:600 12.5px var(--body);letter-spacing:.06em;text-transform:uppercase}
+  .cdock .csl input{flex:1;width:auto;height:34px;accent-color:var(--accent)}
+}
+@keyframes pslideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .cover .rs{position:absolute;right:-9px;bottom:-9px;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--accent);cursor:nwse-resize}
 .cover .tools{bottom:auto;top:-52px;white-space:nowrap}
 .cover .tools .ico[aria-pressed="true"]{background:rgba(255,255,255,.22)}
@@ -692,6 +707,7 @@ img{max-width:100%}
     <aside class="side" id="side" aria-label="Settings"></aside>
   </div>
   <div class="panel" id="panel"></div>
+  <div class="cdock" id="cdock" hidden></div>
   <div class="group mtabs" id="mtabs" role="tablist" aria-label="Settings"><span class="lens" id="mlens"></span>
     <button type="button" class="lay" data-t="pool" role="tab">Pool</button>
     <button type="button" class="lay" data-t="layout" role="tab">Layout</button>
@@ -1978,6 +1994,7 @@ $('gridBtn').onclick = () => {
 const GRID_LW = 2; // the lines' thickness, in sheet units
 const opOf = c => c.op == null ? 1 : Math.max(0, Math.min(1, +c.op));
 function drawCovers(){
+  const dock = $('cdock'); if(dock){ dock.innerHTML = ''; dock.hidden = true; }
   (S.covers||[]).forEach((c, i) => {
     const grid = c.kind === 'grid';
     const d = document.createElement('div'); d.className = 'cover' + (grid ? ' grid' : '') + (i===selCover ? ' sel' : '');
@@ -2024,7 +2041,15 @@ function drawCovers(){
       if(grid) t.append(slider('Size', 8, Math.round(Math.max(BW, BH)/3), Math.round(c.cell || 60), v => { c.cell = v; }));
       t.append(slider('Opacity', 5, 100, Math.round(opOf(c)*100), v => { c.op = v/100; }));
       t.append(pbtn('trash', grid ? 'Remove the grid' : 'Remove the cover', () => { S.covers.splice(i,1); selCover=-1; render(); save(); }, 'del'));
-      d.appendChild(t);
+      // on a phone the settings stand under the sheet, large (Alex, 24 Nov: "από κάτω ... πιο μεγάλα")
+      if(isPhone() && dock){ const hd = document.createElement('div'); hd.className = 'cdhead';
+        hd.innerHTML = `<b>${grid ? 'Grid' : 'Cover'}</b>`; const ok = document.createElement('button'); ok.type = 'button'; ok.className = 'pill cdok'; ok.textContent = 'Done';
+        ok.onclick = () => { selCover = -1; render(); }; hd.appendChild(ok);
+        const sw = document.createElement('div'); sw.className = 'cdsw'; [...t.querySelectorAll(':scope > button:not(.del)')].forEach(b => sw.appendChild(b));
+        const del = t.querySelector(':scope > .del'); const sl = [...t.querySelectorAll(':scope > .csl')];
+        t.innerHTML = ''; t.append(hd, sw, ...sl); if(del){ const r = document.createElement('div'); r.className = 'cdsw'; r.appendChild(del); t.appendChild(r); }
+        dock.appendChild(t); dock.hidden = false; }
+      else d.appendChild(t);
     }
     stage.appendChild(d);
   });
