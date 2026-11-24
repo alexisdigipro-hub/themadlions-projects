@@ -9,7 +9,8 @@
      (releases/latest), questions. EN and GR, the same switch as the main page.
      29 Oct 2026 (Alex: "refresh the Lab pages"): the Lab's fresh layer (../fresh.css, ../fresh.js), the new icon (icon.png)
      in the hero and as the favicon, a version chip, What's new (0.4 to 0.6) as a bento, and the text checked against
-     RoarWriter 0.6.0. Only what is in the app. -->
+     RoarWriter 0.6.0. Only what is in the app.
+     24 Nov 2026: checked against RoarWriter 0.6.2; Sign in with Roar Account (0.6.1) in the version chip and What's new. -->
 <title>RoarWriter · Screenplays, TV, stage plays and more, in English and Greek · by The Mad Lions</title>
 <link rel="canonical" href="https://themadlions.com/lab/roarwriter/">
 <meta name="description" content="RoarWriter, the screenwriting app by The Mad Lions Lab. Nine formats (feature film, TV drama, half-hour, sitcom, stage play, musical, audio drama, AV two-column, comic) in English or Greek, with Final Draft's keys, revisions and versions, a breakdown, a beat board, a storyboard, a shooting schedule, TV series with their bible, writing together, Final Draft, Fade In and Fountain in and out, notes, index cards, a table read and sides, a PDF ready to send and an AI that reads the whole script when you ask. For Mac, Windows, the browser and the phone.">
@@ -509,7 +510,7 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
       <a class="pill web-link" href="https://alexisdigipro-hub.github.io/roarwriter/"><span data-t="cta.browser">Write in the browser</span></a>
     </div>
     <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · Mac, Windows, browser · your Roar Account · updates itself</span></p>
-    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.6 · RoarMail’s glass look</span></a></div>
+    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.6 · one sign-in for every Roar app</span></a></div>
   </div>
   <div class="scene stack rv" style="--d:.18s">
     <figure class="scene-photo"><img src="photo-hero.jpg" alt="" width="1600" height="900" fetchpriority="high"><figcaption data-t="sc.cap">A café in Psyrri, 19:10. Scene 42, finally right.</figcaption></figure>
@@ -787,6 +788,12 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
   </div>
   <div class="f-bento rv">
     <article class="f-card full">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>
+      <h3 data-t="n9.t">Sign in with Roar Account</h3>
+      <p data-t="n9.p">One sign-in for every Roar app: press Sign in with Roar Account, allow it in your browser, and RoarWriter is signed in. With two-step verification on, it asks for the 6-digit code from your authenticator app.</p>
+      <span class="f-tag">v0.6.1</span>
+    </article>
+    <article class="f-card full">
       <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="5" height="14" rx="2"/><rect x="10" y="5" width="11" height="14" rx="2"/><path d="M13 9h5M13 12h5M13 15h3"/></svg></span>
       <h3 data-t="n0.t">The look of RoarMail</h3>
       <p data-t="n0.p">On a computer the scene list, the page and the AI now float as graphite glass panels, with a gap between them, over a soft graphite backdrop. One red that glows takes the place of the orange, the chosen scene is lit from inside, the corners are softer and the name is set in Jost with its second half in red. The page you write on stays white, and on a phone the layout stays as it was with the new colours. A new icon too, in RoarMe’s look.</p>
@@ -982,6 +989,7 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     'ct.idx': 'Επαφή', 'ct.title': 'Ιδέες για <b>την επόμενη έκδοση</b>;', 'ft.lab': 'The Mad Lions Lab', 'ft.legal': 'Απόρρητο & Όροι', 'lg.p': 'Πολιτική απορρήτου', 'lg.t': 'Όροι χρήσης', 'footer': '© 2026 The Mad Lions · RoarWriter'
   }
   // the product page (31 Oct): its own Greek
+  Object.assign(EL, { 'ver.t': 'στην 0.6 · μία σύνδεση για όλες τις εφαρμογές Roar', 'n9.t': 'Σύνδεση με Roar Account', 'n9.p': 'Μία σύνδεση για όλες τις εφαρμογές Roar: πατάς Sign in with Roar Account, το εγκρίνεις στον browser, και το RoarWriter συνδέεται. Αν έχεις επαλήθευση σε δύο βήματα, σου ζητά τον 6ψήφιο κωδικό από την εφαρμογή επαλήθευσης.' })
   Object.assign(EL, {"only.idx": "02 · Μόνο εδώ", "page.idx": "03 · Η σελίδα", "st.idx": "04 · Το studio", "all.idx": "05 · Όλα", "dl.idx": "07 · Λήψη", "faq.idx": "08 · Ερωτήσεις", "hero.claim": "Από την πρώτη σελίδα.<br><b>Ως το γύρισμα.</b>", "hero.lead2": "Γράψε στη μορφή που φτιάχνονται οι ταινίες, στα ελληνικά ή στα αγγλικά, με τα πλήκτρα του Final Draft, και πήγαινέ το ως το storyboard και το πρόγραμμα γυρισμάτων. <b>Web, Mac και Windows.</b>", "sc.cap": "Ένα καφέ στου Ψυρρή, 19:10. Η σκηνή 42, επιτέλους σωστή.", "nav.onset": "Στο γύρισμα", "on.idx": "01 · Στο γύρισμα", "on.title": "Φτιαγμένο από ανθρώπους <b>που κάνουν ταινίες</b>.", "on.sub": "Φτιάξαμε το RoarWriter για τη δική μας δουλειά στο The Mad Lions. Εδώ το χρησιμοποιούμε.", "why.idx": "06 · Γιατί Roar", "why.title": "Γιατί <b>μια εφαρμογή Roar</b>.", "why.sub": "Τι υπόσχεται κάθε εφαρμογή του The Mad Lions Lab, και το RoarWriter.", "nm1": "μορφές: ταινία, σειρά, θέατρο και άλλες.", "nm2": "γλώσσες, ελληνικά και αγγλικά, με τα ίδια γράμματα γραφομηχανής.", "nm3": "και κάθε αλλαγή είναι στον λογαριασμό σου, σε κάθε συσκευή.", "nm4": "Χωρίς συνδρομή, χωρίς διαφημίσεις.", "on1.k": "Στο σπίτι · Η σεναριογράφος", "on1.t": "Η μορφή φροντίζει τον εαυτό της.", "on1.p": "Enter και Tab όπως στο Final Draft, ΕΣΩΤ. και ΕΞΩΤ. όπως INT. και EXT., ονόματα και τόποι προτείνονται καθώς γράφεις.", "on2.k": "Ανάγνωση · Οι ηθοποιοί", "on2.t": "Sides για όλους.", "on2.p": "Sides για κάθε ηθοποιό, το σενάριο διαβασμένο φωναχτά, σημειώσεις σε γραμμές, και ένα PDF έτοιμο να σταλεί.", "on3.k": "Στο γύρισμα · Η σκηνοθέτις", "on3.t": "Από τη σελίδα στη μέρα του γυρίσματος.", "on3.p": "Storyboard, λίστα πλάνων και πρόγραμμα γυρισμάτων από το ίδιο σενάριο, με τις αναθεωρήσεις σε χρώμα.", "w1.t": "Δικό σου, και όποιου το μοιράζεσαι", "w1.p": "Κρατιέται στον υπολογιστή σου καθώς γράφεις και στον λογαριασμό σου ένα δευτερόλεπτο μετά· ένα σενάριο ανοίγει μόνο για σένα και όσους το μοιράζεσαι.", "w2.t": "Ένα AI που περιμένει", "w2.p": "Το AI βλέπει μόνο ό,τι του στέλνεις, και τίποτα στη σελίδα δεν αλλάζει μέχρι να πατήσεις Insert ή Replace.", "w3.t": "Πάντα η νεότερη", "w3.p": "Η έκδοση web είναι πάντα η τελευταία· οι εφαρμογές για Mac και Windows ενημερώνονται μόνες τους.", "w4.t": "Φτιαγμένο από κινηματογραφιστές", "w4.p": "Το The Mad Lions, εταιρεία παραγωγής στην Αθήνα, το χρησιμοποιεί στη δουλειά του. Οι ιδέες σου πάνε κατευθείαν σε όσους το φτιάχνουν."})
   var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
   var EN = {}

@@ -8,7 +8,8 @@
      RoarMail does, what came lately, everything else as an index, privacy, downloads (releases/latest), questions.
      Only what is in the code of RoarMail 0.34.3. EN and GR, the same switch as the main page.
      29 Oct 2026: the Lab's fresh layer (../fresh.css, ../fresh.js), the new icon (icon.png) and What's new (#new).
-     8 Nov 2026: brought up to 0.34 (Roar Account, the ✦ AI, own windows, Block by name/domain/brand, shared spam list, Careful, Waiting for a reply, projects, Roar Calendar, checked updates); What's new has keys of its own (wn*), no version numbers in prose. -->
+     8 Nov 2026: brought up to 0.34 (Roar Account, the ✦ AI, own windows, Block by name/domain/brand, shared spam list, Careful, Waiting for a reply, projects, Roar Calendar, checked updates); What's new has keys of its own (wn*), no version numbers in prose.
+     24 Nov 2026: brought up to 0.38.1 (a contact's own photo, swipe between tabs, lighter, asks before the AI, Waiting for a reply as a switch, the Mac App Store copy on its way); its Greek in the last Object.assign. -->
 <title>RoarMail · The private mail app for Mac and Windows: every inbox in one, trackers blocked, undo everything · by The Mad Lions</title>
 <link rel="canonical" href="https://themadlions.com/lab/roarmail/">
 <meta name="description" content="RoarMail, the mail app for Mac and Windows by The Mad Lions Lab. Every mailbox in one inbox, at keyboard speed, with no server of ours between you and your mail. Trackers blocked, links checked, undo for everything, snooze, send later, and big files as one link up to 5 GB. It updates itself.">
@@ -475,7 +476,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <a class="pill" href="#only"><span data-t="cta.what">See what it does</span></a>
     </div>
     <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · Mac and Windows · updates itself ·</span> <a href="#download" data-t="cta.all">all downloads</a></p>
-    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">Lately · Roar Account, ✦ AI and Waiting for a reply</span></a></div>
+    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">Lately · contact photos, swipe between tabs, a lighter app</span></a></div>
   </div>
   <div class="scene stack rv" style="--d:.18s">
     <figure class="scene-photo"><img src="photo-hero.jpg" alt="" width="1600" height="900" fetchpriority="high"><figcaption data-t="sc.cap">Koukaki, 18:20. Inbox zero, and nobody knew when he read a thing.</figcaption></figure>
@@ -587,7 +588,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <article class="tile t-tasks f-glass rv">
       <span class="k" data-t="n1.k">Snooze · Send later</span>
       <h3 data-t="n1.t" data-html>Not now. <b>Later.</b></h3>
-      <p data-t="n1.p">Snooze a message with B and it leaves the inbox until the time you pick, then comes back unread with a notification. Write now and send later, the same way. Want an answer? Ask RoarMail to remind you if nobody replies in 1, 2, 3 or 7 days, and Waiting for a reply lists what you sent in the last 30 days that nobody answered, with Nudge them one click away.</p>
+      <p data-t="n1.p">Snooze a message with B and it leaves the inbox until the time you pick, then comes back unread with a notification. Write now and send later, the same way. Want an answer? Ask RoarMail to remind you if nobody replies in 1, 2, 3 or 7 days, and turn on Waiting for a reply in Settings to list what you sent in the last 30 days that nobody answered, with Nudge them one click away.</p>
       <div class="when">
         <span data-t="n1.w1" data-html>Later today <small>18:00</small></span>
         <span class="on" data-t="n1.w2" data-html>Tomorrow morning <small>08:00</small></span>
@@ -709,7 +710,8 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <details class="rv"><summary data-t="q5">How big can an attachment be?</summary><p data-t="a5">As big as your mail server accepts; many refuse more than 20 to 25 MB. Signed in with your Roar Account, big files go as one RoarTransfer link instead: up to 5 GB kept for 1 day, or up to 3 GB kept for 3 days, with an optional password.</p></details>
       <details class="rv"><summary data-t="q6">Does search find old mail?</summary><p data-t="a6">Search looks through the mail kept on your computer, which makes it instant; the first time, RoarMail brings the last 90 days of each folder. For older mail, turn on Search the servers too in Settings.</p></details>
       <details class="rv"><summary data-t="q7">Is there a phone version?</summary><p data-t="a7">Not yet: RoarMail is for Mac and Windows. Snoozed, archived and moved mail moves on your server too, so the mail app on your phone sees the same inbox.</p></details>
-      <details class="rv"><summary data-t="q8">What does the ✦ AI see?</summary><p data-t="a8">Only what you ask it to work on, and only when you press it: your request, the text you wrote or selected, the mail you are answering and its recipients. With RoarMail AI it goes through your Roar Account to Claude and is not kept; 30 a day, free. With your own Claude or ChatGPT key it goes straight from your computer to that company. Nothing else of your mail is sent.</p></details>
+      <details class="rv"><summary data-t="q8">What does the ✦ AI see?</summary><p data-t="a8">Only what you ask it to work on, and only when you press it: your request, the text you wrote or selected, the mail you are answering and its recipients. With RoarMail AI it goes through your Roar Account to Claude and is not kept; 30 a day, free. With your own Claude or ChatGPT key it goes straight from your computer to that company. Nothing else of your mail is sent. The first time, RoarMail asks before any text goes to the AI and says plainly who gets it; Settings › Roar Account › AI takes the yes back.</p></details>
+      <details class="rv"><summary data-t="q10">Is RoarMail in the Mac App Store?</summary><p data-t="a10">It is on its way: a Mac App Store copy is built and tested in TestFlight. Until it is there, download it here; this copy updates itself.</p></details>
       <details class="rv"><summary data-t="q9">What is the shared spam list?</summary><p data-t="a9">When you block a sender, a name or a domain, only a one-way fingerprint of it is sent, never the address or your mail. A sender blocked by at least 3 RoarMail users (a name: 5) goes straight to Junk for everyone, never from people you have written to. Turn it off in Settings › Privacy.</p></details>
     </div>
   </div>
@@ -718,9 +720,27 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 <section class="f-new" id="new">
   <div class="f-new-head">
     <div><p class="idx rv" data-t="wn.idx">08 · What's new</p><h2 class="rv" data-t="wn.title" data-html>Lately in <b>RoarMail</b>.</h2></div>
-    <p class="rv" data-t="wn.sub">What came in the latest versions, from the Roar Account and the ✦ AI to fakes caught by the brand they wear.</p>
+    <p class="rv" data-t="wn.sub">What came in the latest versions, from a photo for every contact and swiping between tabs to the Roar Account and the ✦ AI.</p>
   </div>
   <div class="f-bento">
+    <article class="f-card rv">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="12" cy="10" r="2.8"/><path d="M7.8 17a4.6 4.6 0 0 1 8.4 0"/></svg></span>
+      <h3 data-t="wn11.t">A photo for every contact</h3>
+      <p data-t="wn11.p">Give anyone in Contacts a photo of your own, and it shows wherever their picture shows, in every window. It stays on your computer.</p>
+      <span class="f-tag">v0.36</span>
+    </article>
+    <article class="f-card rv" style="--d:.06s">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg></span>
+      <h3 data-t="wn12.t">Swipe between tabs</h3>
+      <p data-t="wn12.p">Two fingers sideways on the trackpad, or one on a touch screen, move between the pages and tabs of Settings, Contacts, Files and Statistics. New content slides in from its side, and every choice has the sliding glass.</p>
+      <span class="f-tag">v0.37</span>
+    </article>
+    <article class="f-card rv" style="--d:.1s">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3 5 13.5h6L10 21l8-10.5h-6z"/></svg></span>
+      <h3 data-t="wn13.t">The same app, lighter</h3>
+      <p data-t="wn13.p">Checked on 9 accounts and 50,000 messages: Junk, blocked senders and Waiting for a reply are worked out only when something changed, and rows out of sight are not drawn. The look stays exactly as it was.</p>
+      <span class="f-tag">v0.38</span>
+    </article>
     <article class="f-card wide tall rv">
       <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>
       <h3 data-t="wn1.t">Roar Account: your RoarMail on every computer</h3>
@@ -737,14 +757,14 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <article class="f-card wide rv" style="--d:.06s">
       <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 13.8 10 20 12l-6.2 2L12 20.5 10.2 14 4 12l6.2-2z"/></svg></span>
       <h3 data-t="wn2.t">✦ AI in a new message</h3>
-      <p data-t="wn2.p">Press ✦, say in a few words what the mail should say, and it writes it. Or change what you wrote: Shorter, Friendlier, More formal, Fix it, in English or in Greek. The answer shows in the card first and goes into the mail only with Put it in the mail; your signature stays as it was. RoarMail AI comes with the Roar Account, 30 a day, free, or use your own Claude or ChatGPT key.</p>
+      <p data-t="wn2.p">Press ✦, say in a few words what the mail should say, and it writes it. Or change what you wrote: Shorter, Friendlier, More formal, Fix it, in English or in Greek. The answer shows in the card first and goes into the mail only with Put it in the mail; your signature stays as it was. RoarMail AI comes with the Roar Account, 30 a day, free, or use your own Claude or ChatGPT key. Before any text goes to the AI, RoarMail asks you and says who gets it.</p>
       <div class="ctx-mock" aria-hidden="true"><span data-t="wn2.m1">Shorter</span><span data-t="wn2.m2">Friendlier</span><span class="on" data-t="wn2.m3">More formal</span><span data-t="wn2.m4">Fix it</span><span data-t="wn2.m5">In Greek</span></div>
-      <span class="f-tag">v0.29 · v0.31</span>
+      <span class="f-tag">v0.29 · v0.38</span>
     </article>
     <article class="f-card wide rv" style="--d:.1s">
       <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>
       <h3 data-t="wn3.t">Waiting for a reply</h3>
-      <p data-t="wn3.p">All accounts › Waiting for a reply lists the mail you sent in the last 30 days that nobody answered. Nudge them writes a short follow-up to the same people; Not waiting takes it off the list.</p>
+      <p data-t="wn3.p">All accounts › Waiting for a reply lists the mail you sent in the last 30 days that nobody answered. Nudge them writes a short follow-up to the same people; Not waiting takes it off the list. Turn it on in Settings › General › Inboxes.</p>
       <div class="cap" aria-hidden="true"><span class="on" data-t="wn3.c1">Waiting</span><span data-t="wn3.c2">Nudge them</span><span data-t="wn3.c3">Not waiting</span></div>
       <span class="f-tag">v0.33</span>
     </article>
@@ -917,6 +937,24 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     setMain(l); showVer(l)
     if (pick) { try { localStorage.setItem('tml_site_lang', l); localStorage.setItem('tml_site_lang_set', '1') } catch (e) {} }
   }
+  // brought up to RoarMail 0.38.1 (24 Nov 2026): its own Greek, over the tables above
+  Object.assign(EL, {
+    'ver.t': 'Πρόσφατα · φωτογραφίες επαφών, σάρωση ανάμεσα στις καρτέλες, πιο ελαφρύ',
+    'n1.p': 'Ανάβαλε ένα μήνυμα με το B και φεύγει από το inbox ως την ώρα που διαλέγεις, μετά γυρίζει αδιάβαστο με ειδοποίηση. Γράψε τώρα και στείλε αργότερα, με τον ίδιο τρόπο. Περιμένεις απάντηση; Ζήτα από το RoarMail να σου θυμίσει αν δεν απαντήσει κανείς σε 1, 2, 3 ή 7 μέρες, και άνοιξε το Περιμένω απάντηση στις Ρυθμίσεις για να βλέπεις ό,τι έστειλες τις τελευταίες 30 μέρες χωρίς απάντηση, με το Ξαναθύμισέ του ένα κλικ μακριά.',
+    'wn.sub': 'Ό,τι ήρθε στις τελευταίες εκδόσεις, από μια φωτογραφία για κάθε επαφή και τη σάρωση ανάμεσα στις καρτέλες ως το Roar Account και το ✦ AI.',
+    'wn11.t': 'Μια φωτογραφία για κάθε επαφή',
+    'wn11.p': 'Δώσε σε όποιον θες στις Επαφές μια δική σου φωτογραφία, και φαίνεται όπου φαίνεται η εικόνα του, σε κάθε παράθυρο. Μένει στον υπολογιστή σου.',
+    'wn12.t': 'Σάρωση ανάμεσα στις καρτέλες',
+    'wn12.p': 'Δύο δάχτυλα στο πλάι στο trackpad, ή ένα σε οθόνη αφής, περνούν από σελίδα σε σελίδα και από καρτέλα σε καρτέλα στις Ρυθμίσεις, τις Επαφές, τα Αρχεία και τα Στατιστικά. Το νέο περιεχόμενο γλιστρά από την πλευρά του, και κάθε επιλογή έχει το γυαλί που γλιστρά.',
+    'wn13.t': 'Η ίδια εφαρμογή, πιο ελαφριά',
+    'wn13.p': 'Δοκιμασμένο σε 9 λογαριασμούς και 50.000 μηνύματα: τα Ανεπιθύμητα, οι μπλοκαρισμένοι αποστολείς και το Περιμένω απάντηση υπολογίζονται μόνο όταν κάτι άλλαξε, και οι γραμμές που δεν φαίνονται δεν ζωγραφίζονται. Η εμφάνιση μένει ακριβώς όπως ήταν.',
+    'wn2.p': 'Πατάς ✦, λες με λίγα λόγια τι να λέει το μήνυμα, και το γράφει. Ή αλλάζει ό,τι έγραψες: Πιο σύντομο, Πιο φιλικό, Πιο επίσημο, Διόρθωση, στα αγγλικά ή στα ελληνικά. Η απάντηση φαίνεται πρώτα στην κάρτα και μπαίνει στο μήνυμα μόνο με το Βάλ’ το στο mail· η υπογραφή σου μένει όπως ήταν. Το RoarMail AI έρχεται με το Roar Account, 30 τη μέρα, δωρεάν, ή βάζεις το δικό σου κλειδί Claude ή ChatGPT. Πριν φύγει οποιοδήποτε κείμενο για το AI, το RoarMail σε ρωτάει και λέει ποιος το παίρνει.',
+    'wn3.p': 'Το Όλοι οι λογαριασμοί › Περιμένω απάντηση δείχνει όσα έστειλες τις τελευταίες 30 μέρες και δεν απάντησε κανείς. Το Ξαναθύμισέ του γράφει ένα σύντομο μήνυμα στους ίδιους ανθρώπους· το Δεν περιμένω πια το βγάζει από τη λίστα. Το ανοίγεις στις Ρυθμίσεις › Γενικά › Εισερχόμενα.',
+    'a8': 'Μόνο ό,τι του ζητάς να δουλέψει, και μόνο όταν το πατάς: το αίτημά σου, το κείμενο που έγραψες ή διάλεξες, το μήνυμα που απαντάς και τους παραλήπτες του. Με το RoarMail AI περνά από το Roar Account σου στο Claude και δεν κρατιέται· 30 τη μέρα, δωρεάν. Με δικό σου κλειδί Claude ή ChatGPT πάει απευθείας από τον υπολογιστή σου σε εκείνη την εταιρεία. Τίποτε άλλο από τα μηνύματά σου δεν στέλνεται. Την πρώτη φορά, το RoarMail ρωτάει πριν φύγει κείμενο για το AI και λέει καθαρά ποιος το παίρνει· στις Ρυθμίσεις › Roar Account › AI παίρνεις πίσω το ναι.',
+    'q10': 'Είναι το RoarMail στο Mac App Store;',
+    'a10': 'Έρχεται: μια έκδοση για το Mac App Store είναι έτοιμη και δοκιμάζεται στο TestFlight. Ως τότε, κατέβασέ το από εδώ· αυτή η έκδοση ενημερώνεται μόνη της.'
+  })
+
   // the first button downloads for the computer you are on; elsewhere it shows the downloads
   var ua = navigator.userAgent || ''
   var phone = /iPhone|iPad|iPod|Android/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
