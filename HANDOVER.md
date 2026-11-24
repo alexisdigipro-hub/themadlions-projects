@@ -37,6 +37,11 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (24 Nov 2026: RoarMask in the Lab)
+- New Lab tool, RoarMask (Alex: "masks for LED screens with exact sizes"): https://themadlions.com/lab/roarmask/, one self-contained page `public/site/lab/roarmask/index.html` (plain HTML, CSS and JS, no build). The screen's size in px, boxes, rounded boxes, rounds, lines and arcs with typed X / Y / W / H, rulers, a grid of any step, snap to grid, shapes, edges and guides dragged from the rulers, any colour with opacity, Transparent = a see-through hole (destination-out), outlines from 1 px inside / centre / outside, hard pixel edges (alpha thresholded per shape), repeat across and down, align, distribute, layers with hide and lock, undo, projects kept in the browser (localStorage roarmask-lib), Save as .json, Export PNG at the exact size. Inside claude.ai it saves through the downloads capability; on the site through a plain download link.
+- Lab page: card 12, section "Experiment 12", Greek in `mk.*`, `roarmask` in APPS; scripts/site-seo.mjs lists it (llms, apps, sitemap). Not on the home page's Lab strip yet.
+- Open question for Alex: keep it on the web, or also a Mac app with self-update like the other Lab apps.
+
 ## Where we stopped (23 Nov 2026: duplicate an estimate)
 - Alex: "I want to be able to duplicate these" (Outbox, the cost estimations). Each estimate row has **Duplicate** (copy icon, administrators, Deliveries.jsx duplicateEstimate): it opens the estimation window with the same content, title + " (copy)", no version, a new id; nothing exists until Publish, which makes a new link. The original and its replies stay as they are.
 - Phone: in a project's head, In RoarMe / Unlink / Create PROjects ran off the card (five pills on one line); they now take their own row under Add, Edit and ⋯, half each (last block of styles.css). Desktop untouched.
