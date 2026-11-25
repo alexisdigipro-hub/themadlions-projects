@@ -51,7 +51,7 @@ export default function EmailWindow({ build, start = {}, base, onKeep, fields = 
      line with its name small inside at the left; a text box keeps its name over its first line */
   const line = (key, k, input, cls = '') => <label key={key} className={`mf${cls ? ` ${cls}` : ''}`}><span className="mf-k">{k}</span>{input}</label>
   const field = (f) => line(f.k, f.label, f.rows
-    ? <textarea className="mf-in" rows={Math.min(f.rows, 4)} value={v[f.k] ?? ''} onChange={(e) => setV({ ...v, [f.k]: e.target.value })} />
+    ? <textarea className="mf-in" rows={f.rows > 2 ? 3 : 1} value={v[f.k] ?? ''} onChange={(e) => setV({ ...v, [f.k]: e.target.value })} />
     : <input className="mf-in" value={v[f.k] ?? ''} onChange={(e) => setV({ ...v, [f.k]: e.target.value })} />, `${f.half ? 'mf-half' : ''}${f.rows ? ' mf-area' : ''}`)
   return (
     <Modal open wide title={title} onClose={onClose} className="mail-win" footer={

@@ -10096,7 +10096,7 @@ html[data-theme] body .mail-form { gap: 6px; align-content: start; }
 .mf-k { flex: none; font-size: 10.5px; font-weight: 600; letter-spacing: .04em; color: var(--muted); white-space: nowrap; }
 .mf-in { flex: 1; min-width: 0; height: 32px; padding: 0; border: 0; outline: 0; background: none; color: var(--text); font: inherit; font-size: 13.5px; }
 .mail-form > .mf.mf-area { align-items: flex-start; flex-direction: column; gap: 2px; padding: 7px 12px; }
-.mf-area .mf-in { height: auto; resize: vertical; line-height: 1.45; min-height: 58px; }
+.mf-area .mf-in { height: auto; resize: vertical; line-height: 1.45; min-height: 0; }
 .mail-form > .mf.mf-cc { padding-right: 4px; }
 .mf-cc .mail-ccs { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
 .mf-cc .mail-ccs .mf-in { flex: 1 1 120px; }
