@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Field, Input, Modal, Textarea, useToast } from './ui.jsx'
+import { Button, Modal, useToast } from './ui.jsx'
 import { copyEmail, sendEmail } from '../lib/deliveryEmail.js'
 
 /* An email made in the hub (Alex, 28 Oct): what the client will see, then Copy email (paste it into a new email in
@@ -47,11 +47,12 @@ export default function EmailWindow({ build, start = {}, base, onKeep, fields = 
     try { await copyEmail(mail); toast('Email copied. Paste it into a new email.', 'ok') } catch { toast('Could not copy. Use Download .html.', 'error') }
   }
   const copyLink = () => navigator.clipboard.writeText(link).then(() => toast('Link copied', 'ok')).catch(() => toast('Could not copy', 'error'))
-  const field = (f) => (
-    <Field key={f.k} label={f.label} className={f.half ? 'mail-half' : ''}>
-      {f.rows ? <Textarea rows={f.rows} value={v[f.k] ?? ''} onChange={(e) => setV({ ...v, [f.k]: e.target.value })} /> : <Input value={v[f.k] ?? ''} onChange={(e) => setV({ ...v, [f.k]: e.target.value })} />}
-    </Field>
-  )
+  /* gathered (Alex, 25 Nov: "no titles over the fields, no gaps, no scrolling to see them all"): each field one slim
+     line with its name small inside at the left; a text box keeps its name over its first line */
+  const line = (key, k, input, cls = '') => <label key={key} className={`mf${cls ? ` ${cls}` : ''}`}><span className="mf-k">{k}</span>{input}</label>
+  const field = (f) => line(f.k, f.label, f.rows
+    ? <textarea className="mf-in" rows={f.rows > 2 ? 3 : 1} value={v[f.k] ?? ''} onChange={(e) => setV({ ...v, [f.k]: e.target.value })} />
+    : <input className="mf-in" value={v[f.k] ?? ''} onChange={(e) => setV({ ...v, [f.k]: e.target.value })} />, `${f.half ? 'mf-half' : ''}${f.rows ? ' mf-area' : ''}`)
   return (
     <Modal open wide title={title} onClose={onClose} className="mail-win" footer={
       <>
@@ -63,17 +64,17 @@ export default function EmailWindow({ build, start = {}, base, onKeep, fields = 
     }>
       <div className="deliv-email with-form" style={{ '--mail-form-w': `${formW}px` }}>
         <div className={fields.length ? 'mail-form' : 'mail-form mail-form-to'}>
-            <Field label="To"><Input type="email" multiple value={to} onChange={(e) => setTo(e.target.value)} placeholder="client@company.com" autoComplete="email" /></Field>
-            <Field label="Cc">
-              <div className="mail-ccs">
-                {ccs.map((x, i) => <Input key={i} type="email" value={x} onChange={(e) => setCcAt(i, e.target.value)} placeholder={i === ccs.length - 1 && !x ? ccHint : 'email'} autoComplete="off" />)}
-                <button type="button" className="mail-ccadd" onClick={() => setCcs((l) => [...l, ''])} aria-label="Add another Cc" title="Add another Cc">+</button>
-              </div>
-            </Field>
-            <label className="mail-copyme"><input type="checkbox" checked={copyMe} onChange={(e) => setCopyMe(e.target.checked)} /> Send me a copy</label>
+          {line('to', 'To', <input className="mf-in" type="email" multiple value={to} onChange={(e) => setTo(e.target.value)} placeholder="client@company.com" autoComplete="email" />)}
+          <div className="mf mf-cc"><span className="mf-k">Cc</span>
+            <div className="mail-ccs">
+              {ccs.map((x, i) => <input key={i} className="mf-in" type="email" value={x} onChange={(e) => setCcAt(i, e.target.value)} placeholder={i === ccs.length - 1 && !x ? ccHint : 'email'} autoComplete="off" />)}
+              <button type="button" className="mail-ccadd" onClick={() => setCcs((l) => [...l, ''])} aria-label="Add another Cc" title="Add another Cc">+</button>
+            </div>
+          </div>
+          <label className="mail-copyme"><input type="checkbox" checked={copyMe} onChange={(e) => setCopyMe(e.target.checked)} /> Send me a copy</label>
           {fields.length > 0 && (<>
-            {fields.map((f) => (f.group ? <h3 key={f.group} className="mail-group">{f.group}</h3> : field(f)))}
-            <Button variant="ghost" size="sm" onClick={() => setV(base || start)}>Back to the original text</Button>
+            {fields.filter((f) => !f.group).map(field)}
+            <Button variant="ghost" size="sm" className="mf-reset" onClick={() => setV(base || start)}>Back to the original text</Button>
           </>)}
         </div>
         <div className="mail-split" onPointerDown={drag} role="separator" aria-orientation="vertical" aria-label="Drag to make the fields wider or narrower" title="Drag" />

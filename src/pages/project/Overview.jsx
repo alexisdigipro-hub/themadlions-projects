@@ -422,7 +422,7 @@ export default function Overview() {
           <span className="ordino-btn-go" aria-hidden="true">›</span>
         </button>
       )}
-      <Modal open={ordinoOpen} title="Ordino" onClose={() => setOrdinoOpen(false)}>
+      <Modal open={ordinoOpen} title="Ordino" className="ordino-win" onClose={() => setOrdinoOpen(false)}>
         {ordinoOpen && <RoardinoPage project={project.id} see className="in-modal" />}
       </Modal>
 

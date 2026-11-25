@@ -10086,3 +10086,28 @@ html[data-theme='dark'] .ov-acts .add-pill.ov-roar .ov-gold, .soft-dark .ov-acts
   .mail-split:hover::after { background: color-mix(in srgb, var(--text) 45%, transparent); height: 64px; margin-top: -32px; }
   html[data-theme] body .modal.mail-win { min-width: 640px; }
 }
+
+/* The email window's fields gathered (Alex, 25 Nov: "no titles over them, no gaps, all seen without scrolling"): each
+   a slim 34px line, its name small and faint inside at the left; two half fields share a line; 6px between lines */
+html[data-theme] body .mail-form { gap: 6px; align-content: start; }
+.mail-form > .mf { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 12px; border-radius: 12px; background: color-mix(in srgb, var(--text) 5%, transparent); border: 1px solid color-mix(in srgb, var(--text) 9%, transparent); cursor: text; min-width: 0; }
+.mail-form > .mf.mf-half { grid-column: auto; }
+.mail-form > .mf:focus-within { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.mf-k { flex: none; font-size: 10.5px; font-weight: 600; letter-spacing: .04em; color: var(--muted); white-space: nowrap; }
+.mf-in { flex: 1; min-width: 0; height: 32px; padding: 0; border: 0; outline: 0; background: none; color: var(--text); font: inherit; font-size: 13.5px; }
+.mail-form > .mf.mf-area { align-items: flex-start; flex-direction: column; gap: 2px; padding: 7px 12px; }
+.mf-area .mf-in { height: auto; resize: vertical; line-height: 1.45; min-height: 0; }
+.mail-form > .mf.mf-cc { padding-right: 4px; }
+.mf-cc .mail-ccs { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.mf-cc .mail-ccs .mf-in { flex: 1 1 120px; }
+.mf-cc .mail-ccadd { width: 26px; height: 26px; font-size: 15px; }
+.mail-form > .mail-copyme { grid-column: 1 / -1; min-height: 24px; font-size: 12.5px; padding: 0 4px; }
+.mail-form > .mf-reset { grid-column: 1 / -1; justify-self: start; margin-top: 2px; }
+
+/* The ordino's window on a computer fills the screen's height (Alex, 25 Nov: "I have room above and below, why not
+   show it all"): 12px from the top and the foot, the call sheet as tall as the window allows */
+@media (min-width: 821px) {
+  html[data-theme] body .modal.ordino-win { max-height: calc(100dvh - 24px); display: flex; flex-direction: column; }
+  html[data-theme] body .modal.ordino-win .modal-body { flex: 1 1 auto; min-height: 0; overflow: auto; }
+  html[data-theme] body .modal.ordino-win .roardino-page.in-modal { height: calc(100dvh - 104px); max-height: none; }
+}
