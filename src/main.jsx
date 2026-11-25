@@ -119,6 +119,18 @@ try {
 installGlassTabs()
 installPullToRefresh()
 
+// A link anywhere in the hub, a public page included, opens only a web address, mail, a phone or a place in the app:
+// one typed into a project, a note or a contact as javascript:, data: or vbscript: is stopped here before it runs
+// (security review, 25 Nov)
+const badLink = (e) => {
+  const a = e.target?.closest?.('a[href]')
+  if (!a) return
+  const href = (a.getAttribute('href') || '').replace(/[\u0000-\u0020\u007f-\u009f]+/g, '').toLowerCase()
+  if (/^(javascript|data|vbscript):/.test(href)) { e.preventDefault(); e.stopPropagation() }
+}
+document.addEventListener('click', badLink, true)
+document.addEventListener('auxclick', badLink, true)
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
