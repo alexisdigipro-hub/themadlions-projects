@@ -1846,11 +1846,12 @@ function buildAdjust(){
   const tabs = document.createElement('div'); tabs.className = 'atabs';
   const TABS = [['face','Face','<circle cx="12" cy="11" r="7"/><path d="M9 10h.01M15 10h.01M9.5 14c1.5 1.2 3.5 1.2 5 0"/>'],
     ['edit','Edit','<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'],
-    ['body','Body','<path d="M9 3c-1 4 1 6 0 9s-1 6 0 9M15 3c1 4-1 6 0 9s1 6 0 9M7 12h3M14 12h3"/>'],
-    ['hair','Hair','<path d="M5 20c-1-6 0-14 7-14s8 8 7 14M8 12c2-1 5-3 6-6"/>']];
+    ['body','Body','<path d="M9 3c-1 4 1 6 0 9s-1 6 0 9M15 3c1 4-1 6 0 9s1 6 0 9M7 12h3M14 12h3"/>']];
   tabs.innerHTML = TABS.map(([k, l, ic]) => `<button type="button" data-tab="${k}" aria-pressed="${k===adjTab}"><svg viewBox="0 0 24 24">${ic}</svg>${l}</button>`).join('');
   box.appendChild(tabs);
   const pane = {}; TABS.forEach(([k]) => { const d = document.createElement('div'); d.className = 'apane'; d.dataset.pane = k; d.hidden = k !== adjTab; box.appendChild(d); pane[k] = d; });
+  pane.hair = document.createElement('div'); // Hair was taken out (Alex, 25 Nov); its pieces are built into a page nobody sees
+  if(!TABS.some(([k]) => k === adjTab)) adjTab = 'face';
   box.show = k => { adjTab = k; tabs.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-pressed', x.dataset.tab === k));
     Object.keys(pane).forEach(q => pane[q].hidden = q !== k); readPhoto(); };
   tabs.onclick = e => { const b = e.target.closest('[data-tab]'); if(b) box.show(b.dataset.tab); };
@@ -3758,8 +3759,7 @@ const RAIL = [['pool','Pool','<rect x="3" y="7" width="13" height="13" rx="2"/><
   ['frame','Frame','<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'],
   ['edit','Edit','<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'],
   ['face','Face','<circle cx="12" cy="11" r="7"/><path d="M9 10h.01M15 10h.01M9.5 14c1.5 1.2 3.5 1.2 5 0"/>'],
-  ['body','Body','<path d="M9 3c-1 4 1 6 0 9s-1 6 0 9M15 3c1 4-1 6 0 9s1 6 0 9M7 12h3M14 12h3"/>'],
-  ['hair','Hair','<path d="M5 20c-1-6 0-14 7-14s8 8 7 14M8 12c2-1 5-3 6-6"/>']];
+  ['body','Body','<path d="M9 3c-1 4 1 6 0 9s-1 6 0 9M15 3c1 4-1 6 0 9s1 6 0 9M7 12h3M14 12h3"/>']];
 let railTab = 'layout'; try{ const r0 = localStorage.getItem('roarref-rail'); if(RAIL.some(x => x[0] === r0)) railTab = r0; }catch{}
 function placeControls(){
   const bar = document.querySelector('.bar'), mark = bar.querySelector('.mark'), stash = $('stash');
@@ -3793,7 +3793,7 @@ function placeControls(){
       if(mTab==='layout' || mTab==='photo') fillMTools(); }
     requestAnimationFrame(moveLens2);
   } else {
-    const side = $('side'), rail = $('rail'), PHOTO = ['frame','edit','face','body','hair'];
+    const side = $('side'), rail = $('rail'), PHOTO = ['frame','edit','face','body'];
     rail.innerHTML = RAIL.map(([k, l, ic], i) => (i === 3 ? '<hr>' : '') + `<button type="button" data-rail="${k}" aria-pressed="${k===railTab}" title="${l}"><svg viewBox="0 0 24 24">${ic}</svg>${l}</button>`).join('');
     rail.onclick = e => { const b2 = e.target.closest('[data-rail]'); if(!b2) return; railTab = b2.dataset.rail; try{ localStorage.setItem('roarref-rail', railTab); }catch{} placeControls(); };
     const s2 = document.createElement('section'); s2.className = 'sec'; side.appendChild(s2);
@@ -3836,7 +3836,7 @@ function placeControls(){
     const t1 = e.changedTouches[0], dx = t1.clientX - s0.x, dy = t1.clientY - s0.y;
     if(Math.abs(dx) < 60 || Math.abs(dx) < 1.6 * Math.abs(dy) || Date.now() - s0.t > 700) return;
     if(s0.edge){ if(dx > 0) goHome(); return; }
-    if(s0.adj){ const box = document.querySelector('[data-k="adjust"]'), A = ['face', 'edit', 'body', 'hair'], k = A.indexOf(adjTab) + (dx < 0 ? 1 : -1);
+    if(s0.adj){ const box = document.querySelector('[data-k="adjust"]'), A = ['face', 'edit', 'body'], k = A.indexOf(adjTab) + (dx < 0 ? 1 : -1);
       if(box && box.show && k >= 0 && k < A.length){ box.show(A[k]); box.classList.remove('pslide-l', 'pslide-r'); void box.offsetWidth; box.classList.add(dx < 0 ? 'pslide-l' : 'pslide-r'); } return; }
     const j = TABS.indexOf(mTab) + (dx < 0 ? 1 : -1); if(j < 0 || j >= TABS.length) return;
     mTab = TABS[j]; placeControls(); const p = $('mpane'); p.classList.remove('pslide-l', 'pslide-r'); void p.offsetWidth; p.classList.add(dx < 0 ? 'pslide-l' : 'pslide-r'); }, {passive:true}); }
