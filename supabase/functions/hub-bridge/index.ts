@@ -19,6 +19,11 @@
 //                                 { unlinked: true }) and, when sent,
 //                                 replaces the project's tasks and locations (the caller merged them; Production Hub,
 //                                 Alex 22 Nov: every group in RoarMe's PROJECTS is a project of the hub, both ways)
+//   cal.get { email, project, from, to, feeds } -> the hub's Calendar as that member sees it (types, who sees which
+//                                 calendar, project access, their own days off), with the calendar feeds' texts when asked;
+//                                 an email that is no member here gets only that project's events, to look at
+//   cal.put { email, event } / cal.delete { email, id } -> as the hub's Calendar saves: the member's calendar right, or their
+//                                 own day off (an administrator anyone's)
 // Photos are fetched only from RoarMe's own storage. Deploy with verify_jwt off (the key is the check).
 
 // deno-lint-ignore-file no-explicit-any
@@ -59,6 +64,59 @@ async function pcloudSignedAt(fileid: number | string, until: number) {
 
 const hex = async (s: string) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, '0')).join('')
 const str = (v: any, n = 300) => (typeof v === 'string' ? v.slice(0, n) : v == null ? '' : String(v).slice(0, n))
+
+// ---------- the Calendar for RoarMe (Alex, 25 Nov: "the hub's calendar in the project's Overview, exactly, talking to it") ----------
+// as src/lib/store.jsx EVENT_TYPES / eventTypesOf / canSeeCalendar / can, and src/lib/ical.js liveFeeds
+const EVENT_TYPES = [
+  { key: 'shoot', label: 'Shoot day', color: '#C8503F' }, { key: 'prep', label: 'Prep', color: '#D9A441' },
+  { key: 'scout', label: 'Location scout', color: '#5B9E7A' }, { key: 'casting', label: 'Casting', color: '#B07FD1' },
+  { key: 'rehearsal', label: 'Rehearsal', color: '#E08A5A' }, { key: 'meeting', label: 'Meeting', color: '#6C9BD1' },
+  { key: 'post', label: 'Post', color: '#4FB3BF' }, { key: 'delivery', label: 'Delivery', color: '#9AA0A6' },
+  { key: 'google', label: 'From Google Calendar', color: '#4285F4' }, { key: 'unavailable', label: 'Not available', color: '#6B7280' },
+]
+const FIXED_TYPES = ['shoot', 'google', 'unavailable']
+function typesOf(settings: any) {
+  const saved = Array.isArray(settings?.eventTypes) ? settings.eventTypes.filter((t: any) => t && t.key) : []
+  if (!saved.length) return EVENT_TYPES
+  const list = [...saved]
+  EVENT_TYPES.filter((t) => FIXED_TYPES.includes(t.key) && !list.some((x: any) => x.key === t.key)).forEach((t) => list.push(t))
+  return list.filter((t: any) => !t.removed).map((t: any) => ({ key: str(t.key, 40), label: str(t.label, 80), color: str(t.color, 20) }))
+}
+const seesCal = (settings: any, u: any, key: string) => {
+  if (!u) return false
+  if (u.role === 'admin') return true
+  const list = settings?.calendarAccess?.[key]
+  return !Array.isArray(list) || list.includes(u.id)
+}
+const seesEvent = (settings: any, u: any, e: any) => (e.type === 'unavailable' && !!u && e.personId === u.id) || seesCal(settings, u, e.feedId ? `feed:${e.feedId}` : e.type)
+const ended = (u: any) => { const until = u?.permissions?.accessUntil; return !!u && u.role !== 'admin' && !!until && until < new Date().toISOString().slice(0, 10) }
+const mayCal = (u: any, level: 'view' | 'edit') => { if (!u) return false; if (u.role === 'admin') return true; if (ended(u)) return false; const h = u.permissions?.calendar || 'none'; return level === 'view' ? h === 'view' || h === 'edit' : h === 'edit' }
+const seesProject = (u: any, pid: string) => !!u && (u.role === 'admin' || u.project_access === 'all' || (Array.isArray(u.project_access) && u.project_access.includes(pid)))
+const FEED_HOSTS = ['calendar.google.com', 'www.google.com', 'calendar.google.co.uk', 'outlook.office365.com', 'outlook.live.com', 'p01-caldav.icloud.com', 'webcal.icloud.com']
+async function feedText(raw: string) {
+  const check = (x: string) => { const u = new URL(String(x).trim().replace(/^webcal:\/\//i, 'https://')); if (u.protocol !== 'https:' || !FEED_HOSTS.includes(u.hostname.toLowerCase())) throw new Error('not a calendar host'); return u }
+  const url = check(raw)
+  let res = await fetch(url, { headers: { Accept: 'text/calendar, text/plain, */*' }, redirect: 'manual' })
+  for (let hop = 0; hop < 5 && res.status >= 300 && res.status < 400 && res.headers.get('location'); hop++) res = await fetch(check(new URL(res.headers.get('location')!, url).toString()), { headers: { Accept: 'text/calendar, text/plain, */*' }, redirect: 'manual' })
+  if (!res.ok) throw new Error(`The calendar service answered ${res.status}.`)
+  const text = await res.text()
+  if (text.length > 8 * 1024 * 1024 || !/BEGIN:VCALENDAR/i.test(text)) throw new Error('Not a calendar file.')
+  return text
+}
+const ISO = /^\d{4}-\d{2}-\d{2}$/
+const HM = /^([01]\d|2[0-3]):[0-5]\d$/
+function cleanEvent(e: any) {
+  const o: any = {
+    id: str(e?.id, 60) || ('e' + Array.from(crypto.getRandomValues(new Uint8Array(9)), (b) => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('')),
+    title: str(e?.title, 300), type: str(e?.type, 40) || 'meeting', date: str(e?.date, 10), endDate: ISO.test(str(e?.endDate, 10)) ? str(e?.endDate, 10) : '',
+    start: e?.allDay ? '' : HM.test(str(e?.start, 5)) ? str(e?.start, 5) : '', end: e?.allDay ? '' : HM.test(str(e?.end, 5)) ? str(e?.end, 5) : '',
+    projectId: str(e?.projectId, 60) || null, locationText: str(e?.locationText, 500), notes: str(e?.notes, 5000),
+  }
+  if (o.type === 'unavailable') o.personId = str(e?.personId, 60)
+  if (!ISO.test(o.date)) throw new Error('The event needs a date.')
+  if (o.endDate && o.endDate < o.date) o.endDate = ''
+  return o
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
@@ -175,6 +233,64 @@ Deno.serve(async (req) => {
       }
       return json({ ok: true, id })
     } catch (e) { return json({ error: (e as Error).message }, 500) }
+  }
+
+  if (action === 'cal.get' || action === 'cal.put' || action === 'cal.delete') {
+    const email = str(body?.email, 200).trim().toLowerCase()
+    const { data: mem } = email ? await db.from('members').select('user_id, name, email, role, permissions, project_access, active').eq('workspace_id', ws).ilike('email', email.replace(/[\\%_]/g, (c) => `\\${c}`)).maybeSingle() : { data: null }
+    const me = mem && mem.active !== false ? { id: mem.user_id, name: mem.name || email, role: mem.role, permissions: mem.permissions || {}, project_access: mem.project_access } : null
+    const { data: w } = await db.from('workspaces').select('settings').eq('id', ws).maybeSingle()
+    const st = w?.settings || {}
+    const pid = str(body?.project, 60)
+    const isAdmin = me?.role === 'admin'
+    const canEdit = mayCal(me, 'edit')
+    if (action === 'cal.get') {
+      const from = ISO.test(str(body?.from, 10)) ? str(body.from, 10) : '0000-01-01'
+      const to = ISO.test(str(body?.to, 10)) ? str(body.to, 10) : '9999-12-31'
+      let q = db.from('events').select('id, project_id, data').eq('workspace_id', ws)
+      if (!me || !mayCal(me, 'view')) q = q.eq('project_id', pid || '-')
+      const { data: rows, error } = await q
+      if (error) return json({ error: error.message }, 500)
+      const events = (rows || []).map((r: any) => ({ ...(r.data || {}), id: r.id, projectId: r.project_id || r.data?.projectId || null }))
+        .filter((e: any) => (e.endDate || e.date || '') >= from && (e.date || '') <= to)
+        .filter((e: any) => (me && mayCal(me, 'view') ? (!e.projectId || seesProject(me, e.projectId)) && seesEvent(st, me, e) : e.projectId === pid && e.type !== 'unavailable'))
+      const { data: prows } = await db.from('projects').select('id, data').eq('workspace_id', ws)
+      const projects = (prows || []).filter((p: any) => (me ? seesProject(me, p.id) : p.id === pid)).map((p: any) => ({ id: p.id, title: p.data?.title || '' }))
+      const { data: mrows } = await db.from('members').select('user_id, name, active').eq('workspace_id', ws)
+      const people = (mrows || []).filter((m: any) => m.active !== false).map((m: any) => ({ id: m.user_id, name: m.name || '' }))
+      const feedList = me && mayCal(me, 'view') && st.calendarFeedsOff !== true ? (st.calendarFeeds || []).filter((f: any) => f && f.url && !f.off && seesCal(st, me, `feed:${f.id}`)) : []
+      const feeds = await Promise.all(feedList.map(async (f: any) => {
+        const base = { id: str(f.id, 60), name: str(f.name, 120) || 'Calendar', color: str(f.color, 20) || '#6C9BD1' }
+        if (!body?.feeds) return base
+        try { return { ...base, text: await feedText(f.url) } } catch (e) { return { ...base, error: (e as Error).message } }
+      }))
+      return json({ ok: true, project: pid, me: me ? { id: me.id, name: me.name, admin: isAdmin, edit: canEdit } : null, types: typesOf(st), projects, people, events, feeds, weekStart: st.weekStart || 'monday', greekHolidays: st.greekHolidays !== false })
+    }
+    if (!me) return json({ error: 'Your email is not a member of this hub, so the calendar can only be looked at.' }, 403)
+    const may = (e: any) => (e?.feedId ? false : e?.type === 'unavailable' ? isAdmin || e.personId === me.id : canEdit)
+    if (action === 'cal.delete') {
+      const id = str(body?.id, 60)
+      const { data: row } = await db.from('events').select('data').eq('id', id).eq('workspace_id', ws).maybeSingle()
+      if (!row) return json({ ok: true })
+      if (!may(row.data)) return json({ error: 'You cannot delete this event.' }, 403)
+      await db.from('events').delete().eq('id', id).eq('workspace_id', ws)
+      return json({ ok: true })
+    }
+    try {
+      const e = cleanEvent(body?.event || {})
+      if (e.type === 'unavailable' && !isAdmin) e.personId = me.id
+      if (!may(e)) return json({ error: 'You cannot change the calendar.' }, 403)
+      if (e.projectId && !seesProject(me, e.projectId)) return json({ error: 'That project is not yours to see.' }, 403)
+      const { data: old } = await db.from('events').select('data, workspace_id').eq('id', e.id).maybeSingle()
+      if (old && old.workspace_id !== ws) return json({ error: 'Not this hub.' }, 403)
+      if (old && !may(old.data)) return json({ error: 'You cannot change this event.' }, 403)
+      const data: any = { ...(old?.data || {}), ...e }
+      if (!old) { data.createdBy = me.id; data.createdByName = me.name }
+      if (e.type === 'unavailable') { const { data: who } = await db.from('members').select('name').eq('workspace_id', ws).eq('user_id', e.personId).maybeSingle(); data.personName = who?.name || '' }
+      const { error } = await db.from('events').upsert({ id: e.id, workspace_id: ws, project_id: e.projectId || null, data })
+      if (error) return json({ error: error.message }, 500)
+      return json({ ok: true, event: data })
+    } catch (x) { return json({ error: (x as Error).message }, 400) }
   }
 
   if (action === 'project.get' || action === 'project.put') {
