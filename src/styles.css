@@ -10103,3 +10103,11 @@ html[data-theme] body .mail-form { gap: 6px; align-content: start; }
 .mf-cc .mail-ccadd { width: 26px; height: 26px; font-size: 15px; }
 .mail-form > .mail-copyme { grid-column: 1 / -1; min-height: 24px; font-size: 12.5px; padding: 0 4px; }
 .mail-form > .mf-reset { grid-column: 1 / -1; justify-self: start; margin-top: 2px; }
+
+/* The ordino's window on a computer fills the screen's height (Alex, 25 Nov: "I have room above and below, why not
+   show it all"): 12px from the top and the foot, the call sheet as tall as the window allows */
+@media (min-width: 821px) {
+  html[data-theme] body .modal.ordino-win { max-height: calc(100dvh - 24px); display: flex; flex-direction: column; }
+  html[data-theme] body .modal.ordino-win .modal-body { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+  html[data-theme] body .modal.ordino-win .roardino-page.in-modal { height: calc(100dvh - 104px); max-height: none; }
+}
