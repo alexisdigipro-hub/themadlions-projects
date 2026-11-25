@@ -7,6 +7,7 @@
 
 const COLORS = ['', '#c0392b', '#d35400', '#b7950b', '#1e8449', '#1f618d', '#7d3c98', '#7f8c8d']
 // the toolbar's line icons (Alex, 15 Oct: "every function in notes professional")
+import { cleanHtml } from '../notes.js'
 const svg = (d) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`
 const ICON = {
   left: svg('<path d="M4 6h16M4 10h10M4 14h16M4 18h10"/>'),
@@ -43,7 +44,9 @@ export function mountDoc(root, html, { onChange, readOnly = false } = {}) {
   const page = el('div', 'xd-page')
   page.contentEditable = readOnly ? 'false' : 'true'
   page.spellcheck = true
-  page.innerHTML = html || '<p><br></p>'
+  // cleaned on the way in: a document made or uploaded by another member can never carry a script, a handler or a
+  // javascript: link (security review, 25 Nov)
+  page.innerHTML = cleanHtml(html) || '<p><br></p>'
   try { document.execCommand('defaultParagraphSeparator', false, 'p') } catch {} // new lines as <p>, not <div>
   const wrap = el('div', 'xd-scroll')
   wrap.appendChild(page)
@@ -308,7 +311,7 @@ export function mountDoc(root, html, { onChange, readOnly = false } = {}) {
       for (const a of [...x.attributes]) if (!['href', 'src', 'colspan', 'rowspan', 'width'].includes(a.name)) x.removeAttribute(a.name)
       if (keepColor && x.tagName === 'SPAN') x.style.color = keepColor
     })
-    document.execCommand('insertHTML', false, d.body.innerHTML)
+    document.execCommand('insertHTML', false, cleanHtml(d.body.innerHTML))
     changed()
   })
 
