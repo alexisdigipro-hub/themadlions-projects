@@ -37,6 +37,16 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Security to-do (agreed with Alex, 25 Nov 2026; do them with him at a computer, one at a time)
+1. 2FA on his Supabase account (Account preferences > Security > Authenticator app), keep the recovery codes away from the computer.
+2. 2FA on his GitHub account (Settings > Password and authentication > Two-factor authentication).
+3. 2FA inside the hub (Supabase Auth MFA, TOTP): first required for administrators (they see Finance), then offered to everyone. Say what changes before building it.
+4. Prevent use of leaked passwords (Authentication > Sign In / Providers > Email), if the plan allows it.
+5. Fewer administrators: list who is admin in Settings > Team and keep only who needs Finance.
+6. Delete the old Edge Functions push and roar-livekit in the hub's Supabase (unused since the chat left).
+7. Optional, only if he wants it: Finance encrypted with his own passphrase (lost passphrase = lost data).
+Done on 25 Nov: hub_chat_off.sql and hub_chat_lock.sql (checked), the document / link fixes in the code.
+
 ## Where we stopped (25 Nov 2026: security review and clean-up)
 - Alex: "check the security, so nobody gets in, clean it well, as light as it gets". Checked: every table has RLS; the Edge Functions without sign-in (pcloud, share-media, site-ai, hub-bridge) each check a signed link that runs out, a share token with a PIN lock, is_admin or the hub key; no secret in the repo; shared html (notes, public notes) already goes through cleanHtml.
 - Fixed: lib/office/docView.js cleans a document's html when it opens and on paste (cleanHtml), so a Word file or a document made by another member can never carry a script, a handler or a javascript: link; main.jsx stops any click on a javascript: / data: / vbscript: link anywhere in the hub and its public pages (links typed into projects, notes, contacts).
