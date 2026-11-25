@@ -746,6 +746,27 @@ html,body{overscroll-behavior:none}
 .arow > input{grid-column:1 / -1}
 .cdock .csl{grid-template-columns:92px 1fr auto!important}
 @media (max-width:820px){.rst{width:30px;height:30px}.rst svg{width:16px;height:16px}}
+/* guides: the face's and body's points placed by hand (Alex, 25 Nov) */
+.gdbtn{align-self:flex-start;height:36px;gap:8px;margin:4px 0 6px}
+.gdbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8}
+.gd{position:fixed;inset:0;z-index:97;background:#050506;display:flex;flex-direction:column;animation:fade .2s;touch-action:none;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+.gd-top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:10px 14px}
+.gd-top h2{margin:0;text-align:center;font:600 16px var(--body)}
+.gd-top .pill.main{height:40px;padding:0 20px}
+.gd-stage{flex:1;min-height:0;position:relative;display:grid;place-items:center;overflow:hidden}
+.gd-box{position:relative}
+.gd-box img{width:100%;height:100%;display:block;user-select:none;-webkit-user-select:none;pointer-events:none}
+.gd-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.gd-ln{stroke:rgba(255,255,255,.55);stroke-width:1.5;stroke-dasharray:4 4}
+.gd-hit{fill:transparent;cursor:grab}
+.gd-dot{fill:var(--accent);stroke:#fff;stroke-width:2.5;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+.gd-pt text{fill:#fff;font:600 11px var(--body);paint-order:stroke;stroke:rgba(0,0,0,.7);stroke-width:3px;pointer-events:none}
+.gd-pt.on .gd-dot{r:9}
+.gd-loupe{position:absolute;left:0;top:0;width:120px;height:120px;border-radius:50%;border:2px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.6);pointer-events:none;opacity:0;transition:opacity .15s}
+.gd-loupe.on{opacity:1}
+.gd-foot{display:flex;align-items:center;gap:12px;padding:10px 16px 14px}
+.gd-foot p{flex:1;margin:0;color:var(--muted);font-size:12.5px;line-height:1.35}
 /* a field never makes the iPhone zoom in (Alex, 24 Nov: "I tap the search and it stays zoomed"): iOS zooms on a field whose
    letters are under 16px, so on a phone every field writes at 16px */
 @media (max-width:820px){input,select,textarea,.field,.psearch input{font-size:16px!important}}
@@ -1246,6 +1267,103 @@ function shapeWarps(p, W, H){
   }
   return out;
 }
+
+/* guides (Alex, 25 Nov: "give me guides to put where they belong, so it is more precise"): the face's and the body's key points as
+   dots on the photo, placed where the reader found them (or in a standing template when it found nothing); each dot is dragged to
+   its place with a loupe under the finger, a drag on the empty photo moves them all, two fingers scale them all. Done bends the
+   reader's full set of points to follow the dots (each point moves with the dots near it); Auto goes back to what the reader found.
+   Saved with the photo: p.lm[kind] (what the warps use), p.lm.auto[kind] (the reader's own), p.lm.manual[kind] (true when placed by hand
+   with nothing found). */
+const GUIDES = {
+  face: {title:'Face points', pts:[['Forehead',10,.5,.2],['Chin',152,.5,.62],['Cheek',234,.36,.42],['Cheek',454,.64,.42],['Jaw',172,.39,.55],['Jaw',397,.61,.55],
+    ['Eye',468,.43,.36],['Eye',473,.57,.36],['Nose',4,.5,.46],['Mouth',61,.45,.53],['Mouth',291,.55,.53]],
+    lines:[[234,172],[172,152],[152,397],[397,454],[468,473],[61,291]], n:478},
+  pose: {title:'Body points', pts:[['Shoulder',12,.4,.25],['Shoulder',11,.6,.25],['Hip',24,.43,.52],['Hip',23,.57,.52],['Knee',26,.44,.72],['Knee',25,.56,.72],
+    ['Ankle',28,.45,.92],['Ankle',27,.55,.92]], lines:[[12,11],[12,24],[11,23],[24,23],[24,26],[26,28],[23,25],[25,27]], n:33}
+};
+function guideApply(p, kind, put){ // put: {index: [x, y]} in 0..1
+  const G = GUIDES[kind]; p.lm = p.lm || {}; p.lm.auto = p.lm.auto || {}; p.lm.manual = p.lm.manual || {};
+  if(p.lm.auto[kind] === undefined && p.lm[kind] && !p.lm.manual[kind]) p.lm.auto[kind] = p.lm[kind];
+  const auto = p.lm.auto[kind] && p.lm.auto[kind].length ? p.lm.auto[kind] : null, ids = G.pts.map(g => g[1]);
+  if(auto){ // every point follows the dots near it (inverse-distance weights), the dots themselves land exactly
+    const d = ids.map(i => [put[i][0] - auto[i][0], put[i][1] - auto[i][1]]);
+    p.lm[kind] = auto.map(([x, y], j) => { const k = ids.indexOf(j); if(k >= 0) return [r4(put[j][0]), r4(put[j][1])];
+      let sw = 0, dx = 0, dy = 0; ids.forEach((i, m) => { const w = 1 / (Math.pow(x - auto[i][0], 2) + Math.pow(y - auto[i][1], 2) + 1e-5); sw += w; dx += w*d[m][0]; dy += w*d[m][1]; });
+      return [r4(x + dx/sw), r4(y + dy/sw)]; });
+    p.lm.manual[kind] = false; }
+  else { // nothing was found: the points the shapes need, worked out from the dots
+    const P = i => put[i], mid = (a, b, t = .5) => [a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t], arr = [];
+    for(let j = 0; j < G.n; j++) arr.push(null);
+    ids.forEach(i => arr[i] = P(i).slice());
+    if(kind === 'face'){ const eL = P(468), eR = P(473), sp = Math.hypot(eR[0]-eL[0], eR[1]-eL[1]) || .05, ex = sp*.22;
+      arr[33] = [eL[0]-ex, eL[1]]; arr[133] = [eL[0]+ex, eL[1]]; arr[362] = [eR[0]-ex, eR[1]]; arr[263] = [eR[0]+ex, eR[1]];
+      arr[6] = mid(eL, eR); arr[129] = [P(4)[0]-sp*.22, P(4)[1]]; arr[358] = [P(4)[0]+sp*.22, P(4)[1]];
+      const mc = mid(P(61), P(291)); arr[13] = [mc[0], mc[1]-sp*.04]; arr[14] = [mc[0], mc[1]+sp*.04]; arr[0] = arr[13]; }
+    else arr[0] = [ (P(11)[0]+P(12)[0])/2, Math.max(0, P(11)[1] - Math.abs(P(11)[0]-P(12)[0])*.6) ];
+    const fill = arr[0] || P(ids[0]); p.lm[kind] = arr.map(q => q ? [r4(q[0]), r4(q[1])] : [r4(fill[0]), r4(fill[1])]); p.lm.manual[kind] = true; }
+  p.lm.guide = p.lm.guide || {}; p.lm.guide[kind] = Object.fromEntries(ids.map(i => [i, put[i]]));
+}
+function guideAuto(p, kind){ if(!p.lm) return; const a = p.lm.auto && p.lm.auto[kind];
+  if(a !== undefined) p.lm[kind] = a; else if(p.lm.manual && p.lm.manual[kind]) delete p.lm[kind];
+  if(p.lm.manual) p.lm.manual[kind] = false; if(p.lm.guide) delete p.lm.guide[kind]; }
+async function openGuides(kind){
+  const p = sel >= 0 ? photos[sel] : null; if(!p) return; const G = GUIDES[kind];
+  try{ if(!p.lm || p.lm[kind] === undefined) await ensureLM(p, kind); }catch{}
+  const have = p.lm && p.lm[kind] && p.lm[kind].length ? p.lm[kind] : null;
+  const pts = {}; G.pts.forEach(([, i, tx, ty]) => { pts[i] = have ? have[i].slice() : [tx, ty]; });
+  const url = URL.createObjectURL(srcOf(p));
+  const m = document.createElement('div'); m.className = 'gd';
+  m.innerHTML = `<div class="gd-top"><button type="button" class="pill round" data-g="x" aria-label="Cancel" title="Cancel"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h2>${G.title}</h2><button type="button" class="pill main" data-g="ok">Done</button></div>
+    <div class="gd-stage"><div class="gd-box"><img alt=""><svg class="gd-svg"></svg></div><canvas class="gd-loupe" width="240" height="240"></canvas></div>
+    <div class="gd-foot"><p>${have ? 'Drag any dot that is off to its place.' : 'Nothing was found: drag the dots to their places.'} Drag the photo to move them all, two fingers to size them.</p>
+    <button type="button" class="pill" data-g="auto">Auto</button></div>`;
+  document.body.appendChild(m);
+  const img = m.querySelector('img'), box = m.querySelector('.gd-box'), svg = m.querySelector('.gd-svg'), lp = m.querySelector('.gd-loupe'), lg = lp.getContext('2d');
+  img.src = url; await img.decode().catch(() => {});
+  const fitBox = () => { const st = m.querySelector('.gd-stage'), W = st.clientWidth - 24, H = st.clientHeight - 24, k = Math.min(W / img.naturalWidth, H / img.naturalHeight);
+    box.style.width = img.naturalWidth*k + 'px'; box.style.height = img.naturalHeight*k + 'px'; draw(); };
+  const NS = 'http://www.w3.org/2000/svg';
+  const lines = G.lines.map(() => { const l = document.createElementNS(NS, 'line'); l.setAttribute('class', 'gd-ln'); svg.appendChild(l); return l; });
+  const dots = {}; G.pts.forEach(([name, i, tx]) => { const g = document.createElementNS(NS, 'g'); g.setAttribute('class', 'gd-pt'); g.dataset.i = i;
+    const side = tx < .48 ? 'end" x="-13" y="4' : tx > .52 ? 'start" x="13" y="4' : 'middle" y="-14';
+    g.innerHTML = `<circle class="gd-hit" r="22"/><circle class="gd-dot" r="7"/><text text-anchor="${side}">${name}</text>`; svg.appendChild(g); dots[i] = g; });
+  const draw = () => { const w = box.clientWidth, h = box.clientHeight; svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    G.lines.forEach(([a, b2], k) => { const l = lines[k]; l.setAttribute('x1', pts[a][0]*w); l.setAttribute('y1', pts[a][1]*h); l.setAttribute('x2', pts[b2][0]*w); l.setAttribute('y2', pts[b2][1]*h); });
+    G.pts.forEach(([, i]) => { const g = dots[i]; g.setAttribute('transform', `translate(${pts[i][0]*w} ${pts[i][1]*h})`); g.classList.toggle('on', !!(drag && drag.i === i)); }); };
+  const loupe = (i, cx, cy) => { if(i == null){ lp.classList.remove('on'); return; } const z = 3, R = 120, sx = pts[i][0]*img.naturalWidth, sy = pts[i][1]*img.naturalHeight, s = R / z * (img.naturalWidth / box.clientWidth);
+    lg.clearRect(0, 0, 240, 240); lg.save(); lg.beginPath(); lg.arc(R, R, R, 0, Math.PI*2); lg.clip(); lg.fillStyle = '#111'; lg.fillRect(0, 0, 240, 240);
+    lg.drawImage(img, sx - s, sy - s, s*2, s*2, 0, 0, 240, 240); lg.strokeStyle = 'rgba(255,255,255,.9)'; lg.lineWidth = 2; lg.beginPath(); lg.moveTo(R-14, R); lg.lineTo(R+14, R); lg.moveTo(R, R-14); lg.lineTo(R, R+14); lg.stroke(); lg.restore();
+    const st = m.querySelector('.gd-stage').getBoundingClientRect(); let x = cx - st.left - 60, y = cy - st.top - 190; if(y < 0) y = cy - st.top + 60; lp.style.transform = `translate(${Math.max(0, Math.min(st.width - 120, x))}px, ${y}px)`; lp.classList.add('on'); };
+  let drag = null; const touches = new Map();
+  const pos = e => { const r = box.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; };
+  m.querySelector('.gd-stage').addEventListener('pointerdown', e => { e.preventDefault(); touches.set(e.pointerId, pos(e)); e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId);
+    const g = e.target.closest && e.target.closest('.gd-pt');
+    if(touches.size === 2){ const [a, b] = [...touches.values()]; drag = {pinch:true, d0:Math.hypot(a[0]-b[0], a[1]-b[1]) || .01, c:[(a[0]+b[0])/2, (a[1]+b[1])/2], base:JSON.parse(JSON.stringify(pts))}; loupe(null); return; }
+    drag = g ? {i:+g.dataset.i, at:pos(e), from:pts[+g.dataset.i].slice()} : {all:true, at:pos(e), base:JSON.parse(JSON.stringify(pts))}; draw(); if(g) loupe(drag.i, e.clientX, e.clientY); });
+  m.addEventListener('pointermove', e => { if(!drag || !touches.has(e.pointerId)) return; const q = pos(e); touches.set(e.pointerId, q);
+    const cl = v => Math.max(0, Math.min(1, v));
+    if(drag.pinch){ if(touches.size < 2) return; const [a, b] = [...touches.values()], f = Math.hypot(a[0]-b[0], a[1]-b[1]) / drag.d0, c2 = [(a[0]+b[0])/2, (a[1]+b[1])/2];
+      Object.keys(pts).forEach(i => { const o = drag.base[i]; pts[i] = [cl(c2[0] + (o[0]-drag.c[0])*f), cl(c2[1] + (o[1]-drag.c[1])*f)]; }); draw(); return; }
+    const dx = q[0] - drag.at[0], dy = q[1] - drag.at[1];
+    if(drag.all){ Object.keys(pts).forEach(i => { pts[i] = [cl(drag.base[i][0] + dx), cl(drag.base[i][1] + dy)]; }); draw(); return; }
+    pts[drag.i] = [cl(drag.from[0] + dx), cl(drag.from[1] + dy)]; draw(); loupe(drag.i, e.clientX, e.clientY); });
+  const up = e => { touches.delete(e.pointerId); if(touches.size === 0){ drag = null; loupe(null); draw(); } else if(drag && drag.pinch){ drag = null; } };
+  m.addEventListener('pointerup', up); m.addEventListener('pointercancel', up);
+  const ro = new ResizeObserver(fitBox); ro.observe(m.querySelector('.gd-stage'));
+  const close = () => { ro.disconnect(); URL.revokeObjectURL(url); m.remove(); };
+  m.querySelector('[data-g="x"]').onclick = close;
+  m.querySelector('[data-g="auto"]').onclick = async () => { guideAuto(p, kind); try{ await ensureLM(p, kind); }catch{} const a = p.lm && p.lm[kind] && p.lm[kind].length ? p.lm[kind] : null;
+    G.pts.forEach(([, i, tx, ty]) => { pts[i] = a ? a[i].slice() : [tx, ty]; }); draw(); toast(a ? 'Back to what was found' : 'Nothing was found in this photo'); };
+  m.querySelector('[data-g="ok"]').onclick = () => { guideApply(p, kind, pts); close(); fxSoon(p); save(); readPhoto(); syncAdj(true); toast('Points set'); };
+  fitBox();
+}
+function guideBtn(parent, kind){
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'pill gdbtn'; b.dataset.guide = kind;
+  b.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg><span>Place points</span>';
+  b.title = kind === 'face' ? 'Place the face points yourself, for precise Face changes' : 'Place the body points yourself, for precise Body changes';
+  b.onclick = () => openGuides(kind); parent.appendChild(b); return b;
+}
 function warpPixels(d, W, H, warps){
   const src = new Uint8ClampedArray(d), bb = warps.map(w => w.t === 'y' ? null : [w.cx - w.rx, w.cy - w.ry, w.cx + w.rx, w.cy + w.ry]);
   for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
@@ -1627,7 +1745,7 @@ async function gpuRender(p, W, H, full){
   gl.uniform1i(G.U(wp, 'hasHair'), hair ? 1 : 0);
   if(hair){ gl.uniform1f(G.U(wp, 'hairAmt'), v('hairAmt')/100); gl.uniform1f(G.U(wp, 'hairS'), v('hairS')/100); gl.uniform1f(G.U(wp, 'hairL'), v('hairL')/100);
     gl.uniform3fv(G.U(wp, 'hairOff'), hueRGB(v('hairH'))); }
-  let lipAmt = 0; const F = (+a.lips || 0) > 0 && p.lm && p.lm.face && p.lm.face.length > 415 ? p.lm.face : null;
+  let lipAmt = 0; const F = (+a.lips || 0) > 0 && p.lm && p.lm.face && p.lm.face.length > 415 && !(p.lm.manual && p.lm.manual.face) ? p.lm.face : null;
   if(F){ // the lips as a mask drawn from the face points: the outer line of the lips minus the open mouth
     if(!p._lipT || p._lipF !== F){ if(p._lipT) gl.deleteTexture(p._lipT);
       const mw = 512, mh = Math.max(1, Math.round(512*p.h/p.w)), mc = document.createElement('canvas'); mc.width = mw; mc.height = mh; const mg = mc.getContext('2d');
@@ -1637,7 +1755,7 @@ async function gpuRender(p, W, H, full){
     G.bind(2, p._lipT); gl.uniform1i(G.U(wp, 'lipM'), 2); gl.uniform3fv(G.U(wp, 'lipCol'), hueRGB(+a.lipH || 352)); lipAmt = a.lips/100; }
   gl.uniform1f(G.U(wp, 'lipAmt'), lipAmt);
   gl.uniform1f(G.U(wp, 'dist'), v('distort')/100); gl.uniform1f(G.U(wp, 'pv'), v('persV')/100); gl.uniform1f(G.U(wp, 'phz'), v('persH')/100);
-  const FK = ['eyeB','teeth','contour','under'], F2 = FK.some(k => +a[k]) && p.lm && p.lm.face && p.lm.face.length > 466 ? p.lm.face : null;
+  const FK = ['eyeB','teeth','contour','under'], F2 = FK.some(k => +a[k]) && p.lm && p.lm.face && p.lm.face.length > 466 && !(p.lm.manual && p.lm.manual.face) ? p.lm.face : null;
   if(F2){ if(!p._fmT || p._fmF !== F2){ if(p._fmT){ gl.deleteTexture(p._fmT[0]); gl.deleteTexture(p._fmT[1]); } const m2 = faceMasks(p, F2); p._fmT = [G.upload(m2[0], false), G.upload(m2[1], false)]; p._fmF = F2; }
     G.bind(3, p._fmT[0]); gl.uniform1i(G.U(wp, 'fm1'), 3); G.bind(4, p._fmT[1]); gl.uniform1i(G.U(wp, 'fm2'), 4); }
   gl.uniform1f(G.U(wp, 'eyeB'), F2 ? v('eyeB')/100 : 0); gl.uniform1f(G.U(wp, 'teethW'), F2 ? v('teeth')/100 : 0);
@@ -1879,7 +1997,7 @@ function buildAdjust(){
   cmp.onpointerup = cmp.onpointercancel = () => cmpSet(false);
   top.querySelector('#fxOff').onclick = () => { const p = photos[sel]; if(!p) return; const lmKeep = p.lm; p.adj = {}; p.lm = lmKeep; applyFx(p); syncAdj(); };
   pane.face.appendChild(top);
-  status('face');
+  status('face'); guideBtn(pane.face, 'face');
   { const sk = fold(pane.face, 'Skin', true); row(sk, 'smooth', 'Smooth skin', 0, 100); row(sk, 'under', 'Under-eye', 0, 100); row(sk, 'contour', 'Contour', 0, 100);
     const et = fold(pane.face, 'Eyes & teeth'); row(et, 'eyeB', 'Bright eyes', 0, 100); row(et, 'teeth', 'Whiten teeth', 0, 100);
     const lp = fold(pane.face, 'Lips'); row(lp, 'lips', 'Lip colour', 0, 100); row(lp, 'lipH', 'Lip shade', 0, 360); }
@@ -1960,7 +2078,7 @@ function buildAdjust(){
   lq.querySelector('#liquify').onclick = () => { if(sel >= 0 && photos[sel]) openLiquify(sel); };
   lq.querySelector('#unLiquify').onclick = () => { if(sel >= 0) restoreOriginalPhoto(sel); };
   pane.body.appendChild(lq);
-  status('pose', 'body');
+  status('pose', 'body'); guideBtn(pane.body, 'pose');
   const bsF = fold(pane.body, 'Shape', true);
   const bs = document.createElement('div'); bs.className = 'agroup'; bs.dataset.needs = 'pose'; bsF.appendChild(bs);
   [['waist','Waist'],['hips','Hips'],['shoulders','Shoulders'],['legs','Longer legs',0,100]].forEach(([k, l, mn, mx]) => row(bs, k, l, mn, mx));
@@ -2005,12 +2123,12 @@ async function readPhoto(){
   if(!kind || !p || !st) return;
   const known = kind === 'hair' ? (p.hairMask ? true : null) : (p.lm && p.lm[kind] ? p.lm[kind].length > 0 : null);
   const show = ok => { const what = {face:'face', pose:'person', hair:'hair'}[kind];
-    st.textContent = ok == null ? `Finding the ${what}…` : ok ? '' : `No ${what} found in this photo.`; st.hidden = ok === true; grp.classList.toggle('off', ok !== true); };
+    st.textContent = ok == null ? `Finding the ${what}…` : ok ? '' : `No ${what} found in this photo. Place the points yourself.`; st.hidden = ok === true; grp.classList.toggle('off', ok !== true); };
   show(known); if(known !== null) return;
   const key = kind + ':' + photos.indexOf(p); if(reading === key) return; reading = key;
   let ok = false;
   try{ ok = kind === 'hair' ? await ensureHair(p) : await ensureLM(p, kind); }
-  catch{ st.textContent = 'The reader could not load. Check the connection and open the tab again.'; grp.classList.add('off'); reading = null; return; }
+  catch{ st.textContent = 'The reader could not load. Place the points yourself, or check the connection and open the tab again.'; grp.classList.add('off'); reading = null; return; }
   reading = null; if(photos[sel] === p) show(ok);
 }
 function syncAdj(keepLook){
@@ -2304,7 +2422,7 @@ stage.addEventListener('dblclick', e => {
   const f = e.target.closest('.frame'); if(!f) return; const i=+f.dataset.i;
   if(photos[i]){ reset(photos[i]); place(i); save(); }
 });
-document.addEventListener('pointerdown', e => { if(!e.target.isConnected) return; if(sel>=0 && !e.target.closest('.stage, .modal, .lq, .bar, .panel, .side, .rail, .mpane, .mtabs, .tools, .ghost')){ sel=-1; render(); } });
+document.addEventListener('pointerdown', e => { if(!e.target.isConnected) return; if(sel>=0 && !e.target.closest('.stage, .modal, .lq, .gd, .bar, .panel, .side, .rail, .mpane, .mtabs, .tools, .ghost')){ sel=-1; render(); } });
 document.addEventListener('keydown', e => {
   if(e.target.closest && e.target.closest('input')) return;
   if(e.key==='Escape' && (sel>=0 || selCover>=0)){ sel=-1; selCover=-1; render(); return; }
@@ -3819,7 +3937,7 @@ function placeControls(){
    photos and the sheet itself keep their own moves. */
 { let es = null; const TABS = ['pool', 'layout', 'look', 'photo', 'edit'];
   document.addEventListener('touchstart', e => { es = null;
-    if(!isPhone() || e.touches.length !== 1 || document.querySelector('.spage, .modal, .lq, .pm')) return;
+    if(!isPhone() || e.touches.length !== 1 || document.querySelector('.spage, .modal, .lq, .pm, .gd')) return;
     const t0 = e.touches[0], tg = e.target, edge = t0.clientX < 22 && !tg.closest('.stage');
     if(!edge && (!tg.closest('#mpane, #mtabs') || tg.closest('input, select, textarea, .group:not(.mtabs), #poolBox .pth, canvas, .wheel, [draggable="true"]'))) return;
     es = {x:t0.clientX, y:t0.clientY, t:Date.now(), edge, adj:!edge && !!tg.closest('[data-k="adjust"]')}; }, {passive:true}); // in Adjust a swipe goes Face, Edit, Body, Hair
