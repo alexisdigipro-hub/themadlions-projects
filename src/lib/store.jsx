@@ -427,7 +427,7 @@ export function StoreProvider({ children }) {
         gear: libRows.filter((r) => r.kind === 'gear').map((r) => ({ ...r.data, id: r.id })),
       },
       todos: libRows.filter((r) => r.kind === 'task').map((r) => ({ ...r.data, id: r.id })),
-      // the old chat tables are not used (since 20 Oct); the team's chat is Hub Chat (hubchat/, its own tables)
+      // the hub has no chat any more (Alex, 25 Nov); these stay empty for code that still reads them
       chat: [],
       chats: [],
       notices: ntcRows.map((r) => ({ ...r.data, id: r.id })),

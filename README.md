@@ -7,6 +7,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 
 ## What is inside
 
+- **No chat in the hub** (25 Nov): TmlChat, TML Chat (the home-screen, Mac, Windows and Android apps) and Settings > Chat are gone. Old chat links open Home. The team talks in RoarMe.
 - **Fold any box** (18 Nov): on a project's Overview every box (Song, Lyrics Per Section, Tasks, Files & notes, Crew, Cast, Locations, Gear, Script) has a small arrow on its side that folds it into a slim bar; tap the bar to open it. Each device remembers what you folded.
 - **Duplicate an estimate** (23 Nov): in Outbox each cost estimation has Duplicate: the same estimate opens as a new one to change and publish with its own link; the original stays.
 - **Share a project with collaborators** (18 Nov): Overview > ⋯ > Share with collaborators makes a link where outside people see the project almost as the team does, in the hub's look: progress, the song with its song map and lyrics, schedule, tasks, files & notes, script and breakdown, team, locations and gear, and can leave comments; nothing else. Never the budget, phone numbers or emails; songs and photos can be heard and seen, not downloaded. Switch any section off, add a code, a closing date, close it any time; it follows the project by itself.

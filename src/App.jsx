@@ -33,9 +33,6 @@ const Overview = lazyPage(() => import('./pages/project/Overview.jsx'))
 const Schedule = lazyPage(() => import('./pages/project/Schedule.jsx'))
 const Whiteboard = lazyPage(() => import('./pages/project/Whiteboard.jsx'))
 const Database = lazyPage(() => import('./pages/Database.jsx'))
-// the hub's own chat (Alex, 1 Nov 2026): RoarMe's chat copied into the hub (hubchat/), shown in a frame
-const HubChatPage = lazyPage(() => import('./pages/HubChatPage.jsx'))
-// the chat alone in a window of its own (the ⧉ button on the chat list), no side menu
 const MyWork = lazyPage(() => import('./pages/MyWork.jsx'))
 const Profile = lazyPage(() => import('./pages/Profile.jsx'))
 const Office = lazyPage(() => import('./pages/Office.jsx'))
@@ -73,19 +70,11 @@ function RequireUser() {
   return user ? <Outlet /> : <Navigate to="/login" replace />
 }
 
-// The project's own Chat tab is gone (its room already lives in the sidebar's Chat), but an old
-// link should still land on that same room rather than a dead page.
-function ProjectChatRedirect() {
-  return <Navigate to="/chat" replace />
-}
-
 function LoginGate() {
   const user = useCurrentUser()
   const { ready } = useStore()
   if (!ready) return <Loading />
-  // TML Chat (chat.html) signs in on its own on an iPhone, and must land back on the chat, not on Home
-  const home = /chat\.html$/.test(window.location.pathname) ? '/chat-window' : '/'
-  return user ? <Navigate to={home} replace /> : <Login />
+  return user ? <Navigate to="/" replace /> : <Login />
 }
 
 function PresentationMoved() {
@@ -143,7 +132,7 @@ export default function App() {
           <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/login" element={<LoginGate />} />
-            {/* RoarMe left the hub (Alex, 1 Nov 2026): its old sign-in address lands on Home, /roarme and /roarme-app on Chat */}
+            {/* RoarMe left the hub (Alex, 1 Nov 2026) and the hub's chat was taken out (Alex, 25 Nov): their old addresses land on Home */}
             <Route path="/roarme-signin" element={<Navigate to="/" replace />} />
             {/* the old ordino links stopped when Roardino took the ordino over (Alex, 23 Oct); Roardino's own crew
                 links come as go.themadlions.com/?o/<token> and open its page */}
@@ -159,19 +148,14 @@ export default function App() {
             {/* a note opened from its link (Alex, 10 Oct) */}
             <Route path="/n/:token" element={<PublicNote />} />
             <Route element={<RequireUser />}>
-              {/* TML Chat (chat.html) and the chat window: the hub's chat on the whole screen */}
-              <Route path="chat-window" element={<HubChatPage full />} />
-              <Route path="chat-window/:room" element={<HubChatPage full />} />
-              <Route path="roarme-app" element={<Navigate to="/chat" replace />} />
+              <Route path="chat-window/*" element={<Navigate to="/" replace />} />
+              <Route path="roarme-app" element={<Navigate to="/" replace />} />
               <Route element={<Layout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="calendar" element={<CalendarAll />} />
                 <Route path="tasks" element={<OfficeHub />} />
-                {/* the hub's own chat again (Alex, 1 Nov 2026): RoarMe's chat copied into the hub, on the hub's database */}
-                <Route path="chat" element={<HubChatPage />} />
-                <Route path="chat/:room" element={<HubChatPage />} />
-                <Route path="roarme" element={<Navigate to="/chat" replace />} />
-                <Route path="roarme/*" element={<Navigate to="/chat" replace />} />
+                <Route path="chat/*" element={<Navigate to="/" replace />} />
+                <Route path="roarme/*" element={<Navigate to="/" replace />} />
                 {/* only for whom the administrator opens them (Alex, 27 Oct) */}
                 <Route path="roardino" element={<OnlyWith k="roardino"><RoardinoRoute /></OnlyWith>} />
                 <Route path="roarlist" element={<OnlyWith k="roarlist"><OfficeHub /></OnlyWith>} />
@@ -198,8 +182,6 @@ export default function App() {
                 <Route path="settings" element={<Settings />} />
                 <Route path="p/:id" element={<Project />}>
                   <Route index element={<Overview />} />
-                  {/* The project's own Chat tab is gone; the same room lives in the sidebar's Chat */}
-                  <Route path="chat" element={<ProjectChatRedirect />} />
                   {/* The song map moved into Script (a music video's "script" is the song) */}
                   <Route path="music" element={<Navigate to=".." replace />} />
                   <Route path="script" element={<Navigate to=".." replace />} />
