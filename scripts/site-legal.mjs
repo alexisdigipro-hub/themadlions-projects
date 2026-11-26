@@ -356,7 +356,7 @@ const APPS = [
     }, termsEnd('Roardino App', LAB)),
   },
   {
-    id: 'roarref', name: 'RoarRef', page: 'lab/roarref/', updated: { en: '26 November 2026', el: '26 Νοεμβρίου 2026' }, what: { en: 'character sheets for AI', el: 'φύλλα χαρακτήρα για AI' },
+    id: 'roarref', name: 'RoarRef', page: 'lab/roarref/', updated: { en: '24 November 2026', el: '24 Νοεμβρίου 2026' }, what: { en: 'character sheets for AI', el: 'φύλλα χαρακτήρα για AI' },
     privacy: join2({
       en: [
         ['In short', ['RoarRef keeps your characters and their photos in your Roar Account, so they wait for you on any computer or phone. Nobody else sees them, and we never use them to train AI.']],
@@ -368,7 +368,7 @@ const APPS = [
           'Whether your account has RoarRef Pro, and until when.',
         ]],
         ['On your device', [
-          'Face and Body find the face and the body in a photo on your own device, with Google\'s MediaPipe models downloaded from storage.googleapis.com and jsDelivr. Your photo is not sent to them. The points you place yourself with Place points are kept with the photo.',
+          'Face, Body and Hair find the face, the body and the hair in a photo on your own device, with Google\'s MediaPipe models downloaded from storage.googleapis.com and jsDelivr. Your photo is not sent to them.',
           'Your browser keeps the last character you opened and how you like Home (grid or list, order, folder).',
           'Code and fonts load from jsDelivr and Google Fonts, so they see your IP address.',
         ]],
@@ -385,7 +385,7 @@ const APPS = [
           'Αν ο λογαριασμός σου έχει RoarRef Pro, και ως πότε.',
         ]],
         ['Στη συσκευή σου', [
-          'Τα Face και Body βρίσκουν το πρόσωπο και το σώμα σε μια φωτογραφία πάνω στη δική σου συσκευή, με τα μοντέλα MediaPipe της Google που κατεβαίνουν από το storage.googleapis.com και το jsDelivr. Η φωτογραφία σου δεν τους στέλνεται. Τα σημεία που βάζεις μόνος σου με το Place points κρατιούνται μαζί με τη φωτογραφία.',
+          'Τα Face, Body και Hair βρίσκουν το πρόσωπο, το σώμα και τα μαλλιά σε μια φωτογραφία πάνω στη δική σου συσκευή, με τα μοντέλα MediaPipe της Google που κατεβαίνουν από το storage.googleapis.com και το jsDelivr. Η φωτογραφία σου δεν τους στέλνεται.',
           'Ο browser σου κρατά τον τελευταίο χαρακτήρα που άνοιξες και πώς σου αρέσει η Αρχική (πλέγμα ή λίστα, σειρά, φάκελος).',
           'Κώδικας και γραμματοσειρές φορτώνουν από το jsDelivr και το Google Fonts, οπότε βλέπουν τη διεύθυνση IP σου.',
         ]],

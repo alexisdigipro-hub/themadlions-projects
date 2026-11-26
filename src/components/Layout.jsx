@@ -232,21 +232,24 @@ export default function Layout() {
             </Fragment>
           ))}
         </nav>
-        <div className="sidebar-foot">
-          <div className="user-chip">
-            {user?.name}
-            <small>
-              {user?.email} · {user?.role}
-            </small>
-          </div>
+        {/* you, at the foot of the menu (Alex, 26 Nov: "more aligned, centred, a different version, it looks old"): one glass
+            capsule with your picture or initials, your name and your role, which opens your profile, and a round sign-out */}
+        <div className="sidebar-foot me-card">
+          <NavLink to="/settings" className="user-chip me-link" title={user?.email || ''}>
+            <span className="me-ava">{user?.profile?.thumb || user?.profile?.photo ? <img src={user.profile.thumb || user.profile.photo} alt="" /> : (user?.name || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()}</span>
+            <span className="me-text"><b>{user?.name}</b><small>{user?.role === 'admin' ? 'Administrator' : 'Team'}</small></span>
+          </NavLink>
           <button
-            className="btn btn-ghost btn-sm sign-out"
+            type="button"
+            className="sign-out me-out"
+            aria-label="Sign out"
+            title="Sign out"
             onClick={() => {
               logout()
               nav('/login')
             }}
           >
-            Sign out
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /><path d="M10 16l-4-4 4-4M6 12h10" /></svg>
           </button>
         </div>
       </aside>
