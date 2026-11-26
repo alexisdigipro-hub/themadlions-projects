@@ -138,7 +138,8 @@ function FinancePage({ start }) {
   const companyOut = company.filter((t) => t.type === 'expense')
   // a teammate's own job in My Finance that no budget line pays: money we owe beyond the budgets
   const salaried = new Set(state.users.filter((u) => u.permissions?.salaried).map((u) => u.id))
-  const ownJobs = (state.worklog || []).filter((e) => !e.budgetLineId && Number(e.amount) > 0 && !salaried.has(e.userId))
+  const admins = new Set(state.users.filter((u) => u.role === 'admin').map((u) => u.id))
+  const ownJobs = (state.worklog || []).filter((e) => !e.budgetLineId && Number(e.amount) > 0 && !salaried.has(e.userId) && !admins.has(e.userId))
   const yearProj = projRows.filter((r) => inSel(r.date))
   const incomeAll = sumOf(yearProj, (r) => r.fee) + sumOf(companyIn.filter((t) => inSel(t.date)))
   const expenseAll = sumOf(yearProj, (r) => r.costs) + sumOf(companyOut.filter((t) => inSel(t.date))) + sumOf(ownJobs.filter((e) => inSel(e.date)), (e) => Number(e.amount))
@@ -175,6 +176,8 @@ function FinancePage({ start }) {
         const row = { project: p, line: l, what: l.description || l.category, agreed, paid: linePaid(l), balance: lineBalance(l), date }
         if (l.memberId) {
           const u = state.users.find((x) => x.id === l.memberId)
+          // an administrator is the company, not someone it pays (Alex, 26 Nov: "take me out, I am the company")
+          if (u?.role === 'admin') continue
           push(get(`u:${l.memberId}`, { name: u?.name || payeeOf(l) || 'Teammate', role: u?.profile?.position || '', kind: 'member' }), row)
           continue
         }
