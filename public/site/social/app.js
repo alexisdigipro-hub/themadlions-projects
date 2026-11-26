@@ -1238,8 +1238,18 @@ const byeOk = () => { if (!run.home || run.ok) return; run.ok = true; crumb('lef
 window.addEventListener('pagehide', byeOk);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') byeOk(); });
 function homeStanding() { clearTimeout(homeOkT); homeOkT = setTimeout(() => { run.ok = true; crumb('home stood 6s'); }, 6000); }
+// the card is not shown any more (Alex, 26 Nov: "what is this?"); the black box keeps writing and Home still opens
+// light after a stop. The steps can be read in the Safari inspector: localStorage roardino-crumbs.
+const SHOW_SAFE_CARD = false;
+// what more the box writes (26 Nov, a stop 0.6 s after the first picture with nothing to say why): errors, a video
+// starting or failing, the page going to the back and coming to the front
+window.addEventListener('error', (e) => crumb('error: ' + String(e.message || e.type).slice(0, 80)));
+window.addEventListener('unhandledrejection', (e) => crumb('promise: ' + String(e.reason?.message || e.reason || '').slice(0, 80)));
+document.addEventListener('playing', (e) => { const v = e.target; if (v?.tagName === 'VIDEO') crumb(`video playing ${v.videoWidth}x${v.videoHeight}`); }, true);
+document.addEventListener('error', (e) => { const x = e.target; if (x?.tagName === 'VIDEO' || x?.tagName === 'IMG') crumb(`${x.tagName.toLowerCase()} failed`); }, true);
+document.addEventListener('visibilitychange', () => crumb('page ' + document.visibilityState));
 function safeCard() {
-  if (!crashedBefore || !isPhone()) return null; // only phones crash this way; a computer never shows the card
+  if (!SHOW_SAFE_CARD || !crashedBefore || !isPhone()) return null; // only phones crash this way; a computer never shows the card
   const steps = (lastRun.steps || []).slice(-6);
   return h('div', { class: 'card safe-card' },
     h('b', {}, t('Roardino restarted after a problem on this phone')),
