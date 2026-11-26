@@ -7464,7 +7464,7 @@ a.lchip:hover { color: var(--text); }
   html[data-theme] body main.content .tabs.db-tabs > :is(a, button) small { font-size: 11px; opacity: .7; }
   html[data-theme] body main.content :is(.db-top, .proj-top, .share-dtop, .fin-top, .hub-top, .cal-top) :is(input.search, .input.search, input[type=search]) { height: 44px !important; min-height: 44px; border-radius: 999px !important; }
   html[data-theme] body main.content :is(.db-top, .share-dtop, .fin-top) :is(.db-add, .ab-more, .db-filter, .icon-btn, .act-round, .db-search-btn) { width: 44px !important; height: 44px !important; min-height: 44px; }
-  html[data-theme] body main.content :is(.db-top, .share-dtop, .fin-top) :is(.act:not(.act-round), .btn:not(.btn-sm):not(.ab-more):not(.db-add)) { height: 44px; min-height: 44px; }
+  html[data-theme] body main.content :is(.db-top, .share-dtop, .fin-top) :is(.act:not(.act-round):not(.act-sm), .btn:not(.btn-sm):not(.ab-more):not(.db-add)) { height: 44px; min-height: 44px; }
   html[data-theme] body main.content :is(.db-top, .share-dtop, .fin-top) .ab-count { height: 44px; }
   html[data-theme] body main.content :is(.db-top, .share-dtop, .fin-top) .segmented { min-height: 44px; padding: 3px; box-sizing: border-box; }
   html[data-theme] body main.content :is(.db-top, .share-dtop, .fin-top) .segmented > button { height: 38px; }
@@ -8819,3 +8819,24 @@ html[data-theme][data-theme] body .project-grid :is(.project-body, .project-cat,
    page. The premium glass of 26 Nov dressed it as a frame round the whole tab (Alex: "chaos with the frames in the whole
    Database"); it is bare again. Checked on every page against the build before: the only invisible panel in the hub. */
 html[data-theme][data-theme][data-theme] body .content .panel.db-card { background: none !important; border: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+
+/* Office: one search on every tab (Alex, 26 Nov: "the search is once right, once left"). Tasks, Notes and RoarList used
+   a field with room for a sign that never showed, Documents another field with none: now the same field everywhere,
+   44px like the tabs' row, a drawn magnifier 16px in, the word 42px in, the tabs' own type size. */
+@media (min-width: 821px) {
+  html[data-theme][data-theme] body .office-hub .db-slot :is(.rem-search, .input.search) {
+    height: 44px; box-sizing: border-box; width: 320px; max-width: 320px; flex: 0 0 320px; min-width: 160px;
+    padding: 0 16px 0 42px; font-size: 14px; border-radius: 999px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a9b3c2' stroke-width='2' stroke-linecap='round'><circle cx='11' cy='11' r='6.5'/><path d='m20 20-4-4'/></svg>"), var(--mx-gloss, none);
+    background-repeat: no-repeat, no-repeat; background-position: 16px center, 0 0; background-size: 16px 16px, 100% 100%;
+  }
+  html[data-theme][data-theme] body .office-hub .db-slot .rem-search-wrap { flex: 0 1 320px; width: 320px; min-width: 160px; margin: 0; }
+  html[data-theme][data-theme] body .office-hub .db-slot .rem-search-ico { display: none; }
+  html[data-theme][data-theme] body .office-hub .db-slot :is(.rem-search, .input.search)::placeholder { color: var(--muted); opacity: .8; }
+  /* Documents' own controls stand at the same height */
+  html[data-theme][data-theme] body .office-hub .db-slot .office-tools :is(.segmented, select.input) { height: 44px; box-sizing: border-box; }
+}
+
+/* Round buttons never stretch into ovals (Alex, 26 Nov, pCloud's top row: "the buttons are stretched"): a row that grows
+   taller than them (a 44px field beside them) no longer pulls them to its height */
+html[data-theme][data-theme] body :is(.act, .row-ico, .icon-btn, .cal-zoom-btn, .round) { align-self: center; flex-shrink: 0; }
