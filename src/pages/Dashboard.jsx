@@ -60,6 +60,15 @@ export function ProjectForm({ value, onChange }) {
   const set = (k) => (e) => onChange({ ...value, [k]: e.target.value })
   const cover = useCover({ value, projectId: value.id, keepSource: !value.isNew, onChange: (patch) => onChange({ ...value, ...patch }) })
   const coverFile = useRef(null)
+  // the cover opens a window of the covers already used on other projects, with Upload under them (Alex, 26 Nov: "not
+  // straight to choose file: the ones we have uploaded, to pick one, and under them upload"); a cover picked there is
+  // the same square picture, tied to no file of the other project (Adjust then works from the square)
+  const { state: st } = useStore()
+  const [gallery, setGallery] = useState(false)
+  const used = []
+  const seen = new Set([value.coverThumb])
+  for (const p of st.projects || []) if (p.coverThumb && !seen.has(p.coverThumb)) { seen.add(p.coverThumb); used.push(p) }
+  const openCover = () => (used.length ? setGallery(true) : coverFile.current?.click())
   // a category switch can bring new tabs (Music, Script…); they start hidden, like everything else
   // a project not made yet keeps every tab on when its category changes; an existing one hides the tabs new to it
   const setCategory = (e) => onChange({ ...value, category: e.target.value, hiddenTabs: value.isNew ? (value.hiddenTabs || []) : hiddenAfterCategory(value, e.target.value) })
@@ -75,7 +84,7 @@ export function ProjectForm({ value, onChange }) {
       <div className="pform-hero">
         <div className="pform-cover">
           <input ref={coverFile} type="file" accept="image/*" hidden onChange={(e) => { cover.pick(e.target.files?.[0]); e.target.value = '' }} />
-          <button type="button" className="pform-cover-pick" onClick={() => coverFile.current?.click()} title={value.coverThumb ? 'Change the cover' : 'Choose a cover image'} style={{ '--pc': value.color }}>
+          <button type="button" className="pform-cover-pick" onClick={openCover} title={value.coverThumb ? 'Change the cover' : 'Choose a cover image'} style={{ '--pc': value.color }}>
             {value.coverThumb ? <img src={value.coverThumb} alt="" /> : (
               <span className="pform-cover-empty">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" /><circle cx="9" cy="10" r="1.8" /><path d="m4 17 5-5 4 4 3-3 4 4" /></svg>
@@ -90,6 +99,17 @@ export function ProjectForm({ value, onChange }) {
             </span>
           )}
           {cover.modal}
+          <Modal open={gallery} title="Choose a cover" onClose={() => setGallery(false)} className="cover-gallery"
+            footer={<><Button variant="ghost" onClick={() => setGallery(false)}>Cancel</Button><Button variant="primary" onClick={() => { setGallery(false); coverFile.current?.click() }}>Upload from your computer</Button></>}>
+            <div className="cg-grid">
+              {used.map((p) => (
+                <button key={p.id} type="button" className="cg-tile" title={p.title || ''} onClick={() => { onChange({ ...value, coverThumb: p.coverThumb, coverCrop: null, coverSource: null }); setGallery(false) }}>
+                  <img src={p.coverThumb} alt="" loading="lazy" />
+                  <span>{p.title || 'Untitled'}</span>
+                </button>
+              ))}
+            </div>
+          </Modal>
         </div>
         <div className="pform-main">
           <div className="row-2">
