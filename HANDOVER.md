@@ -37,6 +37,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (26 Nov 2026: where you're signed in)
+- Alex (driving): "show me when someone signs in to my account, who and from where, like Facebook or Instagram", then "without the city". components/SignIns.jsx under Settings > My profile (remote only): my_sessions() lists this account's devices from auth.sessions (user agent turned into "iPhone · Safari", signed in, last seen, This device), end_session / end_other_sessions sign devices out (deleting the session ends its refresh token; an open page lasts until its access token runs out, an hour at most); administrators also get team_sessions() and end_member_sessions(). supabase/sign_ins.sql, applied by Claude on 26 Nov (Alex was driving) and tested: the trigger signin_new_device on auth.sessions emails a person through the Edge Function signin-alert (deployed, verify_jwt off, checks the token in public.signin_hook) when a browser new to their account in 90 days signs in; the browsers signed in on 26 Nov were marked as seen, so nobody got an email that day. A test insert in a rolled-back block queued exactly one alert and the sign-in went through. The screen itself was not seen in a browser (it needs the real database).
+
 ## Security to-do (agreed with Alex, 25 Nov 2026; do them with him at a computer, one at a time)
 1. 2FA on his Supabase account (Account preferences > Security > Authenticator app), keep the recovery codes away from the computer.
 2. 2FA on his GitHub account (Settings > Password and authentication > Two-factor authentication).

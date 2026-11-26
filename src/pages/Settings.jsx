@@ -11,6 +11,7 @@ import { authorizeUrl as gcalAuthorizeUrl, clearOauthCode, gcalCalendars, gcalCo
 import { FEED_COLOR, feedsAreOff, feedsOf, fetchFeedText, parseIcs } from '../lib/ical.js'
 import Team from './Team.jsx'
 import Profile from './Profile.jsx'
+import SignIns from '../components/SignIns.jsx'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { applyFont, currentFont } from '../lib/fonts.js'
 import FontPicker from '../components/FontPicker.jsx'
@@ -573,6 +574,8 @@ export default function Settings() {
       {tab === 'profile' && (
         <>
           <Profile mine embedded />
+          {/* every device signed in to this account (Alex, 26 Nov); administrators also see the team's */}
+          {remote && <SignIns isAdmin={isAdmin} />}
           {/* on a phone there is no side menu any more, so signing out lives here too */}
           <div className="row-actions settings-signout"><Button variant="ghost" onClick={() => { logout(); nav('/login') }}>Sign out</Button></div>
         </>
