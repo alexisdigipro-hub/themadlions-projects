@@ -8840,3 +8840,54 @@ html[data-theme][data-theme][data-theme] body .content .panel.db-card { backgrou
 /* Round buttons never stretch into ovals (Alex, 26 Nov, pCloud's top row: "the buttons are stretched"): a row that grows
    taller than them (a 44px field beside them) no longer pulls them to its height */
 html[data-theme][data-theme] body :is(.act, .row-ico, .icon-btn, .cal-zoom-btn, .round) { align-self: center; flex-shrink: 0; }
+
+/* ---------- Windows, 2026 (Alex, 26 Nov: "all these windows and their fields fresher, in the same look as today's") ----------
+   Every window (the shared Modal) in the dark glass skins: the frames' matte glass (grain, light from the top edge, a
+   bright top hairline, a deep soft shadow), a head and a foot with no ruled lines, a calm bold title; fields as soft glass
+   wells with a gentle glow on focus instead of a hard blue ring, no number spinners, small quiet labels and hints; the
+   foot's main button filled with the accent's light, Cancel and the body's buttons glass pills. Layout untouched. */
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal {
+  background-color: rgba(18, 24, 36, .97);
+  background-image: var(--mx-grain), var(--mx-light);
+  background-repeat: repeat, no-repeat;
+  border: 1px solid var(--mx-edge);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 40px 90px -30px rgba(0, 0, 0, .75), 0 2px 6px rgba(0, 0, 0, .35);
+  -webkit-backdrop-filter: blur(30px) saturate(160%); backdrop-filter: blur(30px) saturate(160%);
+}
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal :is(.modal-head, .modal-foot) { border: 0; background: transparent; }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal .modal-head :is(h2, h3, .modal-title) { font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal .field-label { font-size: 11px; font-weight: 600; letter-spacing: .09em; color: var(--muted); opacity: .9; }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal .field-hint { font-size: 12px; color: var(--muted); opacity: .75; }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal :is(input.input, select.input, select.select, textarea.input, .textarea, .date-input, .input-date) {
+  border-radius: 14px; border: 1px solid rgba(255, 255, 255, .085);
+  background-color: rgba(255, 255, 255, .045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), inset 0 -1px 0 rgba(0, 0, 0, .15);
+  transition: border-color .18s, box-shadow .18s, background-color .18s;
+}
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal :is(input.input, select.input, select.select, textarea.input, .textarea):hover { background-color: rgba(255, 255, 255, .06); }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal :is(input.input, select.input, select.select, textarea.input, .textarea):focus {
+  outline: none; border-color: color-mix(in srgb, var(--accent, #7cc4ff) 55%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent, #7cc4ff) 14%, transparent), inset 0 1px 0 rgba(255, 255, 255, .06);
+  background-color: rgba(255, 255, 255, .065);
+}
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal :is(input.input, textarea.input, .textarea)::placeholder { color: var(--muted); opacity: .55; }
+/* no number spinners: the amount is typed */
+html[data-theme] body .modal input[type='number']::-webkit-inner-spin-button, html[data-theme] body .modal input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+html[data-theme] body .modal input[type='number'] { -moz-appearance: textfield; appearance: textfield; }
+/* buttons: the foot's main one filled with the accent's light, everything else glass */
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal .modal-foot .btn-primary {
+  color: #071423; border-color: transparent;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent, #7cc4ff) 88%, #fff) 0%, var(--accent, #7cc4ff) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 8px 24px -8px color-mix(in srgb, var(--accent, #7cc4ff) 70%, transparent);
+  font-weight: 700;
+}
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal .modal-foot .btn-primary:hover { filter: brightness(1.06); }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal :is(.modal-foot .btn:not(.btn-primary, .btn-danger), .modal-body .btn:not(.btn-danger)) {
+  color: var(--text); border: 1px solid rgba(255, 255, 255, .1);
+  background: var(--mx-gloss), rgba(255, 255, 255, .05);
+  box-shadow: var(--mx-gloss-edge);
+}
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal .modal-body .btn-primary { color: color-mix(in srgb, var(--accent, #7cc4ff) 80%, #fff); }
+@media (min-width: 821px) {
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal { border-radius: 28px; }
+}

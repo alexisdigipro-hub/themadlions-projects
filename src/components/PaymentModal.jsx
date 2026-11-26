@@ -3,7 +3,7 @@ import { Button, Field, Input, Modal, Select, useToast } from './ui.jsx'
 import { today, uid, useStore } from '../lib/store.jsx'
 import { ordinoDates } from '../lib/shootDays.js'
 import { DOCS, METHODS, emptyTx, money } from '../lib/finance.js'
-import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
+import { lineBalance, lineEstimate, linePaid, payeeOf, syncLineWorklog } from '../lib/budget.js'
 import { finCatFor } from '../lib/budgetCats.js'
 
 
@@ -17,7 +17,7 @@ export function recordPayment(s, { projectId, lineId, amount, date, method, doc,
   const line = p?.budget?.lines?.find((l) => l.id === lineId)
   if (!p || !line) return null
   const tx = emptyTx('expense', {
-    date, projectId, category: finCatFor(s.settings, line.category), description: `${line.description}${note ? ` · ${note}` : ''}`, party: line.vendor || '',
+    date, projectId, category: finCatFor(s.settings, line.category), description: `${line.description}${note ? ` · ${note}` : ''}`, party: payeeOf(line),
     net: Number(amount), vatPct: Number(vatPct) || 0, status: 'paid', paidOn: date, doc, docNumber, method, budgetLineId: line.id, syncBudget: false,
   })
   s.finance.transactions.push(tx)
@@ -58,7 +58,7 @@ export function BulkPaymentModal({ project, lines, onClose, onDone }) {
           <tbody>
             {rows.map(({ line, amount }) => (
               <tr key={line.id}>
-                <td>{line.description}<div className="muted small">{line.vendor}</div></td>
+                <td>{line.description}<div className="muted small">{payeeOf(line)}</div></td>
                 <td className="num">{money(amount, cur)}{Number(line.vatPct) > 0 && <div className="muted small">+ {line.vatPct}% VAT = {money(amount * (1 + Number(line.vatPct) / 100), cur)}</div>}</td>
               </tr>
             ))}
