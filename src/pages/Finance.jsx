@@ -18,7 +18,7 @@ import { FinancePinGate, FinancePinSettings } from '../components/FinancePin.jsx
 /* The tabs, a glass capsule like the Database's (Alex, 10 Oct): Overview, Invoices (back in Finance, out
    of the side menu), Transactions, Team, then the year and Settings on their own at the end. Recurring
    is no longer a tab: it opens from Transactions, whose tab stays lit while it is open. */
-const FIN_TABS = [['overview', 'Overview'], ['invoices', 'Invoices'], ['transactions', 'Transactions'], ['team', 'Team']]
+const FIN_TABS = [['overview', 'Overview'], ['invoices', 'Invoices'], ['transactions', 'Transactions'], ['team', 'Team'], ['crew', 'Crew & Cast']]
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -528,6 +528,8 @@ function FinancePage({ start }) {
 
       {tab === 'team' && <TeamWork />}
 
+      {tab === 'crew' && <CrewCast cur={cur} onPay={(project, line) => setPay({ project, line })} />}
+
 
       {tab === 'recurring' && (
         <>
@@ -790,6 +792,107 @@ function TeamWork() {
         {!people.length && <p className="muted">No teammates yet.</p>}
       </div>
       {sel && <TeamMemberDetail person={sel} log={selLog} onClose={() => setWho('')} />}
+    </div>
+  )
+}
+
+/* Finance > Crew & Cast (Alex, 26 Nov: "like Team, somewhere to have what we still owe our crew and
+   cast, read from the projects"). Nothing is stored: every budget line with a payee that is not a
+   hub member (members are on Team) is grouped by person (the Database entry when the line's
+   contact has one, else the name), agreed minus paid across every project and year. A card per
+   person, opened for their lines with Record payment. */
+function CrewCast({ cur, onPay }) {
+  const { state } = useStore()
+  const [who, setWho] = useState('')
+  const [kind, setKind] = useState('') // '' | crew | cast
+  const [show, setShow] = useState('owed') // owed | all
+  const people = useMemo(() => {
+    const lib = new Map((state.library?.contacts || []).map((c) => [c.id, c]))
+    const map = new Map()
+    for (const p of state.projects) {
+      for (const l of p.budget?.lines || []) {
+        if (l.memberId || l.txId || l.category === 'Contingency') continue
+        const agreed = lineEstimate(l)
+        if (!(agreed > 0)) continue
+        const c = l.contactId ? (p.contacts || []).find((x) => x.id === l.contactId) : null
+        const name = (c?.name || payeeOf(l) || '').trim()
+        if (!name) continue
+        const le = c?.libraryId ? lib.get(c.libraryId) : null
+        const key = le ? `lib:${le.id}` : `n:${name.toLowerCase()}`
+        const k = (c?.kind || le?.kind || (/cast/i.test(l.category || '') ? 'cast' : 'crew')) === 'cast' ? 'cast' : 'crew'
+        if (!map.has(key)) map.set(key, { key, name: le?.name || name, role: le?.role || c?.role || '', kind: k, rows: [], agreed: 0, paid: 0, balance: 0 })
+        const r = map.get(key)
+        const paid = linePaid(l), balance = lineBalance(l)
+        r.rows.push({ project: p, line: l, agreed, paid, balance, date: l.date || projectWorkDate(p) || '' })
+        r.agreed += agreed; r.paid += paid; r.balance += balance
+      }
+    }
+    return [...map.values()].map((r) => ({ ...r, rows: r.rows.sort((a, b) => b.balance - a.balance || String(b.date).localeCompare(String(a.date))) }))
+  }, [state.projects, state.library])
+  const ofKind = people.filter((r) => !kind || r.kind === kind)
+  const list = ofKind.filter((r) => show === 'all' || r.balance > 0).sort((a, b) => b.balance - a.balance || b.agreed - a.agreed || a.name.localeCompare(b.name))
+  const owedTotal = ofKind.reduce((a, r) => a + r.balance, 0)
+  const paidTotal = ofKind.reduce((a, r) => a + r.paid, 0)
+  const owedPeople = ofKind.filter((r) => r.balance > 0).length
+  const openLines = ofKind.reduce((a, r) => a + r.rows.filter((x) => x.balance > 0).length, 0)
+  const max = Math.max(1, ...list.map((r) => (show === 'all' ? r.agreed : r.balance)))
+  const sel = people.find((r) => r.key === who)
+  return (
+    <div className="teamwork crewcast">
+      <div className="fin-hero">
+        <div className="fin-card neg"><div className="fin-label">We owe</div><div className="fin-value">{money(owedTotal, cur)}</div><div className="muted small">{owedPeople} {owedPeople === 1 ? 'person' : 'people'} · {openLines} open line{openLines === 1 ? '' : 's'}</div></div>
+        <div className="fin-card pos"><div className="fin-label">Paid</div><div className="fin-value">{money(paidTotal, cur)}</div><div className="muted small">all projects, all years</div></div>
+        <div className="fin-card"><div className="fin-label">Agreed</div><div className="fin-value">{money(owedTotal + paidTotal, cur)}</div><div className="muted small">{ofKind.length} {ofKind.length === 1 ? 'person' : 'people'} in budgets</div></div>
+      </div>
+      <div className="toolbar cc-bar">
+        <div className="segmented small">{[['', 'All'], ['crew', 'Crew'], ['cast', 'Cast']].map(([k, l]) => <button key={k} className={kind === k ? 'on' : ''} onClick={() => setKind(k)}>{l}</button>)}</div>
+        <div className="segmented small">{[['owed', 'Owed'], ['all', 'Everyone']].map(([k, l]) => <button key={k} className={show === k ? 'on' : ''} onClick={() => setShow(k)}>{l}</button>)}</div>
+      </div>
+      <div className="tw-grid">
+        {list.map((r) => (
+          <button key={r.key} className={`tw-card ${who === r.key ? 'on' : ''}`} onClick={() => setWho(who === r.key ? '' : r.key)}>
+            <div className="tw-head"><strong>{r.name}</strong><span className="muted small">{r.kind === 'cast' ? 'Cast' : 'Crew'}</span></div>
+            {r.role && <div className="muted small cc-role">{r.role}</div>}
+            <div className="tw-total">{money(r.balance, cur)}</div>
+            <div className="tw-bar">
+              <div className="tw-bar-fill" style={{ width: `${((show === 'all' ? r.agreed : r.balance) / max) * 100}%` }}>
+                {r.paid > 0 && <span className="paid" style={{ flexGrow: r.paid }} />}
+                {r.balance > 0 && <span className="pend" style={{ flexGrow: r.balance }} />}
+              </div>
+            </div>
+            <div className="tw-nums"><span className="pend">{money(r.balance, cur)} owed</span><span className="paid">{money(r.paid, cur)} paid</span></div>
+          </button>
+        ))}
+        {!list.length && <p className="muted">{show === 'owed' ? 'Nothing owed. Everyone is paid up.' : 'No crew or cast in the budgets yet.'}</p>}
+      </div>
+      {sel && (
+        <section className="panel tw-detail">
+          <div className="panel-head"><h2>{sel.name}</h2><Button size="sm" variant="ghost" onClick={() => setWho('')}>Close</Button></div>
+          <div className="stats">
+            <Stat label="Owed" value={money(sel.balance, cur)} note={`${sel.rows.filter((x) => x.balance > 0).length} open line${sel.rows.filter((x) => x.balance > 0).length === 1 ? '' : 's'}`} />
+            <Stat label="Paid" value={money(sel.paid, cur)} />
+            <Stat label="Agreed" value={money(sel.agreed, cur)} note={`${new Set(sel.rows.map((x) => x.project.id)).size} project${new Set(sel.rows.map((x) => x.project.id)).size === 1 ? '' : 's'}`} />
+          </div>
+          <div className="table-wrap">
+            <table className="table fin-table">
+              <thead><tr><th>Project</th><th>Date</th><th>Line</th><th className="num">Agreed</th><th className="num">Paid</th><th className="num">Balance</th><th /></tr></thead>
+              <tbody>
+                {sel.rows.map((x) => (
+                  <tr key={x.line.id}>
+                    <td className="small"><Link to={`/p/${x.project.id}/budget`}>{x.project.title}</Link></td>
+                    <td className="small nowrap">{x.date ? fmtDate(x.date) : ''}</td>
+                    <td><strong>{x.line.description || x.line.category}</strong><div className="muted small">{x.line.category}</div></td>
+                    <td className="num">{money(x.agreed, cur)}</td>
+                    <td className="num">{x.paid ? money(x.paid, cur) : ''}</td>
+                    <td className={`num${x.balance > 0 ? ' over' : ''}`}>{x.balance ? money(x.balance, cur) : ''}</td>
+                    <td className="row-actions">{x.balance > 0 && <Button size="sm" onClick={() => onPay(x.project, x.line)}>Record payment</Button>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

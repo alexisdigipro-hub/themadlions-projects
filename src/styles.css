@@ -8987,3 +8987,8 @@ html[data-theme][data-theme] body .modal .modal-body .pform-colours .swatch { wi
 /* The categories in capitals (Alex, 26 Nov: "all the categories in capitals"): Home's row of categories and the label on
    each project card */
 html:root[data-theme][data-theme] body .chips.cat-chips > button.chip, html[data-theme] body .project-cat { text-transform: uppercase !important; letter-spacing: .05em; }
+
+/* Finance > Crew & Cast (26 Nov): Team's cards, two choices on one row */
+.crewcast .cc-bar { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.crewcast .tw-head span { text-transform: uppercase; letter-spacing: .05em; font-size: 11px; }
+.crewcast .cc-role { margin-top: -4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
