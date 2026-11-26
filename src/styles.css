@@ -9081,3 +9081,6 @@ a.fp-row:hover { border-color: color-mix(in srgb, var(--pc, var(--accent)) 55%, 
   .fp-row > span:not(.fp-name) { text-align: left; }
 }
 @media (min-width: 1001px) { html[data-theme][data-theme] body .finance .fin-head.with-hero .fin-hero { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* Unpay on a paid budget line (Alex, 26 Nov): a pill like Edit, red once armed */
+html[data-theme][data-theme] body .topsheet .budget-table .row-actions button.b-unpay.b-unpay { width: auto; min-width: 0; padding: 0 12px !important; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--muted); }
+html[data-theme][data-theme] body .topsheet .budget-table .row-actions button.b-unpay.btn-danger { color: #fff; background: var(--danger); border-color: var(--danger); }
