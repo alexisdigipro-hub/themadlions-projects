@@ -8891,3 +8891,19 @@ html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[da
 @media (min-width: 821px) {
   html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .modal { border-radius: 28px; }
 }
+
+/* ---------- Windows gathered (Alex, 26 Nov: "gather them in every window", as the email window): the field's name sits
+   small inside its own box, top left, the value under it; no title above the box. Every Field whose control is one
+   input, select, text area or date picker, in every window; fields holding anything richer keep their name above.
+   Less room between fields, hints closer. */
+html[data-theme][data-theme] body .modal .field:has(> .input) { position: relative; gap: 0; }
+html[data-theme][data-theme] body .modal .field:has(> .input) > .field-label {
+  position: absolute; left: 15px; top: 9px; z-index: 2; margin: 0; padding: 0;
+  font-size: 10px; line-height: 1; letter-spacing: .09em; pointer-events: none; white-space: nowrap; max-width: calc(100% - 30px); overflow: hidden; text-overflow: ellipsis;
+}
+html[data-theme][data-theme] body .modal .field:has(> .input) > .input:not(textarea) { min-height: 54px; height: 54px; padding-top: 20px; padding-bottom: 6px; box-sizing: border-box; }
+html[data-theme][data-theme] body .modal .field:has(> .input) > textarea.input { padding-top: 26px; min-height: 76px; }
+html[data-theme][data-theme] body .modal .field:has(> .input) > .input.dp-field { align-items: flex-end; padding-bottom: 9px; }
+html[data-theme][data-theme] body .modal .field > .field-hint { margin-top: 4px; }
+html[data-theme][data-theme] body .modal .modal-body :is(.row-2, .row-3, .row, .stack, .grid-2, .grid-3) { gap: 10px; }
+html[data-theme][data-theme] body .modal .modal-body > :is(.field, .row-2, .row-3, .row, .field-row) + :is(.field, .row-2, .row-3, .row, .field-row) { margin-top: 8px; }
