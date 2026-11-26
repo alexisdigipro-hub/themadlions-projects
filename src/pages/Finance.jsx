@@ -625,31 +625,28 @@ function FinancePage({ start }) {
       )}
 
       {tab === 'settings' && (
+        <div className="fin-set-stack">
         <section className="panel fin-settings">
           <h2>Finance settings</h2>
+          {/* one row (Alex, 26 Nov: "a mess"); the income tax estimate went, nothing showed it any more */}
           <div className="row-3">
             <Field label="Currency"><Select value={settings.currency} onChange={(e) => setSettings({ ...settings, currency: e.target.value })} options={['EUR', 'USD', 'GBP']} /></Field>
             <Field label="Default VAT %"><Input type="number" min="0" max="30" value={settings.vatDefault} onChange={(e) => setSettings({ ...settings, vatDefault: e.target.value })} /></Field>
-            <Field label="Income tax estimate %" hint="Applied to the year's profit for the estimate on the overview."><Input type="number" min="0" max="60" value={settings.taxRate} onChange={(e) => setSettings({ ...settings, taxRate: e.target.value })} /></Field>
-          </div>
-          <div className="row-2">
-            <Field label="Financial year starts in" hint="January for a Greek company, which is the default. Change it only if you close the books on another month; every year total and year tab on this page follows it.">
+            <Field label="Financial year starts in">
               <Select value={String(settings.fiscalYearStart ?? 1)} onChange={(e) => setSettings({ ...settings, fiscalYearStart: Number(e.target.value) })} options={MONTHS.map((m, i) => [String(i + 1), m])} />
             </Field>
-            <div />
           </div>
           <div className="row-actions"><Button variant="primary" onClick={saveSettings}>Save</Button></div>
           <p className="fineprint">Finance is stored in its own table that only administrators can read. Expenses tied to a project also appear as actuals in that project's budget.</p>
         </section>
-      )}
-      {tab === 'settings' && <FinancePinSettings />}
-      {tab === 'settings' && <InvoiceProfileSettings />}
-      {tab === 'settings' && (
+        <FinancePinSettings />
+        <InvoiceProfileSettings />
         <section className="panel fin-settings">
           <h2>Income &amp; expense categories</h2>
           <p className="muted small">The lists the Income and Expense forms offer. Click a name to rename it and every transaction and recurring item already filed under it follows; for an expense column, the budget categories that land in it follow too (Settings &gt; Budget). A category with transactions on it asks where they go before it disappears. Changes save at once.</p>
           <FinanceCategories toast={toast} />
         </section>
+        </div>
       )}
 
       {pay && <PaymentModal project={pay.project} line={pay.line} onClose={() => setPay(null)} />}
