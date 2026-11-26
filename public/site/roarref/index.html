@@ -318,6 +318,32 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .pcardm .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .pcardm .pill.danger{color:#ff6b6b}
 .pcardm .pill.off{opacity:.4;pointer-events:none}
+.pnotes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pnarea{resize:vertical;min-height:76px;line-height:1.45;padding:12px 14px;font:400 14px var(--body);border-radius:16px}
+.pmx .pill.on{color:#ff8f86}.pmx .pill.wait{opacity:.6}
+.pmsub{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.pmsub .plabel{margin:0}.pmhint{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+.pmenu .ptrow{display:flex;align-items:center;gap:2px;border-radius:12px}
+.pmenu .ptrow > button:first-child{flex:1;min-width:0}
+.pmenu .ptrow .ptdel{width:40px;flex:none;justify-content:center;padding:0;color:var(--muted)}
+.pmenu .ptrow .ptdel.sure{color:#fff;background:#c0392b}
+.modal.pm .pcardm{max-height:calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.modal.pm.busy{cursor:progress}.modal.pm.busy .pcardm{opacity:.75}
+@media (max-width:820px){.pnotes{grid-template-columns:repeat(2,minmax(0,1fr))}.pnotes .field:last-child{grid-column:1/-1}.pmx .pill{flex:1 1 auto;justify-content:center}}
+/* the page a share link opens (view only, no sign-in) */
+.shv{position:fixed;inset:0;z-index:200;overflow:auto;background:var(--bg,#111);color:var(--fg)}
+.shv-in{max-width:1100px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:18px;min-height:100%;box-sizing:border-box}
+.shv-top{display:flex;align-items:center;justify-content:space-between}
+.shv-ro{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 12px;border-radius:999px;border:1px solid var(--line)}
+.shv h1{margin:0;font:700 clamp(26px,4vw,40px) var(--display);text-align:center}
+.shv-img{display:block;width:100%;height:auto;border-radius:18px;border:1px solid var(--line);background:var(--panel)}
+.shv-facts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.shv-facts div{padding:10px 16px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--line);min-width:110px;text-align:center}
+.shv-facts small{display:block;font:600 10.5px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.shv-facts b{font:600 16px var(--body)}
+.shv-notes{margin:0 auto;max-width:720px;white-space:pre-wrap;line-height:1.55;color:var(--fg);text-align:center}
+.shv-foot{margin-top:auto;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.shv-none{align-items:center;justify-content:center;text-align:center}.shv-none h1{font-size:26px}.shv-none p{color:var(--muted);margin:0}
 .pcardm .pill svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
 @media (max-width:820px){.pinfo{grid-template-columns:repeat(2,minmax(0,1fr))} .pcardm .row > span{flex:0 0 100% !important;height:0} .pcardm #pmNo2,.pcardm #pmSave,.pcardm #pmDup,.pcardm #pmDel{flex:1;justify-content:center}}
 .bsep{width:1px;height:22px;background:var(--line);margin:0 4px;flex:none}
@@ -2857,6 +2883,7 @@ function exportPng(){
     m.innerHTML = `<div class="card" style="max-width:720px"><h2>Export the sheet</h2>
       <p>Format</p><div class="row">${['png','jpg'].map(f=>`<button type="button" class="pill" data-f="${f}" aria-pressed="${ex.fmt===f}">${f==='png'?'PNG · lossless':'JPEG · best quality'}</button>`).join('')}</div>
       <p>Size</p><div class="row">${sizesNow().map(([n,l])=>{const [w,h]=dims(l);return `<button type="button" class="pill" data-s="${n}" aria-pressed="${ex.size===n}">${n} <span style="opacity:.6">${w} × ${h}</span></button>`}).join('')}</div>
+      ${hasNotes() ? `<p>Character notes</p><div class="row"><button type="button" class="pill" data-n="1" aria-pressed="${!!ex.notes}">Under the sheet</button><button type="button" class="pill" data-n="0" aria-pressed="${!ex.notes}">Leave out</button></div>` : ''}
       <div class="row"><span class="spacer" style="flex:1"></span><button type="button" class="pill" id="xNo">Cancel</button><button type="button" class="pill main" id="xGo"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export</button></div></div>`;
   };
   draw();
@@ -2865,6 +2892,7 @@ function exportPng(){
     if(e.target===m || t?.id==='xNo'){ m.remove(); return; }
     if(t?.dataset.f){ ex.fmt=t.dataset.f; draw(); }
     else if(t?.dataset.s){ ex.size=t.dataset.s; draw(); }
+    else if(t?.dataset.n){ ex.notes = t.dataset.n === '1'; draw(); }
     else if(t?.id==='xGo'){ S.export = ex; save(); m.remove(); runExport(dims((sizesNow().find(x=>x[0]===ex.size) || SIZES[2])[1])[0], ex.fmt); }
   };
   document.body.appendChild(m);
@@ -2873,7 +2901,7 @@ async function runExport(W, fmt){
   const btn = $('export'); btn.disabled = true; toast('Making the sheet…');
   try{
     const type = fmt==='jpg' ? 'image/jpeg' : 'image/png';
-    const blob = await drawSheet(W, type, W <= 800);
+    let blob = await drawSheet(W, type, W <= 800); if((S.export || {}).notes && hasNotes()) blob = await withNotes(blob, type);
     photos.forEach(q => { if(q && q.view && q.path && q.blob !== q.view){ if(q._gt && q._gtBlob === q.blob){ G.gl.deleteTexture(q._gt); q._gt = null; } q.blob = null; } }); // the whole photos are let go again; they wait in this browser's own store
     // the file takes the project's name (Alex, 14 Nov); without one, the old name with the date
     const pn = ((curSheet() || {}).name || '').replace(/[\/\\:*?"<>|\x00-\x1f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100);
@@ -2888,6 +2916,112 @@ async function runExport(W, fmt){
     toast('Saved to your Downloads');
   } catch(e){ toast('This size is too big for this browser. Try 6K or 4K.'); }
   finally { btn.disabled = false; }
+}
+/* ---------- the five of 26 Nov (Alex: "1,2,3,4,5"): character notes, Copy prompt, templates, a folder in one zip, a share link ---------- */
+const NOTE_KEYS = [['height','Height'],['age','Age'],['wardrobe','Wardrobe']];
+const notesOf = () => { const n = S.notes || {}; return {height:n.height || '', age:n.age || '', wardrobe:n.wardrobe || '', notes:n.notes || ''}; };
+const hasNotes = () => { const n = notesOf(); return !!(n.height || n.age || n.wardrobe || n.notes); };
+// the notes as a band under the sheet, in the sheet's own colours (an export with notes, and the share picture)
+async function withNotes(blob, type){
+  const n = notesOf(), name = (curSheet() || {}).name || '';
+  const im = new Image(), u = URL.createObjectURL(blob); im.src = u; await im.decode(); URL.revokeObjectURL(u);
+  const W = im.naturalWidth, k = W / 1600, pad = 56*k, ink = lum(S.sheet) < .5 ? '#ffffff' : '#141414', soft = lum(S.sheet) < .5 ? 'rgba(255,255,255,.62)' : 'rgba(20,20,20,.6)';
+  const t = document.createElement('canvas').getContext('2d');
+  const font = (w, s) => `${w} ${s*k}px "DM Sans", system-ui, sans-serif`;
+  const wrap = (txt, f, max) => { t.font = f; const out = []; String(txt).split(/\n/).forEach(par => { let line = ''; par.split(/\s+/).forEach(w => { const tryL = line ? line + ' ' + w : w; if(t.measureText(tryL).width > max && line){ out.push(line); line = w; } else line = tryL; }); out.push(line); }); return out; };
+  const facts = NOTE_KEYS.filter(([k2]) => n[k2]).map(([k2, l]) => [l, n[k2]]);
+  const noteLines = n.notes ? wrap(n.notes, font(400, 22), W - 2*pad) : [];
+  const H = Math.round(pad + (name ? 44*k : 0) + (facts.length ? 64*k : 0) + noteLines.length*32*k + pad*.7);
+  const c = document.createElement('canvas'); c.width = W; c.height = im.naturalHeight + H; const g = c.getContext('2d');
+  g.fillStyle = S.sheet; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0);
+  let y = im.naturalHeight + pad; g.textBaseline = 'alphabetic';
+  if(name){ g.fillStyle = ink; g.font = font(700, 34); g.fillText(name, pad, y + 30*k); y += 44*k; }
+  if(facts.length){ let x = pad; y += 12*k;
+    facts.forEach(([l, v]) => { g.font = font(600, 14); g.fillStyle = soft; if('letterSpacing' in g) g.letterSpacing = (14*k*.08)+'px'; g.fillText(l.toUpperCase(), x, y + 14*k);
+      if('letterSpacing' in g) g.letterSpacing = '0px'; g.font = font(500, 24); g.fillStyle = ink; g.fillText(v, x, y + 44*k);
+      const w = Math.max(g.measureText(v).width, 120*k); x += w + 56*k; });
+    y += 64*k; }
+  g.font = font(400, 22); g.fillStyle = ink; noteLines.forEach(l => { y += 32*k; g.fillText(l, pad, y - 6*k); });
+  return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(), type, type === 'image/jpeg' ? .92 : undefined));
+}
+const freeFull = () => photos.forEach(q => { if(q && q.view && q.path && q.blob !== q.view){ if(q._gt && q._gtBlob === q.blob){ G.gl.deleteTexture(q._gt); q._gt = null; } q.blob = null; } });
+// 5. Copy prompt: the sheet in words, for Higgsfield, Midjourney and the rest
+function promptText(){
+  const n = notesOf(), name = (curSheet() || {}).name || 'the character', views = rects(lay(), S.gap, pad()).map(r => r.label).filter(Boolean);
+  const dark = lum(S.sheet) < .5;
+  const parts = [`Character reference sheet of ${name}`];
+  if(views.length) parts.push(`${views.length} panels: ${views.join(', ')}`);
+  NOTE_KEYS.forEach(([k2, l]) => { if(n[k2]) parts.push(`${l}: ${n[k2]}`); });
+  if(n.notes) parts.push(n.notes.replace(/\s+/g, ' ').trim());
+  parts.push('the same person in every panel, identical face, hair and outfit', 'soft even studio light', `plain ${dark ? 'dark' : 'light'} seamless background`, `${S.ratio || '16:9'} sheet`, 'sharp detail, no text, no logos, no watermark');
+  return parts.map(x => x.replace(/[.\s]+$/, '')).map(x => x.charAt(0).toUpperCase() + x.slice(1)).join('. ') + '.';
+}
+async function copyText(s){
+  try{ await navigator.clipboard.writeText(s); return true; }catch{}
+  try{ const a = document.createElement('textarea'); a.value = s; a.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(a); a.select(); const ok = document.execCommand('copy'); a.remove(); return ok; }catch{ return false; }
+}
+// 3. Templates: a layout with its colours and window names (table roarref_templates; null = the database has none yet)
+let templates = null;
+async function listTemplates(){ try{ const { data, error } = await sb.from('roarref_templates').select('id,name,data,created_at').order('created_at'); return error ? null : (data || []); }catch{ return null; } }
+const tplLook = () => { const o = {layout:S.layout, ratio:S.ratio, stack:S.stack, gap:S.gap, rad:S.rad, sheet:S.sheet, fill:S.fill, labels:S.labels};
+  if(S.custom) o.custom = JSON.parse(JSON.stringify(S.custom)); if(S.covers && S.covers.length) o.covers = JSON.parse(JSON.stringify(S.covers)); return o; };
+async function saveTemplate(name){
+  const { data, error } = await sb.from('roarref_templates').insert({name, data:tplLook()}).select('id,name,data,created_at').single();
+  if(error || !data){ toast('The template could not be saved. Check the connection.'); return null; }
+  (templates = templates || []).push(data); return data;
+}
+async function dropTemplate(id){ const { error } = await sb.from('roarref_templates').delete().eq('id', id);
+  if(error){ toast('The template could not be deleted. Check the connection.'); return false; } templates = (templates || []).filter(x => x.id !== id); return true; }
+// 2. A folder as one zip of PNGs (makeZip and giveFile are the pool's own, further down)
+const safeName = s => String(s || '').replace(/[\/\\:*?"<>|\x00-\x1f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100);
+async function exportFolder(fid){
+  const f = (folders || []).find(x => x.id === fid), list = sheets.list.filter(x => x.folder === fid);
+  if(!list.length){ toast('This folder has no characters yet.'); return; }
+  const back = sheets.cur; clearTimeout(st); await save(); await saveThumb();
+  const files = [], used = new Set();
+  try{
+    for(let i = 0; i < list.length; i++){
+      toast(`Making ${i + 1} of ${list.length}…`);
+      await openSheet(list[i].id);
+      let blob = await drawSheet(3840, 'image/png'); if((S.export || {}).notes && hasNotes()) blob = await withNotes(blob, 'image/png'); freeFull();
+      let nm = safeName(list[i].name) || 'character', k = 2; while(used.has(nm.toLowerCase())) nm = safeName(list[i].name) + ' ' + k++; used.add(nm.toLowerCase());
+      files.push({name:nm + '.png', u8:new Uint8Array(await blob.arrayBuffer())});
+    }
+  }catch{ toast('The folder could not be made. Try again with fewer photos open.'); }
+  if(back && sheets.list.some(x => x.id === back)) await openSheet(back);
+  if(files.length){ await giveFile(makeZip(files), (safeName(f && f.name) || 'RoarRef') + '.zip'); if(!matchMedia('(pointer:coarse)').matches) toast('Saved to your Downloads'); }
+}
+// 1. Share link: a picture of the sheet with its notes, at roarref-share/<account>/<token>; the link reads ?s=<account>.<token>
+const SHARE_BUCKET = 'roarref-share';
+const shareUrl = t => `${location.origin}${location.pathname.replace(/index\.html$/, '')}?s=${me.id}.${t}`;
+async function shareSheet(){
+  const t = (S.share && S.share.t) || Array.from(crypto.getRandomValues(new Uint8Array(24)), b => 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b % 56]).join('');
+  const blob = await drawSheet(2560, 'image/jpeg'); freeFull(); // the notes are written on the page itself
+  const c = curSheet(), meta = new Blob([JSON.stringify({name:(c && c.name) || 'Character', notes:notesOf(), at:new Date().toISOString(), ratio:S.ratio})], {type:'application/json'});
+  const b = sb.storage.from(SHARE_BUCKET), o = {upsert:true, cacheControl:'60'};
+  const r1 = await b.upload(`${me.id}/${t}.jpg`, blob, Object.assign({contentType:'image/jpeg'}, o));
+  const r2 = r1.error ? r1 : await b.upload(`${me.id}/${t}.json`, meta, Object.assign({contentType:'application/json'}, o));
+  if(r2.error){ toast('The link could not be made. Check the connection.'); return null; }
+  S.share = {t, at:Date.now()}; save(); return shareUrl(t);
+}
+async function stopShare(){ if(!S.share) return true; const t = S.share.t;
+  const { error } = await sb.storage.from(SHARE_BUCKET).remove([`${me.id}/${t}.jpg`, `${me.id}/${t}.json`]);
+  if(error){ toast('Sharing could not be stopped. Check the connection.'); return false; } delete S.share; save(); return true; }
+// the page a shared link opens: no sign-in, only the picture and the notes
+async function showShared(code){
+  const [uid, t] = code.split('.'), base = `${SB_URL}/storage/v1/object/public/${SHARE_BUCKET}/${uid}/${t}`;
+  document.body.classList.remove('boot'); $('gate').hidden = true;
+  const v = document.createElement('div'); v.className = 'shv'; document.body.appendChild(v);
+  const fail = () => { v.innerHTML = `<div class="shv-in shv-none"><div class="mark">Roar<b>Ref</b></div><h1>This link is not shared any more</h1><p>Ask for a new link.</p><a class="pill main" href="${location.pathname}">Open RoarRef</a></div>`; };
+  try{
+    const r = await fetch(base + '.json?v=' + Date.now()); if(!r.ok) return fail(); const d = await r.json(), n = d.notes || {};
+    const facts = NOTE_KEYS.filter(([k2]) => n[k2]).map(([k2, l]) => `<div><small>${l}</small><b>${esc(n[k2])}</b></div>`).join('');
+    document.title = `${d.name || 'Character'} · RoarRef`;
+    v.innerHTML = `<div class="shv-in"><header class="shv-top"><div class="mark">Roar<b>Ref</b></div><span class="shv-ro">View only</span></header>
+      <h1>${esc(d.name || 'Character')}</h1><img class="shv-img" alt="${esc(d.name || 'Character sheet')}" src="${base}.jpg?v=${encodeURIComponent(d.at || '')}">
+      ${facts ? `<div class="shv-facts">${facts}</div>` : ''}${n.notes ? `<p class="shv-notes">${esc(n.notes)}</p>` : ''}
+      <footer class="shv-foot"><span>Shared ${esc(new Date(d.at).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}))}</span><a class="pill" href="${location.pathname}">Make your own on RoarRef</a></footer></div>`;
+  }catch{ fail(); }
 }
 function askClear(){
   const m = document.createElement('div'); m.className='modal';
@@ -3266,7 +3400,7 @@ async function start(){
   $('gate').hidden = true;
   try{
     await readPro();
-    [sheets.list, folders] = await Promise.all([listSheets(), listFolders()]);
+    [sheets.list, folders, templates] = await Promise.all([listSheets(), listFolders(), listTemplates()]);
     const moved = await bringLocal();
     if(moved){ sheets.list = await listSheets(); toast(`${moved} sheet${moved>1?'s':''} from this browser are now in your account.`); }
     if(!sheets.list.length){ const row = await insertSheet('Character 1', {S:JSON.parse(DEF), photos:[]}); if(row) sheets.list = await listSheets(); }
@@ -3281,7 +3415,7 @@ async function switchSheet(id){
   if(id === sheets.cur) return;
   clearTimeout(st); await save(); await saveThumb(); await openSheet(id);
 }
-async function newSheet(copy, folder){
+async function newSheet(copy, folder, tpl){
   if(sheets.list.length >= MAX_SHEETS){ toast(`Up to ${MAX_SHEETS} sheets: delete one to make room.`); return; }
   clearTimeout(st); await save(); await saveThumb();
   if(copy){
@@ -3293,8 +3427,8 @@ async function newSheet(copy, folder){
     await sb.from('roarref_sheets').update({data:{S, photos:ph}}).eq('id', row.id);
     sheets.list = await listSheets(); await openSheet(row.id); await saveThumb();
   } else {
-    const look = {layout:S.layout, ratio:S.ratio, stack:S.stack, gap:S.gap, rad:S.rad, sheet:S.sheet, fill:S.fill};
-    if(S.custom){ look.custom = JSON.parse(JSON.stringify(S.custom)); (function wipe(n){ if(n.k) n.k.forEach(wipe); else n.label = 'View'; })(look.custom); }
+    const look = tpl ? JSON.parse(JSON.stringify(tpl.data || {})) : {layout:S.layout, ratio:S.ratio, stack:S.stack, gap:S.gap, rad:S.rad, sheet:S.sheet, fill:S.fill};
+    if(!tpl && S.custom){ look.custom = JSON.parse(JSON.stringify(S.custom)); (function wipe(n){ if(n.k) n.k.forEach(wipe); else n.label = 'View'; })(look.custom); }
     const row = await insertSheet('Character ' + (sheets.list.length + 1), {S:Object.assign(JSON.parse(DEF), look), photos:[]}, folder); if(!row) return;
     sheets.list = await listSheets(); await openSheet(row.id);
   }
@@ -3709,7 +3843,8 @@ async function openSheets(first){
          <button type="button" class="pdanger" data-fx="sure"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete, its characters stay</span></button>`
       : `<p>${esc(f.name)}</p><button type="button" data-fx="open"><svg viewBox="0 0 24 24">${IC.folder}</svg><span>Open</span></button>
          <button type="button" data-fx="ren"><svg viewBox="0 0 24 24">${IC.pen}</svg><span>Rename</span></button>
-         <button type="button" data-fx="thumb"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8"/></svg><span>Thumbnail</span></button><hr>
+         <button type="button" data-fx="thumb"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8"/></svg><span>Thumbnail</span></button>
+         <button type="button" data-fx="zip"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span>Export all (zip)</span></button><hr>
          <button type="button" class="pdanger" data-fx="del"><svg viewBox="0 0 24 24">${IC.trash}</svg><span>Delete</span></button>`;
     card.classList.add('pheld'); veil(); m.appendChild(o); placeCtx(o, card, pt); };
   const popAt = (btn, html, cls) => { shutMenu(); const o = document.createElement('div'); o.className = 'pmenu' + (cls ? ' ' + cls : ''); o.innerHTML = html;
@@ -3967,6 +4102,14 @@ async function openSheets(first){
       if(k === 'trash') return openTrash(); return; }
     if(t.dataset.vw){ const [k, v] = t.dataset.vw.split(':'); shutMenu(); pv[k] = v; keep(); m.querySelectorAll(`[data-pv^="${k}:"]`).forEach(x => x.setAttribute('aria-pressed', x.dataset.pv === k + ':' + v)); paintList(); return; }
     if(t.dataset.pv){ const [k, v] = t.dataset.pv.split(':'); pv[k] = v; keep(); m.querySelectorAll(`[data-pv^="${k}:"]`).forEach(x => x.setAttribute('aria-pressed', x === t)); paintList(); return; }
+    if((t.id === 'shNew' || t.id === 'shNew2') && templates && templates.length && !t.dataset.go){ if(sheets.list.length >= MAX_SHEETS) return;
+      // templates (Alex, 26 Nov): a new character starts empty or from a saved layout
+      popAt(t, `<p>Start from</p><button type="button" data-tp=""><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Empty sheet</span></button><hr>
+        ${templates.map(x => `<div class="ptrow"><button type="button" data-tp="${x.id}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="18" height="8" rx="2"/></svg><span>${esc(x.name)}</span></button><button type="button" class="ptdel" data-tpdel="${x.id}" aria-label="Delete the template ${esc(x.name)}" title="Delete template"><svg viewBox="0 0 24 24">${IC.trash}</svg></button></div>`).join('')}`, 'ptpl'); return; }
+    if(t.dataset.tpdel){ const id = t.dataset.tpdel, row = t.closest('.ptrow');
+      if(!t.classList.contains('sure')){ t.classList.add('sure'); t.title = 'Tap again to delete'; row.classList.add('sure'); setTimeout(() => { t.classList.remove('sure'); row.classList.remove('sure'); }, 2600); return; }
+      if(await dropTemplate(id)){ row.remove(); toast('Template deleted'); if(!templates.length) shutMenu(); } return; }
+    if(t.dataset.tp != null){ if(sheets.list.length >= MAX_SHEETS) return; const tp = (templates || []).find(x => x.id === t.dataset.tp); shutMenu(); const cf = curF(); busy(true); await newSheet(false, cf && cf.id, tp); busy(false); return close(); }
     if(t.id === 'shNew' || t.id === 'shNew2'){ if(sheets.list.length >= MAX_SHEETS) return; const cf = curF(); busy(true); await newSheet(false, cf && cf.id); busy(false); return close(); }
     // folders (Alex, 20 Nov)
     if(t.dataset.fold){ shutMenu(); toFolder(t.dataset.fold); return; }
@@ -3986,6 +4129,7 @@ async function openSheets(first){
       if(k === 'open'){ shutMenu(); toFolder(fid); return; }
       if(k === 'ren'){ shutMenu(); return renameFolder(fid); }
       if(k === 'thumb'){ shutMenu(); return pickThumb(null, fid); }
+      if(k === 'zip'){ shutMenu(); busy(true); try{ await exportFolder(fid); } finally { busy(false); } if(document.body.contains(m)) paintList(); return; }
       if(k === 'del') return card ? openFctx(card, fid, 'del') : shutMenu();
       if(k === 'keep') return shutMenu();
       if(k === 'sure'){ shutMenu(); busy(true); const { error } = await sb.from('roarref_folders').delete().eq('id', fid); busy(false);
@@ -4086,35 +4230,66 @@ function openProject(){
   const c = curSheet(); if(!c || document.querySelector('.modal.pm')) return;
   const m = document.createElement('div'); m.className = 'modal pm';
   const when = t => { try{ return new Date(t).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}); }catch{ return ''; } };
-  const draw = sure => {
-    const full = sheets.list.length >= MAX_SHEETS, n = photos.filter(Boolean).length, wins = rects(lay(), S.gap, pad()).length;
+  const nt = notesOf(); let mode = '', link = S.share ? shareUrl(S.share.t) : '';
+  const putNotes = () => { const was = JSON.stringify(notesOf()); m.querySelectorAll('[data-nk]').forEach(i => { nt[i.dataset.nk] = i.value.trim(); });
+    if(JSON.stringify(nt) === was) return false; if(nt.height || nt.age || nt.wardrobe || nt.notes) S.notes = Object.assign({}, nt); else delete S.notes; save(); return true; };
+  const draw = step => { mode = step || '';
+    m.querySelectorAll('[data-nk]').forEach(i => { nt[i.dataset.nk] = i.value; });
+    const full = sheets.list.length >= MAX_SHEETS, n = photos.filter(Boolean).length, wins = rects(lay(), S.gap, pad()).length, keepName = m.querySelector('#pmName');
+    const nameV = keepName ? keepName.value : c.name;
+    const sub = mode === 'tpl' ? `<div class="pmsub"><p class="plabel">Save as template</p><p class="pmhint">The layout, colours, window names and covers. No photos. Pick it next time you make a new character.</p>
+        <div class="row"><input class="field" id="pmTplName" maxlength="40" value="${esc((nameV || 'My') + ' layout')}" aria-label="Template name" autocomplete="off" style="flex:1;min-width:160px"><button type="button" class="pill" data-pm="back">Cancel</button><button type="button" class="pill main" data-pm="tplgo">Save template</button></div></div>`
+      : mode === 'share' ? `<div class="pmsub"><p class="plabel">Share link</p><p class="pmhint">Anyone with the link sees a picture of the sheet and its notes, nothing else, and cannot change anything. Update makes the picture new.</p>
+        <input class="field" id="pmLink" readonly value="${esc(link)}" aria-label="Share link">
+        <div class="row"><button type="button" class="pill main" data-pm="copylink"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Copy link</button><button type="button" class="pill" data-pm="reshare"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>Update</button><span style="flex:1"></span><button type="button" class="pill danger" data-pm="unshare">Stop sharing</button></div></div>` : '';
     m.innerHTML = `<form class="card pcardm" novalidate><div class="row whead"><button type="button" class="pill round" id="pmNo" data-close aria-label="Close" title="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h2>This project</h2><i></i></div>
-      <p class="plabel">Name</p><input class="field" id="pmName" maxlength="40" value="${esc(c.name)}" aria-label="Project name" autocomplete="off">
+      <p class="plabel">Name</p><input class="field" id="pmName" maxlength="40" value="${esc(nameV)}" aria-label="Project name" autocomplete="off">
       ${folders ? `<p class="plabel">Folder</p><select class="field" id="pmFolder" aria-label="Folder"><option value="">Home, no folder</option>${folders.map(f => `<option value="${f.id}"${f.id === c.folder ? ' selected' : ''}>${esc(f.name)}</option>`).join('')}</select>` : ''}
       <div class="pinfo"><div><b>${n} of ${wins}</b><small>windows filled</small></div><div><b>${pool.length}</b><small>in the pool</small></div><div><b>${esc(S.ratio || '16:9')}</b><small>sheet shape</small></div><div><b>${esc(when(c.updated_at))}</b><small>last change</small></div></div>
-      ${sure ? `<div class="row"><p style="flex:1;margin:0;color:var(--fg);font-size:14px">Delete this project? It waits 30 days in Recently deleted, on Home, before it goes for good.</p><button type="button" class="pill" id="pmKeep">Keep</button><button type="button" class="pill main" id="pmSure">Delete</button></div>`
+      <p class="plabel">Character notes</p><div class="pnotes">${NOTE_KEYS.map(([k, l]) => `<input class="field" data-nk="${k}" maxlength="60" placeholder="${l}" aria-label="${l}" value="${esc(nt[k])}" autocomplete="off">`).join('')}</div>
+      <textarea class="field pnarea" data-nk="notes" maxlength="1200" rows="3" placeholder="Notes: look, voice, anything the team should know" aria-label="Notes">${esc(nt.notes)}</textarea>
+      <div class="row pmx"><button type="button" class="pill" data-pm="prompt"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Copy prompt</button>
+        <button type="button" class="pill" data-pm="tpl" aria-pressed="${mode === 'tpl'}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><path d="M17 13v8M13 17h8"/></svg>Save as template</button>
+        <button type="button" class="pill${S.share ? ' on' : ''}" data-pm="share" aria-pressed="${mode === 'share'}"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>${S.share ? 'Shared link' : 'Share link'}</button></div>
+      ${sub}
+      ${step === 'del' ? `<div class="row"><p style="flex:1;margin:0;color:var(--fg);font-size:14px">Delete this project? It waits 30 days in Recently deleted, on Home, before it goes for good.</p><button type="button" class="pill" id="pmKeep">Keep</button><button type="button" class="pill main" id="pmSure">Delete</button></div>`
         : `<div class="row"><button type="button" class="pill${full ? ' off' : ''}" id="pmDup" title="${full ? `All ${MAX_SHEETS} places are taken` : 'A copy of this project, as a new one'}"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Duplicate</button>
           <button type="button" class="pill danger" id="pmDel"><svg viewBox="0 0 24 24">${IC.trash}</svg>Delete</button><span style="flex:1"></span>
           <button type="button" class="pill" id="pmNo2">Cancel</button><button type="submit" class="pill main" id="pmSave">Save</button></div>`}</form>`;
     const f = m.querySelector('form'); f.onsubmit = e => { e.preventDefault(); saveName(true); };
+    if(mode === 'tpl'){ const i = m.querySelector('#pmTplName'); if(i && !isPhone()){ i.focus(); i.select(); } }
+    if(mode === 'tpl' || mode === 'share' || step === 'del'){ const sb2 = m.querySelector('.pmsub') || m.querySelector('#pmSure'); if(sb2) requestAnimationFrame(() => sb2.scrollIntoView({block:'nearest', behavior:'smooth'})); }
   };
   const close = () => { m.remove(); document.removeEventListener('keydown', esc3); };
   const saveName = async shut => { const inp = m.querySelector('#pmName'), v = inp ? inp.value.trim() : '';
+    putNotes();
     { const fs = m.querySelector('#pmFolder'); if(fs && fs.value !== (c.folder || '')) await setFolder(c.id, fs.value); }
     if(v && v !== c.name){ c.name = v; syncPanel(); const { error } = await sb.from('roarref_sheets').update({name:v}).eq('id', c.id); if(error) toast('The name could not be saved. Check the connection.'); }
     if(shut) close(); };
+  const busy = on => m.classList.toggle('busy', on);
   m.onclick = async e => {
     if(e.target === m) return close();
     const t = e.target.closest('button'); if(!t || m.classList.contains('busy')) return;
     if(t.id === 'pmNo' || t.id === 'pmNo2') return close();
-    if(t.id === 'pmDel'){ await saveName(false); return draw(true); }
-    if(t.id === 'pmKeep') return draw(false);
-    if(t.id === 'pmDup'){ if(sheets.list.length >= MAX_SHEETS) return; m.classList.add('busy'); await saveName(false); await newSheet(true); close(); toast('A copy was made: you are in it now'); return; }
-    if(t.id === 'pmSure'){ m.classList.add('busy'); await deleteSheet(c.id); close(); syncPanel(); openSheets(); }
+    if(t.id === 'pmDel'){ await saveName(false); return draw('del'); }
+    if(t.id === 'pmKeep') return draw('');
+    if(t.id === 'pmDup'){ if(sheets.list.length >= MAX_SHEETS) return; busy(true); await saveName(false); await newSheet(true); close(); toast('A copy was made: you are in it now'); return; }
+    if(t.id === 'pmSure'){ busy(true); await deleteSheet(c.id); close(); syncPanel(); openSheets(); return; }
+    const k = t.dataset.pm; if(!k) return;
+    if(k === 'back') return draw('');
+    if(k === 'prompt'){ await saveName(false); toast(await copyText(promptText()) ? 'Prompt copied: paste it into Higgsfield, Midjourney or any AI' : 'The prompt could not be copied in this browser'); return; }
+    if(k === 'tpl') return draw(mode === 'tpl' ? '' : 'tpl');
+    if(k === 'tplgo'){ const nm = (m.querySelector('#pmTplName').value || '').trim() || 'My layout'; busy(true); const r = await saveTemplate(nm); busy(false); if(r){ draw(''); toast(`Template saved: pick it under New character`); } return; }
+    if(k === 'share'){ if(mode === 'share') return draw(''); await saveName(false);
+      if(!S.share){ busy(true); t.classList.add('wait'); t.lastChild.textContent = 'Making the link…'; const u = await shareSheet(); busy(false); if(!u) return draw(''); link = u; draw('share'); if(await copyText(u)) toast('Link copied'); return; }
+      link = shareUrl(S.share.t); return draw('share'); }
+    if(k === 'copylink'){ toast(await copyText(link) ? 'Link copied' : 'Copy the link by hand'); return; }
+    if(k === 'reshare'){ await saveName(false); busy(true); t.lastChild.textContent = 'Updating…'; const u = await shareSheet(); busy(false); if(u){ link = u; draw('share'); toast('The shared picture is up to date'); } return; }
+    if(k === 'unshare'){ busy(true); const ok = await stopShare(); busy(false); if(ok){ link = ''; draw(''); toast('Not shared any more: the link shows nothing now'); } return; }
   };
   const esc3 = e => { if(e.key === 'Escape') close(); };
   document.addEventListener('keydown', esc3);
-  draw(false); document.body.appendChild(m);
+  draw(''); document.body.appendChild(m);
   const inp = m.querySelector('#pmName'); if(inp && !isPhone()){ inp.focus(); inp.select(); }
 }
 
@@ -4172,6 +4347,7 @@ async function afterSignIn(){
   if(me) start(); else { gateMode = 'in'; drawGate(); }
 }
 async function restore(){
+  { const sp = new URLSearchParams(location.search).get('s'); if(sp && /^[\w-]{1,40}\.[A-Za-z0-9]{24}$/.test(sp)) return showShared(sp); }
   if(!sb){ $('gate').hidden = false; $('gateBox').innerHTML = '<div class="card gate-card"><div class="mark">Roar<b>Ref</b></div><h2>RoarRef could not start</h2><p>The sign-in could not load. Check the connection and reload the page.</p></div>'; return; }
   const { data } = await sb.auth.getSession();
   if(data.session) afterSignIn(); else drawGate();

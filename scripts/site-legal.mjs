@@ -359,13 +359,15 @@ const APPS = [
     id: 'roarref', name: 'RoarRef', page: 'lab/roarref/', updated: { en: '26 November 2026', el: '26 Νοεμβρίου 2026' }, what: { en: 'character sheets for AI', el: 'φύλλα χαρακτήρα για AI' },
     privacy: join2({
       en: [
-        ['In short', ['RoarRef keeps your characters and their photos in your Roar Account, so they wait for you on any computer or phone. Nobody else sees them, and we never use them to train AI.']],
+        ['In short', ['RoarRef keeps your characters and their photos in your Roar Account, so they wait for you on any computer or phone. Nobody else sees them unless you make a share link, and we never use them to train AI.']],
         ['What we keep', [
           'Your account (name, email, password as a secure hash, from RoarMe).',
           'Your characters and folders: names, the layout, the settings of every photo and window, the thumbnail you chose, and when each was made and changed.',
           'Your photos, the pool of each character and the ones on its sheet, as you sent them, at full resolution.',
           'A character you delete waits in Recently deleted for 30 days, so you can bring it back; then, or when you delete it for good, it is gone with its photos.',
           'Whether your account has RoarRef Pro, and until when.',
+          'The character notes you write (height, age, wardrobe, notes) and the templates you save (a layout with its colours and window names, no photos).',
+          'A share link, only when you make one: a picture of the sheet with its name and notes, which anyone who has the link can see. Stop sharing deletes it at once.',
         ]],
         ['On your device', [
           'Face and Body find the face and the body in a photo on your own device, with Google\'s MediaPipe models downloaded from storage.googleapis.com and jsDelivr. Your photo is not sent to them. The points you place yourself with Place points are kept with the photo.',
@@ -376,13 +378,15 @@ const APPS = [
         ['How to delete it', [`Delete a character or a folder in the app, then empty Recently deleted. To delete everything, delete your Roar Account (themadlions.com/account > Delete account, or ${ROARME_DEL.en}).`]],
       ],
       el: [
-        ['Με λίγα λόγια', ['Το RoarRef κρατά τους χαρακτήρες σου και τις φωτογραφίες τους στον Roar Account σου, ώστε να σε περιμένουν σε κάθε υπολογιστή ή κινητό. Κανείς άλλος δεν τους βλέπει, και δεν τους χρησιμοποιούμε ποτέ για εκπαίδευση AI.']],
+        ['Με λίγα λόγια', ['Το RoarRef κρατά τους χαρακτήρες σου και τις φωτογραφίες τους στον Roar Account σου, ώστε να σε περιμένουν σε κάθε υπολογιστή ή κινητό. Κανείς άλλος δεν τους βλέπει, εκτός αν φτιάξεις share link, και δεν τους χρησιμοποιούμε ποτέ για εκπαίδευση AI.']],
         ['Τι κρατάμε', [
           'Τον λογαριασμό σου (όνομα, email, κωδικό ως ασφαλές hash, από το RoarMe).',
           'Τους χαρακτήρες και τους φακέλους σου: ονόματα, το στήσιμο, τις ρυθμίσεις κάθε φωτογραφίας και παραθύρου, τη μικρογραφία που διάλεξες, και πότε φτιάχτηκε και άλλαξε ο καθένας.',
           'Τις φωτογραφίες σου, της δεξαμενής κάθε χαρακτήρα και όσες είναι στο φύλλο του, όπως τις έστειλες, στην πλήρη τους ανάλυση.',
           'Ένας χαρακτήρας που σβήνεις περιμένει στα Πρόσφατα διαγραμμένα για 30 μέρες, για να τον επαναφέρεις· μετά, ή όταν τον σβήσεις οριστικά, φεύγει μαζί με τις φωτογραφίες του.',
           'Αν ο λογαριασμός σου έχει RoarRef Pro, και ως πότε.',
+          'Τις σημειώσεις χαρακτήρα που γράφεις (ύψος, ηλικία, ρούχα, σημειώσεις) και τα πρότυπα που φυλάς (ένα στήσιμο με τα χρώματα και τα ονόματα των παραθύρων, χωρίς φωτογραφίες).',
+          'Ένα share link, μόνο όταν φτιάξεις: μια εικόνα του φύλλου με το όνομα και τις σημειώσεις, που τη βλέπει όποιος έχει το link. Το Stop sharing τη σβήνει αμέσως.',
         ]],
         ['Στη συσκευή σου', [
           'Τα Face και Body βρίσκουν το πρόσωπο και το σώμα σε μια φωτογραφία πάνω στη δική σου συσκευή, με τα μοντέλα MediaPipe της Google που κατεβαίνουν από το storage.googleapis.com και το jsDelivr. Η φωτογραφία σου δεν τους στέλνεται. Τα σημεία που βάζεις μόνος σου με το Place points κρατιούνται μαζί με τη φωτογραφία.',
