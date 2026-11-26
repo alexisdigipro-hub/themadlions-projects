@@ -8794,3 +8794,23 @@ html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[da
 @media (min-resolution: 2dppx) {
   html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body :is(.shell > .sidebar, .content .panel, .content .rem-app, .content .office-frame) { border-width: .5px; border-color: rgba(255, 255, 255, .14); }
 }
+
+/* Smooth page slides (Alex, 26 Nov: "Active to Delivered stutters, and elsewhere"). A slide moves two copies of a page
+   (.glide-ghost out, .glide-in in), and every frosted piece in them was blurring what lay behind it again on every
+   frame. While they move: no backdrop blur and no deep shadows inside them, each copy on its own layer and contained;
+   the glass comes back the moment the slide ends (the classes leave at 320 / 360 ms). */
+.glide-ghost, .glide-in.in-next, .glide-in.in-prev { will-change: transform; contain: layout paint; backface-visibility: hidden; }
+html[data-theme][data-theme] body :is(.glide-ghost, .glide-in.in-next, .glide-in.in-prev),
+html[data-theme][data-theme] body :is(.glide-ghost, .glide-in.in-next, .glide-in.in-prev) * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html[data-theme][data-theme] body :is(.glide-ghost, .glide-in.in-next, .glide-in.in-prev) :is(.panel, .project-card, .pcard, [class*="card"]) { box-shadow: none !important; }
+.glide-ghost :is(img, video) { content-visibility: auto; }
+
+/* Smooth switching, second pass (measured 26 Nov: Home's Active / Delivered and Office's tabs drew ~20 frames in 900 ms;
+   with this ~55, as smooth as Finance). The big frames sit on the page's own soft colour fields, which are already blurry,
+   so re-blurring what is behind them on every frame cost a lot and showed almost nothing: frames keep their matte glass
+   (grain, top light, hairlines, shadow) with no live backdrop blur. Project cards stand on their own cover, so their label
+   and buttons lose the blur too and take a deeper fill to read the same. Small controls keep their blur. */
+html[data-theme][data-theme] body :is(.shell > .sidebar, .content .panel, .content .rem-app, .content .office-frame) { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme] { --mx-frame: rgba(19, 25, 37, .6); }
+html[data-theme][data-theme] body .project-grid :is(.project-card, .project-card *) { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html[data-theme][data-theme] body .project-grid :is(.project-body, .project-cat, .pt-btn) { background-color: rgba(12, 16, 24, .66); }
