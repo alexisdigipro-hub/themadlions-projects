@@ -767,6 +767,25 @@ html,body{overscroll-behavior:none}
 .gd-loupe.on{opacity:1}
 .gd-foot{display:flex;align-items:center;gap:12px;padding:10px 16px 14px}
 .gd-foot p{flex:1;margin:0;color:var(--muted);font-size:12.5px;line-height:1.35}
+/* a folder drawn as a folder (Alex, 26 Nov) */
+.pthumb .pfx{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 0%,#241616,#0f0f10 70%)}
+.pfx-tab{position:absolute;left:9%;top:6%;width:32%;height:14%;border-radius:9px 12px 0 0;background:linear-gradient(180deg,#8a1d1a,#6e1513)}
+.pfx-back{position:absolute;left:9%;right:9%;top:14%;bottom:8%;border-radius:4px 12px 12px 12px;background:linear-gradient(180deg,#7a1916,#4f0f0e);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.pfx-pp{position:absolute;top:16%;width:36%;height:62%;object-fit:cover;border-radius:5px;border:2px solid #f4f1ec;box-shadow:0 6px 14px rgba(0,0,0,.45);
+  transition:transform .45s cubic-bezier(.2,.85,.25,1)}
+.pfx.n1 .pfx-pp{left:22%;width:56%;top:15%;transform:rotate(-2deg)}
+.pfx.n2 .pfx-pp:nth-of-type(1){left:17%;transform:rotate(-6deg)}.pfx.n2 .pfx-pp:nth-of-type(2){left:47%;transform:rotate(5deg)}
+.pfx.n3 .pfx-pp:nth-of-type(1){left:13%;transform:rotate(-8deg)}.pfx.n3 .pfx-pp:nth-of-type(2){left:32%;top:13%;z-index:1}.pfx.n3 .pfx-pp:nth-of-type(3){left:51%;transform:rotate(7deg)}
+.pfx-front{position:absolute;left:6%;right:6%;top:58%;bottom:6%;z-index:2;border-radius:10px;display:grid;place-items:center;
+  background:linear-gradient(180deg,rgba(212,0,0,.82),rgba(118,10,10,.92));border-top:1px solid rgba(255,170,160,.55);
+  box-shadow:0 -8px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.18);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.pfx-front em{font:600 12px var(--body);font-style:normal;color:rgba(255,235,232,.85)}
+.pcard.pfold:hover .pfx.n1 .pfx-pp{transform:translateY(-8%) rotate(-2deg)}
+.pcard.pfold:hover .pfx.n2 .pfx-pp:nth-of-type(1){transform:translateY(-8%) rotate(-9deg)}.pcard.pfold:hover .pfx.n2 .pfx-pp:nth-of-type(2){transform:translateY(-8%) rotate(8deg)}
+.pcard.pfold:hover .pfx.n3 .pfx-pp:nth-of-type(1){transform:translateY(-6%) rotate(-11deg)}.pcard.pfold:hover .pfx.n3 .pfx-pp:nth-of-type(2){transform:translateY(-10%)}.pcard.pfold:hover .pfx.n3 .pfx-pp:nth-of-type(3){transform:translateY(-6%) rotate(10deg)}
+.pcard.pfold{border-color:rgba(255,120,110,.22);background:linear-gradient(180deg,rgba(212,0,0,.10),rgba(255,255,255,.03))}
+.pfold .pfbadge{z-index:3;left:auto;right:10px;top:auto;bottom:10px;background:rgba(0,0,0,.35);border-color:rgba(255,255,255,.25)}
+.prow.pfold .pfx-pp{border-width:1px;border-radius:3px}.prow.pfold .pfx-front{border-radius:5px}.prow.pfold .pfx-front em{display:none}
 /* a field never makes the iPhone zoom in (Alex, 24 Nov: "I tap the search and it stays zoomed"): iOS zooms on a field whose
    letters are under 16px, so on a phone every field writes at 16px */
 @media (max-width:820px){input,select,textarea,.field,.psearch input{font-size:16px!important}}
@@ -3247,8 +3266,11 @@ async function openSheets(first){
   const fActs = f => `<div class="sh-acts">
       <button type="button" class="ico" data-fren="${f.id}" title="Rename folder" aria-label="Rename folder"><svg viewBox="0 0 24 24">${IC.pen}</svg></button>
       <button type="button" class="ico del" data-fdel="${f.id}" title="Delete folder (its characters stay, back on Home)" aria-label="Delete folder"><svg viewBox="0 0 24 24">${IC.trash}</svg></button></div>`;
-  const mosaic = f => { if(f._u) return `<span class="pmos"><img src="${f._u}" alt=""></span>`; const us = rows.filter(r => r.x.folder === f.id && r.u).slice(0, 4).map(r => r.u);
-    return us.length ? `<span class="pmos n${us.length}">${us.map(u => `<img src="${u}" alt="">`).join('')}</span>` : `<span class="pblank pfempty"><svg viewBox="0 0 24 24">${IC.folder}</svg><em>Empty folder</em></span>`; };
+  // a folder looks like one (Alex, 26 Nov: "the folders should stand apart, now they look like the projects"): its back with a tab, the
+  // projects' pictures peeking out like papers, and a front flap of red glass over them
+  const mosaic = f => { const us = f._u ? [f._u] : rows.filter(r => r.x.folder === f.id && r.u).slice(0, 3).map(r => r.u);
+    return `<span class="pfx n${us.length}"><i class="pfx-tab"></i><i class="pfx-back"></i>${us.map(u => `<img class="pfx-pp" src="${u}" alt="">`).join('')}`
+      + `<i class="pfx-front">${us.length ? '' : '<em>Empty folder</em>'}</i></span>`; };
   const paintList = () => {
     const box = m.querySelector('#pList'); if(!box) return;
     const full = sheets.list.length >= MAX_SHEETS, q = query.trim().toLowerCase(), cf = curF();
