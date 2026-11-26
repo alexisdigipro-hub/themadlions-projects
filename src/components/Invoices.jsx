@@ -271,7 +271,7 @@ function InvoiceEditor({ draft, isNew, projects, clients, services, onChange, on
                 <Input value={l.project || ''} onChange={(e) => setLine(i, 'project', e.target.value)} placeholder="Project / song" list="inv-project-list" />
                 <Input type="date" value={l.date || ''} onChange={(e) => setLine(i, 'date', e.target.value)} title="Shoot day (optional)" />
                 <Input type="number" min="0" step="0.01" value={l.unitPrice ?? ''} onChange={(e) => setLine(i, 'unitPrice', e.target.value)} placeholder="0" />
-                <button className="link small" onClick={() => rmLine(i)} disabled={draft.lines.length === 1}>Remove</button>
+                <Button size="sm" variant="ghost" onClick={() => rmLine(i)} disabled={draft.lines.length === 1}>Remove</Button>
               </div>
             ))}
             <datalist id="inv-project-list">{projects.map((p) => <option key={p.id} value={p.title} />)}</datalist>
@@ -359,7 +359,7 @@ export function InvoiceProfileForm({ onDone }) {
           {p.headerImage ? <img className="logo-preview" style={{ width: 'auto', maxWidth: 220, height: 'auto' }} src={p.headerImage} alt="" /> : <span className="muted small">No header yet</span>}
           <input ref={headerRef} type="file" accept="image/*" hidden onChange={(e) => pickHeader(e.target.files?.[0])} />
           <Button variant="ghost" onClick={() => headerRef.current?.click()}>{p.headerImage ? 'Change' : 'Upload header'}</Button>
-          {p.headerImage && <button className="link small" onClick={() => set('headerImage', '')}>Remove</button>}
+          {p.headerImage && <Button size="sm" variant="ghost" onClick={() => set('headerImage', '')}>Remove</Button>}
         </div>
       </Field>
       <Field label="Stamp & signature (PNG)" hint="A transparent PNG with your stamp and signature together. It prints in the Provider signature box of every invoice.">
@@ -367,7 +367,7 @@ export function InvoiceProfileForm({ onDone }) {
           {p.stamp ? <img className="logo-preview" src={p.stamp} alt="" /> : <span className="muted small">No stamp yet</span>}
           <input ref={stampRef} type="file" accept="image/*" hidden onChange={(e) => pickStamp(e.target.files?.[0])} />
           <Button variant="ghost" onClick={() => stampRef.current?.click()}>{p.stamp ? 'Change' : 'Upload stamp'}</Button>
-          {p.stamp && <button className="link small" onClick={() => set('stamp', '')}>Remove</button>}
+          {p.stamp && <Button size="sm" variant="ghost" onClick={() => set('stamp', '')}>Remove</Button>}
         </div>
       </Field>
       <div className="row-2">
