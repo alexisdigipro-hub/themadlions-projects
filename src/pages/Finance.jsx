@@ -8,7 +8,7 @@ import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, payeeOf, syncLineWorklog } from '../lib/budget.js'
 import { budgetCatForFin, finCatFor } from '../lib/budgetCats.js'
-import { AGE_BUCKETS, WorkLogTable, ageBucket, avgDaysToPay, daysWaiting, entryTotals, entryTotalsByYear, money2, projectWorkDate, topClientOf } from '../components/WorkLog.jsx'
+import { projectWorkDate } from '../components/WorkLog.jsx'
 import { InvoiceProfileSettings, InvoicesTab } from '../components/Invoices.jsx'
 import { invoiceTotals } from '../lib/invoice.js'
 import { ReceiptView } from '../components/Receipt.jsx'
@@ -18,7 +18,12 @@ import { FinancePinGate, FinancePinSettings } from '../components/FinancePin.jsx
 /* The tabs, a glass capsule like the Database's (Alex, 10 Oct): Overview, Invoices (back in Finance, out
    of the side menu), Transactions, Team, then the year and Settings on their own at the end. Recurring
    is no longer a tab: it opens from Transactions, whose tab stays lit while it is open. */
-const FIN_TABS = [['overview', 'Overview'], ['invoices', 'Invoices'], ['transactions', 'Transactions'], ['team', 'Team'], ['crew', 'Crew & Cast']]
+/* Finance rebuilt (Alex, 26 Nov: "very confusing, Team and Crew & Cast especially; build it again"):
+   Overview (the year in three numbers, month by month, what we are owed and what we owe), Projects
+   (one line a project), People (everyone we pay, members, crew and cast, in one place, read from the
+   budgets), Transactions (only money that really moved), Invoices. One rule for the year everywhere:
+   a project counts in the year of its shoot day; what is owed, either way, counts whatever the year. */
+const FIN_TABS = [['overview', 'Overview'], ['projects', 'Projects'], ['people', 'People'], ['transactions', 'Transactions'], ['invoices', 'Invoices']]
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -60,45 +65,16 @@ function FinancePage({ start }) {
   const allTime = year === 'all'
   const inSel = (d) => allTime || fiscalYearOf(d, fiscalStart) === year
   const yearText = allTime ? 'all time' : fyLabel(year)
-  const [tab, setTab] = useState(start || 'overview') // overview | invoices | transactions | recurring | team | settings
+  const [tab, setTab] = useState(start === 'team' || start === 'crew' ? 'people' : start || 'overview') // overview | invoices | transactions | recurring | team | settings
   const [draft, setDraft] = useState(null)
   const [f, setF] = useState({ q: '', type: '', project: '', status: '', doc: '', month: '' })
   const [settings, setSettings] = useState(fin.settings)
   const [rdraft, setRdraft] = useState(null)
   const [pay, setPay] = useState(null) // { project, line }
-  const commitments = state.projects.flatMap((p) => (p.budget?.lines || []).filter((l) => lineEstimate(l) > 0 && l.category !== 'Contingency' && !l.txId).map((l) => ({ project: p, line: l, agreed: lineEstimate(l), paid: linePaid(l), balance: lineBalance(l) })))
-  // every budget line with money still owed, whatever the project's status: a delivered project
-  // with an unpaid fee is exactly what Finance must not lose sight of
-  const openCommitments = commitments.filter((c) => c.balance > 0).sort((a, b) => b.balance - a.balance)
-  const committed = openCommitments.reduce((a, c) => a + c.balance, 0)
-  /* Alex: "the fees we put in a project's budget should reach Finance." Each open line reads as an
-     expense still to pay in the Transactions list and as Owed in the per-project table. Nothing is
-     copied: the row is the line itself, so recording a payment (which does create a transaction)
-     shrinks or removes it by itself. */
-  const owedRows = openCommitments.map((c) => ({
-    id: `owed:${c.line.id}`, owed: true, type: 'expense', status: 'pending', doc: 'none', vatPct: 0,
-    date: c.line.date || projectWorkDate(c.project) || today(),
-    description: c.line.description || c.line.category, party: (c.line.memberId && state.users.find((u) => u.id === c.line.memberId)?.name) || payeeOf(c.line),
-    projectId: c.project.id, category: finCatFor(state.settings, c.line.category), net: c.balance, agreed: c.agreed, paid: c.paid, project: c.project, line: c.line,
-  }))
-  // per project, only what falls in the year shown (the line's date, else the project's shoot day),
-  // so picking 2025 does not pull in a 2026 project that merely still owes its crew
-  const owedYearRows = owedRows.filter((r) => inSel(r.date))
-  const owedByProject = {}
-  owedYearRows.forEach((r) => { owedByProject[r.project.title] = (owedByProject[r.project.title] || 0) + r.net })
-  /* And the income side (Alex: "but where is the income?", then "I don't want it 'expected', the
-     project's Budget already counts as income"): the Budget set on the project is what the client
-     pays, booked as income straight away. Whatever of it is not yet recorded as a real transaction
-     reads as this project's remaining income, folded into every total below exactly like a real
-     one (see the summarize() call), not shown apart or needing an extra step first. */
-  const expectedRows = state.projects.map((p) => {
-    const cap = Number(p.budget?.cap) || 0
-    if (!cap) return null
-    const recorded = fin.transactions.filter((t) => t.type === 'income' && t.projectId === p.id).reduce((a, t) => a + Number(t.net || 0), 0)
-    const remaining = cap - recorded
-    if (remaining <= 0) return null
-    return { id: `expected:${p.id}`, expected: true, type: 'income', status: 'invoiced', doc: 'none', vatPct: 0, date: projectWorkDate(p) || today(), description: `${p.title}: budget`, party: p.client || '', projectId: p.id, category: 'Production fee', net: remaining, cap, recorded, project: p }
-  }).filter(Boolean)
+  const [pKind, setPKind] = useState('') // People: '' | member | crew | cast
+  const [pShow, setPShow] = useState('owed') // People: owed | all
+  const [pWho, setPWho] = useState('')
+  const [prOpen, setPrOpen] = useState(false) // Projects: only those with money still open
   const recurring = fin.recurring || []
   const due = recurring.map((r) => ({ r, periods: duePeriods(r) })).filter((x) => x.periods.length)
   const dueCount = due.reduce((a, x) => a + x.periods.length, 0)
@@ -134,28 +110,102 @@ function FinancePage({ start }) {
   }
   const monthlyLoad = recurring.filter((r) => r.active).reduce((a, r) => a + (r.type === 'expense' ? 1 : -1) * Number(r.net || 0) / (r.frequency === 'yearly' ? 12 : r.frequency === 'quarterly' ? 3 : 1), 0)
 
-  // expectedRows (each project's remaining Budget) is merged straight into the real transactions
-  // here, so it is real income everywhere below: this year's income, the monthly bars, and every
-  // By project / client / category / type breakdown, not just the Profit tile.
-  const S = summarize([...fin.transactions, ...expectedRows], { year: allTime ? null : year, projects: state.projects, fiscalStart })
-  const owedInYear = owedRows.filter((r) => inSel(r.date)).reduce((a, r) => a + r.net, 0)
-  // Pending jobs in the team's My work that are not tied to a budget line (those are counted with
-  // the lines above): what we owe the team beyond the budgets (Alex). Same rule as Team work.
-  const teamJobs = (state.worklog || []).filter((e) => e.status !== 'paid' && !e.budgetLineId && Number(e.amount) > 0)
-  const teamOwed = teamJobs.reduce((a, e) => a + Number(e.amount || 0), 0)
-  const teamOwedInYear = teamJobs.filter((e) => inSel(e.date)).reduce((a, e) => a + Number(e.amount || 0), 0)
-  const incomeAll = S.income
-  const expenseAll = S.expense + owedInYear + teamOwedInYear
+  // VAT from the real transactions of the year
+  const S = summarize(fin.transactions, { year: allTime ? null : year, projects: state.projects, fiscalStart })
+  const sumOf = (l, f = (t) => Number(t.net || 0)) => l.reduce((a, t) => a + f(t), 0)
+
+  /* Each project's money, the one source for Overview, Projects and People. Fee: the project's budget
+     (what the client pays) or what was invoiced, whichever is more. Collected: income marked paid.
+     Costs: expenses paid, plus what is still owed on budget lines and on unpaid expenses. */
+  const txByProject = {}
+  fin.transactions.forEach((t) => { if (t.projectId) (txByProject[t.projectId] = txByProject[t.projectId] || []).push(t) })
+  const projRows = state.projects.map((p) => {
+    const tx = txByProject[p.id] || []
+    const inc = tx.filter((t) => t.type === 'income' && t.status !== 'quoted')
+    const exp = tx.filter((t) => t.type === 'expense')
+    const fee = Math.max(Number(p.budget?.cap) || 0, sumOf(inc))
+    const collected = sumOf(inc.filter((t) => t.status === 'paid'))
+    // a budget line counts what was agreed (or paid, if more); an expense not tied to a line counts on its own
+    const lines = (p.budget?.lines || []).filter((l) => !l.txId && l.category !== 'Contingency')
+    const loose = exp.filter((t) => !t.budgetLineId)
+    const costs = lines.reduce((a, l) => a + Math.max(lineEstimate(l), linePaid(l)), 0) + sumOf(loose)
+    const toPay = lines.reduce((a, l) => a + lineBalance(l), 0) + sumOf(loose.filter((t) => t.status !== 'paid'))
+    const paidOut = costs - toPay
+    return { p, date: projectWorkDate(p) || p.startDate || '', fee, collected, toCollect: Math.max(0, fee - collected), paidOut, toPay, costs, profit: fee - costs }
+  })
+  const company = fin.transactions.filter((t) => !t.projectId)
+  const companyIn = company.filter((t) => t.type === 'income' && t.status !== 'quoted')
+  const companyOut = company.filter((t) => t.type === 'expense')
+  // a teammate's own job in My Finance that no budget line pays: money we owe beyond the budgets
+  const salaried = new Set(state.users.filter((u) => u.permissions?.salaried).map((u) => u.id))
+  const ownJobs = (state.worklog || []).filter((e) => !e.budgetLineId && Number(e.amount) > 0 && !salaried.has(e.userId))
+  const yearProj = projRows.filter((r) => inSel(r.date))
+  const incomeAll = sumOf(yearProj, (r) => r.fee) + sumOf(companyIn.filter((t) => inSel(t.date)))
+  const expenseAll = sumOf(yearProj, (r) => r.costs) + sumOf(companyOut.filter((t) => inSel(t.date))) + sumOf(ownJobs.filter((e) => inSel(e.date)), (e) => Number(e.amount))
   const profitAll = incomeAll - expenseAll
   // The bars: the twelve months of the year shown, or for All time one bar per year
+  const barOf = (keyOf) => {
+    const m = {}
+    const add = (k, kind, v) => { if (!k) return; m[k] = m[k] || { income: 0, expense: 0 }; m[k][kind] += v }
+    projRows.forEach((r) => { add(keyOf(r.date), 'income', r.fee); add(keyOf(r.date), 'expense', r.costs) })
+    companyIn.forEach((t) => add(keyOf(t.date), 'income', Number(t.net || 0)))
+    companyOut.forEach((t) => add(keyOf(t.date), 'expense', Number(t.net || 0)))
+    ownJobs.forEach((e) => add(keyOf(e.date), 'expense', Number(e.amount || 0)))
+    return m
+  }
   const bars = allTime
-    ? [...years].sort((a, b) => a - b).map((y) => {
-        const l = [...fin.transactions, ...expectedRows].filter((t) => fiscalYearOf(t.date, fiscalStart) === y)
-        const add = (list) => list.reduce((a, t) => a + Number(t.net || 0), 0)
-        return { key: String(y), label: fyLabel(y), income: add(l.filter((t) => t.type === 'income' && t.status !== 'quoted')), expense: add(l.filter((t) => t.type === 'expense')) }
-      })
-    : S.months.map((m, i) => ({ ...m, label: MONTHS[i] }))
+    ? (() => { const m = barOf((d) => (d ? String(fiscalYearOf(d, fiscalStart)) : '')); return Object.keys(m).sort().map((k) => ({ key: k, label: fyLabel(Number(k)), ...m[k] })) })()
+    : (() => { const m = barOf((d) => (d && fiscalYearOf(d, fiscalStart) === year ? ym(d) : '')); return Array.from({ length: 12 }, (_, i) => { const mi = ((fiscalStart - 1 + i) % 12) + 1; const k = `${fiscalStart > 1 && mi < fiscalStart ? year + 1 : year}-${String(mi).padStart(2, '0')}`; return { key: k, label: MONTHS[mi - 1], ...(m[k] || { income: 0, expense: 0 }) } }) })()
   const maxMonth = Math.max(1, ...bars.map((m) => Math.max(m.income, m.expense)))
+
+  /* Everyone we pay, in one place: members, crew and cast. Read from every budget line with a payee
+     (a member by memberId, anyone else by their Database entry or name), plus a member's own jobs in
+     My Finance that no line pays. Owed counts every year. */
+  const people = (() => {
+    const lib = new Map((state.library?.contacts || []).map((c) => [c.id, c]))
+    const map = new Map()
+    const get = (key, base) => { if (!map.has(key)) map.set(key, { key, rows: [], agreed: 0, paid: 0, balance: 0, ...base }); return map.get(key) }
+    const push = (r, row) => { r.rows.push(row); r.agreed += row.agreed; r.paid += row.paid; r.balance += row.balance }
+    for (const p of state.projects) {
+      for (const l of p.budget?.lines || []) {
+        if (l.txId || l.category === 'Contingency') continue
+        const agreed = lineEstimate(l)
+        if (!(agreed > 0)) continue
+        const date = l.date || projectWorkDate(p) || ''
+        const row = { project: p, line: l, what: l.description || l.category, agreed, paid: linePaid(l), balance: lineBalance(l), date }
+        if (l.memberId) {
+          const u = state.users.find((x) => x.id === l.memberId)
+          push(get(`u:${l.memberId}`, { name: u?.name || payeeOf(l) || 'Teammate', role: u?.profile?.position || '', kind: 'member' }), row)
+          continue
+        }
+        const c = l.contactId ? (p.contacts || []).find((x) => x.id === l.contactId) : null
+        const name = (c?.name || payeeOf(l) || '').trim()
+        if (!name) continue
+        const le = c?.libraryId ? lib.get(c.libraryId) : null
+        const kind = (c?.kind || le?.kind || (/cast/i.test(l.category || '') ? 'cast' : 'crew')) === 'cast' ? 'cast' : 'crew'
+        push(get(le ? `lib:${le.id}` : `n:${name.toLowerCase()}`, { name: le?.name || name, role: le?.role || c?.role || '', kind }), row)
+      }
+    }
+    for (const e of ownJobs) {
+      const u = state.users.find((x) => x.id === e.userId)
+      const done = e.status === 'paid'
+      push(get(`u:${e.userId}`, { name: u?.name || 'Former teammate', role: u?.profile?.position || '', kind: 'member' }),
+        { job: e, project: state.projects.find((x) => x.id === e.projectId), what: e.description || e.client || 'Job', agreed: Number(e.amount), paid: done ? Number(e.amount) : 0, balance: done ? 0 : Number(e.amount), date: e.date || '' })
+    }
+    return [...map.values()].map((r) => ({ ...r, rows: r.rows.sort((a, b) => (b.balance > 0) - (a.balance > 0) || String(b.date).localeCompare(String(a.date))) }))
+  })()
+  const toPayList = [
+    ...people.filter((r) => r.balance > 0).map((r) => ({ key: r.key, name: r.name, sub: r.kind === 'member' ? 'Team' : r.kind === 'cast' ? 'Cast' : 'Crew', amount: r.balance, person: r.key })),
+    ...Object.entries(fin.transactions.filter((t) => t.type === 'expense' && t.status !== 'paid' && !t.budgetLineId).reduce((m, t) => { const k = t.party || t.description || 'Expense'; m[k] = (m[k] || 0) + Number(t.net || 0); return m }, {}))
+      .map(([k, v]) => ({ key: `tx:${k}`, name: k, sub: 'Unpaid expense', amount: v })),
+  ].filter((x) => x.amount > 0).sort((a, b) => b.amount - a.amount)
+  const toCollectList = [
+    ...projRows.filter((r) => r.toCollect > 0).map((r) => ({ key: r.p.id, name: r.p.title, sub: r.collected ? `${money(r.collected, cur)} of ${money(r.fee, cur)} in` : r.date ? fmtDate(r.date) : '', amount: r.toCollect, projectId: r.p.id })),
+    ...companyIn.filter((t) => t.status === 'invoiced').map((t) => ({ key: t.id, name: t.party || t.description, sub: 'Invoice', amount: Number(t.net || 0) })),
+  ].sort((a, b) => b.amount - a.amount)
+  const weAreOwed = sumOf(toCollectList, (x) => x.amount)
+  const weOwe = sumOf(toPayList, (x) => x.amount)
+  const markJobPaid = (e) => update((s) => { const x = (s.worklog || []).find((w) => w.id === e.id); if (x) { x.status = 'paid'; x.paidDate = today() } return s })
 
   const listed = fin.transactions
     .filter((t) => inSel(t.date))
@@ -166,27 +216,7 @@ function FinancePage({ start }) {
     .filter((t) => (f.month ? t.date.slice(5, 7) === f.month : true))
     .filter((t) => matchTx(t, f.q))
     .sort((a, b) => b.date.localeCompare(a.date))
-  // open budget lines pass the same filters (they are expenses to pay with no document) and sit among the transactions by date
-  const listedOwed = owedRows
-    .filter((t) => inSel(t.date))
-    .filter((t) => (f.type ? f.type === 'expense' : true))
-    .filter((t) => (f.project ? t.projectId === f.project : true))
-    .filter((t) => (f.status ? f.status === 'pending' : true))
-    .filter((t) => (f.doc ? f.doc === 'none' : true))
-    .filter((t) => (f.month ? t.date.slice(5, 7) === f.month : true))
-    .filter((t) => matchTx(t, f.q))
-  const listedExpected = expectedRows
-    .filter((t) => inSel(t.date))
-    .filter((t) => (f.type ? f.type === 'income' : true))
-    .filter((t) => (f.project ? t.projectId === f.project : true))
-    .filter((t) => (f.status ? f.status === 'invoiced' : true))
-    .filter((t) => (f.doc ? f.doc === 'none' : true))
-    .filter((t) => (f.month ? t.date.slice(5, 7) === f.month : true))
-    .filter((t) => matchTx(t, f.q))
-  const listedAll = [...listed, ...listedOwed, ...listedExpected].sort((a, b) => b.date.localeCompare(a.date))
-  const listedOwedTotal = listedOwed.reduce((a, t) => a + Number(t.net || 0), 0)
-  const listedExpectedTotal = listedExpected.reduce((a, t) => a + Number(t.net || 0), 0)
-  const invoiceExpected = (r) => setDraft(emptyTx('income', { projectId: r.projectId, party: r.party || r.project.title, description: r.project.title, net: r.net, vatPct: fin.settings.vatDefault, status: 'invoiced', date: today() }))
+  const listedAll = listed
 
   /* Picking a project in the transaction form fills what the project knows. Only fields that are
      empty, or still hold the previous project's fill, are touched: typed text stays. */
@@ -300,20 +330,6 @@ function FinancePage({ start }) {
   }
 
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
-  // a project with money still owed on a budget line but no transaction yet still gets a row in
-  // the per-project table (an expected-income-only project is already in S.byProject, merged above)
-  // one Sort by for every breakdown table (Alex wanted it visible, not only in the headings)
-  const [bdSort, setBdSort] = useState({ key: 'income', dir: -1 })
-  const bdSortBy = (key) => setBdSort((o) => (o.key === key ? { key, dir: -o.dir } : { key, dir: key === 'key' ? 1 : -1 }))
-  const byProjectRows = [...S.byProject, ...Object.keys(owedByProject).filter((k) => !S.byProject.some((r) => r.key === k)).map((k) => ({ key: k, income: 0, expense: 0, profit: 0, margin: null }))]
-  // By month: the same amounts as By project, each in the month it is dated
-  const [bdView, setBdView] = useState('project')
-  const monthEntries = [
-    ...[...fin.transactions, ...expectedRows]
-      .filter((t) => inSel(t.date) && (t.type === 'expense' || t.status !== 'quoted'))
-      .map((t) => ({ date: t.date, key: t.projectId ? pName(t.projectId) || 'Deleted project' : COMPANY, kind: t.type === 'income' ? 'income' : 'expense', amount: Number(t.net || 0) })),
-    ...owedYearRows.map((r) => ({ date: r.date, key: r.project.title, kind: 'owed', amount: r.net })),
-  ]
 
   const addActs = (
     <>
@@ -343,21 +359,16 @@ function FinancePage({ start }) {
       {tab === 'overview' && (
       <div className="fin-hero">
         <div className="fin-card">
-          {/* Alex: "Income", and the number alone, no line underneath splitting it */}
           <div className="fin-label">Income {yearText}</div>
           <div className="fin-value">{money(incomeAll, cur)}</div>
+        </div>
+        <div className="fin-card">
+          <div className="fin-label">Expenses {yearText}</div>
+          <div className="fin-value">{money(expenseAll, cur)}</div>
         </div>
         <div className={`fin-card ${profitAll < 0 ? 'neg' : 'pos'}`}>
           <div className="fin-label">Profit {yearText}</div>
           <div className="fin-value">{money(profitAll, cur)}</div>
-        </div>
-        <div className="fin-card">
-          <div className="fin-label">We owe</div>
-          <div className="fin-value">{money(S.weOwe + committed + teamOwed, cur)}</div>
-        </div>
-        <div className="fin-card">
-          <div className="fin-label">This month</div>
-          <div className="fin-value">{money(S.monthIn - S.monthOut, cur)}</div>
         </div>
       </div>
       )}
@@ -372,9 +383,8 @@ function FinancePage({ start }) {
 
       {tab === 'overview' && (
         <div className="fin-overview">
-
           <section className="panel">
-            <div className="panel-head"><h2>{allTime ? 'Year by year' : `Month by month ${yearText}`}</h2><span className="muted small">VAT balance {allTime ? 'over all time' : 'for the year'}: {money(S.vatBalance, cur)} ({money(S.vatIn, cur)} collected, {money(S.vatOut, cur)} paid)</span></div>
+            <div className="panel-head"><h2>{allTime ? 'Year by year' : `Month by month ${yearText}`}</h2><span className="muted small">a project counts in the month of its shoot day</span></div>
             <div className="fin-months" style={allTime ? { gridTemplateColumns: `repeat(${bars.length}, minmax(0, 120px))`, justifyContent: 'space-around' } : undefined}>
               {bars.map((m) => (
                 <div key={m.key} className="fin-month" title={`${m.label}: ${money(m.income, cur)} in, ${money(m.expense, cur)} out`}>
@@ -387,63 +397,41 @@ function FinancePage({ start }) {
                 </div>
               ))}
             </div>
-            <div className="legend small muted"><span className="sw in" /> income <span className="sw out" /> expense</div>
+            <div className="legend small muted"><span className="sw in" /> income <span className="sw out" /> expenses</div>
           </section>
 
-          {!fin.transactions.length ? (
-            <Empty title="No transactions yet">Start with this year's invoices and the big expenses: crew, rentals, rent, salaries. Tie project costs to their project and the profit per project appears by itself.</Empty>
-          ) : (
-            <div className="fin-breakdowns">
-              <div className="fin-sortbar">
-                <span className="fin-sortbar-label">Sort by</span>
-                <Select value={bdSort.key} onChange={(e) => setBdSort({ key: e.target.value, dir: e.target.value === 'key' ? 1 : -1 })} options={BD_SORTS} aria-label="Sort every table by" />
-                <Button size="sm" onClick={() => setBdSort((o) => ({ ...o, dir: -o.dir }))} title="Flip the order">{bdSort.dir > 0 ? 'Low to high ↑' : 'High to low ↓'}</Button>
-                <span className="muted small">applies to the table below · clicking a column heading works too</span>
-              </div>
-              <section className="panel">
-                <div className="panel-head">
-                  <div className="segmented small fin-bd-tabs">
-                    {[['project', 'By project'], ['month', 'By month']].map(([k, l]) => <button key={k} className={bdView === k ? 'on' : ''} onClick={() => setBdView(k)}>{l}</button>)}
-                  </div>
-                  {bdView === 'month' && <span className="muted small">each amount in the month it is dated · click a month for its projects</span>}
-                </div>
-                {bdView === 'project'
-                  ? <BreakdownTable rows={byProjectRows} label="Project" cur={cur} owed={owedByProject} sort={bdSort} onSort={bdSortBy} />
-                  : <ByMonthTable entries={monthEntries} cur={cur} sort={bdSort} onSort={bdSortBy} />}
-              </section>
-            </div>
-          )}
-
-          {openCommitments.length > 0 && (
-            <section className="panel">
-              <div className="panel-head"><h2>Owed to crew & vendors</h2><span className="muted small">from project budgets · agreed minus paid</span></div>
-              <div className="table-wrap">
-                <table className="table fin-table">
-                  <thead><tr><th>Project</th><th>Line</th><th>Payee</th><th className="num">Agreed</th><th className="num">Paid</th><th className="num">Balance</th><th /></tr></thead>
-                  <tbody>
-                    {openCommitments.map((c) => (
-                      <tr key={c.line.id}>
-                        <td className="small">{c.project.title}</td>
-                        <td><strong>{c.line.description}</strong><div className="muted small">{c.line.category}</div></td>
-                        <td className="small">{payeeOf(c.line)}</td>
-                        <td className="num">{money(c.agreed, cur)}</td>
-                        <td className="num">{c.paid ? money(c.paid, cur) : ''}</td>
-                        <td className="num over">{money(c.balance, cur)}</td>
-                        <td className="row-actions"><button onClick={() => setPay({ project: c.project, line: c.line })}>Record payment</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          <div className="fo-owed">
+            <section className="panel fo-list">
+              <div className="panel-head"><h2>To collect</h2><strong className="fo-total pos">{money(weAreOwed, cur)}</strong></div>
+              <p className="muted small fo-note">What clients still owe us, every year</p>
+              {!toCollectList.length ? <p className="muted small">Nothing to collect.</p> : toCollectList.slice(0, 8).map((x) => (
+                <button key={x.key} type="button" className="fo-row" onClick={() => { if (x.projectId) { setPrOpen(true); setTab('projects') } else setTab('transactions') }}>
+                  <span className="fo-name"><strong>{x.name}</strong><span className="muted small">{x.sub}</span></span>
+                  <span className="fo-amt">{money(x.amount, cur)}</span>
+                </button>
+              ))}
+              {toCollectList.length > 8 && <Button size="sm" variant="ghost" onClick={() => { setPrOpen(true); setTab('projects') }}>All {toCollectList.length}</Button>}
             </section>
-          )}
+            <section className="panel fo-list">
+              <div className="panel-head"><h2>To pay</h2><strong className="fo-total neg">{money(weOwe, cur)}</strong></div>
+              <p className="muted small fo-note">What we still owe people and suppliers, every year</p>
+              {!toPayList.length ? <p className="muted small">Everyone is paid.</p> : toPayList.slice(0, 8).map((x) => (
+                <button key={x.key} type="button" className="fo-row" onClick={() => { if (x.person) { setPWho(x.person); setPShow('owed'); setPKind(''); setTab('people') } else setTab('transactions') }}>
+                  <span className="fo-name"><strong>{x.name}</strong><span className="muted small">{x.sub}</span></span>
+                  <span className="fo-amt">{money(x.amount, cur)}</span>
+                </button>
+              ))}
+              {toPayList.length > 8 && <Button size="sm" variant="ghost" onClick={() => { setPShow('owed'); setTab('people') }}>All {toPayList.length}</Button>}
+            </section>
+          </div>
+          {S.vatIn + S.vatOut > 0 && <p className="muted small fo-vat">VAT {allTime ? 'over all time' : yearText}: {money(S.vatIn, cur)} collected, {money(S.vatOut, cur)} paid, balance {money(S.vatBalance, cur)}</p>}
         </div>
       )}
 
       {tab === 'transactions' && (
         <>
           <div className="toolbar">
-            <div className="toolbar-info"><strong>{listed.length + listedExpected.length} transactions{listedOwed.length ? ` · ${listedOwed.length} owed from budgets` : ''}</strong><span className="muted">{money(listed.filter((t) => t.type === 'income').reduce((a, t) => a + Number(t.net), 0) + listedExpectedTotal, cur)} in · {money(listed.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net), 0), cur)} out (net){listedOwed.length ? ` · ${money(listedOwedTotal, cur)} still owed on budget lines` : ''}</span></div>
+            <div className="toolbar-info"><strong>{listed.length} transaction{listed.length === 1 ? '' : 's'}</strong><span className="muted">{money(listed.filter((t) => t.type === 'income').reduce((a, t) => a + Number(t.net), 0), cur)} in · {money(listed.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net), 0), cur)} out (net) · only money that moved; what is owed is in People and Projects</span></div>
             <div className="toolbar-actions">
               <Input className="input search" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} placeholder="Search" />
               <Select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })} options={[['', 'Income & expense'], ['income', 'Income'], ['expense', 'Expense']]} />
@@ -462,39 +450,7 @@ function FinancePage({ start }) {
               <table className="table fin-list">
                 <thead><tr><th>Date</th><th>Description</th><th>Project</th><th>Category</th><th className="num">Net</th><th className="num">VAT</th><th className="num">Gross</th><th>Doc</th><th>Status</th><th /></tr></thead>
                 <tbody>
-                  {listedAll.map((t) => t.expected ? (
-                    <tr key={t.id} className="tx-income">
-                      <td className="nowrap">{fmtDate(t.date, { day: 'numeric', month: 'short' })}</td>
-                      <td><strong>{t.description}</strong>{t.party && <div className="muted small">{t.party}</div>}</td>
-                      <td className="small">{t.project.title}</td>
-                      <td className="small">{t.category}</td>
-                      <td className="num under">+{money(t.net, cur)}</td>
-                      <td className="num muted" />
-                      <td className="num">{money(t.net, cur)}</td>
-                      <td className="small muted">—</td>
-                      <td className="small">Invoiced</td>
-                      <td className="row-actions">
-                        <button onClick={() => invoiceExpected(t)}>Invoice</button>
-                        <Link className="btn btn-ghost btn-sm" to={`/p/${t.project.id}/budget`}>Budget</Link>
-                      </td>
-                    </tr>
-                  ) : t.owed ? (
-                    <tr key={t.id} className="tx-expense tx-owed">
-                      <td className="nowrap">{fmtDate(t.date, { day: 'numeric', month: 'short' })}</td>
-                      <td><strong>{t.description}</strong><div className="muted small">{t.party}{t.party ? ' · ' : ''}from the project budget{t.paid ? ` · ${money(t.paid, cur)} of ${money(t.agreed, cur)} paid` : ''}</div></td>
-                      <td className="small">{t.project.title}</td>
-                      <td className="small">{t.category}</td>
-                      <td className="num">−{money(t.net, cur)}</td>
-                      <td className="num muted" />
-                      <td className="num">{money(t.net, cur)}</td>
-                      <td className="small muted">—</td>
-                      <td><span className="tx-owed-badge">Owed · budget</span></td>
-                      <td className="row-actions">
-                        <button onClick={() => setPay({ project: t.project, line: t.line })}>Record payment</button>
-                        <Link className="btn btn-ghost btn-sm" to={`/p/${t.project.id}/budget`}>Budget</Link>
-                      </td>
-                    </tr>
-                  ) : (
+                  {listedAll.map((t) => (
                     <tr key={t.id} className={`tx-${t.type}`}>
                       <td className="nowrap">{fmtDate(t.date, { day: 'numeric', month: 'short' })}</td>
                       <td><strong>{t.description}</strong>{receiptOf(t) && <button type="button" className="receipt-chip" onClick={() => setViewReceipt(receiptOf(t))} title="Open the receipt">🧾<span>Receipt</span></button>}{t.party && <div className="muted small">{t.party}{t.docNumber ? ` · ${t.docNumber}` : ''}</div>}</td>
@@ -526,9 +482,100 @@ function FinancePage({ start }) {
 
       {tab === 'invoices' && <InvoicesTab />}
 
-      {tab === 'team' && <TeamWork />}
+      {tab === 'projects' && (() => {
+        const list = yearProj.filter((r) => !prOpen || r.toCollect > 0 || r.toPay > 0).sort((a, b) => String(b.date).localeCompare(String(a.date)))
+        const tot = (k) => sumOf(list, (r) => r[k])
+        return (
+          <div className="fin-projects">
+            <div className="toolbar fp-bar">
+              <div className="segmented small">{[[false, 'All'], [true, 'Money still open']].map(([k, l]) => <button key={l} className={prOpen === k ? 'on' : ''} onClick={() => setPrOpen(k)}>{l}</button>)}</div>
+              <span className="muted small">{list.length} project{list.length === 1 ? '' : 's'} {yearText}</span>
+            </div>
+            <div className="fp-head small muted"><span>Project</span><span>Fee</span><span>Costs</span><span>Profit</span><span>To collect</span><span>To pay</span></div>
+            <div className="fp-row fp-total">
+              <span className="fp-name"><strong>Total</strong></span>
+              <span data-l="Fee">{money(tot('fee'), cur)}</span><span data-l="Costs">{money(tot('costs'), cur)}</span>
+              <span data-l="Profit" className={tot('profit') < 0 ? 'over' : 'under'}>{money(tot('profit'), cur)}</span>
+              <span data-l="To collect">{tot('toCollect') ? money(tot('toCollect'), cur) : ''}</span><span data-l="To pay" className="over">{tot('toPay') ? money(tot('toPay'), cur) : ''}</span>
+            </div>
+            {!list.length ? <Empty title="Nothing here">{prOpen ? 'Every project of this year is settled both ways.' : 'No project has its shoot day in this year.'}</Empty> : list.map((r) => (
+              <Link key={r.p.id} to={`/p/${r.p.id}/budget`} className="fp-row" style={{ '--pc': r.p.color }}>
+                <span className="fp-name"><strong>{r.p.title}</strong><span className="muted small">{[r.p.code, r.date ? fmtDate(r.date) : ''].filter(Boolean).join(' · ')}</span></span>
+                <span data-l="Fee">{r.fee ? money(r.fee, cur) : ''}</span>
+                <span data-l="Costs">{r.costs ? money(r.costs, cur) : ''}</span>
+                <span data-l="Profit" className={r.profit < 0 ? 'over' : 'under'}>{r.fee || r.costs ? money(r.profit, cur) : ''}</span>
+                <span data-l="To collect">{r.toCollect ? money(r.toCollect, cur) : ''}</span>
+                <span data-l="To pay" className="over">{r.toPay ? money(r.toPay, cur) : ''}</span>
+              </Link>
+            ))}
+          </div>
+        )
+      })()}
 
-      {tab === 'crew' && <CrewCast cur={cur} onPay={(project, line) => setPay({ project, line })} />}
+      {tab === 'people' && (() => {
+        const ofKind = people.filter((r) => !pKind || r.kind === pKind)
+        const list = ofKind.filter((r) => pShow === 'all' || r.balance > 0).sort((a, b) => b.balance - a.balance || b.agreed - a.agreed || a.name.localeCompare(b.name))
+        const max = Math.max(1, ...list.map((r) => (pShow === 'all' ? r.agreed : r.balance)))
+        const sel = people.find((r) => r.key === pWho)
+        const openN = (r) => r.rows.filter((x) => x.balance > 0).length
+        return (
+          <div className="teamwork fin-people">
+            <div className="fin-hero">
+              <div className="fin-card neg"><div className="fin-label">We owe</div><div className="fin-value">{money(sumOf(ofKind, (r) => r.balance), cur)}</div><div className="muted small">{ofKind.filter((r) => r.balance > 0).length} people, every year</div></div>
+              <div className="fin-card pos"><div className="fin-label">Paid</div><div className="fin-value">{money(sumOf(ofKind, (r) => r.paid), cur)}</div><div className="muted small">every year</div></div>
+            </div>
+            <div className="toolbar cc-bar">
+              <div className="segmented small">{[['', 'Everyone'], ['member', 'Team'], ['crew', 'Crew'], ['cast', 'Cast']].map(([k, l]) => <button key={k} className={pKind === k ? 'on' : ''} onClick={() => setPKind(k)}>{l}</button>)}</div>
+              <div className="segmented small">{[['owed', 'Owed'], ['all', 'All']].map(([k, l]) => <button key={k} className={pShow === k ? 'on' : ''} onClick={() => setPShow(k)}>{l}</button>)}</div>
+            </div>
+            <div className="tw-grid">
+              {list.map((r) => (
+                <button key={r.key} className={`tw-card ${pWho === r.key ? 'on' : ''}`} onClick={() => setPWho(pWho === r.key ? '' : r.key)}>
+                  <div className="tw-head"><strong>{r.name}</strong><span className="muted small">{r.kind === 'member' ? 'Team' : r.kind === 'cast' ? 'Cast' : 'Crew'}</span></div>
+                  {r.role && <div className="muted small cc-role">{r.role}</div>}
+                  <div className="tw-total">{money(r.balance, cur)}</div>
+                  <div className="tw-bar">
+                    <div className="tw-bar-fill" style={{ width: `${((pShow === 'all' ? r.agreed : r.balance) / max) * 100}%` }}>
+                      {r.paid > 0 && <span className="paid" style={{ flexGrow: r.paid }} />}
+                      {r.balance > 0 && <span className="pend" style={{ flexGrow: r.balance }} />}
+                    </div>
+                  </div>
+                  <div className="tw-nums"><span className="pend">{money(r.balance, cur)} owed</span><span className="paid">{money(r.paid, cur)} paid</span></div>
+                </button>
+              ))}
+              {!list.length && <p className="muted">{pShow === 'owed' ? 'Nothing owed. Everyone is paid.' : 'Nobody in the budgets yet.'}</p>}
+            </div>
+            {sel && (
+              <section className="panel tw-detail">
+                <div className="panel-head"><h2>{sel.name}</h2><Button size="sm" variant="ghost" onClick={() => setPWho('')}>Close</Button></div>
+                <div className="stats">
+                  <Stat label="Owed" value={money(sel.balance, cur)} note={`${openN(sel)} open`} />
+                  <Stat label="Paid" value={money(sel.paid, cur)} />
+                  <Stat label="Jobs" value={String(sel.rows.length)} note={`${new Set(sel.rows.map((x) => x.project?.id).filter(Boolean)).size} projects`} />
+                </div>
+                <div className="table-wrap">
+                  <table className="table fin-table">
+                    <thead><tr><th>Project</th><th>Date</th><th>What</th><th className="num">Agreed</th><th className="num">Paid</th><th className="num">Balance</th><th /></tr></thead>
+                    <tbody>
+                      {sel.rows.map((x, i) => (
+                        <tr key={x.line?.id || x.job?.id || i}>
+                          <td className="small">{x.project ? <Link to={`/p/${x.project.id}/budget`}>{x.project.title}</Link> : <span className="muted">{x.job?.client || ''}</span>}</td>
+                          <td className="small nowrap">{x.date ? fmtDate(x.date) : ''}</td>
+                          <td>{x.what}{x.job && <div className="muted small">own job in My Finance</div>}</td>
+                          <td className="num">{money(x.agreed, cur)}</td>
+                          <td className="num">{x.paid ? money(x.paid, cur) : ''}</td>
+                          <td className={`num${x.balance > 0 ? ' over' : ''}`}>{x.balance ? money(x.balance, cur) : ''}</td>
+                          <td className="row-actions">{x.balance > 0 && (x.line ? <Button size="sm" onClick={() => setPay({ project: x.project, line: x.line })}>Record payment</Button> : <Button size="sm" onClick={() => markJobPaid(x.job)}>Mark paid</Button>)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
+          </div>
+        )
+      })()}
 
 
       {tab === 'recurring' && (
@@ -698,257 +745,6 @@ function FinancePage({ start }) {
 }
 
 
-function TeamWork() {
-  const { state } = useStore()
-  const [who, setWho] = useState('')
-  const [year, setYear] = useState(String(new Date().getFullYear()))
-  const log = state.worklog || []
-  const years = [...new Set([String(new Date().getFullYear()), ...log.map((e) => (e.date || '').slice(0, 4)).filter(Boolean)])].sort().reverse()
-
-  // Everyone who can appear here: the active team, plus anyone who still has jobs logged
-  // but has since left, been deactivated or become an administrator. Without that second
-  // group their money counted in the totals above with no card to open below, and the
-  // figures on this page did not add up.
-  const people = useMemo(() => {
-    const team = state.users.filter((u) => u.active !== false && u.role !== 'admin' && !u.permissions?.salaried)
-    const out = [...team]
-    const seen = new Set(team.map((u) => u.id))
-    for (const e of log) {
-      const id = e.userId || ''
-      if (seen.has(id)) continue
-      if (state.users.find((u) => u.id === id)?.permissions?.salaried) continue
-      seen.add(id)
-      const known = state.users.find((u) => u.id === id)
-      out.push({ id, name: known?.name || (id ? 'Former teammate' : 'Not assigned'), gone: true })
-    }
-    return out
-  }, [state.users, log])
-
-  const rows = people
-    .map((u) => ({ u, t: entryTotals(log.filter((e) => (e.userId || '') === u.id && (e.date || '').startsWith(year))), allT: entryTotals(log.filter((e) => (e.userId || '') === u.id)) }))
-    // ranked by their all-time total, which is what the card itself now leads with (Alex)
-    .sort((a, b) => b.allT.total - a.allT.total || a.u.name.localeCompare(b.u.name))
-  // Counts exactly the people listed below, so the hero and the cards always agree.
-  const all = entryTotals(rows.flatMap((r) => log.filter((e) => (e.userId || '') === r.u.id && (e.date || '').startsWith(year))))
-  const sel = people.find((u) => u.id === who)
-  const selLog = sel ? log.filter((e) => (e.userId || '') === sel.id) : []
-  const max = Math.max(1, ...rows.map((r) => r.allT.total))
-
-  // Money owed is money owed whatever year it was earned in, so these totals ignore the year tabs.
-  const owed = useMemo(() => log.filter((e) => e.status !== 'paid').map((e) => ({ e, days: daysWaiting(e) })), [log])
-  const aging = owed.reduce((acc, o) => { acc[ageBucket(o.days)] += Number(o.e.amount) || 0; return acc }, { fresh: 0, warn: 0, late: 0 })
-  const owedTotal = owed.reduce((a, o) => a + (Number(o.e.amount) || 0), 0)
-
-  return (
-    <div className="teamwork">
-      <section className="panel tw-owed">
-        <div className="panel-head">
-          <h2>Owed Right Now</h2>
-          <span className="muted small">Every unpaid job across all years, split by how long it has waited. The year tabs below do not change these totals.</span>
-        </div>
-        {!owed.length ? (
-          <p className="muted small tw-owed-empty">Nothing outstanding. Everyone is paid up.</p>
-        ) : (
-          <div className="tw-aging">
-            {AGE_BUCKETS.map((b) => (
-              <div key={b.key} className={`tw-age ${b.key}`}>
-                <span className="tw-age-label">{b.label}</span>
-                <strong>{money2(aging[b.key])}</strong>
-              </div>
-            ))}
-            <div className="tw-age total">
-              <span className="tw-age-label">All unpaid</span>
-              <strong>{money2(owedTotal)}</strong>
-            </div>
-          </div>
-        )}
-      </section>
-
-      <div className="fin-hero">
-        <div className="fin-card neg"><div className="fin-label">Owed in {year}</div><div className="fin-value">{money2(all.pending)}</div><div className="muted small">{all.open} unpaid job{all.open === 1 ? '' : 's'}</div></div>
-        <div className="fin-card pos"><div className="fin-label">Paid to the team</div><div className="fin-value">{money2(all.paid)}</div><div className="muted small">in {year}</div></div>
-        <div className="fin-card"><div className="fin-label">Total {year}</div><div className="fin-value">{money2(all.total)}</div><div className="muted small">{all.jobs} job{all.jobs === 1 ? '' : 's'} logged</div></div>
-        <div className="fin-card"><div className="fin-label">People logging</div><div className="fin-value">{rows.filter((r) => r.t.jobs).length}</div><div className="muted small">of {people.length} with a work log</div></div>
-      </div>
-      <div className="toolbar">
-        <div className="segmented small">{years.map((y) => <button key={y} className={year === y ? 'on' : ''} onClick={() => setYear(y)}>{y}</button>)}</div>
-        <p className="muted small">Each member keeps their own list under My Finance. Here you see everyone, and you can mark jobs as paid on their behalf.</p>
-      </div>
-      <div className="tw-grid">
-        {/* Kept to just this, on Alex's ask: the name, the all-time total, the paid/pending bar,
-            and the two amounts. Open the card for the year-by-year breakdown and the rest. */}
-        {rows.map(({ u, allT }) => (
-          <button key={u.id} className={`tw-card ${who === u.id ? 'on' : ''}`} onClick={() => setWho(who === u.id ? '' : u.id)}>
-            <div className="tw-head"><strong>{u.name}</strong></div>
-            <div className="tw-total">{money2(allT.total)}</div>
-            <div className="tw-bar" title={`${money2(allT.total)} of ${money2(max)}, the most anyone has logged`}>
-              <div className="tw-bar-fill" style={{ width: `${(allT.total / max) * 100}%` }}>
-                {allT.paid > 0 && <span className="paid" style={{ flexGrow: allT.paid }} />}
-                {allT.pending > 0 && <span className="pend" style={{ flexGrow: allT.pending }} />}
-              </div>
-            </div>
-            <div className="tw-nums"><span className="pend">{money2(allT.pending)} pending</span><span className="paid">{money2(allT.paid)} paid</span></div>
-          </button>
-        ))}
-        {!people.length && <p className="muted">No teammates yet.</p>}
-      </div>
-      {sel && <TeamMemberDetail person={sel} log={selLog} onClose={() => setWho('')} />}
-    </div>
-  )
-}
-
-/* Finance > Crew & Cast (Alex, 26 Nov: "like Team, somewhere to have what we still owe our crew and
-   cast, read from the projects"). Nothing is stored: every budget line with a payee that is not a
-   hub member (members are on Team) is grouped by person (the Database entry when the line's
-   contact has one, else the name), agreed minus paid across every project and year. A card per
-   person, opened for their lines with Record payment. */
-function CrewCast({ cur, onPay }) {
-  const { state } = useStore()
-  const [who, setWho] = useState('')
-  const [kind, setKind] = useState('') // '' | crew | cast
-  const [show, setShow] = useState('owed') // owed | all
-  const people = useMemo(() => {
-    const lib = new Map((state.library?.contacts || []).map((c) => [c.id, c]))
-    const map = new Map()
-    for (const p of state.projects) {
-      for (const l of p.budget?.lines || []) {
-        if (l.memberId || l.txId || l.category === 'Contingency') continue
-        const agreed = lineEstimate(l)
-        if (!(agreed > 0)) continue
-        const c = l.contactId ? (p.contacts || []).find((x) => x.id === l.contactId) : null
-        const name = (c?.name || payeeOf(l) || '').trim()
-        if (!name) continue
-        const le = c?.libraryId ? lib.get(c.libraryId) : null
-        const key = le ? `lib:${le.id}` : `n:${name.toLowerCase()}`
-        const k = (c?.kind || le?.kind || (/cast/i.test(l.category || '') ? 'cast' : 'crew')) === 'cast' ? 'cast' : 'crew'
-        if (!map.has(key)) map.set(key, { key, name: le?.name || name, role: le?.role || c?.role || '', kind: k, rows: [], agreed: 0, paid: 0, balance: 0 })
-        const r = map.get(key)
-        const paid = linePaid(l), balance = lineBalance(l)
-        r.rows.push({ project: p, line: l, agreed, paid, balance, date: l.date || projectWorkDate(p) || '' })
-        r.agreed += agreed; r.paid += paid; r.balance += balance
-      }
-    }
-    return [...map.values()].map((r) => ({ ...r, rows: r.rows.sort((a, b) => b.balance - a.balance || String(b.date).localeCompare(String(a.date))) }))
-  }, [state.projects, state.library])
-  const ofKind = people.filter((r) => !kind || r.kind === kind)
-  const list = ofKind.filter((r) => show === 'all' || r.balance > 0).sort((a, b) => b.balance - a.balance || b.agreed - a.agreed || a.name.localeCompare(b.name))
-  const owedTotal = ofKind.reduce((a, r) => a + r.balance, 0)
-  const paidTotal = ofKind.reduce((a, r) => a + r.paid, 0)
-  const owedPeople = ofKind.filter((r) => r.balance > 0).length
-  const openLines = ofKind.reduce((a, r) => a + r.rows.filter((x) => x.balance > 0).length, 0)
-  const max = Math.max(1, ...list.map((r) => (show === 'all' ? r.agreed : r.balance)))
-  const sel = people.find((r) => r.key === who)
-  return (
-    <div className="teamwork crewcast">
-      <div className="fin-hero">
-        <div className="fin-card neg"><div className="fin-label">We owe</div><div className="fin-value">{money(owedTotal, cur)}</div><div className="muted small">{owedPeople} {owedPeople === 1 ? 'person' : 'people'} · {openLines} open line{openLines === 1 ? '' : 's'}</div></div>
-        <div className="fin-card pos"><div className="fin-label">Paid</div><div className="fin-value">{money(paidTotal, cur)}</div><div className="muted small">all projects, all years</div></div>
-        <div className="fin-card"><div className="fin-label">Agreed</div><div className="fin-value">{money(owedTotal + paidTotal, cur)}</div><div className="muted small">{ofKind.length} {ofKind.length === 1 ? 'person' : 'people'} in budgets</div></div>
-      </div>
-      <div className="toolbar cc-bar">
-        <div className="segmented small">{[['', 'All'], ['crew', 'Crew'], ['cast', 'Cast']].map(([k, l]) => <button key={k} className={kind === k ? 'on' : ''} onClick={() => setKind(k)}>{l}</button>)}</div>
-        <div className="segmented small">{[['owed', 'Owed'], ['all', 'Everyone']].map(([k, l]) => <button key={k} className={show === k ? 'on' : ''} onClick={() => setShow(k)}>{l}</button>)}</div>
-      </div>
-      <div className="tw-grid">
-        {list.map((r) => (
-          <button key={r.key} className={`tw-card ${who === r.key ? 'on' : ''}`} onClick={() => setWho(who === r.key ? '' : r.key)}>
-            <div className="tw-head"><strong>{r.name}</strong><span className="muted small">{r.kind === 'cast' ? 'Cast' : 'Crew'}</span></div>
-            {r.role && <div className="muted small cc-role">{r.role}</div>}
-            <div className="tw-total">{money(r.balance, cur)}</div>
-            <div className="tw-bar">
-              <div className="tw-bar-fill" style={{ width: `${((show === 'all' ? r.agreed : r.balance) / max) * 100}%` }}>
-                {r.paid > 0 && <span className="paid" style={{ flexGrow: r.paid }} />}
-                {r.balance > 0 && <span className="pend" style={{ flexGrow: r.balance }} />}
-              </div>
-            </div>
-            <div className="tw-nums"><span className="pend">{money(r.balance, cur)} owed</span><span className="paid">{money(r.paid, cur)} paid</span></div>
-          </button>
-        ))}
-        {!list.length && <p className="muted">{show === 'owed' ? 'Nothing owed. Everyone is paid up.' : 'No crew or cast in the budgets yet.'}</p>}
-      </div>
-      {sel && (
-        <section className="panel tw-detail">
-          <div className="panel-head"><h2>{sel.name}</h2><Button size="sm" variant="ghost" onClick={() => setWho('')}>Close</Button></div>
-          <div className="stats">
-            <Stat label="Owed" value={money(sel.balance, cur)} note={`${sel.rows.filter((x) => x.balance > 0).length} open line${sel.rows.filter((x) => x.balance > 0).length === 1 ? '' : 's'}`} />
-            <Stat label="Paid" value={money(sel.paid, cur)} />
-            <Stat label="Agreed" value={money(sel.agreed, cur)} note={`${new Set(sel.rows.map((x) => x.project.id)).size} project${new Set(sel.rows.map((x) => x.project.id)).size === 1 ? '' : 's'}`} />
-          </div>
-          <div className="table-wrap">
-            <table className="table fin-table">
-              <thead><tr><th>Project</th><th>Date</th><th>Line</th><th className="num">Agreed</th><th className="num">Paid</th><th className="num">Balance</th><th /></tr></thead>
-              <tbody>
-                {sel.rows.map((x) => (
-                  <tr key={x.line.id}>
-                    <td className="small"><Link to={`/p/${x.project.id}/budget`}>{x.project.title}</Link></td>
-                    <td className="small nowrap">{x.date ? fmtDate(x.date) : ''}</td>
-                    <td><strong>{x.line.description || x.line.category}</strong><div className="muted small">{x.line.category}</div></td>
-                    <td className="num">{money(x.agreed, cur)}</td>
-                    <td className="num">{x.paid ? money(x.paid, cur) : ''}</td>
-                    <td className={`num${x.balance > 0 ? ' over' : ''}`}>{x.balance ? money(x.balance, cur) : ''}</td>
-                    <td className="row-actions">{x.balance > 0 && <Button size="sm" onClick={() => onPay(x.project, x.line)}>Record payment</Button>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-    </div>
-  )
-}
-
-/* One teammate's numbers: a year-by-year total (pending & paid, Alex's ask), then a few more
-   statistics worth having (average per job, average time to get paid, their biggest client, their
-   oldest unpaid job), then their usual job-by-job table. */
-function TeamMemberDetail({ person, log, onClose }) {
-  const byYear = entryTotalsByYear(log)
-  const allT = entryTotals(log)
-  const avgLag = avgDaysToPay(log)
-  const top = topClientOf(log)
-  const unpaid = log.filter((e) => e.status !== 'paid')
-  const oldest = unpaid.length ? unpaid.reduce((a, e) => (daysWaiting(e) > daysWaiting(a) ? e : a)) : null
-
-  return (
-    <section className="panel tw-detail">
-      <div className="panel-head"><h2>{person.name}</h2><button className="link small" onClick={onClose}>Close</button></div>
-      <div className="stats">
-        <Stat label="All-time total" value={money2(allT.total)} note={`${allT.jobs} job${allT.jobs === 1 ? '' : 's'}`} />
-        <Stat label="Average per job" value={allT.jobs ? money2(allT.total / allT.jobs) : '—'} />
-        <Stat label="Average time to pay" value={avgLag != null ? `${avgLag} day${avgLag === 1 ? '' : 's'}` : '—'} note={avgLag != null ? 'from job date to marked paid' : 'no paid job has a paid date yet'} />
-        <Stat label="Biggest client" value={top ? top.name : '—'} note={top ? money2(top.amount) : ''} />
-        {oldest && <Stat label="Oldest unpaid job" value={`${daysWaiting(oldest)} day${daysWaiting(oldest) === 1 ? '' : 's'}`} note={fmtDate(oldest.date)} />}
-      </div>
-      {byYear.length > 1 && (
-        <div className="table-wrap">
-          <table className="table fin-table">
-            <thead><tr><th>Year</th><th className="num">Jobs</th><th className="num">Pending</th><th className="num">Paid</th><th className="num">Total</th></tr></thead>
-            <tbody>
-              {byYear.map((y) => (
-                <tr key={y.year}>
-                  <td>{y.year}</td>
-                  <td className="num muted">{y.jobs}</td>
-                  <td className="num over">{y.pending ? money2(y.pending) : ''}</td>
-                  <td className="num">{y.paid ? money2(y.paid) : ''}</td>
-                  <td className="num">{money2(y.total)}</td>
-                </tr>
-              ))}
-              <tr className="fin-total">
-                <td>All years</td>
-                <td className="num muted">{allT.jobs}</td>
-                <td className="num over">{allT.pending ? money2(allT.pending) : ''}</td>
-                <td className="num">{allT.paid ? money2(allT.paid) : ''}</td>
-                <td className="num">{money2(allT.total)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
-      <WorkLogTable userId={person.id} editable showHero={false} compact />
-    </section>
-  )
-}
-
 
 /* Finance > Settings > Income & expense categories: two editable lists. */
 function FinanceCategories({ toast }) {
@@ -1032,164 +828,3 @@ function FinanceCategories({ toast }) {
 }
 
 
-/* The breakdown tables on the Overview: click a heading to sort (again for the other way), a
-   totals row at the bottom, each row's share of the year's income or expenses. The project table
-   also counts client budgets as income and what is still owed on budget lines; the client table
-   shows what is invoiced and not yet paid. */
-const BD_SORTS = [['income', 'Income'], ['expense', 'Expense'], ['profit', 'Profit'], ['margin', 'Margin'], ['share', 'Share'], ['outstanding', 'Outstanding'], ['owedAmt', 'Owed'], ['key', 'Name']]
-
-function BreakdownTable({ rows, label, cur, owed, expected, outstanding, sort, onSort }) {
-  const withDerived = rows.map((r) => {
-    const o = owed ? owed[r.key] || 0 : 0
-    const x = expected ? expected[r.key] || 0 : 0
-    const income = r.income + x
-    const profit = income - r.expense - o
-    const margin = income ? Math.round((profit / income) * 100) : null
-    return { ...r, income, toInvoice: x, owedAmt: o, profit, margin }
-  })
-  const totIncome = withDerived.reduce((a, r) => a + r.income, 0)
-  const totExpense = withDerived.reduce((a, r) => a + r.expense, 0)
-  const totOwed = withDerived.reduce((a, r) => a + r.owedAmt, 0)
-  const totProfit = totIncome - totExpense - totOwed
-  const totOut = withDerived.reduce((a, r) => a + (r.outstanding || 0), 0)
-  const share = (r) => (r.income ? (totIncome ? Math.round((r.income / totIncome) * 100) : 0) : totExpense ? Math.round((r.expense / totExpense) * 100) : 0)
-  const shareLabel = (r) => (r.income ? 'of income' : 'of expenses')
-  const sorted = [...withDerived].sort((a, b) => {
-    const va = sort.key === 'key' ? a.key : sort.key === 'share' ? share(a) : a[sort.key] ?? -Infinity
-    const vb = sort.key === 'key' ? b.key : sort.key === 'share' ? share(b) : b[sort.key] ?? -Infinity
-    if (sort.key === 'key') return sort.dir * String(va).localeCompare(String(vb), 'el')
-    return sort.dir * ((va === null ? -Infinity : va) - (vb === null ? -Infinity : vb))
-  })
-  const click = (key) => onSort(key)
-  // a render function, not an inner component, so the headings are not remounted on every sort
-  const th = (k, text, num = true) => (
-    <th key={k} className={`${num ? 'num' : ''} sortable ${sort.key === k ? 'on' : ''}`} onClick={() => click(k)} title="Sort by this column" aria-sort={sort.key === k ? (sort.dir > 0 ? 'ascending' : 'descending') : 'none'}>
-      {text}{sort.key === k ? <span className="sort-arrow">{sort.dir > 0 ? '↑' : '↓'}</span> : null}
-    </th>
-  )
-  const cols = { owed: !!owed, outstanding: !!outstanding }
-  return (
-    <div className="table-wrap">
-      <table className="table fin-table fin-breakdown">
-        <thead>
-          <tr>
-            {th('key', label, false)}
-            {th('income', 'Income')}
-            {cols.outstanding && th('outstanding', 'Outstanding')}
-            {th('expense', 'Expense')}
-            {cols.owed && th('owedAmt', 'Owed')}
-            {th('profit', 'Profit')}
-            {th('margin', 'Margin')}
-            {th('share', 'Share')}
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map((r) => (
-            <tr key={r.key}>
-              <td>{r.key}</td>
-              <td className="num">{r.income ? money(r.income, cur) : ''}{r.toInvoice ? <div className="muted small">{money(r.toInvoice, cur)} to invoice</div> : null}</td>
-              {cols.outstanding && <td className="num over">{r.outstanding ? money(r.outstanding, cur) : ''}</td>}
-              <td className="num">{r.expense ? money(r.expense, cur) : ''}</td>
-              {cols.owed && <td className="num over">{r.owedAmt ? money(r.owedAmt, cur) : ''}</td>}
-              <td className={`num ${r.profit < 0 ? 'over' : ''}`}>{money(r.profit, cur)}</td>
-              <td className="num muted">{r.margin != null ? `${r.margin}%` : ''}</td>
-              <td className="num muted" title={shareLabel(r)}>{r.income || r.expense ? `${share(r)}%` : ''}</td>
-            </tr>
-          ))}
-          {sorted.length > 1 && (
-            <tr className="fin-total">
-              <td>Total</td>
-              <td className="num">{money(totIncome, cur)}</td>
-              {cols.outstanding && <td className="num over">{totOut ? money(totOut, cur) : ''}</td>}
-              <td className="num">{money(totExpense, cur)}</td>
-              {cols.owed && <td className="num over">{totOwed ? money(totOwed, cur) : ''}</td>}
-              <td className={`num ${totProfit < 0 ? 'over' : ''}`}>{money(totProfit, cur)}</td>
-              <td className="num muted">{totIncome ? `${Math.round((totProfit / totIncome) * 100)}%` : ''}</td>
-              <td />
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-/* The year month by month: every amount in the month it is dated (an invoice, an expense, a
-   client budget still to invoice on the project's shoot day, a budget line still owed), so the
-   months match the bars at the top. Each month is one line with its totals; click it for the
-   projects behind it. Months run in calendar order; the Sort by orders the projects inside. */
-const COMPANY = 'Company (no project)'
-const monthLabel = (key) => new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, 1).toLocaleString('en-GB', { month: 'long', year: 'numeric' })
-
-function ByMonthTable({ entries, cur, sort, onSort }) {
-  const [open, setOpen] = useState([])
-  const toggle = (k) => setOpen((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]))
-  const finish = (r) => {
-    const profit = r.income - r.expense - r.owedAmt
-    return { ...r, profit, margin: r.income ? Math.round((profit / r.income) * 100) : null }
-  }
-  const byMonth = {}
-  entries.forEach((e) => {
-    const m = ym(e.date)
-    if (!m) return
-    const rows = (byMonth[m] = byMonth[m] || {})
-    const r = (rows[e.key] = rows[e.key] || { key: e.key, income: 0, expense: 0, owedAmt: 0 })
-    r[e.kind === 'income' ? 'income' : e.kind === 'owed' ? 'owedAmt' : 'expense'] += e.amount
-  })
-  const sum = (l) => finish({ income: l.reduce((a, r) => a + r.income, 0), expense: l.reduce((a, r) => a + r.expense, 0), owedAmt: l.reduce((a, r) => a + r.owedAmt, 0) })
-  const order = (a, b) => {
-    if (sort.key === 'key') return sort.dir * String(a.key).localeCompare(String(b.key), 'el')
-    const va = sort.key === 'share' ? a.income : a[sort.key] ?? null
-    const vb = sort.key === 'share' ? b.income : b[sort.key] ?? null
-    return sort.dir * ((va ?? -Infinity) - (vb ?? -Infinity))
-  }
-  const months = Object.keys(byMonth).sort().map((m) => {
-    const lines = Object.values(byMonth[m]).map(finish).sort(order)
-    return { key: m, lines, ...sum(lines) }
-  })
-  const total = sum(months.flatMap((m) => m.lines))
-  const share = (income) => (income && total.income ? `${Math.round((income / total.income) * 100)}%` : '')
-
-  const th = (k, text, num = true) => (
-    <th key={k} className={`${num ? 'num' : ''} sortable ${sort.key === k ? 'on' : ''}`} onClick={() => onSort(k)} title="Sort the projects inside each month by this column">
-      {text}{sort.key === k ? <span className="sort-arrow">{sort.dir > 0 ? '↑' : '↓'}</span> : null}
-    </th>
-  )
-  const cells = (r, withShare = true) => (
-    <>
-      <td className="num">{r.income ? money(r.income, cur) : ''}</td>
-      <td className="num">{r.expense ? money(r.expense, cur) : ''}</td>
-      <td className="num over">{r.owedAmt ? money(r.owedAmt, cur) : ''}</td>
-      <td className={`num ${r.profit < 0 ? 'over' : ''}`}>{money(r.profit, cur)}</td>
-      <td className="num muted">{r.margin != null ? `${r.margin}%` : ''}</td>
-      <td className="num muted">{withShare ? share(r.income) : ''}</td>
-    </>
-  )
-  const projectCount = (l) => { const n = l.filter((r) => r.key !== COMPANY).length; return n ? ` · ${n} project${n === 1 ? '' : 's'}` : '' }
-  if (!months.length) return <p className="muted small">Nothing booked in this year yet.</p>
-  return (
-    <div className="table-wrap">
-      <table className="table fin-table fin-breakdown fin-bymonth">
-        <thead>
-          <tr>{th('key', 'Month', false)}{th('income', 'Income')}{th('expense', 'Expense')}{th('owedAmt', 'Owed')}{th('profit', 'Profit')}{th('margin', 'Margin')}{th('share', 'Share')}</tr>
-        </thead>
-        {months.map((m) => {
-          const isOpen = open.includes(m.key)
-          return (
-            <tbody key={m.key}>
-              <tr className={`fin-month-head ${isOpen ? 'open' : ''}`} onClick={() => toggle(m.key)} title={isOpen ? 'Hide its projects' : 'Show its projects'}>
-                <td><span className="fin-chev" aria-hidden="true">{isOpen ? '▾' : '▸'}</span>{monthLabel(m.key)}<span className="muted small">{projectCount(m.lines)}</span></td>{cells(m)}
-              </tr>
-              {isOpen && m.lines.map((r) => <tr key={`${m.key}:${r.key}`} className="fin-month-line"><td>{r.key}</td>{cells(r)}</tr>)}
-            </tbody>
-          )
-        })}
-        {months.length > 1 && (
-          <tbody>
-            <tr className="fin-total"><td>Total</td>{cells(total, false)}</tr>
-          </tbody>
-        )}
-      </table>
-    </div>
-  )
-}
