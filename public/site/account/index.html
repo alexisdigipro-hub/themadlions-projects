@@ -571,7 +571,7 @@ footer a { color:var(--dim); }
       ['roartransfer', 'RoarTransfer', t.open + ' ' + t.onWeb, 'https://roartransfer.com/'],
       ['roardino', 'Roardino App', t.open + ' ' + t.onWeb, '../roardino/'],
       ['roardino-social', 'Roardino', t.open + ' ' + t.onWeb, 'https://roardino.com/'],
-      ['roarref', 'RoarRef', t.open + ' ' + t.onWeb, '../lab/roarref/app/'],
+      ['roarref', 'RoarRef', t.open + ' ' + t.onWeb, '../roarref/'],
       ['roarmask', 'RoarMask', t.open + ' ' + t.onWeb, '../lab/roarmask/', '../lab/roarmask/icon.png'],
     ]
     $('apps').innerHTML = APPS.map(([k, n, line, href, ico]) => `<a class="tile app" href="${href}" ${href.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}><img src="${ico || `../lab/icons/${k}.png`}" alt=""><span class="t"><b>${n}</b><span>${esc(line)}</span></span></a>`).join('')
