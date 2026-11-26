@@ -11,8 +11,7 @@ import { isBirthday } from '../lib/profileExtras.js'
 import { joinName, nameParts } from '../lib/projectName.js'
 import { duplicateProject } from '../lib/duplicate.js'
 import { syncShootDay } from '../lib/shootDays.js'
-import { glassLens, slideOut, stillMotion } from '../lib/glide.js'
-import { useArrowTabs } from '../lib/arrowTabs.js'
+import { slideOut, stillMotion } from '../lib/glide.js'
 import { projectTasksFor, pushProjectTasks } from '../lib/autoTasks.js'
 import { lineTotal } from '../lib/budget.js'
 import { sendAutoNotice } from '../components/Notices.jsx'
@@ -49,6 +48,47 @@ const TOOL_ICONS = {
   copy: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" /><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8" /></svg>,
   trash: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13" /></svg>,
 }
+
+/* A pill that opens a short menu (Alex, 26 Nov: "the categories are too many, gather them, a submenu"):
+   the choice and its count on the pill, the list under it, Escape or a click outside closes it. */
+function PillMenu({ label, count, items, value, onPick, className = '' }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  useEffect(() => {
+    if (!open) return
+    const out = (e) => { if (!ref.current?.contains(e.target)) setOpen(false) }
+    const key = (e) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('pointerdown', out)
+    document.addEventListener('keydown', key)
+    return () => { document.removeEventListener('pointerdown', out); document.removeEventListener('keydown', key) }
+  }, [open])
+  return (
+    <div className={`pill-menu ${className}`} ref={ref}>
+      <button type="button" className={`chip pm-btn${open ? ' open' : ''}`} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <span>{label}</span>
+        {count != null && <small>{count}</small>}
+        <svg className="pm-caret" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </button>
+      {open && (
+        <div className="pm-list" role="menu">
+          {items.map(([k, l, n]) => (
+            <button key={k} type="button" role="menuitemradio" aria-checked={value === k} className={value === k ? 'on' : ''} onClick={() => { onPick(k); setOpen(false) }}>
+              <span>{l}</span>
+              {n != null && <small>{n}</small>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const VIEW_I = {
+  grid: <svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><g fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="3" width="5.5" height="5.5" rx="1.5" /><rect x="11.5" y="3" width="5.5" height="5.5" rx="1.5" /><rect x="3" y="11.5" width="5.5" height="5.5" rx="1.5" /><rect x="11.5" y="11.5" width="5.5" height="5.5" rx="1.5" /></g></svg>,
+  list: <svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><g fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M7 5h10M7 10h10M7 15h10" /><circle cx="3.6" cy="5" r=".9" fill="currentColor" /><circle cx="3.6" cy="10" r=".9" fill="currentColor" /><circle cx="3.6" cy="15" r=".9" fill="currentColor" /></g></svg>,
+}
+// the year a project belongs to: its shoot day, else when it was made
+const yearOf = (p) => String(p.startDate || p.endDate || p.createdAt || '').slice(0, 4)
 
 function CardName({ p }) {
   const { artist, shortTitle } = nameParts(p)
@@ -189,6 +229,11 @@ export default function Dashboard() {
   // Sort by Date or Name (Alex), remembered per device like the other view choices.
   const [sort, setSort] = useState(() => { try { return localStorage.getItem('tml_home_sort') || 'date' } catch { return 'date' } })
   const pickSort = (v) => { setSort(v); try { localStorage.setItem('tml_home_sort', v) } catch { /* private window */ } }
+  // Cards or a list (Alex, 26 Nov), kept on this device
+  const [view, setView] = useState(() => { try { return localStorage.getItem('tml_home_view') || 'grid' } catch { return 'grid' } })
+  const pickView = (v) => { setView(v); try { localStorage.setItem('tml_home_view', v) } catch { /* private window */ } }
+  // Delivered by year (Alex, 26 Nov): all years in groups, or one year
+  const [year, setYear] = useState('all')
   const canEdit = can(user, 'projects', 'edit')
   // Sort by is on the computer only (Alex, 8 Oct, took it off the phone): a phone always
   // shows Date, whatever the computer last picked.
@@ -234,37 +279,24 @@ export default function Dashboard() {
   const active = projects.filter((p) => p.status !== 'Delivered')
   const closed = projects.filter((p) => p.status === 'Delivered')
   // while searching, the live ones first and then the delivered ones, greyed as on their own chip
-  const shown = searching ? [...active, ...closed] : showDelivered ? closed : active
+  const shown = searching ? [...active, ...closed] : showDelivered ? closed.filter((p) => year === 'all' || yearOf(p) === year) : active
 
-  // A tap on another category (or Delivered) works like TML Chat's folders (Alex, 9 Oct): a small glass
-  // lens lifts off the chip that was chosen and slides to the new one, and the projects slide over, left
-  // or right by where the new chip sits. The old grid is copied into a frame that slides out.
-  const chipsRef = useRef(null)
-  // ← and → on a computer step through All, Delivered and the categories, as on the other pages (Alex, 26 Nov)
-  useArrowTabs(chipsRef)
+  // A new category or Active / Delivered slides the projects over, left or right by where it sits.
   const slideRef = useRef(null)
   const [slide, setSlide] = useState('')
   const slideTimer = useRef(0)
   useEffect(() => () => clearTimeout(slideTimer.current), [])
-  const glassTo = (from, to, hide) => glassLens(chipsRef.current, from, to, { hide })
   const slideTo = (dir) => {
     if (!slideOut(slideRef.current, dir)) return
     setSlide(dir)
     clearTimeout(slideTimer.current)
     slideTimer.current = setTimeout(() => setSlide(''), 360)
   }
-  const chipOf = (key) => chipsRef.current?.querySelector(`[data-chip="${CSS.escape(key)}"]`)
-  // two choices side by side (Alex, 26 Nov): Active or Delivered, and a category (All or one) that holds for both
   const current = filter
+  const CAT_ORDER = ['All', ...CATEGORIES]
   const pickTab = (c) => {
     if (c === current) return
-    if (!stillMotion()) {
-      const order = [...(chipsRef.current?.querySelectorAll('[data-chip]') || [])]
-      const from = chipOf(current)
-      const to = chipOf(c)
-      slideTo(order.indexOf(to) > order.indexOf(from) ? 'next' : 'prev')
-      glassTo(from, to, 'cat')
-    }
+    if (!stillMotion()) slideTo(CAT_ORDER.indexOf(c) > CAT_ORDER.indexOf(current) ? 'next' : 'prev')
     setFilter(c)
   }
   const pickStatus = (delivered) => {
@@ -272,19 +304,16 @@ export default function Dashboard() {
     if (!stillMotion()) slideTo(delivered ? 'next' : 'prev')
     setShowDelivered(delivered)
   }
-  const liveAll = state.projects.filter((p) => (showDelivered ? p.status === 'Delivered' : p.status !== 'Delivered'))
-  const chipFor = (c) => {
-    const n = liveAll.filter((p) => c === 'All' || p.category === c).length
-    // On a phone only the categories that hold something (Alex, 8 Oct); the one picked stays
-    if (mobile && !n && c !== 'All' && c !== current) return null
-    return (
-      <button key={c} data-chip={c} className={`chip ${current === c ? 'on' : ''}`} onClick={() => pickTab(c)}>
-        {c}
-        {/* an empty category shows no 0 on a computer (Alex, 11 Oct: tidier row) */}
-        {(n > 0 || mobile) && <small>{n}</small>}
-      </button>
-    )
+  const pickYear = (y) => {
+    if (y === year) return
+    if (!stillMotion()) slideTo(y === 'all' || (year !== 'all' && y < year) ? 'next' : 'prev')
+    setYear(y)
   }
+  const liveAll = state.projects.filter((p) => (showDelivered ? p.status === 'Delivered' : p.status !== 'Delivered'))
+  const catCount = (c) => liveAll.filter((p) => c === 'All' || p.category === c).length
+  // only the categories that hold something, and the one picked (Alex, 26 Nov: fewer)
+  const catItems = CAT_ORDER.filter((c) => c === 'All' || c === current || catCount(c) > 0).map((c) => [c, c === 'All' ? 'All categories' : c, catCount(c)])
+  const deliveredYears = [...new Set(state.projects.filter((p) => p.status === 'Delivered' && (current === 'All' || p.category === current)).map(yearOf).filter(Boolean))].sort().reverse()
 
   const [duping, setDuping] = useState('')
   const duplicate = async (p) => {
@@ -373,6 +402,27 @@ export default function Dashboard() {
     </Link>
   )
 
+  // a project as one line of the list (Alex, 26 Nov): picture, name, code and client, category, shoot day, progress
+  const row = (p, grey) => (
+    <Link key={p.id} to={`/p/${p.id}`} className={`project-row ${grey ? 'grey' : ''}`} style={{ '--pc': p.color }}>
+      <span className="pr-thumb">{p.coverThumb ? <img src={p.coverThumb} alt="" /> : <span className="slate-bar" />}</span>
+      <span className="pr-main">
+        <strong title={p.title}>{p.title}</strong>
+        <span className="muted small">{[p.code, p.client].filter(Boolean).join(' · ')}</span>
+      </span>
+      <span className="pr-cat">{p.category}</span>
+      <span className="pr-date muted small">{p.startDate ? fmtDate(p.startDate) : ''}</span>
+      <span className="pr-prog" title={`${projectProgress(p, state.settings).pct}% done`}><span style={{ width: `${projectProgress(p, state.settings).pct}%` }} /></span>
+    </Link>
+  )
+  const listOf = (list, grey) => (view === 'list'
+    ? <div className="project-list">{list.map((p) => row(p, grey(p)))}</div>
+    : <div className="project-grid">{list.map((p) => card(p, grey(p)))}</div>)
+  const greyOf = (p) => (searching ? p.status === 'Delivered' : showDelivered)
+  const byYear = showDelivered && !searching && year === 'all'
+    ? [...new Set(shown.map(yearOf))].sort().reverse().map((y) => [y, shown.filter((p) => yearOf(p) === y)])
+    : null
+
   // Sort, Search and New project: on a computer they sit at the right of the team's tile (Alex, 11 Oct:
   // the Calendar's way, every control in the top row, the category pills get a line of their own)
   const actionsUp = !mobile && team.length > 0
@@ -387,6 +437,10 @@ export default function Dashboard() {
           </span>
         </span>
       )}
+      <span className="segmented small view-pick" title="View">
+        <button type="button" className={view === 'grid' ? 'on' : ''} onClick={() => pickView('grid')} aria-label="Cards" title="Cards">{VIEW_I.grid}</button>
+        <button type="button" className={view === 'list' ? 'on' : ''} onClick={() => pickView('list')} aria-label="List" title="List">{VIEW_I.list}</button>
+      </span>
       <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
       {canEdit && (
         <Act icon="plus" label="New project" main onClick={() => setDraft(freshProject())} />
@@ -409,10 +463,11 @@ export default function Dashboard() {
           </button>
         </div>
       )}
-      <div className="chips cat-chips" ref={chipsRef} data-glide="own">
-        {chipFor('All')}
-        {CATEGORIES.map(chipFor)}
-      </div>
+      {showDelivered && deliveredYears.length > 0 && (
+        <PillMenu className="year-menu" label={year === 'all' ? 'All years' : year} value={year} onPick={pickYear}
+          items={[['all', 'All years'], ...deliveredYears.map((y) => [y, y, state.projects.filter((p) => p.status === 'Delivered' && yearOf(p) === y && (current === 'All' || p.category === current)).length])]} />
+      )}
+      <PillMenu className="cat-menu" label={current === 'All' ? 'All categories' : current} count={catCount(current)} value={current} onPick={pickTab} items={catItems} />
     </>
   )
 
@@ -470,7 +525,7 @@ export default function Dashboard() {
       )}
 
       <div className="glide-box" ref={slideRef}>
-      <div key={current} className={`glide-in${slide ? ` in-${slide}` : ''}`}>
+      <div key={`${current}|${showDelivered}|${year}|${view}`} className={`glide-in${slide ? ` in-${slide}` : ''}`}>
       {shown.length === 0 ? (
         <Empty
           title={searching ? 'Nothing matches' : showDelivered ? 'No delivered projects here' : state.projects.length ? 'Nothing matches' : 'No projects yet'}
@@ -479,7 +534,14 @@ export default function Dashboard() {
           {searching ? 'No project, live or delivered, has that in its name, client, code or category.' : showDelivered ? 'A project moves here when its status is set to Delivered.' : state.projects.length ? 'Try another category or search term.' : 'A project holds the script, breakdown, schedule, call sheets, locations and people.'}
         </Empty>
       ) : (
-        <div className="project-grid">{shown.map((p) => card(p, searching ? p.status === 'Delivered' : showDelivered))}</div>
+        byYear
+          ? byYear.map(([y, list]) => (
+            <section key={y} className="year-group">
+              <h3 className="year-head">{y || 'No date'} <small>{list.length}</small></h3>
+              {listOf(list, greyOf)}
+            </section>
+          ))
+          : listOf(shown, greyOf)
       )}
       </div>
       </div>

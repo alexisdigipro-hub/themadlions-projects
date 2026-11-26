@@ -710,12 +710,13 @@ function TeamWork() {
   // group their money counted in the totals above with no card to open below, and the
   // figures on this page did not add up.
   const people = useMemo(() => {
-    const team = state.users.filter((u) => u.active !== false && u.role !== 'admin')
+    const team = state.users.filter((u) => u.active !== false && u.role !== 'admin' && !u.permissions?.salaried)
     const out = [...team]
     const seen = new Set(team.map((u) => u.id))
     for (const e of log) {
       const id = e.userId || ''
       if (seen.has(id)) continue
+      if (state.users.find((u) => u.id === id)?.permissions?.salaried) continue
       seen.add(id)
       const known = state.users.find((u) => u.id === id)
       out.push({ id, name: known?.name || (id ? 'Former teammate' : 'Not assigned'), gone: true })

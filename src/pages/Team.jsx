@@ -268,6 +268,10 @@ export default function Team({ embedded = false }) {
                   <Input type="date" value={draft.permissions?.accessUntil || ''} onChange={(e) => setDraft({ ...draft, permissions: { ...draft.permissions, accessUntil: e.target.value } })} />
                 </Field>
 
+                <Field label="Paid" hint="Monthly salary: no My Finance for them, and no card in Finance > Team.">
+                  <Select value={draft.permissions?.salaried ? 'monthly' : 'job'} onChange={(e) => setDraft({ ...draft, permissions: { ...draft.permissions, salaried: e.target.value === 'monthly' } })} options={[['job', 'Per job (My Finance)'], ['monthly', 'Monthly salary']]} />
+                </Field>
+
                 <h3 className="team-sec">What they can do</h3>
                 <div className="field">
                   <span className="field-label">Start from a role</span>

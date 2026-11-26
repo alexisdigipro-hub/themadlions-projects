@@ -139,7 +139,7 @@ export default function Layout() {
     // since 27 Oct a tab of Share (Alex); the side menu keeps it only for someone with the Ordino permission but not Share
     { to: '/roardino', label: 'Roardino', show: remote && can(user, 'roardino') && !can(user, 'share'), icon: 'callsheets' },
     // RoarList, the shot lists (Alex, 27 Oct), is a tab of Office since 29 Oct, after Notes
-    { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
+    { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin' && !user?.permissions?.salaried, icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)
     // Outbox, once Share (Alex, 29 Oct): what goes out to clients; the address stays /share
