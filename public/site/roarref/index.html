@@ -957,6 +957,19 @@ button svg,.ico svg,.pill svg,.round svg,svg.pfi{stroke-linecap:round;stroke-lin
 @media (max-width:820px) and (max-height:700px){.gl-sub{display:none}.gl-shot{max-height:16vh}}
 @media (max-width:820px) and (max-height:600px){.gl-pts{display:none}.gl-shot{max-height:15vh}.gland h1{font-size:19px}.gl-mark{font-size:22px}}
 @media (min-width:821px) and (max-height:720px){.gl-pts li:nth-child(n+4){display:none}.gl-shot{max-height:30vh}}
+/* a computer's sheet in a frame of the panels' own curve (Alex, 26 Nov: "the curve where we work and the side panels' curve are not the
+   same; a frame with that curve, a couple of pixels in, and inside the sheet square as it should be") */
+.sframe{display:contents}
+@media (min-width:821px){
+  .sframe{display:block;padding:5px;border-radius:18px;background:var(--panel);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.45);line-height:0}
+  .sframe > .stage{border-radius:3px!important;box-shadow:0 0 0 1px rgba(255,255,255,.06)!important;line-height:normal}
+  /* Home's head on a computer: the logo at the left, the toolbar closer under it */
+  .phead .phl{display:none}
+  .phead{grid-template-columns:auto 1fr auto!important}
+  .phead .mark{justify-self:start!important;grid-column:1}
+  .phead .phr{grid-column:3}
+  .spage .pwrap{padding-top:16px!important}
+}
 /* a field never makes the iPhone zoom in (Alex, 24 Nov: "I tap the search and it stays zoomed"): iOS zooms on a field whose
    letters are under 16px, so on a phone every field writes at 16px */
 @media (max-width:820px){input,select,textarea,.field,.psearch input{font-size:16px!important}}
@@ -996,7 +1009,7 @@ img{max-width:100%}
   </div>
   <div class="work" id="work">
     <div class="stagewrap" id="wrap">
-      <div class="stage" id="stage"></div>
+      <div class="sframe"><div class="stage" id="stage"></div></div>
     </div>
     <nav class="rail" id="rail" aria-label="Tools"></nav>
     <aside class="side" id="side" aria-label="Settings"></aside>
@@ -1187,7 +1200,8 @@ $('export').onclick = exportPng;
 
 /* ---------- sheet ---------- */
 function fit(){
-  const W = wrap.clientWidth, H = isPhone() ? Math.min(W*BH/BW, innerHeight*0.4) : wrap.clientHeight;
+  const fr = isPhone() ? 0 : 12; // a computer's sheet sits in a rounded frame of the panels' curve, 5px in and a 1px rim each side
+  const W = wrap.clientWidth - fr, H = isPhone() ? Math.min(W*BH/BW, innerHeight*0.4) : wrap.clientHeight - fr;
   const w = Math.min(W, H*BW/BH);
   stage.style.width = w+'px'; stage.style.height = (w*BH/BW)+'px';
   stage.style.setProperty('--k', w/BW);
@@ -3491,6 +3505,17 @@ if(!CALM){
     if(frameKey !== null && frameKey !== k){ stage.classList.remove('gl-frames'); void stage.offsetWidth; stage.classList.add('gl-frames'); clearTimeout(stage._gf); stage._gf = setTimeout(() => stage.classList.remove('gl-frames'), 900); }
     frameKey = k; }catch{} };
 }
+
+/* the arrow keys up and down walk the tabs (Pool, Layout, Look, Frame, Edit, Face, Body on a computer; the five tabs on a phone)
+   when no photo is picked; with a photo picked they still move the photo (Alex, 26 Nov) */
+document.addEventListener('keydown', e => {
+  if(e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  if(e.metaKey || e.ctrlKey || e.altKey || (e.target.closest && e.target.closest('input, select, textarea, [contenteditable]'))) return;
+  if(document.querySelector('.spage, .modal, .lq, .gd, .poolview, .pmenu') || (sel >= 0 && photos[sel]) || selCover >= 0 || !me) return;
+  e.preventDefault(); const d = e.key === 'ArrowDown' ? 1 : -1;
+  if(isPhone()){ const T = ['pool', 'layout', 'look', 'photo', 'edit'], j = T.indexOf(mTab) + d; if(j < 0 || j >= T.length) return; mTab = T[j]; placeControls(); return; }
+  const K = RAIL.map(r => r[0]), j = K.indexOf(railTab) + d; if(j < 0 || j >= K.length) return;
+  railTab = K[j]; try{ localStorage.setItem('roarref-rail', railTab); }catch{} placeControls(); });
 let pushBack = false; // Home comes back in from the left, as an iPhone's previous page
 function goHome(){ if(document.querySelector('.spage')) return; pushBack = isPhone(); const f = homeFolder(); homeAt(f ? f.id : '');
   if(history.state && history.state.rr === 'edit'){ history.back(); return; } // the popstate below opens Home
