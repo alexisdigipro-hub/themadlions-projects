@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
+import { ACT_ICON, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { uid, useStore } from '../../lib/store.jsx'
 import { coordsFromText } from '../../lib/sun.js'
@@ -250,7 +250,7 @@ export default function Locations({ hideEmpty = false, startSignal = 0, libraryS
               <span className="ab-cell" onClick={(e) => e.stopPropagation()}>{l.contact}{l.phone && <> {l.contact ? '· ' : ''}<a href={`tel:${l.phone}`}>{l.phone}</a></>}</span>
               <span className="ab-acts" onClick={(e) => e.stopPropagation()}>
                 {l.address && <a className="btn btn-default btn-sm" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.address)}`} target="_blank" rel="noreferrer">Map</a>}
-                {editable && <button type="button" className="btn btn-default btn-sm" onClick={() => setDraft({ ...l })}>Edit</button>}
+                {editable && <button type="button" className="row-ico" onClick={() => setDraft({ ...l })} title="Edit" aria-label="Edit">{ACT_ICON.edit}</button>}
               </span>
             </article>
           ))}

@@ -8,7 +8,7 @@ export const stillMotion = () => typeof window.matchMedia === 'function' && wind
 // A small glass lens lifts off `from`, slides to `to` and melts into it. `track` (the row holding both,
 // position: relative) carries data-lens=`hide` while the lens travels, so the CSS can keep the newly
 // chosen item clear until the lens arrives.
-export function glassLens(track, from, to, { hide = 'on', scale = 1.12 } = {}) {
+export function glassLens(track, from, to, { hide = 'on' } = {}) {
   if (!track || !from || !to || from === to || typeof track.animate !== 'function') return
   track.querySelectorAll(':scope > .glass-lens').forEach((n) => n.remove())
   const lens = document.createElement('span')
@@ -16,23 +16,33 @@ export function glassLens(track, from, to, { hide = 'on', scale = 1.12 } = {}) {
   lens.setAttribute('aria-hidden', 'true')
   if (getComputedStyle(track).position === 'static') {
     track.style.position = 'relative'
-    setTimeout(() => { if (!track.querySelector(':scope > .glass-lens')) track.style.position = '' }, 600)
+    setTimeout(() => { if (!track.querySelector(':scope > .glass-lens')) track.style.position = '' }, 700)
   }
   const radius = (b) => { const r = getComputedStyle(b).borderTopLeftRadius; return parseFloat(r) > 0 ? r : '10px' }
   lens.style.borderRadius = radius(to)
   track.appendChild(lens)
   track.dataset.lens = hide
   track.dataset.lensed = '1'
-  const at = (b) => `translate(${b.offsetLeft}px, ${b.offsetTop}px)`
-  const box = (b) => ({ width: `${b.offsetWidth}px`, height: `${b.offsetHeight}px` })
+  /* GLASS TRAVEL, RoarMe's signature motion (Alex, 26 Nov: "the buttons as RoarMe's menu, with its glass and its
+     animation"), in two beats: 150 ms on cubic-bezier(.3, .7, .4, 1) the lens lifts into clearer glass (scale 1.03 by
+     1.16), stretches from the old choice across to the new one and its colours split at the rim (red left, blue right,
+     green above, yellow below); then 300 ms on cubic-bezier(.25, 1.45, .45, 1) it draws in onto the new choice and
+     settles with one small overshoot, the split fading. Only transform, width, height and box-shadow move. */
+  const x = (b) => b.offsetLeft, y = (b) => b.offsetTop
+  const left = Math.min(x(from), x(to)), right = Math.max(x(from) + from.offsetWidth, x(to) + to.offsetWidth)
+  const top = Math.min(y(from), y(to))
+  const base = '0 6px 18px rgba(0, 0, 0, .22)'
+  const split = '-2px 0 0 rgba(255, 70, 70, .38), 2px 0 0 rgba(70, 130, 255, .38), 0 -1px 0 rgba(80, 255, 140, .26), 0 1.5px 0 rgba(255, 220, 70, .3), 0 10px 26px rgba(0, 0, 0, .26)'
   const run = lens.animate([
-    { transform: `${at(from)} scale(1)`, ...box(from), opacity: 0 },
-    { offset: 0.15, transform: `${at(from)} scale(${scale})`, ...box(from), opacity: 1 },
-    { offset: 0.75, transform: `${at(to)} scale(${scale})`, ...box(to), opacity: 1 },
-    { transform: `${at(to)} scale(1)`, ...box(to), opacity: 0 },
-  ], { duration: 560, easing: 'cubic-bezier(.3, .7, .2, 1)', fill: 'both' })
-  setTimeout(() => { delete track.dataset.lens }, 380)
-  run.onfinish = () => lens.remove()
+    { transform: `translate(${x(from)}px, ${y(from)}px) scale(1, 1)`, width: `${from.offsetWidth}px`, height: `${from.offsetHeight}px`, boxShadow: base, easing: 'cubic-bezier(.3, .7, .4, 1)' },
+    { offset: 1 / 3, transform: `translate(${left}px, ${top}px) scale(1.03, 1.16)`, width: `${right - left}px`, height: `${to.offsetHeight}px`, boxShadow: split, easing: 'cubic-bezier(.25, 1.45, .45, 1)' },
+    { transform: `translate(${x(to)}px, ${y(to)}px) scale(1, 1)`, width: `${to.offsetWidth}px`, height: `${to.offsetHeight}px`, boxShadow: base },
+  ], { duration: 450, fill: 'both' })
+  setTimeout(() => { delete track.dataset.lens }, 440)
+  run.onfinish = () => {
+    const out = lens.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: 'both' })
+    out.onfinish = () => lens.remove()
+  }
 }
 
 // The page under the row slides over: `box` (.glide-box) holds the current page in a .glide-in; a copy of
@@ -94,7 +104,9 @@ export function useGlide() {
 // Every row of tabs, chips or a segmented switch in the app (Alex, 9 Oct: "wherever there are tabs like
 // these"): a click on another item sends the glass lens from the chosen one to it. Rows where more than
 // one item can be on (data-glide="off"), or that run their own lens (data-glide="own"), are left alone.
-const ROWS = '.tabs, .segmented, .chips, .cal-legend' // the Calendar's type pills too (Alex, 11 Oct)
+// the Calendar's type pills too (Alex, 11 Oct); every other row of tabs or a switch in the hub (Alex, 26 Nov: "these buttons
+// everywhere, with RoarMe's glass and motion")
+const ROWS = '.tabs, .segmented, .chips, .cal-legend, .db-tabs, .est-seg, .est-tabs, .share-tabs, .pseg, .pjh-seg, .fin-bd-tabs, .ab-menu-pills, .ab-gap-tabs, .ptabs-chips, .rem-pills'
 export function installGlassTabs() {
   if (typeof document === 'undefined' || installGlassTabs.done) return
   installGlassTabs.done = true
@@ -105,6 +117,6 @@ export function installGlassTabs() {
     if (!row || !row.matches(ROWS) || row.closest('[data-glide]') || item.disabled || item.hasAttribute('data-noglide')) return
     const on = [...row.children].filter((n) => n.classList.contains('on') || n.classList.contains('active'))
     if (on.length !== 1 || on[0] === item) return
-    glassLens(row, on[0], item, { scale: row.matches('.tabs') ? 1.04 : 1.08 })
+    glassLens(row, on[0], item)
   }, true)
 }
