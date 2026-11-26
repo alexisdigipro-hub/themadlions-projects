@@ -14,7 +14,7 @@ import { toISODate } from './dates.js'
 export const STORAGE_KEY = 'tml_projects_v1'
 export const SESSION_KEY = 'tml_session_v1'
 
-export const CATEGORIES = ['Music Video', 'Event', 'Editing', 'Ad', 'Visuals', 'IV', 'Corporate', 'Other']
+export const CATEGORIES = ['Music Video', 'Event', 'Editing', 'Ad', 'Visuals', 'IV', 'Other']
 export const STATUSES = ['Development', 'Pre-production', 'Production', 'Post-production', 'Delivered', 'On hold']
 
 /* The permission modules, grouped the way the app is laid out today (Alex, 10 Oct: "we have changed
@@ -251,7 +251,7 @@ const foldVendor = (l) => {
   const same = d.toLowerCase() === v.toLowerCase() || d.toLowerCase().endsWith(`| ${v.toLowerCase()}`)
   return { ...l, description: !d ? v : same ? d : `${d} | ${v}`, vendor: '' }
 }
-const OLD_CATEGORIES = { Events: 'Event', 'Feature Film': 'Visuals', Advertise: 'Ad' }
+const OLD_CATEGORIES = { Events: 'Event', 'Feature Film': 'Visuals', Advertise: 'Ad', Corporate: 'Other' }
 export function migrateProject(p) {
   // Vendor / payee left the budget line (Alex, 26 Nov): an outside line's vendor joins its description after " | "
   if (p.budget?.lines?.some((l) => l.vendor && !l.memberId && !l.contactId && !l.locationId)) p = { ...p, budget: { ...p.budget, lines: p.budget.lines.map(foldVendor) } }

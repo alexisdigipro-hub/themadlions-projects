@@ -8983,3 +8983,7 @@ html[data-theme][data-theme] body .modal .modal-body .field:not(:has(> .input, .
 }
 html[data-theme][data-theme] body .modal .modal-body .pform-colours { gap: 6px; min-height: 0; flex-wrap: nowrap; }
 html[data-theme][data-theme] body .modal .modal-body .pform-colours .swatch { width: 20px; height: 20px; flex: none; }
+
+/* The categories in capitals (Alex, 26 Nov: "all the categories in capitals"): Home's row of categories and the label on
+   each project card */
+html:root[data-theme][data-theme] body .chips.cat-chips > button.chip, html[data-theme] body .project-cat { text-transform: uppercase !important; letter-spacing: .05em; }
