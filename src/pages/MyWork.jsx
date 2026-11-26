@@ -7,6 +7,7 @@ export default function MyWork() {
   const { state } = useStore()
   const user = useCurrentUser()
   if (user?.role === 'admin') return <Navigate to="/finance" replace />
+  if (user?.permissions?.salaried) return <Navigate to="/" replace />
   const mine = (state.worklog || []).filter((e) => e.userId === user?.id)
   const t = entryTotals(mine)
   return (
