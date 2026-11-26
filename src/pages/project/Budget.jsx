@@ -1,3 +1,4 @@
+import { ensureMemberInProject, ensureTeamInLibrary } from '../../lib/teamCrew.js'
 import { useEffect, useMemo, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
@@ -251,6 +252,8 @@ function BudgetPage() {
       else p.budget.lines.push(line)
       p.updatedAt = new Date().toISOString()
       syncLineWorklog(s, p, line)
+      // a teammate paid here joins the project's crew and the company library (Alex, 26 Nov)
+      if (who && !line.reimburse) { ensureTeamInLibrary(s); ensureMemberInProject(s, p, s.users.find((u) => u.id === who.id) || who, line.category) }
       return s
     })
     setDraft(null)

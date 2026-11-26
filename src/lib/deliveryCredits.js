@@ -60,7 +60,10 @@ export function creditsFromProject(project, company = '', { users = [], settings
     if (l.contactId) linked.add(l.contactId)
     add(role, name, lead(role) ?? rankOf(l.category, i))
   })
-  people.filter((c) => c.kind === 'crew' && c.dept !== 'Client' && !linked.has(c.id)).forEach((c, i) => {
+  // a teammate in the crew who is also paid on the Budget is credited once, from the Budget (Alex, 26 Nov: members now join
+  // the crew by themselves)
+  const paidMembers = new Set((project.budget?.lines || []).filter(credited).map((l) => l.memberId).filter(Boolean))
+  people.filter((c) => c.kind === 'crew' && c.dept !== 'Client' && !linked.has(c.id) && !(c.memberId && paidMembers.has(c.memberId))).forEach((c, i) => {
     const role = c.role || c.dept
     const rank = lead(role) ?? 1e6 + (DEPT_ORDER.indexOf(c.dept) < 0 ? DEPT_ORDER.length : DEPT_ORDER.indexOf(c.dept)) * 1000 + i
     add(role, c.name, rank)
