@@ -113,6 +113,12 @@ function FinancePage({ start }) {
   // VAT from the real transactions of the year
   const S = summarize(fin.transactions, { year: allTime ? null : year, projects: state.projects, fiscalStart })
   const sumOf = (l, f = (t) => Number(t.net || 0)) => l.reduce((a, t) => a + f(t), 0)
+  /* A teammate who marked their fee paid in their own My Finance: the budget shows it settled ("marked by them"),
+     so Finance does too, until the company records a payment that takes over (Alex, 26 Nov, Άγγελος). */
+  const selfPaidIds = new Set((state.worklog || []).filter((e) => e.budgetLineId && e.status === 'paid').map((e) => e.budgetLineId))
+  const selfPaid = (l) => !l.payments?.length && !!l.memberId && selfPaidIds.has(l.id)
+  const paidOf = (l) => (selfPaid(l) ? lineEstimate(l) : linePaid(l))
+  const owedOf = (l) => (selfPaid(l) ? 0 : lineBalance(l))
 
   /* Each project's money, the one source for Overview, Projects and People. Fee: the project's budget
      (what the client pays) or what was invoiced, whichever is more. Collected: income marked paid.
@@ -128,8 +134,8 @@ function FinancePage({ start }) {
     // a budget line counts what was agreed (or paid, if more); an expense not tied to a line counts on its own
     const lines = (p.budget?.lines || []).filter((l) => !l.txId && l.category !== 'Contingency')
     const loose = exp.filter((t) => !t.budgetLineId)
-    const costs = lines.reduce((a, l) => a + Math.max(lineEstimate(l), linePaid(l)), 0) + sumOf(loose)
-    const toPay = lines.reduce((a, l) => a + lineBalance(l), 0) + sumOf(loose.filter((t) => t.status !== 'paid'))
+    const costs = lines.reduce((a, l) => a + Math.max(lineEstimate(l), paidOf(l)), 0) + sumOf(loose)
+    const toPay = lines.reduce((a, l) => a + owedOf(l), 0) + sumOf(loose.filter((t) => t.status !== 'paid'))
     const paidOut = costs - toPay
     return { p, date: projectWorkDate(p) || p.startDate || '', fee, collected, toCollect: Math.max(0, fee - collected), paidOut, toPay, costs, profit: fee - costs }
   })
@@ -173,7 +179,7 @@ function FinancePage({ start }) {
         const agreed = lineEstimate(l)
         if (!(agreed > 0)) continue
         const date = l.date || projectWorkDate(p) || ''
-        const row = { project: p, line: l, what: l.description || l.category, agreed, paid: linePaid(l), balance: lineBalance(l), date }
+        const row = { project: p, line: l, what: l.description || l.category, agreed, paid: paidOf(l), balance: owedOf(l), date, self: selfPaid(l) }
         if (l.memberId) {
           const u = state.users.find((x) => x.id === l.memberId)
           // an administrator is the company, not someone it pays (Alex, 26 Nov: "take me out, I am the company")
@@ -566,7 +572,7 @@ function FinancePage({ start }) {
                           <td className="small nowrap">{x.date ? fmtDate(x.date) : ''}</td>
                           <td>{x.what}{x.job && <div className="muted small">own job in My Finance</div>}</td>
                           <td className="num">{money(x.agreed, cur)}</td>
-                          <td className="num">{x.paid ? money(x.paid, cur) : ''}</td>
+                          <td className="num">{x.paid ? money(x.paid, cur) : ''}{x.self && <div className="muted small">marked by them</div>}</td>
                           <td className={`num${x.balance > 0 ? ' over' : ''}`}>{x.balance ? money(x.balance, cur) : ''}</td>
                           <td className="row-actions">{x.balance > 0 && (x.line ? <Button size="sm" onClick={() => setPay({ project: x.project, line: x.line })}>Record payment</Button> : <Button size="sm" onClick={() => markJobPaid(x.job)}>Mark paid</Button>)}</td>
                         </tr>
