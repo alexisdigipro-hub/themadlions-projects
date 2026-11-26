@@ -6,6 +6,7 @@ import { NoticePopup } from './Notices.jsx'
 import Island from './Island.jsx'
 import { useToast } from './ui.jsx'
 import { backupDue, pcloudBackup } from '../lib/pcloud.js'
+import { syncTeamCrew } from '../lib/teamCrew.js'
 import { remote } from '../lib/supabase.js'
 import { listenSwipes, swipeTabs } from '../lib/swipeTabs.js'
 import { applyTeamLook, localLook } from '../lib/teamLook.js'
@@ -42,6 +43,15 @@ export default function Layout() {
      to write, so there is no new table and no SQL to run. Once per half hour at most, never
      while viewing as someone else, and never from a stale render. */
   const stamped = useRef(false)
+  /* The team in the crew (Alex, 26 Nov): an administrator opening the hub puts every member into Database > Crew and
+     every member paid on a budget line into that project's crew, once per visit, after it has settled (lib/teamCrew.js) */
+  const teamSynced = useRef(false)
+  useEffect(() => {
+    if (teamSynced.current || viewAs || user?.role !== 'admin' || !state.users.length || !state.projects.length) return
+    teamSynced.current = true
+    setTimeout(() => update((s) => { syncTeamCrew(s); return s }), 4000)
+  }, [user?.role, viewAs, state.users.length, state.projects.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
   /* Settings > Data > Backup to pCloud > Every week: an administrator opening the app takes it when
      the last one is a week old, quietly, once per visit; a failure waits for the next visit. */
   const backedUp = useRef(false)
