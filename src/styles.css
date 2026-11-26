@@ -8705,7 +8705,7 @@ html[data-theme][data-theme] body .content :is(p, .notice, .hint, .muted, small,
    from the grid's edges (transform-origin set per day), waits a beat so a passing mouse does not set it off */
 @media (min-width: 821px) and (hover: hover) {
   html[data-theme] body .calendar .cal-grid.zoomy .cal-cell { position: relative; transition: transform .26s cubic-bezier(.25, 1.35, .45, 1), box-shadow .26s ease; }
-  html[data-theme] body .calendar .cal-grid.zoomy .cal-cell:hover { transform: scale(2); z-index: 40; transition-delay: .12s; background: var(--panel-solid, #1b1d24); box-shadow: 0 26px 60px rgba(0, 0, 0, .55), inset 0 0 0 1px color-mix(in srgb, var(--text, #fff) 16%, transparent); }
+  html[data-theme] body .calendar .cal-grid.zoomy .cal-cell:hover { transform: scale(1.5); z-index: 40; transition-delay: .12s; background: var(--panel-solid, #1b1d24); box-shadow: 0 26px 60px rgba(0, 0, 0, .55), inset 0 0 0 1px color-mix(in srgb, var(--text, #fff) 16%, transparent); }
   html[data-theme='light'] body .calendar .cal-grid.zoomy .cal-cell:hover { background: #fff; box-shadow: 0 26px 60px rgba(0, 0, 0, .18), inset 0 0 0 1px rgba(0, 0, 0, .08); }
   html[data-theme] body .calendar .cal-grid.zoomy .cal-cell.dim:hover { opacity: 1; }
   html[data-theme] body .calendar .cal-zoom-btn { flex: none; width: 38px; height: 38px; padding: 0; display: inline-grid; place-items: center; border-radius: 50%; cursor: pointer; color: var(--muted); border: 1px solid color-mix(in srgb, var(--text, #fff) 12%, transparent); background: color-mix(in srgb, var(--text, #fff) 5%, transparent); transition: transform .15s cubic-bezier(.3, .7, .4, 1), background .15s, color .15s; }
@@ -8738,3 +8738,59 @@ html[data-theme][data-theme] body .home-status button small { margin-left: 5px; 
 }
 /* Home's "Show all N" over the team's faces: a small glass pill, not a word */
 html[data-theme][data-theme] body .team-strip-more { text-decoration: none; padding: 4px 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text, #fff) 14%, transparent); background: color-mix(in srgb, var(--text, #fff) 7%, transparent); color: var(--text); font-weight: 600; }
+
+/* No line between the buttons of a switch (Alex, 26 Nov: "a line inside the button at Delivered"): the chosen glass
+   already parts them. The Calendar's Today keeps its own divider (drawn with ::after). */
+html[data-theme][data-theme] body .segmented > :is(button, a) + :is(button, a) { border-left: 0; }
+
+/* ---------- Premium glass (Alex, 26 Nov: "the glass more expensive and beautiful, the frames more matte, crisp, shiny,
+   the best resolution") ----------
+   In the dark glass skins (the default and its kin):
+   - FRAMES (the side menu, every panel, Office's and the Calendar's big frames) are matte frosted glass: a deeper blur
+     with more colour, a fine grain so the glass reads as a material, a soft light falling from the top edge, a bright
+     hairline along the top and a faint dark one along the foot, and a long soft shadow under it.
+   - CONTROLS (pills, switches, rows of tabs, fields) are glossy: a sheen from the top and a bright top edge.
+   - THE CHOSEN item is brighter, clearer glass that catches the light.
+   - Text is drawn crisp (grayscale antialiasing), and on sharp screens the hairlines are half a pixel. */
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme] {
+  --mx-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .055 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --mx-frame: rgba(20, 26, 38, .52);
+  --mx-light: linear-gradient(180deg, rgba(255, 255, 255, .065) 0%, rgba(255, 255, 255, .018) 38%, rgba(255, 255, 255, 0) 70%);
+  --mx-edge: rgba(255, 255, 255, .085);
+  --mx-frame-shadow: inset 0 1px 0 rgba(255, 255, 255, .13), inset 0 -1px 0 rgba(0, 0, 0, .28), 0 1px 2px rgba(0, 0, 0, .28), 0 28px 60px -26px rgba(0, 0, 0, .7);
+  --mx-gloss: linear-gradient(180deg, rgba(255, 255, 255, .085) 0%, rgba(255, 255, 255, .02) 55%, rgba(255, 255, 255, .01) 100%);
+  --mx-gloss-edge: inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 -1px 0 rgba(0, 0, 0, .18), 0 1px 2px rgba(0, 0, 0, .25);
+  --mx-chosen: linear-gradient(180deg, rgba(255, 255, 255, .24) 0%, rgba(255, 255, 255, .1) 100%);
+  --mx-chosen-edge: inset 0 1px 0 rgba(255, 255, 255, .38), inset 0 -1px 0 rgba(0, 0, 0, .12), 0 2px 10px rgba(0, 0, 0, .32);
+}
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme] body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+
+/* frames */
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body :is(.shell > .sidebar, .content .panel, .content .rem-app, .content .office-frame) {
+  background-color: var(--mx-frame);
+  background-image: var(--mx-grain), var(--mx-light);
+  background-repeat: repeat, no-repeat;
+  border: 1px solid var(--mx-edge);
+  box-shadow: var(--mx-frame-shadow);
+  -webkit-backdrop-filter: blur(36px) saturate(170%);
+  backdrop-filter: blur(36px) saturate(170%);
+}
+
+/* controls: pill buttons, switches, rows of tabs, fields */
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .content :is(.btn:not(.btn-primary, .btn-danger, .main), .add-pill:not(.main), .act:not(.act-main), .row-ico:not(.btn-danger), .segmented, .db-tabs, .tabs.db-tabs, .chips:not(:has(> .chip:only-child)), .cal-zoom-btn, input.input, select.input, .input.search),
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .sidebar .me-card {
+  background-image: var(--mx-gloss);
+  box-shadow: var(--mx-gloss-edge);
+}
+
+/* the chosen item in a row: brighter glass that catches the light */
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body :is(.segmented, .db-tabs, .chips, .tabs) > :is(.on, .active):not(.cal-today),
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .sidenav a.active {
+  background-image: var(--mx-chosen);
+  box-shadow: var(--mx-chosen-edge);
+}
+
+/* half-pixel hairlines on sharp screens */
+@media (min-resolution: 2dppx) {
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body :is(.shell > .sidebar, .content .panel, .content .rem-app, .content .office-frame) { border-width: .5px; border-color: rgba(255, 255, 255, .14); }
+}
