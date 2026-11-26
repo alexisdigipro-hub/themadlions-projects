@@ -961,7 +961,7 @@ button svg,.ico svg,.pill svg,.round svg,svg.pfi{stroke-linecap:round;stroke-lin
    same; a frame with that curve, a couple of pixels in, and inside the sheet square as it should be") */
 .sframe{display:contents}
 @media (min-width:821px){
-  .sframe{display:block;padding:5px;border-radius:18px;background:var(--panel);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.45);line-height:0}
+  .sframe{display:block;padding:10px;border-radius:18px;background:var(--panel);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.45);line-height:0}
   .sframe > .stage{border-radius:3px!important;box-shadow:0 0 0 1px rgba(255,255,255,.06)!important;line-height:normal}
   /* Home's head on a computer: the logo at the left, the toolbar closer under it */
   .phead .phl{display:none}
@@ -1200,7 +1200,7 @@ $('export').onclick = exportPng;
 
 /* ---------- sheet ---------- */
 function fit(){
-  const fr = isPhone() ? 0 : 12; // a computer's sheet sits in a rounded frame of the panels' curve, 5px in and a 1px rim each side
+  const fr = isPhone() ? 0 : 22; // a computer's sheet sits in a rounded frame of the panels' curve, 10px in and a 1px rim each side
   const W = wrap.clientWidth - fr, H = isPhone() ? Math.min(W*BH/BW, innerHeight*0.4) : wrap.clientHeight - fr;
   const w = Math.min(W, H*BW/BH);
   stage.style.width = w+'px'; stage.style.height = (w*BH/BW)+'px';
