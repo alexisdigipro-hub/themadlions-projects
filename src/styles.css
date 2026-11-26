@@ -8673,7 +8673,7 @@ html[data-theme][data-theme] body button.row-ico.btn-danger { width: auto; paddi
    menu do not match"): its corner is the row's corner less the room between them, so the two curves run side by side.
    Pill rows (the tabs of Office, Database, Outbox, Finance, Settings, a project) get a pill; the Calendar's Day / Week /
    Month (12px row, 4px in) gets 8px; the small switch is a pill inside a pill everywhere. */
-html[data-theme][data-theme] body .db-tabs > :is(.on, .active),
+html[data-theme][data-theme] body .db-tabs > *,
 html[data-theme][data-theme] body .db-tabs > .glass-lens { border-radius: 999px; }
 html[data-theme][data-theme] body .segmented.cal-mode > :is(.on, .active, button, a) { border-radius: 8px; }
 html[data-theme][data-theme] body .segmented.small { border-radius: 999px; }

@@ -20,7 +20,11 @@ export function glassLens(track, from, to, { hide = 'on' } = {}) {
     setTimeout(() => { if (!track.querySelector(':scope > .glass-lens')) track.style.position = '' }, 700)
   }
   const radius = (b) => { const r = getComputedStyle(b).borderTopLeftRadius; return parseFloat(r) > 0 ? r : '10px' }
-  lens.style.borderRadius = radius(to)
+  // the lens wears the chosen item's own curve the whole way (Alex, 26 Nov: "while they move they are squarer and end
+  // up with their curve"): a pill inside a pill row, else the curve of the choice it leaves
+  const tr = parseFloat(getComputedStyle(track).borderTopLeftRadius) || 0
+  const pill = tr >= track.offsetHeight / 2 - 1
+  lens.style.borderRadius = pill ? '999px' : radius(from instanceof Element ? from : to)
   track.appendChild(lens)
   track.dataset.lens = hide
   track.dataset.lensed = '1'

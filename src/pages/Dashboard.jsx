@@ -12,6 +12,7 @@ import { joinName, nameParts } from '../lib/projectName.js'
 import { duplicateProject } from '../lib/duplicate.js'
 import { syncShootDay } from '../lib/shootDays.js'
 import { glassLens, slideOut, stillMotion } from '../lib/glide.js'
+import { useArrowTabs } from '../lib/arrowTabs.js'
 import { projectTasksFor, pushProjectTasks } from '../lib/autoTasks.js'
 import { lineTotal } from '../lib/budget.js'
 import { sendAutoNotice } from '../components/Notices.jsx'
@@ -218,6 +219,8 @@ export default function Dashboard() {
   // lens lifts off the chip that was chosen and slides to the new one, and the projects slide over, left
   // or right by where the new chip sits. The old grid is copied into a frame that slides out.
   const chipsRef = useRef(null)
+  // ← and → on a computer step through All, Delivered and the categories, as on the other pages (Alex, 26 Nov)
+  useArrowTabs(chipsRef)
   const slideRef = useRef(null)
   const [slide, setSlide] = useState('')
   const slideTimer = useRef(0)
