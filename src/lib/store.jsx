@@ -243,8 +243,18 @@ const adapter = {
   },
 }
 
+// an outside budget line's old vendor joins its description as "description | vendor" (Alex, 26 Nov); kept here rather
+// than in budget.js, which imports this file
+const foldVendor = (l) => {
+  if (!l || !(l.vendor || '').trim() || l.memberId || l.contactId || l.locationId) return l
+  const v = l.vendor.trim(), d = String(l.description || '').trim()
+  const same = d.toLowerCase() === v.toLowerCase() || d.toLowerCase().endsWith(`| ${v.toLowerCase()}`)
+  return { ...l, description: !d ? v : same ? d : `${d} | ${v}`, vendor: '' }
+}
 const OLD_CATEGORIES = { Events: 'Event', 'Feature Film': 'Visuals', Advertise: 'Ad' }
 export function migrateProject(p) {
+  // Vendor / payee left the budget line (Alex, 26 Nov): an outside line's vendor joins its description after " | "
+  if (p.budget?.lines?.some((l) => l.vendor && !l.memberId && !l.contactId && !l.locationId)) p = { ...p, budget: { ...p.budget, lines: p.budget.lines.map(foldVendor) } }
   if (OLD_CATEGORIES[p.category]) p = { ...p, category: OLD_CATEGORIES[p.category] }
   // New project used to save its form's "isNew" flag into the project, so Edit details took it for
   // a new one and hid the Delivered switch (Alex, 11 Oct); a saved project is never new

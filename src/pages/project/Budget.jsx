@@ -240,7 +240,7 @@ function BudgetPage() {
     const who = team.find((u) => u.id === draft.memberId)
     const contact = draft.contactId ? (project.contacts || []).find((c) => c.id === draft.contactId) : null
     const loc = draft.locationId ? locations.find((l) => l.id === draft.locationId) : null
-    const line = { ...draft, description, vendor: who ? who.name : contact ? contact.name : loc ? loc.name : draft.vendor }
+    const line = { ...draft, description, vendor: who ? who.name : contact ? contact.name : loc ? loc.name : '' }
     delete line.filledFrom // only the form's note of where the amounts came from
     update((s) => {
       const p = s.projects.find((x) => x.id === project.id)
@@ -427,7 +427,7 @@ function BudgetPage() {
           {draft.memberId ? (
             <Field label="Work date" hint={`From the project's shooting days. Goes into ${team.find((u) => u.id === draft.memberId)?.name || 'their'} My Finance as "${project.title}${draft.description || draft.category ? ` · ${draft.description || draft.category}` : ''}"${draft.date ? ` on ${fmtDate(draft.date)}` : ', dated today'}.`}><Input type="date" value={draft.date || ''} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
           ) : !draft.contactId && !draft.locationId ? (
-            <Field label="Vendor / payee"><Input value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} placeholder="Optional" /></Field>
+            null
           ) : null}
           <Field label="Description (optional)" hint={`Leave it empty and the line is called "${draft.category || 'its category'}". Worth writing for props, gear, permits.`}><Input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder={draft.category || 'Alexa Mini LF package, rooftop permit'} /></Field>
           {/* One amount per line, Alex's call. An old line made as quantity × rate shows its total here and is saved as that total. VAT is optional, next to it, and folds into the line's total. */}

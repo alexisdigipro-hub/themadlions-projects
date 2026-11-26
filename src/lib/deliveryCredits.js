@@ -5,6 +5,7 @@
    categories in Settings > Budget, then the project's crew grouped by role in the order of a film's credits, two
    people in the same role on one line. Placeholders (a name with TBC in it) and the client's own people stay out. */
 import { budgetCategories, finCatFor } from './budgetCats.js'
+import { payeeOf } from './budget.js'
 
 // the order the crew's departments come in, the way credits are usually read
 const DEPT_ORDER = ['Direction', 'Production', 'Camera', 'Lighting', 'Grip', 'Art', 'Costume', 'Makeup & hair', 'Sound', 'Post', 'Locations', 'Casting', 'Transport', 'Catering', 'Other']
@@ -48,14 +49,14 @@ export function creditsFromProject(project, company = '', { users = [], settings
   const credited = (l) => {
     if (l.reimburse) return false
     if (l.memberId) return true
-    if (!l.vendor?.trim() || /credit|licen|software/i.test(l.category || '')) return false
+    if (!payeeOf(l) || /credit|licen|software/i.test(l.category || '')) return false
     if (l.contactId && people.find((c) => c.id === l.contactId)?.kind === 'cast') return false
     return ['crew', 'post-production', 'postproduction'].includes(finCatFor(settings, l.category).toLowerCase().replace(/\s+/g, ''))
   }
   const rankOf = (cat, i) => 10 + (cats.indexOf(cat) < 0 ? cats.length : cats.indexOf(cat)) * 1000 + i
   ;(project.budget?.lines || []).filter(credited).forEach((l, i) => {
     const role = asRole(l.category || l.description)
-    const name = (l.memberId && users.find((u) => u.id === l.memberId)?.name) || l.vendor
+    const name = (l.memberId && users.find((u) => u.id === l.memberId)?.name) || payeeOf(l)
     if (l.contactId) linked.add(l.contactId)
     add(role, name, lead(role) ?? rankOf(l.category, i))
   })

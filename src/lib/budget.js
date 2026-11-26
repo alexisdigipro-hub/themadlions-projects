@@ -1,5 +1,8 @@
 import { today, uid } from './store.jsx'
 
+/* Who a line pays (Alex, 26 Nov: Vendor / payee left the budget line; an outside payee is written in the description
+   after " | "): a teammate's, a contact's or a place's own name kept in vendor, else what follows the bar. */
+export const payeeOf = (l) => (l?.vendor || '').trim() || (String(l?.description || '').includes(' | ') ? String(l.description).split(' | ').slice(1).join(' | ').trim() : '')
 export const lineEstimate = (l) => (l.estimate !== '' && l.estimate != null ? Number(l.estimate) : Number(l.qty || 0) * Number(l.rate || 0))
 // VAT is optional per line (vatPct, e.g. 24). lineEstimate stays the net amount everything else
 // already keys off (My work fees, payments, Finance); lineTotal is net + VAT, used only where the

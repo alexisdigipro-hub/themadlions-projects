@@ -7,6 +7,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 
 ## What is inside
 
+- **Budget lines without Vendor** (26 Nov): who you pay goes in the Description after a bar, e.g. "Equipment rental | RPV". Old lines were moved there.
 - **Where you're signed in** (26 Nov): Settings > My profile lists every device signed in to your account (what it is, when it signed in, when it was last seen, this device marked), with a sign-out beside each and Sign out everywhere else. Administrators also see the team's devices and can sign a member out everywhere. A sign-in from a new device emails you. No place is looked up. Database: `supabase/sign_ins.sql`; Edge Function `signin-alert`.
 - **No chat in the hub** (25 Nov): TmlChat, TML Chat (the home-screen, Mac, Windows and Android apps) and Settings > Chat are gone. Old chat links open Home. The team talks in RoarMe.
 - **Fold any box** (18 Nov): on a project's Overview every box (Song, Lyrics Per Section, Tasks, Files & notes, Crew, Cast, Locations, Gear, Script) has a small arrow on its side that folds it into a slim bar; tap the bar to open it. Each device remembers what you folded.

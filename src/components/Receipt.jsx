@@ -157,9 +157,9 @@ export function ReceiptModal({ project, groups, onClose }) {
       const receipt = await storeReceipt({ state, projectId: project.id, lineId: id, file, who: me, label: `${f.date} ${f.vendor || description}` })
       const shop = f.vendor.trim()
       const line = {
-        id, category: f.category, description, qty: 1, unit: 'flat', rate: 0,
+        id, category: f.category, description: !member && shop && shop.toLowerCase() !== description.toLowerCase() ? `${description} | ${shop}` : description, qty: 1, unit: 'flat', rate: 0,
         estimate: net, vatPct: vat || '', actual: '',
-        vendor: member ? member.name : shop, memberId: member ? member.id : '', contactId: '', locationId: '',
+        vendor: member ? member.name : '', memberId: member ? member.id : '', contactId: '', locationId: '',
         date: f.date, notes: [member && shop ? `Receipt from ${shop}` : '', f.notes.trim()].filter(Boolean).join(' · '),
         receipt, ...(member ? { reimburse: true } : {}),
       }

@@ -6,7 +6,7 @@ import { today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { DOCS, FREQ, METHODS, TX_STATUS, catsFor, duePeriods, emptyRecurring, emptyTx, expenseCats, financeCategoryUses, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, incomeCats, matchTx, money, renameFinanceCategory, summarize, vatOf, ym } from '../lib/finance.js'
 import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
-import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
+import { lineBalance, lineEstimate, linePaid, payeeOf, syncLineWorklog } from '../lib/budget.js'
 import { budgetCatForFin, finCatFor } from '../lib/budgetCats.js'
 import { AGE_BUCKETS, WorkLogTable, ageBucket, avgDaysToPay, daysWaiting, entryTotals, entryTotalsByYear, money2, projectWorkDate, topClientOf } from '../components/WorkLog.jsx'
 import { InvoiceProfileSettings, InvoicesTab } from '../components/Invoices.jsx'
@@ -78,7 +78,7 @@ function FinancePage({ start }) {
   const owedRows = openCommitments.map((c) => ({
     id: `owed:${c.line.id}`, owed: true, type: 'expense', status: 'pending', doc: 'none', vatPct: 0,
     date: c.line.date || projectWorkDate(c.project) || today(),
-    description: c.line.description || c.line.category, party: (c.line.memberId && state.users.find((u) => u.id === c.line.memberId)?.name) || c.line.vendor || '',
+    description: c.line.description || c.line.category, party: (c.line.memberId && state.users.find((u) => u.id === c.line.memberId)?.name) || payeeOf(c.line),
     projectId: c.project.id, category: finCatFor(state.settings, c.line.category), net: c.balance, agreed: c.agreed, paid: c.paid, project: c.project, line: c.line,
   }))
   // per project, only what falls in the year shown (the line's date, else the project's shoot day),
@@ -213,7 +213,7 @@ function FinancePage({ start }) {
     if (!line) return out
     const free = (val, was) => !val || (prevLine && val === was)
     if (free(d.description, prevLine?.description)) out.description = line.description
-    if (free(d.party, prevLine?.vendor)) out.party = line.vendor || ''
+    if (free(d.party, prevLine ? payeeOf(prevLine) : '')) out.party = payeeOf(line)
     if (free(d.net, prevLine ? String(lineBalance(prevLine)) : '') || Number(d.net) === 0) out.net = String(lineBalance(line) || lineEstimate(line))
     out.category = finCatFor(state.settings, line.category)
     return out
@@ -425,7 +425,7 @@ function FinancePage({ start }) {
                       <tr key={c.line.id}>
                         <td className="small">{c.project.title}</td>
                         <td><strong>{c.line.description}</strong><div className="muted small">{c.line.category}</div></td>
-                        <td className="small">{c.line.vendor}</td>
+                        <td className="small">{payeeOf(c.line)}</td>
                         <td className="num">{money(c.agreed, cur)}</td>
                         <td className="num">{c.paid ? money(c.paid, cur) : ''}</td>
                         <td className="num over">{money(c.balance, cur)}</td>
