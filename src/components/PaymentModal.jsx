@@ -1,10 +1,15 @@
 import { useState } from 'react'
 import { Button, Field, Input, Modal, Select, useToast } from './ui.jsx'
 import { today, uid, useStore } from '../lib/store.jsx'
+import { ordinoDates } from '../lib/shootDays.js'
 import { DOCS, METHODS, emptyTx, money } from '../lib/finance.js'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
 import { finCatFor } from '../lib/budgetCats.js'
 
+
+/* A payment's date starts as the project's shoot day (Alex, 26 Nov: "the shoot date from the start"): the first shoot
+   day in the Calendar, else the project's Shoot day, else today. */
+const shootDateOf = (project, events) => (project?.shootingDays || []).map((d) => d.date).filter(Boolean).sort()[0] || ordinoDates(project, events)[0] || project?.startDate || today()
 
 /* Records a payment against a project budget line: creates the Finance expense and updates the line. */
 export function recordPayment(s, { projectId, lineId, amount, date, method, doc, docNumber, note, vatPct, kind }) {
@@ -29,7 +34,7 @@ export function BulkPaymentModal({ project, lines, onClose, onDone }) {
   const { state, update } = useStore()
   const toast = useToast()
   const cur = project.budget?.currency || 'EUR'
-  const [f, setF] = useState({ date: today(), method: 'Bank', doc: 'invoice', note: '', vatPct: state.finance.settings.vatDefault ?? 24 })
+  const [f, setF] = useState({ date: shootDateOf(project, state.events), method: 'Bank', doc: 'invoice', note: '', vatPct: state.finance.settings.vatDefault ?? 24 })
   const rows = lines.map((l) => ({ line: l, amount: lineBalance(l) })).filter((r) => r.amount > 0)
   const total = rows.reduce((a, r) => a + r.amount, 0)
   const save = () => {
@@ -80,7 +85,7 @@ export default function PaymentModal({ project, line, onClose }) {
   const toast = useToast()
   const cur = project.budget?.currency || 'EUR'
   const balance = lineBalance(line)
-  const [f, setF] = useState({ amount: balance || lineEstimate(line), date: today(), method: 'Bank', doc: 'invoice', docNumber: '', note: balance && balance < lineEstimate(line) ? 'balance' : '', vatPct: state.finance.settings.vatDefault ?? 24 })
+  const [f, setF] = useState({ amount: balance || lineEstimate(line), date: shootDateOf(project, state.events), method: 'Bank', doc: 'invoice', docNumber: '', note: balance && balance < lineEstimate(line) ? 'balance' : '', vatPct: state.finance.settings.vatDefault ?? 24 })
   // an advance (Alex, 16 Oct): a share of what is still owed, marked as such on the line and in Finance
   const [kind, setKind] = useState('balance')
   const share = (pct) => Math.round(balance * pct) / 100

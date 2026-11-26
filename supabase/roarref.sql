@@ -177,37 +177,3 @@ begin
   return new;
 end $$;
 revoke execute on function roarref_limit() from public, anon, authenticated;
-
--- Templates (Alex, 26 Nov): a layout with its colours and window names, saved to start a new character from. Safe to re-run.
-create table if not exists roarref_templates (
-  id uuid primary key default gen_random_uuid(),
-  owner uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  name text not null,
-  data jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now(),
-  constraint roarref_templates_name check (char_length(name) <= 60),
-  constraint roarref_templates_size check (octet_length(data::text) <= 100000)
-);
-create index if not exists roarref_templates_owner on roarref_templates (owner, created_at);
-alter table roarref_templates enable row level security;
-drop policy if exists roarref_templates_own on roarref_templates;
-create policy roarref_templates_own on roarref_templates for all to authenticated
-  using (owner = (select auth.uid())) with check (owner = (select auth.uid()));
-
--- Share links (Alex, 26 Nov): a picture of the sheet and its notes, readable by anyone who has the link
--- (roarref-share/<owner>/<token>.jpg and .json; the token is 24 random letters, nothing is listed). Only the owner writes.
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('roarref-share', 'roarref-share', true, 15728640, array['image/jpeg','application/json'])
-on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
-drop policy if exists roarref_share_write on storage.objects;
-create policy roarref_share_write on storage.objects for insert to authenticated
-  with check (bucket_id = 'roarref-share' and (storage.foldername(name))[1] = (select auth.uid())::text);
-drop policy if exists roarref_share_update on storage.objects;
-create policy roarref_share_update on storage.objects for update to authenticated
-  using (bucket_id = 'roarref-share' and (storage.foldername(name))[1] = (select auth.uid())::text);
-drop policy if exists roarref_share_delete on storage.objects;
-create policy roarref_share_delete on storage.objects for delete to authenticated
-  using (bucket_id = 'roarref-share' and (storage.foldername(name))[1] = (select auth.uid())::text);
-drop policy if exists roarref_share_own_read on storage.objects;
-create policy roarref_share_own_read on storage.objects for select to authenticated
-  using (bucket_id = 'roarref-share' and (storage.foldername(name))[1] = (select auth.uid())::text);
