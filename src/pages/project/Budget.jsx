@@ -265,6 +265,22 @@ function BudgetPage() {
     if (r) await deleteFile(r).catch(() => {})
     removeLine(id)
   }
+  // take a payment back (Alex, 26 Nov: "if I pressed Pay, to be able to undo it"): the line's payments and their
+  // Finance expenses go, the line is owed again, and a teammate's job in My Finance turns back to pending
+  const unpay = (id) => update((s) => {
+    const p = s.projects.find((x) => x.id === project.id)
+    const l = p?.budget?.lines?.find((x) => x.id === id)
+    if (!l) return s
+    const ids = new Set((l.payments || []).map((x) => x.txId).filter(Boolean))
+    s.finance.transactions = s.finance.transactions.filter((t) => !ids.has(t.id))
+    l.payments = []
+    l.actual = ''
+    p.updatedAt = new Date().toISOString()
+    syncLineWorklog(s, p, l)
+    const w = (s.worklog || []).find((e) => e.budgetLineId === l.id)
+    if (w) { w.status = 'pending'; w.paidDate = '' }
+    return s
+  })
   const removeLine = (id) => update((s) => {
     const p = s.projects.find((x) => x.id === project.id)
     if (!p?.budget) return s
@@ -341,6 +357,7 @@ function BudgetPage() {
                   {editable && (
                     <td className="row-actions no-print">
                       {me?.role === 'admin' && lineEstimate(l) > 0 && lineBalance(l) > 0 && <button type="button" className="b-pay" onClick={() => setPay(l)}>Pay</button>}
+                      {me?.role === 'admin' && (l.payments?.length > 0 || (!l.txId && l.actual !== '' && l.actual != null && Number(l.actual) > 0)) && <Confirm className="b-unpay" label="Unpay" title="Take the payment back" onConfirm={() => { unpay(l.id); toast('Payment taken back') }}>Unpay</Confirm>}
                       <button type="button" className="b-edit" onClick={() => setDraft({ ...l })}>Edit</button>
                       <Confirm onConfirm={() => remove(l.id)} label="Delete">×</Confirm>
                     </td>
