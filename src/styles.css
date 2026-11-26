@@ -8907,3 +8907,79 @@ html[data-theme][data-theme] body .modal .field:has(> .input) > .input.dp-field 
 html[data-theme][data-theme] body .modal .field > .field-hint { margin-top: 4px; }
 html[data-theme][data-theme] body .modal .modal-body :is(.row-2, .row-3, .row, .stack, .grid-2, .grid-3) { gap: 10px; }
 html[data-theme][data-theme] body .modal .modal-body > :is(.field, .row-2, .row-3, .row, .field-row) + :is(.field, .row-2, .row-3, .row, .field-row) { margin-top: 8px; }
+
+/* Choose a cover (Alex, 26 Nov): the covers already used on other projects as square tiles with their project's name,
+   Upload from your computer in the foot */
+.cover-gallery .cg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; max-height: min(60vh, 520px); overflow-y: auto; padding: 2px; }
+.cover-gallery .cg-tile { display: flex; flex-direction: column; gap: 6px; padding: 6px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, .08); background: rgba(255, 255, 255, .04); color: var(--text); cursor: pointer; text-align: left; transition: transform .16s cubic-bezier(.3, .7, .4, 1), background .16s, border-color .16s; }
+.cover-gallery .cg-tile:hover { transform: translateY(-2px); background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .18); }
+.cover-gallery .cg-tile:active { transform: scale(.97); }
+.cover-gallery .cg-tile img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 11px; display: block; }
+.cover-gallery .cg-tile span { font-size: 11.5px; line-height: 1.25; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding: 0 2px 2px; }
+
+/* ---------- Windows on one measure (Alex, 26 Nov: "equal pixels in the gaps between the fields, around them, everything";
+   "count how much room the texts take"). Two numbers only: 12px between any two things inside a window (fields, rows,
+   the two columns, a box and the line under it) and 24px from the window's edge to what is in it, top, sides and foot.
+   A field is its own box: the small name, the value and its hint all inside it, so a hint makes its box taller instead
+   of pushing the next row away, and the two boxes of a row stretch to the same height. */
+html[data-theme][data-theme] body .modal { --wg: 12px; --wp: 24px; }
+@media (min-width: 821px) {
+  html[data-theme][data-theme] body .modal.modal:not(.ab-card) > .modal-head { padding: var(--wp) var(--wp) 0; min-height: 0; }
+  html[data-theme][data-theme] body .modal.modal:not(.ab-card) > .modal-body { padding: var(--wp); }
+  html[data-theme][data-theme] body .modal.modal:not(.ab-card) > .modal-foot { padding: 0 var(--wp) var(--wp); gap: 10px; }
+  html[data-theme][data-theme] body .modal.modal:not(.ab-card) > .modal-head .icon-btn { margin: -6px -4px -6px 0; }
+}
+/* the field as the box */
+html[data-theme][data-theme] body .modal .field:has(> .input) {
+  border-radius: 14px; border: 1px solid rgba(255, 255, 255, .085);
+  background-color: rgba(255, 255, 255, .045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), inset 0 -1px 0 rgba(0, 0, 0, .15);
+  transition: border-color .18s, box-shadow .18s, background-color .18s;
+}
+html[data-theme][data-theme] body .modal .field:has(> .input):hover { background-color: rgba(255, 255, 255, .06); }
+html[data-theme][data-theme] body .modal .field:has(> .input):focus-within {
+  border-color: color-mix(in srgb, var(--accent, #7cc4ff) 55%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent, #7cc4ff) 14%, transparent), inset 0 1px 0 rgba(255, 255, 255, .06);
+  background-color: rgba(255, 255, 255, .065);
+}
+html[data-theme][data-theme] body .modal .field:has(> .input) > .input,
+html[data-theme][data-theme] body .modal .field:has(> .input) > .input:is(:hover, :focus) {
+  border-color: transparent; background-color: transparent; box-shadow: none; outline: none;
+}
+html[data-theme][data-theme] body .modal .field:has(> .input) > textarea.input { flex: 1 1 auto; resize: vertical; }
+html[data-theme][data-theme] body .modal .field:has(> .input) > .input { padding-left: 15px; padding-right: 15px; }
+html[data-theme][data-theme] body .modal .field:has(> .input) > select.input { padding-right: 34px; }
+html[data-theme][data-theme] body .modal .field:has(> .input) > .field-hint { margin: -2px 0 0; padding: 0 15px 11px; line-height: 1.4; }
+/* a field holding something richer (the receipt's buttons, the colours, the tabs' chips) is a box too: its name on top, inside */
+html[data-theme][data-theme] body .modal .modal-body .field:not(:has(> .input, .field)) {
+  padding: 11px 15px 13px; gap: 9px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, .085);
+  background-color: rgba(255, 255, 255, .045);
+}
+html[data-theme][data-theme] body .modal .modal-body .field:not(:has(> .input, .field)) > .field-label { font-size: 10px; line-height: 1; letter-spacing: .09em; }
+html[data-theme][data-theme] body .modal .modal-body .field:not(:has(> .input, .field)) > .field-hint { margin: 0; line-height: 1.4; }
+/* one gap everywhere: rows and their boxes, stacked boxes at any depth, the receipt's two columns */
+html[data-theme][data-theme] body .modal .modal-body :is(.row-2, .row-3, .row, .stack, .grid-2, .grid-3, .receipt-form, .receipt-shot, .receipt-fields, .pform-hero, .pform-main) { gap: var(--wg); }
+html[data-theme][data-theme] body .modal .modal-body :is(.row-2, .row-3, .grid-2, .grid-3) { align-items: stretch; }
+html[data-theme][data-theme] body .modal .modal-body :is(.field, .row-2, .row-3, .row, .field-row, .grid-2, .grid-3, .receipt-form, .check-row):not(:is(.row-2, .row-3, .row, .grid-2, .grid-3, .stack, .receipt-form, .receipt-fields, .pform-hero, .pform-main) > *) + :is(.field, .row-2, .row-3, .row, .field-row, .grid-2, .grid-3, .check-row) { margin-top: var(--wg); }
+html[data-theme][data-theme] body .modal .modal-body .receipt-fields { display: flex; flex-direction: column; gap: var(--wg); }
+html[data-theme][data-theme] body .modal .modal-body .receipt-shot > * { margin: 0; }
+html[data-theme][data-theme] body .modal .modal-body .receipt-shot .receipt-empty { border-radius: 14px; }
+html[data-theme][data-theme] body .modal .modal-body .receipt-shot > p { font-size: 12px; line-height: 1.45; opacity: .75; padding: 0 4px; }
+@media (min-width: 821px) {
+  html[data-theme][data-theme] body .modal .modal-body .receipt-form { grid-template-columns: 240px minmax(0, 1fr); }
+}
+/* inside a rich box a typed field is plain words on the box (no second well), lined up with the box's name */
+html[data-theme][data-theme] body .modal .modal-body .field:not(:has(> .input, .field)) .input:not(.dp-field) {
+  border-color: transparent; background-color: transparent; box-shadow: none; outline: none; padding-left: 0; padding-right: 0; min-height: 30px; height: 30px;
+}
+html[data-theme][data-theme] body .modal .modal-body .field:not(:has(> .input, .field)):focus-within {
+  border-color: color-mix(in srgb, var(--accent, #7cc4ff) 55%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent, #7cc4ff) 14%, transparent);
+}
+/* New project: the cover as tall as the two rows beside it, the colours on one line */
+@media (min-width: 821px) {
+  html[data-theme][data-theme] body .modal .modal-body .pform-hero { grid-template-columns: 120px minmax(0, 1fr); }
+  html[data-theme][data-theme] body .modal .modal-body .pform-cover-pick { width: 120px; height: 120px; }
+}
+html[data-theme][data-theme] body .modal .modal-body .pform-colours { gap: 6px; min-height: 0; flex-wrap: nowrap; }
+html[data-theme][data-theme] body .modal .modal-body .pform-colours .swatch { width: 20px; height: 20px; flex: none; }
