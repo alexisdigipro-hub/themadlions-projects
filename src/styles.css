@@ -8668,3 +8668,32 @@ html[data-theme][data-theme] body button.row-ico:hover { background: color-mix(i
 html[data-theme][data-theme] body button.row-ico:active { transform: scale(.92); }
 html[data-theme][data-theme] body button.row-ico.danger { color: #ff5f5f; }
 html[data-theme][data-theme] body button.row-ico.btn-danger { width: auto; padding: 0 12px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff; background: #e5483f; border-color: transparent; }
+
+/* The chosen item follows the curve of the row it sits in (Alex, 26 Nov: "the shape of the choice and the shape of the
+   menu do not match"): its corner is the row's corner less the room between them, so the two curves run side by side.
+   Pill rows (the tabs of Office, Database, Outbox, Finance, Settings, a project) get a pill; the Calendar's Day / Week /
+   Month (12px row, 4px in) gets 8px; the small switch is a pill inside a pill everywhere. */
+html[data-theme][data-theme] body .db-tabs > :is(.on, .active),
+html[data-theme][data-theme] body .db-tabs > .glass-lens { border-radius: 999px; }
+html[data-theme][data-theme] body .segmented.cal-mode > :is(.on, .active, button, a) { border-radius: 8px; }
+html[data-theme][data-theme] body .segmented.small { border-radius: 999px; }
+html[data-theme][data-theme] body .segmented.small > :is(.on, .active, button, a, .glass-lens) { border-radius: 999px; }
+
+/* ---------- One look for the last odd controls (Alex, 26 Nov: "go through the whole site, fix every button") ---------- */
+/* Office's + New List and Notes' + New Folder: a glass pill, not a blue word */
+html[data-theme][data-theme] body .rem-add-list { display: inline-flex; align-self: flex-start; gap: 8px; margin: 6px 0 0 8px; height: 36px; padding: 0 16px 0 12px; font-size: 13.5px; font-weight: 600; color: var(--text); border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text, #fff) 14%, transparent); background: color-mix(in srgb, var(--text, #fff) 7%, transparent); transition: transform .15s cubic-bezier(.3, .7, .4, 1), background .15s; }
+html[data-theme][data-theme] body .rem-add-list span { width: auto; font-size: 16px; line-height: 1; }
+html[data-theme][data-theme] body .rem-add-list:hover { background: color-mix(in srgb, var(--text, #fff) 13%, transparent); }
+html[data-theme][data-theme] body .rem-add-list:active { transform: scale(.96); }
+/* Sign out at the foot of the side menu: a glass pill, not a word */
+html[data-theme][data-theme] body .sidebar .sign-out { align-self: flex-start; height: 34px; padding: 0 16px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text, #fff) 14%, transparent); background: color-mix(in srgb, var(--text, #fff) 7%, transparent); font-weight: 600; }
+html[data-theme][data-theme] body .sidebar .sign-out:hover { background: color-mix(in srgb, var(--text, #fff) 13%, transparent); }
+/* a link inside a sentence (a notice, a hint, a table): no underline, a small tinted pill (Alex, 5 Nov: never an
+   underlined word as a button) */
+html[data-theme][data-theme] body .content :is(p, .notice, .hint, .muted, small, td, li, span) > a:not(.btn, .add-pill, .ab-q, [class*="btn"], [class*="pill"], [class*="chip"], [class*="tab"]) { text-decoration: none; display: inline-block; padding: 0 8px; border-radius: 999px; line-height: 1.6; background: color-mix(in srgb, var(--accent, #e8b04b) 14%, transparent); color: inherit; font-weight: 600; }
+/* the Database's tabs stay whole on a computer; the search beside them gives way instead */
+@media (min-width: 821px) {
+  html[data-theme][data-theme] body .db-page .db-top .db-tabs { flex: none; overflow: visible; }
+  html[data-theme][data-theme] body .db-page .db-top { flex-wrap: wrap; }
+  html[data-theme][data-theme] body .db-page .db-top .db-slot { flex: 1 1 380px; min-width: 380px; }
+}

@@ -215,9 +215,6 @@ export default function Settings() {
               <Field label="Pop up a notice when a task is assigned to me" hint="The person who assigns it is the sender, so they see the confirmation. Nothing is sent when you assign a task to yourself.">
                 <Select value={state.settings.autoNotice?.taskAssigned === false ? 'no' : 'yes'} onChange={(e) => setSetting('autoNotice', { ...(state.settings.autoNotice || {}), taskAssigned: e.target.value === 'yes' })} options={[['yes', 'Yes'], ['no', 'No']]} />
               </Field>
-              <Field label="Pop up a notice for a new chat message" hint="Messages from the same person collapse into one pop-up that counts them, so a shooting day does not become a wall of modals.">
-                <Select value={state.settings.autoNotice?.chatMessage === false ? 'no' : 'yes'} onChange={(e) => setSetting('autoNotice', { ...(state.settings.autoNotice || {}), chatMessage: e.target.value === 'yes' })} options={[['yes', 'Yes'], ['no', 'No']]} />
-              </Field>
               <Field label="Notices vibrate on phones">
                 <Select value={state.settings.noticeVibrate === false ? 'no' : 'yes'} onChange={(e) => setSetting('noticeVibrate', e.target.value === 'yes')} options={[['yes', 'Yes'], ['no', 'No']]} />
               </Field>
