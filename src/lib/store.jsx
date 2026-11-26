@@ -14,7 +14,7 @@ import { toISODate } from './dates.js'
 export const STORAGE_KEY = 'tml_projects_v1'
 export const SESSION_KEY = 'tml_session_v1'
 
-export const CATEGORIES = ['Music Video', 'Event', 'Editing', 'Ad', 'Visuals', 'IV']
+export const CATEGORIES = ['Music Video', 'Event', 'Editing', 'Ad', 'Visuals', 'IV', 'Corporate', 'Other']
 export const STATUSES = ['Development', 'Pre-production', 'Production', 'Post-production', 'Delivered', 'On hold']
 
 /* The permission modules, grouped the way the app is laid out today (Alex, 10 Oct: "we have changed
