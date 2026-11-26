@@ -8621,3 +8621,24 @@ html[data-theme] body .mail-form { gap: 6px; align-content: start; }
   html[data-theme] body .modal.ordino-win .modal-body { flex: 1 1 auto; min-height: 0; overflow: auto; }
   html[data-theme] body .modal.ordino-win .roardino-page.in-modal { height: calc(100dvh - 104px); max-height: none; }
 }
+
+/* ---------- Where you're signed in (Settings > My profile, components/SignIns.jsx; Alex, 26 Nov) ----------
+   one row per device as a soft tile: its kind of device in a round glass, what it is and when, a round sign-out */
+.signins { display: flex; flex-direction: column; gap: 10px; }
+.signins .si-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.signins .si-head h2 { margin: 0; flex: 1 1 auto; }
+.signins .si-note { margin: 0; font-size: 13px; color: var(--muted); }
+.signins .si-list, .signins .si-team { display: flex; flex-direction: column; gap: 8px; }
+.signins .si-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; background: color-mix(in srgb, var(--text, #fff) 5%, transparent); min-width: 0; }
+.signins .si-row.si-current { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text, #fff) 18%, transparent); }
+.signins .si-ico { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--text, #fff) 9%, transparent); }
+.signins .si-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.signins .si-main b { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.signins .si-main small { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.signins .si-this { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: color-mix(in srgb, #3ecf8e 18%, transparent); }
+.signins .si-end { flex: none; }
+.signins .si-sub { margin: 10px 0 0; font-size: 14px; }
+.signins .si-person { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 18px; background: color-mix(in srgb, var(--text, #fff) 3%, transparent); }
+.signins .si-phead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 2px 4px; }
+.signins .si-phead b { font-weight: 600; }
+.signins .si-phead small { color: var(--muted); flex: 1 1 auto; }
