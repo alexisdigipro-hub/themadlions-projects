@@ -409,7 +409,7 @@ export default function Dashboard() {
           </button>
         </div>
       )}
-      <div className="chips" ref={chipsRef} data-glide="own">
+      <div className="chips cat-chips" ref={chipsRef} data-glide="own">
         {chipFor('All')}
         {CATEGORIES.map(chipFor)}
       </div>
