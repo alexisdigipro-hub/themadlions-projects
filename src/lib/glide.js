@@ -10,6 +10,7 @@ export const stillMotion = () => typeof window.matchMedia === 'function' && wind
 // chosen item clear until the lens arrives.
 export function glassLens(track, from, to, { hide = 'on' } = {}) {
   if (!track || !from || !to || from === to || typeof track.animate !== 'function') return
+  if (!(from instanceof Element) && !(from && typeof from.x === 'number')) return
   track.querySelectorAll(':scope > .glass-lens').forEach((n) => n.remove())
   const lens = document.createElement('span')
   lens.className = 'glass-lens'
@@ -28,13 +29,15 @@ export function glassLens(track, from, to, { hide = 'on' } = {}) {
      1.16), stretches from the old choice across to the new one and its colours split at the rim (red left, blue right,
      green above, yellow below); then 300 ms on cubic-bezier(.25, 1.45, .45, 1) it draws in onto the new choice and
      settles with one small overshoot, the split fading. Only transform, width, height and box-shadow move. */
-  const x = (b) => b.offsetLeft, y = (b) => b.offsetTop
-  const left = Math.min(x(from), x(to)), right = Math.max(x(from) + from.offsetWidth, x(to) + to.offsetWidth)
+  // `from` may be a box kept from a row that a new page has just replaced ({ x, y, w, h } inside the row)
+  const fromBox = from instanceof Element ? { x: from.offsetLeft, y: from.offsetTop, w: from.offsetWidth, h: from.offsetHeight } : from
+  const x = (b) => (b === from ? fromBox.x : b.offsetLeft), y = (b) => (b === from ? fromBox.y : b.offsetTop)
+  const left = Math.min(x(from), x(to)), right = Math.max(x(from) + fromBox.w, x(to) + to.offsetWidth)
   const top = Math.min(y(from), y(to))
   const base = '0 6px 18px rgba(0, 0, 0, .22)'
   const split = '-2px 0 0 rgba(255, 70, 70, .38), 2px 0 0 rgba(70, 130, 255, .38), 0 -1px 0 rgba(80, 255, 140, .26), 0 1.5px 0 rgba(255, 220, 70, .3), 0 10px 26px rgba(0, 0, 0, .26)'
   const run = lens.animate([
-    { transform: `translate(${x(from)}px, ${y(from)}px) scale(1, 1)`, width: `${from.offsetWidth}px`, height: `${from.offsetHeight}px`, boxShadow: base, easing: 'cubic-bezier(.3, .7, .4, 1)' },
+    { transform: `translate(${x(from)}px, ${y(from)}px) scale(1, 1)`, width: `${fromBox.w}px`, height: `${fromBox.h}px`, boxShadow: base, easing: 'cubic-bezier(.3, .7, .4, 1)' },
     { offset: 1 / 3, transform: `translate(${left}px, ${top}px) scale(1.03, 1.16)`, width: `${right - left}px`, height: `${to.offsetHeight}px`, boxShadow: split, easing: 'cubic-bezier(.25, 1.45, .45, 1)' },
     { transform: `translate(${x(to)}px, ${y(to)}px) scale(1, 1)`, width: `${to.offsetWidth}px`, height: `${to.offsetHeight}px`, boxShadow: base },
   ], { duration: 450, fill: 'both' })
@@ -118,5 +121,21 @@ export function installGlassTabs() {
     const on = [...row.children].filter((n) => n.classList.contains('on') || n.classList.contains('active'))
     if (on.length !== 1 || on[0] === item) return
     glassLens(row, on[0], item)
+    // a tab that opens another page (Office's RoarList and Documents, Alex 26 Nov) can rebuild the whole row: the lens
+    // then carries on in the new row, from where the old choice stood to the new one
+    const fromBox = { x: on[0].offsetLeft, y: on[0].offsetTop, w: on[0].offsetWidth, h: on[0].offsetHeight }
+    const index = [...row.children].filter((n) => !n.classList.contains('glass-lens')).indexOf(item)
+    const sel = [...row.classList].map((c) => `.${CSS.escape(c)}`).join('')
+    const t0 = performance.now()
+    const look = () => {
+      if (row.isConnected) { if (performance.now() - t0 < 700) requestAnimationFrame(look); return }
+      const fresh = [...document.querySelectorAll(sel)].find((r) => {
+        const kids = [...r.children].filter((n) => !n.classList.contains('glass-lens'))
+        return kids[index] && (kids[index].classList.contains('on') || kids[index].classList.contains('active'))
+      })
+      if (fresh) glassLens(fresh, fromBox, [...fresh.children].filter((n) => !n.classList.contains('glass-lens'))[index])
+      else if (performance.now() - t0 < 700) requestAnimationFrame(look)
+    }
+    if (sel) requestAnimationFrame(look)
   }, true)
 }
