@@ -35,6 +35,10 @@ export default function CalendarView({ projectId = null, title }) {
   const saveHidden = (list) => { setHiddenTypes(list); try { localStorage.setItem('tml_cal_hidden', JSON.stringify(list.filter((k) => k !== 'unavailable'))) } catch {} }
   const [projFilter, setProjFilter] = useState('all')
   const mobile = useIsMobile()
+  // a day pops up twice its size under the mouse on a computer so its events read easily (Alex, 26 Nov), with a switch
+  // in the top row to turn it off; kept per device
+  const [zoom, setZoom] = useState(() => { try { return localStorage.getItem('tml_cal_zoom') !== 'off' } catch { return true } })
+  const flipZoom = () => setZoom((z) => { try { localStorage.setItem('tml_cal_zoom', z ? 'off' : 'on') } catch {} return !z })
   const [syncing, setSyncing] = useState(false)
   // Read-only calendar feeds (Settings > Integrations). The file is fetched once per visit and
   // kept as text, so moving between months re-reads it without going back to the network.
@@ -255,7 +259,7 @@ export default function CalendarView({ projectId = null, title }) {
     if (!el || mobile || yearView) return undefined // the month grid and the week both stretch
     // measured from the frame around it, which stays put while a month slides in or out
     const fit = () => {
-      el.style.minHeight = `${Math.max(560, Math.round(window.innerHeight - (el.parentElement || el).getBoundingClientRect().top - window.scrollY - 24))}px`
+      el.style.minHeight = `${Math.max(560, Math.round(window.innerHeight - (el.parentElement || el).getBoundingClientRect().top - window.scrollY - 30))}px`
       requestAnimationFrame(() => {
         const cell = [...el.querySelectorAll('.cal-cell')].find((c) => !c.querySelector('.cal-holiday'))
         const box = cell?.querySelector('.cal-events')
@@ -538,6 +542,12 @@ export default function CalendarView({ projectId = null, title }) {
               <button className={yearView ? 'on' : ''} onClick={() => pickMode('year')}>Year</button>
             </div>
           )}
+          {/* the Zoom switch, a round glass sign at the far right (Alex, 26 Nov: "a small button top right to turn it off") */}
+          {!mobile && calMode === 'month' && (
+            <button type="button" className={`cal-zoom-btn${zoom ? ' on' : ''}`} aria-pressed={zoom} aria-label="Zoom days under the mouse" onClick={flipZoom} title={zoom ? 'Zoom: on (days pop up under the mouse)' : 'Zoom: off'}>
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4.2-4.2M11 8.5v5M8.5 11h5" /></svg>
+            </button>
+          )}
         </div>
       </div>
 
@@ -625,14 +635,17 @@ export default function CalendarView({ projectId = null, title }) {
             })}
           </div>
         ) : (
-        <div className="cal-grid" role="grid" ref={gridRef}>
+        <div className={`cal-grid${zoom && !mobile ? ' zoomy' : ''}`} role="grid" ref={gridRef}>
           {weekdayShort(state.settings?.weekStart).map((d) => (
             <div key={d} className="cal-dow">
               {d}
             </div>
           ))}
-          {grid.map((cell) => {
+          {grid.map((cell, gi) => {
             const evs = byDate[cell.iso] || []
+            // it grows away from the grid's edges, so a day in a corner stays whole on the screen
+            const col = gi % 7, row = Math.floor(gi / 7), rows = Math.ceil(grid.length / 7)
+            const origin = `${col === 0 ? 'left' : col === 6 ? 'right' : 'center'} ${row === 0 ? 'top' : row === rows - 1 ? 'bottom' : 'center'}`
             const isToday = cell.iso === today()
             const hol = holiday(cell.iso)
             return (
@@ -643,6 +656,7 @@ export default function CalendarView({ projectId = null, title }) {
                 {...dropOn(cell.iso)}
                 role="gridcell"
                 title={hol || undefined}
+                style={{ transformOrigin: origin }}
               >
                 <span className="cal-day">{Number(cell.iso.slice(-2))}</span>
                 {hol && <span className="cal-holiday">{hol}</span>}

@@ -206,7 +206,8 @@ export default function Dashboard() {
   // Delivered is a tab like the others (Alex, 15 Oct): it shows every delivered project, any category
   const [showDelivered, setShowDelivered] = useState(false)
   const projects = visibleProjects(state, user)
-    .filter((p) => searching || showDelivered || filter === 'All' || p.category === filter)
+    // the category holds for the active and the delivered ones alike (Alex, 26 Nov)
+    .filter((p) => searching || filter === 'All' || p.category === filter)
     .filter((p) => !searching || [p.title, p.artist, p.shortTitle, p.client, p.code, p.category].some((v) => plain(v).includes(needle)))
     .sort((!mobile && SORTS[sort]) || SORTS.date)
   // Delivered projects leave the main grid (Alex): the Delivered tab shows them alone, greyed.
@@ -233,8 +234,8 @@ export default function Dashboard() {
     slideTimer.current = setTimeout(() => setSlide(''), 360)
   }
   const chipOf = (key) => chipsRef.current?.querySelector(`[data-chip="${CSS.escape(key)}"]`)
-  // one tab chosen at a time: All, Delivered or a category
-  const current = showDelivered ? 'Delivered' : filter
+  // two choices side by side (Alex, 26 Nov): Active or Delivered, and a category (All or one) that holds for both
+  const current = filter
   const pickTab = (c) => {
     if (c === current) return
     if (!stillMotion()) {
@@ -244,10 +245,14 @@ export default function Dashboard() {
       slideTo(order.indexOf(to) > order.indexOf(from) ? 'next' : 'prev')
       glassTo(from, to, 'cat')
     }
-    if (c === 'Delivered') setShowDelivered(true)
-    else { setShowDelivered(false); setFilter(c) }
+    setFilter(c)
   }
-  const liveAll = state.projects.filter((p) => p.status !== 'Delivered')
+  const pickStatus = (delivered) => {
+    if (delivered === showDelivered) return
+    if (!stillMotion()) slideTo(delivered ? 'next' : 'prev')
+    setShowDelivered(delivered)
+  }
+  const liveAll = state.projects.filter((p) => (showDelivered ? p.status === 'Delivered' : p.status !== 'Delivered'))
   const chipFor = (c) => {
     const n = liveAll.filter((p) => c === 'All' || p.category === c).length
     // On a phone only the categories that hold something (Alex, 8 Oct); the one picked stays
@@ -369,18 +374,26 @@ export default function Dashboard() {
     </div>
   )
 
+  const deliveredCount = state.projects.filter((p) => p.status === 'Delivered').length
   const categoryChips = (
-    <div className="chips" ref={chipsRef} data-glide="own">
-      {/* All, then Delivered, then the categories (Alex, 9 Oct) */}
-      {chipFor('All')}
-      {(!mobile || showDelivered || state.projects.some((p) => p.status === 'Delivered')) && (
-        <button data-chip="Delivered" className={`chip ${showDelivered ? 'on' : ''}`} onClick={() => pickTab('Delivered')} title="Delivered projects">
-          Delivered
-          <small>{state.projects.filter((p) => p.status === 'Delivered').length}</small>
-        </button>
+    <>
+      {/* Active or Delivered first, apart (Alex, 26 Nov: "All is not all, it is the active ones"), then the categories,
+          which hold for both: Delivered then Music Video shows the old music videos */}
+      {(!mobile || showDelivered || deliveredCount > 0) && (
+        <div className="segmented small home-status">
+          <button type="button" className={showDelivered ? '' : 'on'} onClick={() => pickStatus(false)} title="Projects still in work">
+            Active <small>{state.projects.length - deliveredCount}</small>
+          </button>
+          <button type="button" className={showDelivered ? 'on' : ''} onClick={() => pickStatus(true)} title="Delivered projects">
+            Delivered <small>{deliveredCount}</small>
+          </button>
+        </div>
       )}
-      {CATEGORIES.map(chipFor)}
-    </div>
+      <div className="chips" ref={chipsRef} data-glide="own">
+        {chipFor('All')}
+        {CATEGORIES.map(chipFor)}
+      </div>
+    </>
   )
 
   return (
