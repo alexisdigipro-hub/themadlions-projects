@@ -8777,7 +8777,7 @@ html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[da
 }
 
 /* controls: pill buttons, switches, rows of tabs, fields */
-html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .content :is(.btn:not(.btn-primary, .btn-danger, .main), .add-pill:not(.main), .act:not(.act-main), .row-ico:not(.btn-danger), .segmented, .db-tabs, .tabs.db-tabs, .chips:not(:has(> .chip:only-child)), .cal-zoom-btn, input.input, select.input, .input.search),
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .content :is(.btn:not(.btn-primary, .btn-danger, .main), .add-pill:not(.main), .act:not(.act-main), .row-ico:not(.btn-danger), .segmented, .db-tabs, .tabs.db-tabs, .cal-zoom-btn, input.input, select.input, .input.search),
 html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme][data-theme] body .sidebar .me-card {
   background-image: var(--mx-gloss);
   box-shadow: var(--mx-gloss-edge);
@@ -8814,3 +8814,8 @@ html[data-theme][data-theme] body :is(.shell > .sidebar, .content .panel, .conte
 html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glass'])[data-theme] { --mx-frame: rgba(19, 25, 37, .6); }
 html[data-theme][data-theme] body .project-grid :is(.project-card, .project-card *) { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 html[data-theme][data-theme] body .project-grid :is(.project-body, .project-cat, .pt-btn) { background-color: rgba(12, 16, 24, .66); }
+
+/* The Database's wrapper (.panel.db-card, on every one of its tabs) was always invisible: the tiles stand straight on the
+   page. The premium glass of 26 Nov dressed it as a frame round the whole tab (Alex: "chaos with the frames in the whole
+   Database"); it is bare again. Checked on every page against the build before: the only invisible panel in the hub. */
+html[data-theme][data-theme][data-theme] body .content .panel.db-card { background: none !important; border: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
