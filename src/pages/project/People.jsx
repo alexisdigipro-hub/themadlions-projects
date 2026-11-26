@@ -1,7 +1,7 @@
 import Fold from '../../components/Fold.jsx'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, Select, useToast } from '../../components/ui.jsx'
+import { ACT_ICON, Button, Confirm, Empty, Field, Input, Modal, Select, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { DbBar } from '../../components/DbTools.jsx'
 import { callsheetDefaults, can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
@@ -179,8 +179,8 @@ export default function People({ onOverview = false, pillSlot = null }) {
                 <span className="ab-cell muted" onClick={(e) => e.stopPropagation()}>{showContacts && c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</span>
                 <span className="ab-acts" onClick={(e) => e.stopPropagation()}>
                   {showContacts && c.phone && <a className="ab-q" href={waLink(c.phone, `Hi ${c.name.split(' ')[0]}, `)} target="_blank" rel="noreferrer" title="WhatsApp" aria-label="WhatsApp">{WA}</a>}
-                  {editable && <button type="button" className="btn btn-default btn-sm" onClick={() => setDraft({ ...c })}>Edit</button>}
-                  {editable && <Confirm onConfirm={() => edit((p) => (p.contacts = p.contacts.filter((x) => x.id !== c.id)))} label="Delete" className="ab-del" title="Delete">×</Confirm>}
+                  {editable && <button type="button" className="row-ico" onClick={() => setDraft({ ...c })} title="Edit" aria-label="Edit">{ACT_ICON.edit}</button>}
+                  {editable && <Confirm onConfirm={() => edit((p) => (p.contacts = p.contacts.filter((x) => x.id !== c.id)))} label="Delete" className="ab-del row-ico danger" title="Delete" aria-label="Delete">{ACT_ICON.trash}</Confirm>}
                 </span>
               </article>
             ))}

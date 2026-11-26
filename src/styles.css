@@ -8642,3 +8642,29 @@ html[data-theme] body .mail-form { gap: 6px; align-content: start; }
 .signins .si-phead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 2px 4px; }
 .signins .si-phead b { font-weight: 600; }
 .signins .si-phead small { color: var(--muted); flex: 1 1 auto; }
+
+/* ---------- 30px round every frame on a computer (Alex, 26 Nov: "align them all at the same height; the menu on the
+   left and the frames, 30 pixels of room all round, on every page") ----------
+   The side menu stands 30px from the top, the left and the bottom; every page starts 30px from the top (level with the
+   menu), keeps 30px from the right and the bottom, and 30px from the menu. The menu keeps the width it had (its column
+   grows by what its margin grew). Phones and upright tablets keep their own. */
+@media (min-width: 821px) and (hover: hover) {
+  html[data-theme][data-theme] body .shell { grid-template-columns: calc(var(--sidebar) + 18px) minmax(0, 1fr); }
+  html[data-theme][data-theme] body .shell > .sidebar { margin: 30px 0 30px 30px; top: 30px; height: calc(100vh - 60px); height: calc(100dvh - 60px); }
+  html[data-theme][data-theme] body .shell:has(> .viewas-bar) > .sidebar { top: 74px; height: calc(100vh - 104px); height: calc(100dvh - 104px); }
+  html[data-theme][data-theme] body .shell > .content { padding: 30px; }
+  /* the pages that open with a row of tabs (Office, Database, Outbox, Finance, Settings, My Finance) had 4 to 10px more
+     above it: their row now starts level with the menu too */
+  html[data-theme][data-theme] body .shell > .content .db-top { margin-top: 0; }
+  html[data-theme][data-theme] body .shell > .content .fin-head { padding-top: 0; }
+  html[data-theme][data-theme] body .shell > .content .proj-top { padding-top: 0; }
+}
+
+/* Edit and Delete on a row of people or places (Alex, 26 Nov: "one look everywhere"; 5 Nov: never a word as a button):
+   round glass icons, a pencil and a bin in red; armed, the bin says "Confirm delete" as a red pill */
+html[data-theme][data-theme] body button.row-ico { width: 32px; height: 32px; padding: 0; flex: none; display: inline-grid; place-items: center; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--text, #fff) 14%, transparent); background: color-mix(in srgb, var(--text, #fff) 7%, transparent); color: var(--text, #fff); cursor: pointer; transition: transform .15s cubic-bezier(.3, .7, .4, 1), background .15s; }
+html[data-theme][data-theme] body button.row-ico svg { width: 15px; height: 15px; }
+html[data-theme][data-theme] body button.row-ico:hover { background: color-mix(in srgb, var(--text, #fff) 13%, transparent); }
+html[data-theme][data-theme] body button.row-ico:active { transform: scale(.92); }
+html[data-theme][data-theme] body button.row-ico.danger { color: #ff5f5f; }
+html[data-theme][data-theme] body button.row-ico.btn-danger { width: auto; padding: 0 12px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff; background: #e5483f; border-color: transparent; }

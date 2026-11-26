@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, useToast } from '../components/ui.jsx'
+import { ACT_ICON, Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, useToast } from '../components/ui.jsx'
 import { can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
@@ -153,8 +153,8 @@ export default function PeopleAll({ kind, slot }) {
                 {(c.tags || []).slice(0, 3).map((t) => <span key={t} className="lchip">{t}</span>)}
               </>}
               aside={editable && <>
-                <button type="button" className="btn btn-default btn-sm" onClick={() => setDraft({ ...c })}>Edit</button>
-                <Confirm onConfirm={() => remove(c)} label="Delete" className="ab-del" title="Delete">×</Confirm>
+                <button type="button" className="row-ico" onClick={() => setDraft({ ...c })} title="Edit" aria-label="Edit">{ACT_ICON.edit}</button>
+                <Confirm onConfirm={() => remove(c)} label="Delete" className="ab-del row-ico danger" title="Delete" aria-label="Delete">{ACT_ICON.trash}</Confirm>
               </>} />
           ))}
         </div>
