@@ -8,6 +8,7 @@ import { Icon } from '../components/icons.jsx'
 import { useGlide } from '../lib/glide.js'
 import { swipeTabs } from '../lib/swipeTabs.js'
 import { stopProjectAudio } from '../lib/projectAudio.js'
+import { fmtDate } from '../lib/dates.js'
 
 // The brainstorm whiteboard is built and working but Alex does not need it yet, so the tab is
 // hidden. The page itself still lives at /p/<id>/whiteboard. Flip this to true to bring it back.
@@ -88,6 +89,22 @@ export default function Project() {
     return true
   } : null
 
+  // the facts under the title on a computer: category · shoot day and how far · shoot days · crew · cast
+  const facts = (() => {
+    const out = [project.category, project.status === 'Delivered' && 'Delivered', project.frozen && '🔒 locked']
+    if (/^\d{4}-\d{2}-\d{2}$/.test(project.startDate || '')) {
+      const d = Math.round((Date.parse(project.startDate) - Date.parse(new Date().toISOString().slice(0, 10))) / 86400000)
+      out.push(`${fmtDate(project.startDate)} · ${d === 0 ? 'shoot today' : d === 1 ? 'shoot tomorrow' : d > 1 ? `shoot in ${d} days` : `shot ${-d} day${d === -1 ? '' : 's'} ago`}`)
+    }
+    const n = (project.shootingDays || []).length
+    if (n) out.push(`${n} shoot day${n === 1 ? '' : 's'}`)
+    const crew = (project.contacts || []).filter((c) => c.kind === 'crew' && c.dept !== 'Client').length
+    const cast = (project.contacts || []).filter((c) => c.kind === 'cast').length
+    if (crew) out.push(`${crew} crew`)
+    if (cast) out.push(`${cast} cast`)
+    return out.filter(Boolean).join(' · ')
+  })()
+
   const ctx = {
     project,
     user,
@@ -109,7 +126,11 @@ export default function Project() {
           <Link to="/" className="icon-btn proj-back" aria-label="Projects" title="Projects">‹</Link>
           {project.coverThumb && <img className="proj-top-cover" src={project.coverThumb} alt="" />}
           {/* the category and Delivered moved under the progress on Overview (Alex, 18 Nov) */}
-          <h1 className="page-title proj-name">{project.title}</h1>
+          {/* the title with the project's facts under it, in one bar with the tabs and the buttons (Alex, 27 Nov, version G) */}
+          <div className="proj-tt">
+            <h1 className="page-title proj-name">{project.title}</h1>
+            {facts && <span className="proj-facts">{facts}</span>}
+          </div>
           <nav className="tabs db-tabs">
             {barTabs.map((t) => (
               <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')} onClick={glide.go}>
