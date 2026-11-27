@@ -3,6 +3,7 @@ import { LABELS } from './state'
 import { aspectRatio, vfov } from './camera'
 import { aimAt, figAt, POSE_HEIGHT } from './motion'
 import { clamp, DEG, uid } from './util'
+import { EXAMPLES, RULES } from './examples'
 
 /** The scene from a written description: Claude answers with a small JSON, the code turns it into figures, paths and keyframes. */
 
@@ -34,7 +35,7 @@ WORLD
 - Props give the space and the parallax: "box" (0.6 m cube), "table" (1.4 x 0.8 m), "chair", "door" (a door frame 1.1 m wide), "wall" (4 m long, 2.6 m high, 15 cm thick, running along its local X axis; "rot" turns it). Use only what the scene needs, at most 10. Never put a wall between the camera and its subject.
 
 CAMERA
-- "camera" is a list of 2 to 7 keyframes sorted by "t". The first is at t = 0 and the last at t = duration. The camera flies a smooth curve through them.
+- "camera" is a list of 2 to 10 keyframes sorted by "t". The first is at t = 0 and the last at t = duration. The camera flies a smooth curve through them.
 - Each keyframe is placed relative to an anchor: "around" is a figure label, or a floor point [x, z].
 - "azimuth" in degrees, measured from the anchor figure's facing at that time: 0 = directly in front of the figure, 90 = at the figure's left side, -90 = at its right side, 180 = directly behind it. For a floor-point anchor it is a compass angle.
 - Distance is given by "size", how much of the anchor figure the lens shows: "extreme_wide", "wide", "full", "medium_wide", "medium", "medium_close", "close", "extreme_close". For a floor-point anchor give "distance" in metres instead.
@@ -45,7 +46,16 @@ CAMERA
 - Hold a framing by repeating a keyframe. Give the move a clear start, development and end; do not add moves the description does not ask for.
 
 ANSWER (JSON only)
-{"duration": 4 to 15, "handheld": 0 to 100, "figures": [{"label": "A", "name": "", "x": 0, "z": 0, "facing": 0, "pose": "stand|sit|walk|run|kneel", "height": 1.5 to 2.0, "path": null}], "props": [{"kind": "wall", "x": 0, "z": -4, "rot": 0}], "camera": [{"t": 0, "around": "A", "azimuth": 0, "size": "full", "height": 1.5, "look": "A", "lens": 35, "ease": "inout", "roll": 0}], "notes": "one or two sentences in Greek, friendly, saying what you set up and any choice you made that the description left open"}`
+{"duration": 4 to 30, "handheld": 0 to 100, "figures": [{"label": "A", "name": "", "x": 0, "z": 0, "facing": 0, "pose": "stand|sit|walk|run|kneel", "height": 1.5 to 2.0, "path": null}], "props": [{"kind": "wall", "x": 0, "z": -4, "rot": 0}], "camera": [{"t": 0, "around": "A", "azimuth": 0, "size": "full", "height": 1.5, "look": "A", "lens": 35, "ease": "inout", "roll": 0}], "notes": "one or two sentences in Greek, friendly, saying what you set up and any choice you made that the description left open"}`
+
+/** The director's own rules and approved scenes, added to every request. */
+function learned(): string {
+  let out = ''
+  if (RULES.length) out += `\n\nTHE DIRECTOR'S STANDING PREFERENCES (follow them unless the description says otherwise)\n${RULES.map((r) => `- ${r}`).join('\n')}`
+  if (EXAMPLES.length)
+    out += `\n\nSCENES THIS DIRECTOR APPROVED (match their taste in distances, lenses and timing; do not copy them when the description differs)\n${EXAMPLES.map((e) => `Description: ${e.text}\nAnswer: ${JSON.stringify(e.scene)}`).join('\n\n')}`
+  return out
+}
 
 const SIZE: Record<string, number> = { extreme_wide: 4.2, wide: 2.3, full: 1.35, medium_wide: 0.9, medium: 0.58, medium_close: 0.36, close: 0.21, extreme_close: 0.11 }
 const POSES: Pose[] = ['stand', 'sit', 'walk', 'run', 'kneel']
@@ -60,7 +70,7 @@ type Raw = Record<string, unknown>
 
 /** Turns Claude's answer into a project, clamping whatever is out of range. */
 export function toProject(raw: Raw, cur: Project): Project {
-  const dur = Math.round(clamp(num(raw.duration, cur.shot.duration), 4, 15) * 2) / 2
+  const dur = Math.round(clamp(num(raw.duration, cur.shot.duration), 4, 30) * 2) / 2
   const figures: Figure[] = []
   for (const g of (Array.isArray(raw.figures) ? raw.figures : []).slice(0, 4) as Raw[]) {
     const label = LABELS[figures.length]
@@ -149,7 +159,7 @@ async function call(key: string, text: string, cur: Project, withFallback: boole
   const body: Record<string, unknown> = {
     model: MODEL,
     max_tokens: 16000,
-    system: SYSTEM,
+    system: SYSTEM + learned(),
     messages: [{ role: 'user', content: `Frame: ${cur.shot.aspect}. Scene description:\n${text}` }],
   }
   // if the model declines, the API hands the same request to a fallback model inside this call
