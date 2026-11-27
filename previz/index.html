@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0c0e" />
+    <title>Camera Previz · The Mad Lions</title>
+    <link rel="icon" href="../favicon.svg" />
+  </head>
+  <body>
+    <div id="app" class="view-director">
+      <header id="top">
+        <div class="brand"><b>Camera Previz</b><span>για Seedance · MAGI-2</span></div>
+        <button class="ico" data-a="undo" title="Αναίρεση" aria-label="Αναίρεση"></button>
+        <button class="ico" data-a="redo" title="Επανάληψη" aria-label="Επανάληψη"></button>
+        <div class="seg" id="viewSeg">
+          <button data-a="view" data-v="director">Director</button>
+          <button data-a="view" data-v="shot">Shot</button>
+        </div>
+        <div class="grow"></div>
+        <button class="pill" data-a="settings" id="shotPill"></button>
+        <button class="pill main" data-a="prompt" id="promptBtn"></button>
+      </header>
+      <main id="main">
+        <div id="stage">
+          <canvas id="gl"></canvas>
+          <section class="pane" id="dirPane">
+            <div class="pane-head"><b>DIRECTOR</b><span id="dirInfo"></span></div>
+            <div class="view" id="dirView"><button id="pip" aria-label="Δες το Shot"></button></div>
+          </section>
+          <section class="pane" id="shotPane">
+            <div class="pane-head"><b>SHOT</b><span id="shotInfo"></span></div>
+            <div class="view" id="shotView"></div>
+          </section>
+        </div>
+        <aside id="inspector"></aside>
+      </main>
+      <footer id="dock">
+        <div id="timeline">
+          <button class="ico" data-a="play" id="playBtn" aria-label="Play"></button>
+          <div class="tc" id="tc">00:00</div>
+          <div id="track"><div id="ruler"></div><div id="span"></div><div id="keys"></div><div id="head"></div></div>
+          <button class="ico" data-a="loop" id="loopBtn" aria-label="Loop"></button>
+        </div>
+        <div id="tools">
+          <button class="tool" data-a="add-fig" id="addFig"></button>
+          <button class="tool" data-a="add-prop"></button>
+          <button class="tool" data-a="camera" id="lensBtn"></button>
+          <button class="tool" data-a="frame" id="frameBtn"></button>
+          <div class="grow"></div>
+          <button class="pill main big" data-a="add-key" id="addKey"></button>
+        </div>
+      </footer>
+    </div>
+    <div id="modal" hidden></div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
