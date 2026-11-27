@@ -2,7 +2,8 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { Figure, Pose, Project, Prop, PropKind } from './state'
 import { FIG_COLORS } from './state'
-import { applyCam, evalCamera, hfov, vfov, type CamState } from './camera'
+import { applyCam, camAt, hfov, keyTarget, vfov, type CamState } from './camera'
+import { figAt, POSE_HEIGHT, type FigState } from './motion'
 import { DEG } from './util'
 
 /** Layer 1 holds what only the Director view shows: labels, rings, the camera path and frustums. */
@@ -33,8 +34,22 @@ const POSE: Record<Pose, PoseDef> = {
   sit: { hipL: 90, hipR: 90, kneeL: 90, kneeR: 90, shL: 18, shR: 18, elL: 55, elR: 55, lean: -4, pelvis: 0.54, seat: true },
   kneel: { hipL: 0, hipR: 90, kneeL: 90, kneeR: 90, shL: 10, shR: 10, elL: 30, elR: 30, lean: 4, pelvis: 0.55 },
 }
-/** How tall the figure stands in each pose, as a share of its height. */
-export const POSE_HEIGHT: Record<Pose, number> = { stand: 1, walk: 0.99, run: 0.95, sit: 0.73, kneel: 0.72 }
+/** The walk or run cycle at a phase of the stride. */
+function cycle(run: boolean, ph: number): PoseDef {
+  const sn = Math.sin(ph)
+  const c = Math.cos(ph)
+  const A = run ? 46 : 26
+  const K = run ? 100 : 48
+  const B = run ? 52 : 24
+  const fw = run ? 10 : 2
+  const kb = run ? 18 : 6
+  return {
+    hipL: A * sn + fw, hipR: -A * sn + fw,
+    kneeL: kb + K * Math.max(0, c), kneeR: kb + K * Math.max(0, -c),
+    shL: -B * sn, shR: B * sn, elL: run ? 90 : 20, elR: run ? 90 : 20,
+    lean: run ? 14 : 3, pelvis: (run ? 0.93 : 0.97) - 0.02 * Math.abs(sn),
+  }
+}
 
 interface FigObj {
   root: THREE.Group
@@ -47,6 +62,8 @@ interface FigObj {
   ring: THREE.Mesh
   ringMat: THREE.MeshBasicMaterial
   label: THREE.Sprite
+  dest: THREE.Group
+  destLine: THREE.Line
 }
 
 function labelSprite(text: string, color: string): THREE.Sprite {
@@ -156,19 +173,44 @@ function makeFigure(f: Figure): FigObj {
   const label = labelSprite(f.label, color)
   root.add(label)
 
+  // the destination of the figure's path: a flag to drag, and a line to it
+  const dest = group()
+  const dring = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.34, 40), ringMat)
+  dring.rotation.x = -Math.PI / 2
+  dring.position.y = 0.014
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.1, 8), new THREE.MeshBasicMaterial({ color }))
+  pole.position.y = 0.55
+  const flag = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.2, 0.02), new THREE.MeshBasicMaterial({ color }))
+  flag.position.set(0.17, 1.0, 0)
+  const grab = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 1.2, 12), new THREE.MeshBasicMaterial({ visible: false }))
+  grab.position.y = 0.6
+  dest.add(dring, pole, flag, grab)
+  dest.traverse((o) => o.layers.set(HELP))
+  dest.userData = { kind: 'dest', id: f.id }
+  const destLine = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineDashedMaterial({ color, dashSize: 0.25, gapSize: 0.15, depthTest: false, transparent: true }))
+  destLine.layers.set(HELP)
+  destLine.renderOrder = 4
+
   root.userData = { kind: 'figure', id: f.id }
   return {
-    root, body, pelvis, spine, seat, ring, ringMat, label,
+    root, body, pelvis, spine, seat, ring, ringMat, label, dest, destLine,
     hipL: LL.hip, hipR: RL.hip, kneeL: LL.knee, kneeR: RL.knee,
     shL: L.sh, shR: R.sh, elL: L.el, elR: R.el,
   }
 }
 
-function poseFigure(o: FigObj, f: Figure, selected: boolean): void {
-  const d = POSE[f.pose]
+function poseFigure(o: FigObj, f: Figure, st: FigState, selected: boolean): void {
+  const d = st.moving ? cycle(st.pose === 'run', st.phase) : POSE[st.pose]
   const s = f.height / 1.8
-  o.root.position.set(f.x, 0, f.z)
-  o.root.rotation.y = f.rot * DEG
+  o.root.position.set(st.x, 0, st.z)
+  o.root.rotation.y = st.rot * DEG
+  o.dest.visible = o.destLine.visible = !!f.path
+  if (f.path) {
+    o.dest.position.set(f.path.x, 0, f.path.z)
+    o.destLine.geometry.dispose()
+    o.destLine.geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(f.x, 0.02, f.z), new THREE.Vector3(f.path.x, 0.02, f.path.z)])
+    o.destLine.computeLineDistances()
+  }
   o.body.scale.setScalar(s)
   o.pelvis.position.y = d.pelvis
   o.spine.rotation.x = d.lean * DEG
@@ -181,7 +223,7 @@ function poseFigure(o: FigObj, f: Figure, selected: boolean): void {
   o.elL.rotation.x = -d.elL * DEG
   o.elR.rotation.x = -d.elR * DEG
   o.seat.visible = !!d.seat
-  o.label.position.y = f.height * POSE_HEIGHT[f.pose] + 0.28
+  o.label.position.y = f.height * POSE_HEIGHT[st.pose] + 0.28
   o.ringMat.opacity = selected ? 1 : 0.45
   o.ring.scale.setScalar(selected ? 1.12 : 1)
 }
@@ -242,7 +284,7 @@ function frustumGeo(lens: number, aspect: number, depth: number): THREE.BufferGe
 }
 
 export interface Rect { x: number; y: number; w: number; h: number }
-export type Hit = { kind: 'figure' | 'prop'; id: string }
+export type Hit = { kind: 'figure' | 'prop' | 'dest'; id: string }
 
 export class World {
   renderer: THREE.WebGLRenderer
@@ -315,6 +357,7 @@ export class World {
     this.helpers.add(this.targetDot)
 
     this.dirCam.layers.enable(HELP)
+    this.ray.layers.enable(HELP)
     this.dirCam.position.set(4.6, 3.6, 6.2)
     this.controls = new OrbitControls(this.dirCam, dirEl)
     this.controls.target.set(0, 0.9, -0.6)
@@ -331,25 +374,25 @@ export class World {
   }
 
   /** Bring figures and props in line with the project. */
-  syncScene(p: Project, selId: string | null): void {
+  syncScene(p: Project, selId: string | null, t: number): void {
     const seen = new Set<string>()
     for (const f of p.figures) {
       seen.add(f.id)
       let o = this.figs.get(f.id)
       if (o && o.root.userData.label !== f.label) {
-        this.scene.remove(o.root)
+        this.scene.remove(o.root, o.dest, o.destLine)
         o = undefined
       }
       if (!o) {
         o = makeFigure(f)
         o.root.userData.label = f.label
         this.figs.set(f.id, o)
-        this.scene.add(o.root)
+        this.scene.add(o.root, o.dest, o.destLine)
       }
-      poseFigure(o, f, f.id === selId)
+      poseFigure(o, f, figAt(f, t), f.id === selId)
     }
     for (const [id, o] of this.figs) if (!seen.has(id)) {
-      this.scene.remove(o.root)
+      this.scene.remove(o.root, o.dest, o.destLine)
       this.figs.delete(id)
     }
     const seenP = new Set<string>()
@@ -402,7 +445,7 @@ export class World {
       const t0 = keys[0].t
       const t1 = keys[keys.length - 1].t
       const n = Math.max(60, Math.round((t1 - t0) * 40))
-      for (let i = 0; i <= n; i++) pts.push(evalCamera(keys, t0 + ((t1 - t0) * i) / n).pos)
+      for (let i = 0; i <= n; i++) pts.push(camAt(p, t0 + ((t1 - t0) * i) / n).pos)
     }
     this.pathLine.geometry.dispose()
     this.pathLine.geometry = new THREE.BufferGeometry().setFromPoints(pts)
@@ -420,7 +463,7 @@ export class World {
       )
       l.renderOrder = 5
       l.layers.set(HELP)
-      this.placeLike(l, { pos: new THREE.Vector3(...k.pos), target: new THREE.Vector3(...k.target), roll: k.roll, lens: k.lens }, aspect)
+      this.placeLike(l, { pos: new THREE.Vector3(...k.pos), target: keyTarget(p, k, k.t), roll: k.roll, lens: k.lens }, aspect)
       this.keyGroup.add(l)
     }
   }
@@ -445,7 +488,7 @@ export class World {
 
   pick(clientX: number, clientY: number): Hit | null {
     this.ray.setFromCamera(this.ndc(clientX, clientY), this.dirCam)
-    const objs = [...[...this.figs.values()].map((o) => o.root), ...this.props.values()]
+    const objs = [...[...this.figs.values()].flatMap((o) => (o.dest.visible ? [o.dest, o.root] : [o.root])), ...this.props.values()]
     const hits = this.ray.intersectObjects(objs, true)
     for (const h of hits) {
       let o: THREE.Object3D | null = h.object

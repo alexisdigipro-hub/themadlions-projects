@@ -8,10 +8,11 @@ export type Ease = 'linear' | 'in' | 'out' | 'inout'
 export type PropKind = 'box' | 'table' | 'chair' | 'door' | 'wall'
 export type Aspect = '16:9' | '9:16' | '2.39:1' | '1:1'
 
-export interface Figure { id: string; label: Label; x: number; z: number; rot: number; height: number; pose: Pose }
+export interface FigPath { x: number; z: number; t0: number; t1: number }
+export interface Figure { id: string; label: Label; x: number; z: number; rot: number; height: number; pose: Pose; path?: FigPath | null }
 export interface Prop { id: string; kind: PropKind; x: number; z: number; rot: number }
-export interface Keyframe { id: string; t: number; pos: Vec3; target: Vec3; roll: number; lens: number; ease: Ease }
-export interface Shot { aspect: Aspect; duration: number; fps: 24 | 25; lens: number }
+export interface Keyframe { id: string; t: number; pos: Vec3; target: Vec3; roll: number; lens: number; ease: Ease; look?: Label | null }
+export interface Shot { aspect: Aspect; duration: number; fps: 24 | 25; lens: number; shake: number }
 export interface Project { v: 1; figures: Figure[]; props: Prop[]; keys: Keyframe[]; shot: Shot }
 
 export const FIG_COLORS: Record<Label, string> = { A: '#ff6a45', B: '#33c3ff', C: '#ffd02e', D: '#c47bff' }
@@ -50,6 +51,7 @@ export function exampleProject(): Project {
     roll: 0,
     lens: 35,
     ease: (i === 0 ? 'in' : i === 3 ? 'out' : 'linear') as Ease,
+    look: 'A' as Label,
   }))
   return {
     v: 1,
@@ -65,13 +67,22 @@ export function exampleProject(): Project {
       { id: uid(), kind: 'box', x: -3.2, z: 1.4, rot: 20 },
     ],
     keys,
-    shot: { aspect: '16:9', duration: 8, fps: 24, lens: 35 },
+    shot: { aspect: '16:9', duration: 8, fps: 24, lens: 35, shake: 0 },
   }
 }
 
 export function normalize(p: Project): void {
   p.shot.duration = clamp(p.shot.duration, 4, 15)
-  for (const k of p.keys) k.t = clamp(k.t, 0, p.shot.duration)
+  p.shot.shake = clamp(p.shot.shake || 0, 0, 100)
+  const labels = new Set(p.figures.map((f) => f.label))
+  for (const k of p.keys) {
+    k.t = clamp(k.t, 0, p.shot.duration)
+    if (k.look && !labels.has(k.look)) k.look = null
+  }
+  for (const f of p.figures) if (f.path) {
+    f.path.t0 = clamp(f.path.t0, 0, p.shot.duration - 0.25)
+    f.path.t1 = clamp(f.path.t1, f.path.t0 + 0.25, p.shot.duration)
+  }
   p.keys.sort((a, b) => a.t - b.t)
 }
 
