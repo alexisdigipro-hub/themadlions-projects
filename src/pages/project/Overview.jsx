@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Modal, useToast } from '../../components/ui.jsx'
@@ -166,7 +167,7 @@ const UNLINK_I = <svg viewBox="0 0 24 24" width="16" height="16" fill="none" str
 const ROAR_I = <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 18.5V7a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H8.5z" /><path d="M9 9.5h6M9 12.5h4" /></svg>
 
 export default function Overview() {
-  const { project, edit, canEdit, user, sections = [] } = useProject()
+  const { project, edit, canEdit, user, sections = [], slot } = useProject()
   // Share with collaborators (Alex, 18 Nov): the window, and the open link following the project
   const [sharing, setSharing] = useState(false)
   useProjectShareSync(project)
@@ -293,24 +294,9 @@ export default function Overview() {
     sections.includes('script') && canEdit('script') && !project.script?.text && !(project.scriptVersions || []).length && ['paste', 'Paste script'],
   ].filter(Boolean)
 
-  return (
-    <BoxOrderCtx.Provider value={boxOrder}>
-    <div className="overview" ref={ovRef}>
-      <span ref={stickMark} className="progress-mark" aria-hidden="true" />
-      <section ref={stickPanel} className={`panel progress${stuck ? ' stuck' : ''}`}>
-        <div className="progress-head">
-          <div className="progress-cover">
-            {/* Change / Adjust under the picture went (Alex, 11 Oct): the cover is changed in Edit details */}
-            {project.coverThumb ? <img src={project.coverThumb} alt="" /> : <span className="progress-cover-empty" style={{ background: project.color }} />}
-          </div>
-          <div className="progress-main">
-            <div className="progress-top">
-              <span className="g-old">
-                <strong className="progress-pct">{pct}%<small> done</small></strong> <span className="muted small progress-sub">{[project.category && [project.category, 'progress-cat'], project.status === 'Delivered' && ['Delivered'], project.frozen && ['🔒 locked'], project.startDate && [`shoot ${fmtDate(project.startDate)}`, 'progress-shoot']].filter(Boolean).map(([x, c]) => <span key={x} className={c}>{x}</span>)}</span>
-              </span>
-              {/* the slim head (Alex, 27 Nov, version G of https://claude.ai/artifact/H6eqCcDbxJyq8ityQTZArz): on a computer the
-                  facts in one grey line here, the % moves down to the track */}
-              <span className="g-facts">{[project.category, project.status === 'Delivered' && 'Delivered', project.frozen && '🔒 locked', ...facts.map((f) => (f.k === 'shoot' ? `${f.v} · ${f.l}` : `${f.v} ${f.l}`))].filter(Boolean).join(' · ')}</span>
+  // the actions: on a computer they stand in the project's title bar (Alex, 27 Nov, version G), on a phone here
+  const ovActs = (
+    <>
               {/* the project's few actions, always in the same place (Alex, 28 Oct: "I was looking for Edit"):
                   + Add (everything that can be added, in groups), Edit, and ⋯ for Duplicate and Lock */}
               <span className="ov-acts">
@@ -366,6 +352,29 @@ export default function Overview() {
                   </span>
                 )}
               </span>
+    </>
+  )
+
+  return (
+    <BoxOrderCtx.Provider value={boxOrder}>
+    <div className="overview" ref={ovRef}>
+      {slot && createPortal(<span className="g-slot-acts">{ovActs}</span>, slot)}
+      <span ref={stickMark} className="progress-mark" aria-hidden="true" />
+      <section ref={stickPanel} className={`panel progress${stuck ? ' stuck' : ''}`}>
+        <div className="progress-head">
+          <div className="progress-cover">
+            {/* Change / Adjust under the picture went (Alex, 11 Oct): the cover is changed in Edit details */}
+            {project.coverThumb ? <img src={project.coverThumb} alt="" /> : <span className="progress-cover-empty" style={{ background: project.color }} />}
+          </div>
+          <div className="progress-main">
+            <div className="progress-top">
+              <span className="g-old">
+                <strong className="progress-pct">{pct}%<small> done</small></strong> <span className="muted small progress-sub">{[project.category && [project.category, 'progress-cat'], project.status === 'Delivered' && ['Delivered'], project.frozen && ['🔒 locked'], project.startDate && [`shoot ${fmtDate(project.startDate)}`, 'progress-shoot']].filter(Boolean).map(([x, c]) => <span key={x} className={c}>{x}</span>)}</span>
+              </span>
+              {/* the slim head (Alex, 27 Nov, version G of https://claude.ai/artifact/H6eqCcDbxJyq8ityQTZArz): on a computer the
+                  facts in one grey line here, the % moves down to the track */}
+              <span className="g-facts">{[project.category, project.status === 'Delivered' && 'Delivered', project.frozen && '🔒 locked', ...facts.map((f) => (f.k === 'shoot' ? `${f.v} · ${f.l}` : `${f.v} ${f.l}`))].filter(Boolean).join(' · ')}</span>
+              {slot ? null : ovActs}
             </div>
             <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
             {/* on a computer the bar is made of the stages (Alex, 29 Oct: "this bar could be more refined and beautiful"):

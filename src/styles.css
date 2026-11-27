@@ -9150,3 +9150,19 @@ html body .overview .progress .g-facts, html body .overview .progress .g-track {
   span.g-next { cursor: default; }
 }
 @media (prefers-reduced-motion: no-preference) { .g-seg { transition: transform .15s ease; } }
+
+/* Version G whole (Alex, 27 Nov: "you did not do G"): on a computer the title row and the Overview's head are one card:
+   back, the picture, the title with its facts under it, Overview | Budget and the buttons; under a fine line the track */
+@media (min-width: 821px) {
+  html[data-theme] body main.content .proj-top .proj-tt { flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  html[data-theme] body main.content .proj-top .proj-tt h1.proj-name { flex: none; }
+  .proj-top .proj-facts { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 24px; }
+  .proj-top .g-slot-acts { display: inline-flex; align-items: center; gap: 6px; }
+  .proj-top .g-slot-acts .ov-acts, .proj-top .g-slot-acts > * { flex: none; }
+  html[data-theme][data-theme] body .project:has(.overview) .proj-top { padding: 12px 16px; background: var(--panel); border: 1px solid var(--line-soft); border-bottom: 0; border-radius: 20px 20px 0 0; }
+  html[data-theme][data-theme] body .project:has(.overview) .proj-top::before { display: none; }
+  html[data-theme][data-theme] body .overview .panel.progress { border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; margin-top: 0; padding: 0 16px 14px; }
+  html[data-theme][data-theme] body .overview .panel.progress .progress-top { display: none; }
+  html[data-theme][data-theme] body .overview .panel.progress .g-track { margin-top: 0; }
+}
+@media (min-width: 821px) { html[data-theme][data-theme] body .project:has(.overview) .proj-top .db-slot { order: 6; } }
