@@ -1,11 +1,11 @@
 import './style.css'
 import * as THREE from 'three'
-import { Store, exampleProject, FIG_COLORS, LABELS, LENSES, ASPECTS, POSES, EASES, PROPS, type Figure, type Prop, type Keyframe, type Vec3 } from './state'
+import { Store, exampleProject, migrate, FIG_COLORS, LABELS, LENSES, ASPECTS, POSES, EASES, PROPS, type Figure, type Prop, type Keyframe, type Vec3 } from './state'
 import { World, type Rect } from './scene'
 import { applyCam, aspectRatio, camAt, keyTarget, vfov } from './camera'
 import { figAt, pathLength } from './motion'
 import { PRESETS, applyPreset } from './presets'
-import { getKey, sceneFromText, setKey } from './ai'
+import { getKey, sceneFromText, setKey, toProject } from './ai'
 import { buildPrompt } from './prompt'
 import { I } from './icons'
 import { clamp, esc, gr, timecode, uid } from './util'
@@ -104,7 +104,8 @@ const lensNow = () => {
 function renderTimeline() {
   const p = P()
   const d = p.shot.duration
-  const step = track.clientWidth < 360 ? 2 : 1
+  const narrow = track.clientWidth < 360
+  const step = d > 20 ? (narrow ? 5 : 2) : d > 10 && narrow ? 2 : narrow ? 2 : 1
   let r = ''
   for (let s = 0; s <= d + 1e-6; s += step) r += `<i style="left:${(s / d) * 100}%"><b>${s}</b></i>`
   $('ruler').innerHTML = r
@@ -335,7 +336,7 @@ function addKey() {
   toast(near ? 'Το keyframe ενημερώθηκε' : 'Νέο keyframe')
 }
 
-function act(a: string, v: string | undefined) {
+async function act(a: string, v: string | undefined) {
   const s = ui.sel
   switch (a) {
     case 'undo':
@@ -418,6 +419,18 @@ function act(a: string, v: string | undefined) {
     }
     case 'help':
       return openHelp()
+    case 'share':
+      await copyText(sceneLink())
+      closeModal()
+      return toast('Το link της σκηνής αντιγράφηκε')
+    case 'approve':
+      return openApprove()
+    case 'approve-copy': {
+      const note = (modal.querySelector<HTMLTextAreaElement>('#apText')?.value || '').trim()
+      await copyText(`ΣΩΣΤΟ ΠΛΑΝΟ\n${note || '(χωρίς σημείωση)'}\n\n${buildPrompt(P())}\n\n${sceneLink()}`)
+      closeModal()
+      return toast('Αντιγράφηκε. Επικόλλησέ το στο Claude.')
+    }
     case 'ai':
       return openAi()
     case 'ai-run':
@@ -561,10 +574,10 @@ function openSettings() {
   openModal(
     `<h2>Πλάνο</h2>` +
       `<div class="fld"><span>Aspect</span>${chips('aspect', ASPECTS.map((a) => ({ v: a, t: a })), s.aspect)}</div>` +
-      `<div class="fld"><span>Διάρκεια <em id="dv">${gr(s.duration, 1)} s</em></span><input type="range" min="4" max="15" step="0.5" value="${s.duration}" id="durIn"></div>` +
+      `<div class="fld"><span>Διάρκεια <em id="dv">${gr(s.duration, 1)} s</em></span><input type="range" min="4" max="30" step="0.5" value="${s.duration}" id="durIn"></div>` +
       `<div class="fld"><span>Καρέ το δευτερόλεπτο</span>${chips('fps', [24, 25].map((f) => ({ v: f, t: `${f} fps` })), s.fps)}</div>` +
       `<p class="hint">Αλλάζοντας τη διάρκεια, τα keyframes απλώνονται ή μαζεύονται αναλογικά.</p>` +
-      `<div class="foot"><button class="pill" data-a="help">${I.help}<span>Οδηγίες</span></button><button class="pill" data-a="clear-keys">${I.trash}<span>Κενό πλάνο</span></button><button class="pill" data-a="example">${I.refresh}<span>Το παράδειγμα</span></button><div class="grow"></div><button class="pill main" data-a="modal-close">Έτοιμο</button></div>`,
+      `<div class="foot"><button class="pill" data-a="help">${I.help}<span>Οδηγίες</span></button><button class="pill" data-a="share">${I.copy}<span>Link σκηνής</span></button><button class="pill" data-a="clear-keys">${I.trash}<span>Κενό πλάνο</span></button><button class="pill" data-a="example">${I.refresh}<span>Το παράδειγμα</span></button><div class="grow"></div><button class="pill main" data-a="modal-close">Έτοιμο</button></div>`,
   )
   const inp = modal.querySelector<HTMLInputElement>('#durIn') as HTMLInputElement
   inp.addEventListener('input', () => ($('dv').textContent = `${gr(Number(inp.value), 1)} s`))
@@ -670,18 +683,78 @@ function openPrompt() {
   openModal(
     `<h2>Prompt</h2><p class="hint">Ανέβασε το βίντεο reference ως @Video1 και επικόλλησε αυτό το κείμενο.</p>` +
       `<textarea id="promptText" readonly spellcheck="false">${esc(text)}</textarea>` +
-      `<div class="foot"><div class="grow"></div><button class="pill" data-a="modal-close">Κλείσιμο</button><button class="pill main" data-a="copy" id="copyBtn">${I.copy}<span>Αντιγραφή</span></button></div>`,
+      `<div class="foot"><button class="pill" data-a="approve">${I.check}<span>Σωστό πλάνο</span></button><div class="grow"></div><button class="pill" data-a="modal-close">Κλείσιμο</button><button class="pill main" data-a="copy" id="copyBtn">${I.copy}<span>Αντιγραφή</span></button></div>`,
   )
 }
+async function copyText(text: string) {
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    document.body.appendChild(ta)
+    ta.select()
+    document.execCommand('copy')
+    ta.remove()
+  }
+}
+
+// ---------- a scene in a link ----------
+function b64e(text: string): string {
+  let bin = ''
+  for (const b of new TextEncoder().encode(text)) bin += String.fromCharCode(b)
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+function b64d(code: string): string {
+  const bin = atob(code.replace(/-/g, '+').replace(/_/g, '/'))
+  return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)))
+}
+const sceneLink = () => `${location.origin}${location.pathname}#p=${b64e(JSON.stringify(P()))}`
+
+/** #p= is a whole project (Link σκηνής), #ai= a scene as Claude writes it (previz/tools/link.mjs). */
+function loadFromHash(): boolean {
+  const m = /^#(p|ai)=(.+)$/.exec(location.hash)
+  if (!m) return false
+  history.replaceState(null, '', location.pathname + location.search)
+  try {
+    const raw = JSON.parse(b64d(m[2]))
+    const project = m[1] === 'p' ? migrate(raw) : toProject(raw, P())
+    if (!project) throw new Error('bad')
+    store.replace(project)
+    ui.sel = null
+    ui.frame = false
+    ui.time = 0
+    ui.playing = true
+    const a = project.figures[0]
+    if (a) centerOn(a.x, 0.9, a.z)
+    refresh('sel')
+    const notes = m[1] === 'ai' && typeof raw.notes === 'string' ? raw.notes : 'Άνοιξε η σκηνή από το link.'
+    openModal(`<h2>Νέα σκηνή</h2><p class="note">${esc(notes)}</p><p class="hint">Θες αυτό που είχες πριν; Πάτα Αναίρεση.</p><div class="foot"><div class="grow"></div><button class="pill main" data-a="modal-close">Να το δω</button></div>`)
+  } catch {
+    toast('Το link της σκηνής δεν διαβάζεται')
+  }
+  return true
+}
+window.addEventListener('hashchange', loadFromHash)
+
+function openApprove() {
+  let last = ''
+  try {
+    last = localStorage.getItem('tml_previz_ai_text') || ''
+  } catch {
+    /* private mode */
+  }
+  openModal(
+    `<h2>Σωστό πλάνο</h2><p class="hint">Γράψε με δυο λόγια τι είναι το πλάνο και τι σου αρέσει σε αυτό. Αντιγράφεται μαζί με τη σκηνή, το επικολλάς στο Claude και γίνεται παράδειγμα για τις επόμενες σκηνές.</p>` +
+      `<textarea id="apText" class="write" placeholder="Π.χ. Έτσι θέλω το over the shoulder: 50mm, κοντά στον ώμο, η κάμερα λίγο πιο χαμηλά από τα μάτια.">${esc(last)}</textarea>` +
+      `<div class="foot"><div class="grow"></div><button class="pill" data-a="modal-close">Κλείσιμο</button><button class="pill main" data-a="approve-copy">${I.copy}<span>Αντιγραφή για το Claude</span></button></div>`,
+  )
+}
+
 async function copyPrompt() {
   const ta = modal.querySelector<HTMLTextAreaElement>('#promptText')
   if (!ta) return
-  try {
-    await navigator.clipboard.writeText(ta.value)
-  } catch {
-    ta.select()
-    document.execCommand('copy')
-  }
+  await copyText(ta.value)
   const b = $('copyBtn')
   b.innerHTML = `${I.copy}<span>Αντιγράφηκε</span>`
   setTimeout(() => (b.innerHTML = `${I.copy}<span>Αντιγραφή</span>`), 1600)
@@ -886,8 +959,9 @@ window.addEventListener('resize', () => {
 mq.addEventListener('change', () => refresh('sel'))
 
 refresh('init')
+const fromLink = loadFromHash()
 try {
-  if (!localStorage.getItem('tml_previz_seen')) {
+  if (!fromLink && !localStorage.getItem('tml_previz_seen')) {
     localStorage.setItem('tml_previz_seen', '1')
     openHelp()
   }

@@ -191,8 +191,14 @@ function analyse(p: Project, t0: number, t1: number): Analysis {
     dollyBy = Math.abs(d1 - d0)
     if (d1 < d0 * 0.87 && d0 - d1 > 0.3) dolly = 'in'
     else if (d1 > d0 * 1.15 && d1 - d0 > 0.3) dolly = 'out'
-    // a figure walking to or from a camera that stays put is not a dolly
+    // a figure walking to or from the camera is not a dolly: then only the camera's own travel counts
     if (dolly && path < 0.3) dolly = null
+    if (subjMoves && !tracking) {
+      const to = chest(subject, t0).sub(start.pos).setY(0).normalize()
+      const own = disp.dot(to)
+      dolly = own > 0.5 ? 'in' : own < -0.5 ? 'out' : null
+      dollyBy = Math.abs(own)
+    }
   } else if (Math.abs(ahead) > 0.5 && Math.abs(ahead) > Math.abs(lateral)) {
     dolly = ahead > 0 ? 'in' : 'out'
     dollyBy = Math.abs(ahead)
@@ -201,7 +207,9 @@ function analyse(p: Project, t0: number, t1: number): Analysis {
   const zoomR = end.lens / start.lens
   const zoom: 'in' | 'out' | null = zoomR > 1.12 ? 'in' : zoomR < 0.89 ? 'out' : null
   const lensTxt = `${Math.round(start.lens)}mm to ${Math.round(end.lens)}mm`
-  if (dolly && zoom && dolly !== zoom) {
+  // a dolly zoom keeps the subject the same size; otherwise it is just a dolly and a zoom together
+  const sameSize = !!subject && Math.abs(Math.log((end.pos.distanceTo(chest(subject, t1)) / end.lens) / (start.pos.distanceTo(chest(subject, t0)) / start.lens))) < 0.3
+  if (dolly && zoom && dolly !== zoom && sameSize) {
     const how = dolly === 'out' ? 'camera dollies out while the lens zooms in' : 'camera dollies in while the lens zooms out'
     const on = name ? ` on ${name}` : ''
     moves.push({

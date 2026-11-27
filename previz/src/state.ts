@@ -72,7 +72,7 @@ export function exampleProject(): Project {
 }
 
 export function normalize(p: Project): void {
-  p.shot.duration = clamp(p.shot.duration, 4, 15)
+  p.shot.duration = clamp(p.shot.duration, 4, 30)
   p.shot.shake = clamp(p.shot.shake || 0, 0, 100)
   const labels = new Set(p.figures.map((f) => f.label))
   for (const k of p.keys) {
