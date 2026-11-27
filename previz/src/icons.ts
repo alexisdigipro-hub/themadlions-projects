@@ -24,5 +24,6 @@ export const I = {
   wand: svg('<path d="M4 20 15 9M14 4v3M12.5 5.5h3M19 9v3M17.5 10.5h3M8 3v2M7 4h2"/><path d="m15 9 1.5-1.5"/>'),
   help: svg('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17h.01"/>'),
   walk: svg('<circle cx="13" cy="4.5" r="2"/><path d="M13 8l-3 4 3 3v6M10 12l-3 1M13 10l3 2 2-1M10 16l-3 5"/>'),
+  spark: svg('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>'),
   copy: svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'),
 }

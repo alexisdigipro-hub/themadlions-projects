@@ -5,6 +5,7 @@ import { World, type Rect } from './scene'
 import { applyCam, aspectRatio, camAt, keyTarget, vfov } from './camera'
 import { figAt, pathLength } from './motion'
 import { PRESETS, applyPreset } from './presets'
+import { getKey, sceneFromText, setKey } from './ai'
 import { buildPrompt } from './prompt'
 import { I } from './icons'
 import { clamp, esc, gr, timecode, uid } from './util'
@@ -51,6 +52,7 @@ fill('[data-a="loop"]', I.loop)
 fill('[data-a="add-prop"]', `${I.cube}<span>Αντικείμενο</span>`)
 fill('[data-a="presets"]', `${I.wand}<span>Κινήσεις</span>`)
 fill('[data-a="help"]', I.help)
+fill('#aiBtn', `${I.spark}<span>Σκηνή με AI</span>`)
 $('promptBtn').innerHTML = `${I.text}<span>Prompt</span>`
 $('addKey').innerHTML = `${I.key}<span>Keyframe</span>`
 
@@ -187,7 +189,7 @@ function renderInspector() {
   if (s?.kind === 'figure') {
     const f = fig(s.id) as Figure
     h =
-      head(`Φιγούρα ${f.label}`, FIG_COLORS[f.label]) +
+      head(`Φιγούρα ${f.label}${f.name ? ` · ${esc(f.name)}` : ''}`, FIG_COLORS[f.label]) +
       `<div class="fld"><span>Στάση</span>${chips('pose', POSES.map((p) => ({ v: p.id, t: p.gr })), f.pose)}</div>` +
       rotField(f.rot) +
       `<div class="fld"><span>Ύψος <em id="hv">${gr(f.height, 2)} m</em></span><input type="range" min="1.5" max="2" step="0.01" value="${f.height}" data-k="height"></div>` +
@@ -416,6 +418,13 @@ function act(a: string, v: string | undefined) {
     }
     case 'help':
       return openHelp()
+    case 'ai':
+      return openAi()
+    case 'ai-run':
+      return runAi()
+    case 'ai-key':
+      setKey('')
+      return openAi()
     case 'path-add':
       return store.commit((p) => {
         const f = p.figures.find((f) => f.id === s?.id)
@@ -583,10 +592,64 @@ function openPresets() {
   openModal(
     `<h2>Έτοιμες κινήσεις</h2>` +
       `<div class="fld"><span>Γύρω από</span>${chips('preset-fig', figs.map((f) => ({ v: f.id, t: `Φιγούρα ${f.label}` })), presetFig)}</div>` +
+      `<button class="pill wide ai" data-a="ai">${I.spark}<span>Ή περιέγραψε τη σκηνή με λόγια και στήνεται μόνη της</span></button>` +
       `<div class="grid">${PRESETS.map((x) => `<button class="pill two" data-a="preset" data-v="${x.id}"><b>${x.gr}</b><small>${x.note}</small></button>`).join('')}</div>` +
       `<p class="hint">Η κίνηση αντικαθιστά τα keyframes του πλάνου, με τον φακό και τη διάρκεια που έχεις ορίσει. Μετά τα πειράζεις όπως θες.</p>` +
       `<div class="foot"><div class="grow"></div><button class="pill" data-a="modal-close">Κλείσιμο</button></div>`,
   )
+}
+
+function openAi(error = '') {
+  let last = ''
+  try {
+    last = localStorage.getItem('tml_previz_ai_text') || ''
+  } catch {
+    /* private mode */
+  }
+  const typed = modal.querySelector<HTMLTextAreaElement>('#aiText')?.value
+  const has = !!getKey()
+  openModal(
+    `<h2>Σκηνή με AI</h2>` +
+      `<p class="hint">Γράψε τη σκηνή όπως θα την έλεγες στον οπερατέρ: ποιοι είναι, πού στέκονται, τι κάνουν και πώς κινείται η κάμερα. Το Claude στήνει φιγούρες, χώρο και κίνηση, και μετά τα διορθώνεις με το χέρι.</p>` +
+      `<textarea id="aiText" class="write" placeholder="Π.χ. Ο Νίκος μπαίνει από την πόρτα και περπατάει ως το τραπέζι όπου κάθεται η Μαρία. Η κάμερα τον ακολουθεί από πίσω και καταλήγει σε over the shoulder πάνω της. 8 δευτερόλεπτα, 35mm.">${esc(typed ?? last)}</textarea>` +
+      (has
+        ? ''
+        : `<div class="fld"><span>Κλειδί Claude API</span><input id="aiKey" class="write" type="password" autocomplete="off" placeholder="sk-ant-..."><p class="hint">Μένει μόνο σε αυτή τη συσκευή. Το φτιάχνεις στο console.anthropic.com, στο API keys.</p></div>`) +
+      (error ? `<p class="err">${esc(error)}</p>` : '') +
+      `<div class="foot">${has ? `<button class="pill" data-a="ai-key">Άλλαξε κλειδί</button>` : ''}<div class="grow"></div><button class="pill" data-a="modal-close">Κλείσιμο</button><button class="pill main" data-a="ai-run" id="aiRun">${I.spark}<span>Στήσε τη σκηνή</span></button></div>`,
+  )
+}
+
+async function runAi() {
+  const text = (modal.querySelector<HTMLTextAreaElement>('#aiText')?.value || '').trim()
+  const typedKey = (modal.querySelector<HTMLInputElement>('#aiKey')?.value || '').trim()
+  if (typedKey) setKey(typedKey)
+  const k = getKey()
+  if (!text) return openAi('Γράψε πρώτα τη σκηνή.')
+  if (!k) return openAi('Βάλε το κλειδί Claude API.')
+  try {
+    localStorage.setItem('tml_previz_ai_text', text)
+  } catch {
+    /* private mode */
+  }
+  const b = $<HTMLButtonElement>('aiRun')
+  b.disabled = true
+  b.innerHTML = `<span class="spin"></span><span>Στήνω τη σκηνή, ως ένα λεπτό…</span>`
+  try {
+    const { project, notes } = await sceneFromText(k, text, P())
+    store.replace(project)
+    closeModal()
+    ui.sel = null
+    ui.frame = false
+    ui.time = 0
+    ui.playing = true
+    const a = project.figures[0]
+    centerOn(a.x, 0.9, a.z)
+    refresh('sel')
+    if (notes) openModal(`<h2>Έτοιμη η σκηνή</h2><p class="note">${esc(notes)}</p><p class="hint">Δεν σου κάνει; Πάτα Αναίρεση και γυρνάς εκεί που ήσουν.</p><div class="foot"><div class="grow"></div><button class="pill" data-a="ai">Γράψ' το αλλιώς</button><button class="pill main" data-a="modal-close">Να το δω</button></div>`)
+  } catch (e) {
+    if (!modal.hidden) openAi(e instanceof Error ? e.message : 'Κάτι πήγε στραβά. Δοκίμασε ξανά.')
+  }
 }
 
 function openHelp() {
@@ -596,7 +659,8 @@ function openHelp() {
       step(1, 'Στήσε τη σκηνή', 'Σύρε τις φιγούρες με το δάχτυλο. Πάτα μία για στάση, ύψος, περιστροφή ή για να περπατήσει ως ένα σημείο.') +
       step(2, 'Διάλεξε κίνηση κάμερας', 'Πάτα Κινήσεις και διάλεξε orbit, dolly, crane, vertigo και άλλες. Γίνεται με ένα πάτημα γύρω από τη φιγούρα που θες.') +
       step(3, 'Ή φτιάξ\'τη δική σου', 'Γύρνα τη Director view, διάλεξε χρόνο στο timeline και πάτα Keyframe. Με το Κάδρο φακού βλέπεις ό,τι γράφει η κάμερα.') +
-      step(4, 'Πάρε το prompt', 'Το Prompt γράφει στα αγγλικά την κίνηση της κάμερας και των χαρακτήρων, έτοιμο για Seedance.') +
+      step(4, 'Ή γράψ\'την με λόγια', 'Στο Σκηνή με AI περιγράφεις τη σκηνή και το Claude στήνει φιγούρες, χώρο και κίνηση κάμερας. Θέλει ένα κλειδί Claude API.') +
+      step(5, 'Πάρε το prompt', 'Το Prompt γράφει στα αγγλικά την κίνηση της κάμερας και των χαρακτήρων, έτοιμο για Seedance.') +
       `<div class="foot"><div class="grow"></div><button class="pill main" data-a="modal-close">Πάμε</button></div>`,
   )
 }
