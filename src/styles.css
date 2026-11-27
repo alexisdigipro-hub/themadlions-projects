@@ -9120,3 +9120,33 @@ html[data-theme][data-theme] body .fin-set-stack .fin-settings > h2 { margin: 0 
    a full-width line or a photo row came a few pixels past the edge and the body grew a bar that did nothing.
    Wide tables keep their own scroll inside .table-wrap. */
 html body .modal .modal-body { overflow-x: hidden; }
+
+/* The project's head, slim (Alex, 27 Nov, version G of https://claude.ai/artifact/H6eqCcDbxJyq8ityQTZArz), on a computer:
+   no big picture (it is in the title row), the facts in one grey line beside the buttons, and under a fine line one thin
+   track: the %, the stages as pieces (hover for the name, tap to go), Next at the end. A phone keeps its own. */
+html body .overview .progress .g-facts, html body .overview .progress .g-track { display: none; }
+@media (min-width: 821px) {
+  html body .overview .progress .progress-head { grid-template-columns: minmax(0, 1fr); }
+  html body .overview .progress .progress-cover,
+  html body .overview .progress .g-old,
+  html body .overview .progress .progress-track,
+  html body .overview .progress .progress-segs,
+  html body .overview .progress .stages,
+  html body .overview .progress .progress-facts { display: none; }
+  html body .overview .progress { padding: 12px 16px; }
+  html body .overview .progress .progress-top { display: flex; align-items: center; gap: 12px; }
+  html body .overview .progress .g-facts { display: block; flex: 1 1 auto; min-width: 0; color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html body .overview .progress .g-track { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+  .g-pct { font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .g-pct b { color: var(--text); font-size: 15px; }
+  .g-bar { flex: 1 1 auto; display: flex; gap: 4px; min-width: 120px; }
+  .g-seg { position: relative; height: 6px; padding: 0; border: 0; border-radius: 99px; background: color-mix(in srgb, var(--text) 9%, transparent); overflow: hidden; cursor: pointer; }
+  .g-seg:disabled { cursor: default; }
+  .g-seg > i { position: absolute; inset: 0 auto 0 0; background: var(--ok); border-radius: 99px; }
+  .g-seg.next { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 70%, transparent); }
+  .g-seg:hover:not(:disabled) { transform: scaleY(1.5); }
+  .g-next { font: inherit; font-size: 13px; color: var(--muted); white-space: nowrap; background: none; border: 0; padding: 4px 0; cursor: pointer; }
+  .g-next em { font-style: normal; font-weight: 600; color: var(--accent); }
+  span.g-next { cursor: default; }
+}
+@media (prefers-reduced-motion: no-preference) { .g-seg { transition: transform .15s ease; } }

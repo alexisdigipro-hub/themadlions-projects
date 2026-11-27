@@ -305,9 +305,12 @@ export default function Overview() {
           </div>
           <div className="progress-main">
             <div className="progress-top">
-              <span>
+              <span className="g-old">
                 <strong className="progress-pct">{pct}%<small> done</small></strong> <span className="muted small progress-sub">{[project.category && [project.category, 'progress-cat'], project.status === 'Delivered' && ['Delivered'], project.frozen && ['🔒 locked'], project.startDate && [`shoot ${fmtDate(project.startDate)}`, 'progress-shoot']].filter(Boolean).map(([x, c]) => <span key={x} className={c}>{x}</span>)}</span>
               </span>
+              {/* the slim head (Alex, 27 Nov, version G of https://claude.ai/artifact/H6eqCcDbxJyq8ityQTZArz): on a computer the
+                  facts in one grey line here, the % moves down to the track */}
+              <span className="g-facts">{[project.category, project.status === 'Delivered' && 'Delivered', project.frozen && '🔒 locked', ...facts.map((f) => (f.k === 'shoot' ? `${f.v} · ${f.l}` : `${f.v} ${f.l}`))].filter(Boolean).join(' · ')}</span>
               {/* the project's few actions, always in the same place (Alex, 28 Oct: "I was looking for Edit"):
                   + Add (everything that can be added, in groups), Edit, and ⋯ for Duplicate and Lock */}
               <span className="ov-acts">
@@ -398,6 +401,20 @@ export default function Overview() {
             <div className="progress-facts">
               {facts.map((f) => <span key={f.k} className={`pfact${f.soon ? ' soon' : ''}`}><b>{f.v}</b>{f.l}</span>)}
               {next && (next.manual ? <span className="pfact next">Next<b>{next.label}</b></span> : <button type="button" className="pfact next" onClick={() => goStage(next)}>Next<b>{next.label}</b><span aria-hidden="true">›</span></button>)}
+            </div>
+            <div className="g-track">
+              <span className="g-pct"><b>{pct}%</b> done</span>
+              <div className="g-bar">
+                {stages.map((st) => (
+                  <button key={st.key} type="button" className={`g-seg${st.done >= 1 ? ' done' : st.done > 0 ? ' part' : ''}${next && st.key === next.key ? ' next' : ''}`} style={{ flexGrow: st.weight || 1 }}
+                    title={`${st.label}: ${st.done >= 1 ? 'done' : st.manual ? (canEdit('projects') ? 'tap when done' : 'not yet') : `${Math.round(st.done * 100)}%`}`} aria-label={st.label}
+                    disabled={st.manual && !canEdit('projects')}
+                    onClick={() => (st.manual ? edit((p) => { const k = st.key.slice(7); p.customStages = { ...(p.customStages || {}), [k]: !p.customStages?.[k] } }) : goStage(st))}>
+                    <i style={{ width: `${Math.round(Math.min(1, st.done) * 100)}%` }} />
+                  </button>
+                ))}
+              </div>
+              {next ? (next.manual ? <span className="g-next">Next: <em>{next.label}</em></span> : <button type="button" className="g-next" onClick={() => goStage(next)}>Next: <em>{next.label}</em> ›</button>) : <span className="g-next">All done</span>}
             </div>
           </div>
         </div>
