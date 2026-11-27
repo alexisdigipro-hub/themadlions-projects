@@ -6,6 +6,12 @@
     <meta name="theme-color" content="#0b0c0e" />
     <title>Camera Previz · The Mad Lions</title>
     <link rel="icon" href="../favicon.svg" />
+    <link rel="manifest" href="../previz.webmanifest" />
+    <link rel="apple-touch-icon" href="../icons/previz-180.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Previz" />
   </head>
   <body>
     <div id="app" class="view-director">
@@ -18,6 +24,7 @@
           <button data-a="view" data-v="shot">Shot</button>
         </div>
         <div class="grow"></div>
+        <button class="ico" data-a="help" id="helpBtn" title="Οδηγίες" aria-label="Οδηγίες"></button>
         <button class="pill" data-a="settings" id="shotPill"></button>
         <button class="pill main" data-a="prompt" id="promptBtn"></button>
       </header>
@@ -47,6 +54,7 @@
           <button class="tool" data-a="add-prop"></button>
           <button class="tool" data-a="camera" id="lensBtn"></button>
           <button class="tool" data-a="frame" id="frameBtn"></button>
+          <button class="tool" data-a="presets" id="presetsBtn"></button>
           <div class="grow"></div>
           <button class="pill main big" data-a="add-key" id="addKey"></button>
         </div>

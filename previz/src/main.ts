@@ -2,7 +2,9 @@ import './style.css'
 import * as THREE from 'three'
 import { Store, exampleProject, FIG_COLORS, LABELS, LENSES, ASPECTS, POSES, EASES, PROPS, type Figure, type Prop, type Keyframe, type Vec3 } from './state'
 import { World, type Rect } from './scene'
-import { applyCam, aspectRatio, evalCamera, vfov } from './camera'
+import { applyCam, aspectRatio, camAt, keyTarget, vfov } from './camera'
+import { figAt, pathLength } from './motion'
+import { PRESETS, applyPreset } from './presets'
 import { buildPrompt } from './prompt'
 import { I } from './icons'
 import { clamp, esc, gr, timecode, uid } from './util'
@@ -47,6 +49,8 @@ fill('[data-a="undo"]', I.undo)
 fill('[data-a="redo"]', I.redo)
 fill('[data-a="loop"]', I.loop)
 fill('[data-a="add-prop"]', `${I.cube}<span>Αντικείμενο</span>`)
+fill('[data-a="presets"]', `${I.wand}<span>Κινήσεις</span>`)
+fill('[data-a="help"]', I.help)
 $('promptBtn').innerHTML = `${I.text}<span>Prompt</span>`
 $('addKey').innerHTML = `${I.key}<span>Keyframe</span>`
 
@@ -55,7 +59,6 @@ function refresh(reason = 'edit') {
   const p = P()
   if (ui.sel && !(ui.sel.kind === 'figure' ? fig(ui.sel.id) : ui.sel.kind === 'prop' ? prop(ui.sel.id) : key(ui.sel.id))) ui.sel = null
   ui.time = clamp(ui.time, 0, p.shot.duration)
-  world.syncScene(p, ui.sel && ui.sel.kind !== 'key' ? ui.sel.id : null)
   world.syncPath(p, aspect(), ui.sel?.kind === 'key' ? ui.sel.id : null)
   renderTimeline()
   if (reason !== 'live') renderInspector()
@@ -77,14 +80,14 @@ function renderBars() {
   add.innerHTML = `${I.person}<span>Φιγούρα</span>`
   add.disabled = p.figures.length >= 4
   const k = ui.sel?.kind === 'key' ? key(ui.sel.id) : null
-  $('lensBtn').innerHTML = `${I.lens}<span>${k ? k.lens : p.shot.lens}mm</span>`
+  $('lensBtn').innerHTML = `${I.lens}<span>Κάμερα · ${k ? k.lens : p.shot.lens}mm</span>`
   $('lensBtn').classList.toggle('on', !ui.sel && ui.camPanel)
   $('frameBtn').innerHTML = `${I.frame}<span>Κάδρο φακού</span>`
   $('frameBtn').classList.toggle('on', ui.frame)
   $('tc').textContent = timecode(ui.time, p.shot.fps)
   pip.style.aspectRatio = String(aspect())
   pip.style.width = aspect() < 1 ? '24%' : aspect() > 2 ? '46%' : '40%'
-  const cam = evalCamera(p.keys, ui.time)
+  const cam = camAt(p, ui.time)
   $('shotInfo').textContent = `${Math.round(cam.lens)}mm · ${p.shot.aspect}`
   $('dirInfo').textContent = ui.frame ? `μέσα από τον φακό · ${lensNow()}mm` : 'ελεύθερη κάμερα'
 }
@@ -166,7 +169,7 @@ track.addEventListener('pointercancel', endTrack)
 function setTime(t: number) {
   ui.time = clamp(t, 0, P().shot.duration)
   placeHead()
-  const cam = evalCamera(P().keys, ui.time)
+  const cam = camAt(P(), ui.time)
   $('shotInfo').textContent = `${Math.round(cam.lens)}mm · ${P().shot.aspect}`
   dirty = true
 }
@@ -188,6 +191,7 @@ function renderInspector() {
       `<div class="fld"><span>Στάση</span>${chips('pose', POSES.map((p) => ({ v: p.id, t: p.gr })), f.pose)}</div>` +
       rotField(f.rot) +
       `<div class="fld"><span>Ύψος <em id="hv">${gr(f.height, 2)} m</em></span><input type="range" min="1.5" max="2" step="0.01" value="${f.height}" data-k="height"></div>` +
+      pathField(f) +
       `<div class="row"><button class="pill" data-a="center">${I.target}<span>Κέντρο εδώ</span></button><div class="grow"></div><button class="pill danger" data-a="del">${I.trash}<span>Διαγραφή</span></button></div>`
   } else if (s?.kind === 'prop') {
     const pr = prop(s.id) as Prop
@@ -204,6 +208,7 @@ function renderInspector() {
       head(`Keyframe ${i + 1} / ${P().keys.length} · ${gr(k.t, 2)} s`) +
       `<div class="fld"><span>Φακός (mm)</span>${lensChips('klens', k.lens)}</div>` +
       (last ? '' : `<div class="fld"><span>Μετάβαση ως το επόμενο</span>${chips('kease', EASES.map((e) => ({ v: e.id, t: e.gr })), k.ease)}</div>`) +
+      `<div class="fld"><span>Η κάμερα κοιτάει</span>${chips('klook', [{ v: '', t: 'Ελεύθερα' }, ...P().figures.map((f) => ({ v: f.label, t: `Κλειδωμένη στο ${f.label}` }))], k.look || '')}</div>` +
       `<div class="fld"><span>Roll <em id="rv">${Math.round(k.roll)}°</em></span><input type="range" min="-45" max="45" step="1" value="${k.roll}" data-k="roll"></div>` +
       `<div class="row wrap"><button class="pill" data-a="goto">${I.eye}<span>Δες από εδώ</span></button><button class="pill" data-a="kupdate">${I.refresh}<span>Ενημέρωσε από την τρέχουσα θέση</span></button></div>` +
       `<div class="row"><div class="grow"></div><button class="pill danger" data-a="del">${I.trash}<span>Διαγραφή</span></button></div>`
@@ -212,6 +217,8 @@ function renderInspector() {
     h =
       head('Κάμερα') +
       `<div class="fld"><span>Φακός για νέο keyframe (mm)</span>${lensChips('lens', P().shot.lens)}</div>` +
+      `<div class="fld"><span>Handheld <em id="shv">${shakeName(P().shot.shake)}</em></span><input type="range" min="0" max="100" step="5" value="${P().shot.shake}" data-k="shake"></div>` +
+      `<button class="pill wide" data-a="presets">${I.wand}<span>Έτοιμες κινήσεις κάμερας</span></button>` +
       `<p class="hint">Στήσε τη Director view όπως θες το κάδρο, διάλεξε χρόνο στο timeline και πάτα Keyframe. Με το Κάδρο φακού βλέπεις ακριβώς ό,τι γράφει η κάμερα.</p>` +
       `<button class="pill main wide" data-a="add-key">${I.key}<span>Πρόσθεσε keyframe από την τρέχουσα θέση</span></button>` +
       (keys.length
@@ -220,6 +227,20 @@ function renderInspector() {
   }
   inspector.innerHTML = h
 }
+const shakeName = (n: number) => (n <= 0 ? 'κλειστό' : `${n} · ${n < 34 ? 'ελαφρύ' : n < 67 ? 'φυσικό' : 'έντονο'}`)
+function pathField(f: Figure): string {
+  const d = P().shot.duration
+  if (!f.path)
+    return `<div class="fld"><span>Κίνηση</span><button class="pill wide" data-a="path-add">${I.walk}<span>Να περπατήσει ως ένα σημείο</span></button></div>`
+  const speed = pathLength(f) / Math.max(0.1, f.path.t1 - f.path.t0)
+  return (
+    `<div class="fld"><span>Κίνηση <em id="pinfo">${gr(pathLength(f), 1)} m · ${gr(speed, 1)} m/s</em></span>${chips('gait', [{ v: 'walk', t: 'Περπάτημα' }, { v: 'run', t: 'Τρέξιμο' }], f.pose === 'run' ? 'run' : 'walk')}` +
+    `<p class="hint">Σύρε τη σημαία στη Director για να ορίσεις πού φτάνει.</p></div>` +
+    `<div class="fld"><span>Ξεκινά <em id="p0v">${gr(f.path.t0, 1)} s</em></span><input type="range" min="0" max="${d}" step="0.25" value="${f.path.t0}" data-k="pt0"></div>` +
+    `<div class="fld"><span>Φτάνει <em id="p1v">${gr(f.path.t1, 1)} s</em></span><input type="range" min="0" max="${d}" step="0.25" value="${f.path.t1}" data-k="pt1"></div>` +
+    `<button class="pill" data-a="path-del">${I.close}<span>Χωρίς κίνηση</span></button>`
+  )
+}
 const rotField = (rot: number) =>
   `<div class="fld"><span>Περιστροφή <em id="rotv">${Math.round(rot)}°</em></span><div class="row"><button class="ico" data-a="rot" data-v="-45" aria-label="45° αριστερά">${I.rotL}</button><input type="range" min="-180" max="180" step="5" value="${rot}" data-k="rot"><button class="ico" data-a="rot" data-v="45" aria-label="45° δεξιά">${I.rotR}</button></div></div>`
 
@@ -227,18 +248,35 @@ inspector.addEventListener('input', (e) => {
   const el = e.target as HTMLInputElement
   const k = el.dataset.k
   const s = ui.sel
-  if (!k || !s) return
+  if (!k) return
   const v = Number(el.value)
+  if (k === 'shake') {
+    store.live((p) => (p.shot.shake = v))
+    $('shv').textContent = shakeName(v)
+    return
+  }
+  if (!s) return
   store.live((p) => {
-    const o: { rot?: number; height?: number; roll?: number } | undefined =
-      s.kind === 'figure' ? p.figures.find((f) => f.id === s.id) : s.kind === 'prop' ? p.props.find((f) => f.id === s.id) : p.keys.find((f) => f.id === s.id)
+    if (s.kind === 'key') {
+      const o = p.keys.find((f) => f.id === s.id)
+      if (o && k === 'roll') o.roll = v
+      return
+    }
+    if (s.kind === 'prop') {
+      const o = p.props.find((f) => f.id === s.id)
+      if (o && k === 'rot') o.rot = v
+      return
+    }
+    const o = p.figures.find((f) => f.id === s.id)
     if (!o) return
     if (k === 'rot') o.rot = v
     if (k === 'height') o.height = v
-    if (k === 'roll') o.roll = v
+    if (o.path && k === 'pt0') o.path.t0 = Math.min(v, o.path.t1 - 0.25)
+    if (o.path && k === 'pt1') o.path.t1 = Math.max(v, o.path.t0 + 0.25)
   })
-  const lab = k === 'rot' ? 'rotv' : k === 'height' ? 'hv' : 'rv'
-  $(lab).textContent = k === 'height' ? `${gr(v, 2)} m` : `${Math.round(v)}°`
+  const lab = { rot: 'rotv', height: 'hv', roll: 'rv', pt0: 'p0v', pt1: 'p1v' }[k] as string
+  $(lab).textContent = k === 'height' ? `${gr(v, 2)} m` : k === 'pt0' || k === 'pt1' ? `${gr(v, 1)} s` : `${Math.round(v)}°`
+  if (k === 'pt0' || k === 'pt1') setTime(v)
 })
 inspector.addEventListener('change', (e) => {
   if ((e.target as HTMLElement).dataset.k) store.end()
@@ -355,10 +393,60 @@ function act(a: string, v: string | undefined) {
       store.commit((p) => p.props.push({ id, kind: v as Prop['kind'], x: +at.x.toFixed(2), z: +at.z.toFixed(2), rot: 0 }))
       return select({ kind: 'prop', id })
     }
-    case 'pose':
+    case 'presets':
+      return openPresets()
+    case 'preset-fig':
+      presetFig = v as string
+      return openPresets()
+    case 'preset': {
+      const f0 = P().figures.find((f) => f.id === presetFig) || P().figures[0]
+      if (!f0) return
+      const name = PRESETS.find((x) => x.id === v)?.gr
+      store.commit((p) => {
+        const f = p.figures.find((x) => x.id === f0.id)
+        if (f) applyPreset(p, v as string, f)
+      })
+      closeModal()
+      ui.sel = null
+      ui.frame = false
+      ui.time = 0
+      ui.playing = true
+      refresh('sel')
+      return toast(`${name} γύρω από το ${f0.label}. Δεν σου κάνει; Αναίρεση.`)
+    }
+    case 'help':
+      return openHelp()
+    case 'path-add':
+      return store.commit((p) => {
+        const f = p.figures.find((f) => f.id === s?.id)
+        if (!f) return
+        const r = (f.rot * Math.PI) / 180
+        f.path = { x: +(f.x + Math.sin(r) * 4).toFixed(2), z: +(f.z + Math.cos(r) * 4).toFixed(2), t0: 0, t1: Math.min(p.shot.duration, 3) }
+        if (f.pose !== 'run') f.pose = 'walk'
+      })
+    case 'path-del':
+      return store.commit((p) => {
+        const f = p.figures.find((f) => f.id === s?.id)
+        if (!f) return
+        f.path = null
+        f.pose = 'stand'
+      })
+    case 'gait':
       return store.commit((p) => {
         const f = p.figures.find((f) => f.id === s?.id)
         if (f) f.pose = v as Figure['pose']
+      })
+    case 'klook':
+      return store.commit((p) => {
+        const k = p.keys.find((k) => k.id === s?.id)
+        if (k) k.look = (v || null) as Keyframe['look']
+      })
+    case 'pose':
+      return store.commit((p) => {
+        const f = p.figures.find((f) => f.id === s?.id)
+        if (!f) return
+        f.pose = v as Figure['pose']
+        if (f.path && v !== 'walk' && v !== 'run') f.path = null
       })
     case 'rot':
       return store.commit((p) => {
@@ -366,8 +454,12 @@ function act(a: string, v: string | undefined) {
         if (o) o.rot = ((((o.rot + Number(v) + 180) % 360) + 360) % 360) - 180
       })
     case 'center': {
-      const o = s?.kind === 'figure' ? fig(s.id) : s ? prop(s.id) : null
-      if (o) centerOn(o.x, 'height' in o ? o.height * 0.55 : 0.6, o.z)
+      const f = s?.kind === 'figure' ? fig(s.id) : null
+      const o = s?.kind === 'prop' ? prop(s.id) : null
+      if (f) {
+        const st = figAt(f, ui.time)
+        centerOn(st.x, f.height * 0.55, st.z)
+      } else if (o) centerOn(o.x, 0.6, o.z)
       return
     }
     case 'del':
@@ -394,7 +486,7 @@ function act(a: string, v: string | undefined) {
       const k = s?.kind === 'key' ? key(s.id) : null
       if (!k) return
       world.dirCam.position.set(...k.pos)
-      world.controls.target.set(...k.target)
+      world.controls.target.copy(keyTarget(P(), k, k.t))
       world.controls.update()
       ui.frame = true
       setTime(k.t)
@@ -463,7 +555,7 @@ function openSettings() {
       `<div class="fld"><span>Διάρκεια <em id="dv">${gr(s.duration, 1)} s</em></span><input type="range" min="4" max="15" step="0.5" value="${s.duration}" id="durIn"></div>` +
       `<div class="fld"><span>Καρέ το δευτερόλεπτο</span>${chips('fps', [24, 25].map((f) => ({ v: f, t: `${f} fps` })), s.fps)}</div>` +
       `<p class="hint">Αλλάζοντας τη διάρκεια, τα keyframes απλώνονται ή μαζεύονται αναλογικά.</p>` +
-      `<div class="foot"><button class="pill" data-a="clear-keys">${I.trash}<span>Κενό πλάνο</span></button><button class="pill" data-a="example">${I.refresh}<span>Το παράδειγμα</span></button><div class="grow"></div><button class="pill main" data-a="modal-close">Έτοιμο</button></div>`,
+      `<div class="foot"><button class="pill" data-a="help">${I.help}<span>Οδηγίες</span></button><button class="pill" data-a="clear-keys">${I.trash}<span>Κενό πλάνο</span></button><button class="pill" data-a="example">${I.refresh}<span>Το παράδειγμα</span></button><div class="grow"></div><button class="pill main" data-a="modal-close">Έτοιμο</button></div>`,
   )
   const inp = modal.querySelector<HTMLInputElement>('#durIn') as HTMLInputElement
   inp.addEventListener('input', () => ($('dv').textContent = `${gr(Number(inp.value), 1)} s`))
@@ -472,10 +564,41 @@ function openSettings() {
     store.commit((p) => {
       const f = nd / p.shot.duration
       for (const k of p.keys) k.t = Math.round(k.t * f * p.shot.fps) / p.shot.fps
+      for (const g of p.figures) if (g.path) {
+        g.path.t0 = Math.round(g.path.t0 * f * 4) / 4
+        g.path.t1 = Math.round(g.path.t1 * f * 4) / 4
+      }
       p.shot.duration = nd
     })
     ui.time = clamp(ui.time * 1, 0, nd)
   })
+}
+
+let presetFig = ''
+function openPresets() {
+  const figs = P().figures
+  if (!figs.length) return toast('Βάλε πρώτα μια φιγούρα')
+  if (ui.sel?.kind === 'figure' && modal.hidden) presetFig = ui.sel.id
+  if (!figs.some((f) => f.id === presetFig)) presetFig = figs[0].id
+  openModal(
+    `<h2>Έτοιμες κινήσεις</h2>` +
+      `<div class="fld"><span>Γύρω από</span>${chips('preset-fig', figs.map((f) => ({ v: f.id, t: `Φιγούρα ${f.label}` })), presetFig)}</div>` +
+      `<div class="grid">${PRESETS.map((x) => `<button class="pill two" data-a="preset" data-v="${x.id}"><b>${x.gr}</b><small>${x.note}</small></button>`).join('')}</div>` +
+      `<p class="hint">Η κίνηση αντικαθιστά τα keyframes του πλάνου, με τον φακό και τη διάρκεια που έχεις ορίσει. Μετά τα πειράζεις όπως θες.</p>` +
+      `<div class="foot"><div class="grow"></div><button class="pill" data-a="modal-close">Κλείσιμο</button></div>`,
+  )
+}
+
+function openHelp() {
+  const step = (n: number, t: string, d: string) => `<div class="step"><i>${n}</i><div><b>${t}</b><p>${d}</p></div></div>`
+  openModal(
+    `<h2>Πώς δουλεύει</h2>` +
+      step(1, 'Στήσε τη σκηνή', 'Σύρε τις φιγούρες με το δάχτυλο. Πάτα μία για στάση, ύψος, περιστροφή ή για να περπατήσει ως ένα σημείο.') +
+      step(2, 'Διάλεξε κίνηση κάμερας', 'Πάτα Κινήσεις και διάλεξε orbit, dolly, crane, vertigo και άλλες. Γίνεται με ένα πάτημα γύρω από τη φιγούρα που θες.') +
+      step(3, 'Ή φτιάξ\'τη δική σου', 'Γύρνα τη Director view, διάλεξε χρόνο στο timeline και πάτα Keyframe. Με το Κάδρο φακού βλέπεις ό,τι γράφει η κάμερα.') +
+      step(4, 'Πάρε το prompt', 'Το Prompt γράφει στα αγγλικά την κίνηση της κάμερας και των χαρακτήρων, έτοιμο για Seedance.') +
+      `<div class="foot"><div class="grow"></div><button class="pill main" data-a="modal-close">Πάμε</button></div>`,
+  )
 }
 
 function openPrompt() {
@@ -515,7 +638,7 @@ function toast(t: string) {
 }
 
 // ---------- dragging figures and props in the Director view ----------
-let drag: { kind: 'figure' | 'prop'; id: string; dx: number; dz: number; pid: number } | null = null
+let drag: { kind: 'figure' | 'prop' | 'dest'; id: string; fx: number; fz: number; ox: number; oz: number; pid: number } | null = null
 let tap: { x: number; y: number; t: number; pid: number } | null = null
 let pointers = 0
 stage.addEventListener(
@@ -529,13 +652,15 @@ stage.addEventListener(
     }
     const hit = world.pick(e.clientX, e.clientY)
     if (hit) {
-      const o = hit.kind === 'figure' ? fig(hit.id) : prop(hit.id)
+      const f = hit.kind === 'prop' ? null : fig(hit.id)
+      const o = hit.kind === 'prop' ? prop(hit.id) : hit.kind === 'dest' ? f?.path : f
       const fp = world.floorPoint(e.clientX, e.clientY)
       if (!o || !fp) return
       world.controls.enabled = false
-      drag = { kind: hit.kind, id: hit.id, dx: o.x - fp.x, dz: o.z - fp.z, pid: e.pointerId }
+      drag = { kind: hit.kind, id: hit.id, fx: fp.x, fz: fp.z, ox: o.x, oz: o.z, pid: e.pointerId }
       dirView.setPointerCapture(e.pointerId)
-      if (ui.sel?.id !== hit.id) select(hit)
+      const sel: Sel = { kind: hit.kind === 'prop' ? 'prop' : 'figure', id: hit.id }
+      if (ui.sel?.id !== hit.id) select(sel)
     } else tap = { x: e.clientX, y: e.clientY, t: performance.now(), pid: e.pointerId }
   },
   true,
@@ -545,12 +670,18 @@ dirView.addEventListener('pointermove', (e) => {
   const fp = world.floorPoint(e.clientX, e.clientY)
   if (!fp) return
   const d = drag
+  const x = +clamp(d.ox + fp.x - d.fx, -19, 19).toFixed(2)
+  const z = +clamp(d.oz + fp.z - d.fz, -19, 19).toFixed(2)
   store.live((p) => {
-    const o = d.kind === 'figure' ? p.figures.find((f) => f.id === d.id) : p.props.find((f) => f.id === d.id)
+    const f = d.kind === 'prop' ? null : p.figures.find((f) => f.id === d.id)
+    const o = d.kind === 'prop' ? p.props.find((f) => f.id === d.id) : d.kind === 'dest' ? f?.path : f
     if (!o) return
-    o.x = +clamp(fp.x + d.dx, -19, 19).toFixed(2)
-    o.z = +clamp(fp.z + d.dz, -19, 19).toFixed(2)
+    o.x = x
+    o.z = z
   })
+  const f = d.kind === 'prop' ? null : fig(d.id)
+  const info = document.getElementById('pinfo')
+  if (f?.path && info) info.textContent = `${gr(pathLength(f), 1)} m · ${gr(pathLength(f) / Math.max(0.1, f.path.t1 - f.path.t0), 1)} m/s`
 })
 const endPointer = (e: PointerEvent) => {
   pointers = Math.max(0, pointers - 1)
@@ -618,7 +749,8 @@ function render() {
   }
   world.clearAll(W, H)
   const a = aspect()
-  const cam = evalCamera(P().keys, ui.time)
+  world.syncScene(P(), ui.sel && ui.sel.kind !== 'key' ? ui.sel.id : null, ui.time)
+  const cam = camAt(P(), ui.time, true)
   applyCam(world.shotCam, cam, a)
   world.syncCurrent(cam, a)
 
@@ -671,7 +803,7 @@ function loop(now: number) {
     }
     ui.time = t
     placeHead()
-    $('shotInfo').textContent = `${Math.round(evalCamera(P().keys, t).lens)}mm · ${P().shot.aspect}`
+    $('shotInfo').textContent = `${Math.round(camAt(P(), t).lens)}mm · ${P().shot.aspect}`
     dirty = true
   }
   if (world.controls.update()) dirty = true
@@ -689,8 +821,15 @@ window.addEventListener('resize', () => {
 })
 mq.addEventListener('change', () => refresh('sel'))
 
-// open on the example's first keyframe from a little behind, so the path and the figures read at once
 refresh('init')
+try {
+  if (!localStorage.getItem('tml_previz_seen')) {
+    localStorage.setItem('tml_previz_seen', '1')
+    openHelp()
+  }
+} catch {
+  /* private mode: no guide memory */
+}
 requestAnimationFrame(loop)
 
 // for tests

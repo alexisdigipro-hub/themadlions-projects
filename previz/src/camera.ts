@@ -1,5 +1,6 @@
 import * as THREE from 'three'
-import type { Aspect, Ease, Keyframe } from './state'
+import type { Aspect, Ease, Keyframe, Project } from './state'
+import { aimAt } from './motion'
 import { DEG } from './util'
 
 export function aspectRatio(a: Aspect): number {
@@ -78,15 +79,51 @@ function spline(pts: THREE.Vector3[], i: number, u: number): THREE.Vector3 {
   return catmull(p0, p1, p2, p3, u)
 }
 
-/** Where the shot camera is at time t. Keys must be sorted by time. */
-export function evalCamera(keys: Keyframe[], t: number): CamState {
+/** Where a keyframe looks at time t: its own point, or the figure it is locked on (which may be walking). */
+export function keyTarget(p: Project, k: Keyframe, t: number): THREE.Vector3 {
+  const f = k.look ? p.figures.find((f) => f.label === k.look) : null
+  return f ? aimAt(f, t) : v(k.target)
+}
+
+/** Smooth noise in -1..1 for the handheld shake: a few sines that never line up. */
+function noise(t: number, seed: number): number {
+  return (
+    Math.sin(t * 1.9 + seed * 12.9) * 0.5 +
+    Math.sin(t * 4.3 + seed * 78.2) * 0.3 +
+    Math.sin(t * 9.1 + seed * 37.7) * 0.14 +
+    Math.sin(t * 17.3 + seed * 5.1) * 0.06
+  )
+}
+
+/** Where the shot camera is at time t. Keys must be sorted by time. With shake, the handheld of the shot is added. */
+export function camAt(p: Project, t: number, shake = false): CamState {
+  const s = base(p, t)
+  const amt = shake ? (p.shot.shake || 0) / 100 : 0
+  if (amt > 0) {
+    const dir = s.target.clone().sub(s.pos)
+    const dist = dir.length() || 1
+    dir.normalize()
+    const right = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0))
+    if (right.lengthSq() < 1e-6) right.set(1, 0, 0)
+    right.normalize()
+    const up = new THREE.Vector3().crossVectors(right, dir)
+    const ang = 1.5 * DEG * amt
+    s.target.addScaledVector(right, Math.tan(noise(t, 1) * ang) * dist).addScaledVector(up, Math.tan(noise(t, 2) * ang) * dist)
+    s.pos.addScaledVector(right, noise(t * 0.8, 3) * 0.035 * amt).addScaledVector(up, noise(t * 0.8, 4) * 0.03 * amt)
+    s.roll += noise(t * 0.9, 5) * 1.1 * amt
+  }
+  return s
+}
+
+function base(p: Project, t: number): CamState {
+  const keys = p.keys
   if (!keys.length) return DEFAULT_CAM()
   if (keys.length === 1 || t <= keys[0].t) {
     const k = keys[0]
-    return { pos: v(k.pos), target: v(k.target), roll: k.roll, lens: k.lens }
+    return { pos: v(k.pos), target: keyTarget(p, k, t), roll: k.roll, lens: k.lens }
   }
   const last = keys[keys.length - 1]
-  if (t >= last.t) return { pos: v(last.pos), target: v(last.target), roll: last.roll, lens: last.lens }
+  if (t >= last.t) return { pos: v(last.pos), target: keyTarget(p, last, t), roll: last.roll, lens: last.lens }
   let i = 0
   while (i < keys.length - 2 && t >= keys[i + 1].t) i++
   const a = keys[i]
@@ -94,7 +131,10 @@ export function evalCamera(keys: Keyframe[], t: number): CamState {
   const span = b.t - a.t
   const u = span > 1e-6 ? ease(a.ease, (t - a.t) / span) : 1
   const pos = spline(keys.map((k) => v(k.pos)), i, u)
-  const target = spline(keys.map((k) => v(k.target)), i, u)
+  const target =
+    a.look || b.look
+      ? keyTarget(p, a, t).lerp(keyTarget(p, b, t), u * u * (3 - 2 * u))
+      : spline(keys.map((k) => v(k.target)), i, u)
   return { pos, target, roll: a.roll + (b.roll - a.roll) * u, lens: a.lens + (b.lens - a.lens) * u }
 }
 
