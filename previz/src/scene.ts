@@ -308,7 +308,7 @@ export class World {
     const r = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true })
     r.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     r.shadowMap.enabled = true
-    r.shadowMap.type = THREE.PCFSoftShadowMap
+    r.shadowMap.type = THREE.PCFShadowMap
     r.setScissorTest(true)
     this.renderer = r
 
