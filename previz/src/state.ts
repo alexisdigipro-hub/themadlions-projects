@@ -9,7 +9,7 @@ export type PropKind = 'box' | 'table' | 'chair' | 'door' | 'wall'
 export type Aspect = '16:9' | '9:16' | '2.39:1' | '1:1'
 
 export interface FigPath { x: number; z: number; t0: number; t1: number }
-export interface Figure { id: string; label: Label; x: number; z: number; rot: number; height: number; pose: Pose; path?: FigPath | null }
+export interface Figure { id: string; label: Label; x: number; z: number; rot: number; height: number; pose: Pose; path?: FigPath | null; name?: string }
 export interface Prop { id: string; kind: PropKind; x: number; z: number; rot: number }
 export interface Keyframe { id: string; t: number; pos: Vec3; target: Vec3; roll: number; lens: number; ease: Ease; look?: Label | null }
 export interface Shot { aspect: Aspect; duration: number; fps: 24 | 25; lens: number; shake: number }

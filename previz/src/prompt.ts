@@ -356,11 +356,12 @@ function blocking(p: Project): string[] {
   const dur = p.shot.duration
   const out: string[] = []
   for (const f of [...p.figures].sort((a, b) => a.label.localeCompare(b.label))) {
+    const who = f.name ? `${f.label} (${f.name})` : f.label
     const len = pathLength(f)
     const at0 = place(p, f, 0)
     if (!f.path || len < 0.3) {
       const face = at0 === 'out of frame' ? '' : `, ${facingOf(p, f, 0)}`
-      out.push(`${f.label}: ${POSE_EN[f.pose]} ${at0}${face}, stays in place for the whole shot.`)
+      out.push(`${who}: ${POSE_EN[f.pose]} ${at0}${face}, stays in place for the whole shot.`)
       continue
     }
     const { t0, t1 } = f.path
@@ -384,7 +385,7 @@ function blocking(p: Project): string[] {
     let end = t1 < dur - 0.2 ? `, stops at ${sec(t1)}s ${place(p, f, t1)}` : `, ending ${place(p, f, dur)}`
     const near = p.figures.find((o) => o !== f && Math.hypot(figAt(o, t1).x - f.path!.x, figAt(o, t1).z - f.path!.z) < 1.3)
     if (near) end += `, next to ${near.label}`
-    out.push(`${f.label}: ${before}${pace} about ${metres(len)} ${dir} from ${sec(t0)}s to ${sec(t1)}s${end}.`)
+    out.push(`${who}: ${before}${pace} about ${metres(len)} ${dir} from ${sec(t0)}s to ${sec(t1)}s${end}.`)
   }
   return out
 }
