@@ -15,9 +15,11 @@ function ActDelete({ label, onConfirm, small = false }) {
   useEffect(() => { if (!armed) return; const t = setTimeout(() => setArmed(false), 3000); return () => clearTimeout(t) }, [armed])
   return <Act icon="trash" label={armed ? `Sure? ${label}` : label} className={`act-del${small ? ' act-sm' : ''}${armed ? ' armed' : ''}`} onClick={() => { if (armed) { setArmed(false); onConfirm() } else setArmed(true) }} />
 }
-// mode: C-ready or Compressed (Alex, 27 Nov); the date is the day it was entered, set on save, not asked
-const emptyItem = () => ({ id: uid(), title: '', projectId: '', size: '', mode: 'C-ready', date: '', notes: '' })
-const MODES = ['C-ready', 'Compressed']
+// mode: C-Ready or Compressed (Alex, 27 Nov); the date is the day it was entered, set on save, not asked
+const emptyItem = () => ({ id: uid(), title: '', projectId: '', size: '', mode: 'C-Ready', date: '', notes: '' })
+const MODES = ['C-Ready', 'Compressed']
+// spelled C-ready for a day (27 Nov): read as C-Ready
+const modeOf = (m) => (m === 'C-ready' ? 'C-Ready' : m || '')
 const seriesOf = (d) => d.series || d.name.replace(/[\s\d(].*$/, '').toUpperCase() || 'Other'
 
 /* Capacity and free space are typed by hand ("4 TB", "1,5 TB", "904 GB"), so the fullness bar
@@ -302,7 +304,7 @@ export default function Drives({ slot }) {
                         {poster(f, 'sm')}
                         <div className="drv-film-body">
                           <strong>{it.projectId && projTitle(it.projectId) ? <Link to={`/p/${it.projectId}`}>{it.title || projTitle(it.projectId)}</Link> : it.title}</strong>
-                          <span className="drv-meta">{[it.size ? (parseSize(it.size) ? fmtGB(parseSize(it.size)) : it.size) : '', it.mode, it.date, it.notes].filter(Boolean).join(' · ')}</span>
+                          <span className="drv-meta">{[it.size ? (parseSize(it.size) ? fmtGB(parseSize(it.size)) : it.size) : '', modeOf(it.mode), it.date, it.notes].filter(Boolean).join(' · ')}</span>
                           <span className="drv-chips">{others.length ? <><span className="muted small">Also on</span>{others.map((c) => diskChip(c.d))}</> : <span className="drv-badge warn">Only on this disk</span>}</span>
                         </div>
                         {editable && (
@@ -346,7 +348,7 @@ export default function Drives({ slot }) {
             <Field label="Title" hint="How it is written on the disk, e.g. Ιουλία Καλλιμάνη - Κατράκειος."><Input value={item.title} onChange={(e) => setItem({ ...item, title: e.target.value })} autoFocus /></Field>
             <div className="row-2">
               <Field label="Size"><Input value={item.size} onChange={(e) => setItem({ ...item, size: e.target.value })} placeholder="320 GB" /></Field>
-              <Field label="Mode"><Select value={item.mode || 'C-ready'} onChange={(e) => setItem({ ...item, mode: e.target.value })} options={MODES} /></Field>
+              <Field label="Mode"><Select value={modeOf(item.mode) || 'C-Ready'} onChange={(e) => setItem({ ...item, mode: e.target.value })} options={MODES} /></Field>
             </div>
             <Field label="Notes"><Input value={item.notes} onChange={(e) => setItem({ ...item, notes: e.target.value })} placeholder="RAW + proxies, only masters, also on cloud…" /></Field>
           </div>
