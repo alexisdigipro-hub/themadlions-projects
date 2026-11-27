@@ -2,9 +2,10 @@ import './style.css'
 import * as THREE from 'three'
 import { Store, exampleProject, migrate, FIG_COLORS, LABELS, LENSES, ASPECTS, POSES, EASES, PROPS, type Figure, type Prop, type Keyframe, type Vec3 } from './state'
 import { World, type Rect } from './scene'
-import { applyCam, aspectRatio, camAt, keyTarget, vfov } from './camera'
+import { applyCam, aspectRatio, camAt, keyTarget, shotsOf, vfov } from './camera'
 import { figAt, pathLength } from './motion'
-import { PRESETS, applyPreset } from './presets'
+import { CUTS, PRESETS, applyCuts, applyPreset } from './presets'
+import { SCENES } from './scenes'
 import { getKey, sceneFromText, setKey, toProject } from './ai'
 import { buildPrompt } from './prompt'
 import { I } from './icons'
@@ -50,7 +51,7 @@ fill('[data-a="undo"]', I.undo)
 fill('[data-a="redo"]', I.redo)
 fill('[data-a="loop"]', I.loop)
 fill('[data-a="add-prop"]', `${I.cube}<span>Αντικείμενο</span>`)
-fill('[data-a="presets"]', `${I.wand}<span>Κινήσεις</span>`)
+fill('[data-a="presets"]', `${I.wand}<span>Έτοιμα</span>`)
 fill('[data-a="help"]', I.help)
 fill('#aiBtn', `${I.spark}<span>Σκηνή με AI</span>`)
 $('promptBtn').innerHTML = `${I.text}<span>Prompt</span>`
@@ -110,14 +111,18 @@ function renderTimeline() {
   for (let s = 0; s <= d + 1e-6; s += step) r += `<i style="left:${(s / d) * 100}%"><b>${s}</b></i>`
   $('ruler').innerHTML = r
   $('keys').innerHTML = p.keys
-    .map((k, i) => `<button class="kf${ui.sel?.kind === 'key' && ui.sel.id === k.id ? ' on' : ''}" data-key="${k.id}" style="left:${(k.t / d) * 100}%" aria-label="Keyframe ${i + 1}"></button>`)
+    .map((k, i) => `<button class="kf${ui.sel?.kind === 'key' && ui.sel.id === k.id ? ' on' : ''}${k.cut ? ' cut' : ''}" data-key="${k.id}" style="left:${(k.t / d) * 100}%" aria-label="Keyframe ${i + 1}"></button>`)
     .join('')
-  const sp = $('span')
-  if (p.keys.length > 1) {
-    sp.style.left = `${(p.keys[0].t / d) * 100}%`
-    sp.style.width = `${((p.keys[p.keys.length - 1].t - p.keys[0].t) / d) * 100}%`
-    sp.hidden = false
-  } else sp.hidden = true
+  // one bar per shot: its move, then a thinner hold until the next cut
+  const shots = shotsOf(p.keys)
+  $('span').innerHTML = shots
+    .map((g, i) => {
+      const t0 = g[0].t
+      const t1 = g[g.length - 1].t
+      const end = shots[i + 1] ? shots[i + 1][0].t : shots.length > 1 ? d : t1
+      return `<i style="left:${(t0 / d) * 100}%;width:${((t1 - t0) / d) * 100}%"></i><i class="hold" style="left:${(t1 / d) * 100}%;width:${((end - t1) / d) * 100}%"></i>`
+    })
+    .join('')
   placeHead()
 }
 function placeHead() {
@@ -211,6 +216,7 @@ function renderInspector() {
       head(`Keyframe ${i + 1} / ${P().keys.length} · ${gr(k.t, 2)} s`) +
       `<div class="fld"><span>Φακός (mm)</span>${lensChips('klens', k.lens)}</div>` +
       (last ? '' : `<div class="fld"><span>Μετάβαση ως το επόμενο</span>${chips('kease', EASES.map((e) => ({ v: e.id, t: e.gr })), k.ease)}</div>`) +
+      (i === 0 ? '' : `<div class="fld"><span>Πώς φτάνει εδώ η κάμερα</span>${chips('kcut', [{ v: '0', t: 'Με κίνηση' }, { v: '1', t: 'Με cut (νέο πλάνο)' }], k.cut ? '1' : '0')}</div>`) +
       `<div class="fld"><span>Η κάμερα κοιτάει</span>${chips('klook', [{ v: '', t: 'Ελεύθερα' }, ...P().figures.map((f) => ({ v: f.label, t: `Κλειδωμένη στο ${f.label}` }))], k.look || '')}</div>` +
       `<div class="fld"><span>Roll <em id="rv">${Math.round(k.roll)}°</em></span><input type="range" min="-45" max="45" step="1" value="${k.roll}" data-k="roll"></div>` +
       `<div class="row wrap"><button class="pill" data-a="goto">${I.eye}<span>Δες από εδώ</span></button><button class="pill" data-a="kupdate">${I.refresh}<span>Ενημέρωσε από την τρέχουσα θέση</span></button></div>` +
@@ -221,7 +227,7 @@ function renderInspector() {
       head('Κάμερα') +
       `<div class="fld"><span>Φακός για νέο keyframe (mm)</span>${lensChips('lens', P().shot.lens)}</div>` +
       `<div class="fld"><span>Handheld <em id="shv">${shakeName(P().shot.shake)}</em></span><input type="range" min="0" max="100" step="5" value="${P().shot.shake}" data-k="shake"></div>` +
-      `<button class="pill wide" data-a="presets">${I.wand}<span>Έτοιμες κινήσεις κάμερας</span></button>` +
+      `<button class="pill wide" data-a="presets">${I.wand}<span>Έτοιμες κινήσεις και σκηνές</span></button>` +
       `<p class="hint">Στήσε τη Director view όπως θες το κάδρο, διάλεξε χρόνο στο timeline και πάτα Keyframe. Με το Κάδρο φακού βλέπεις ακριβώς ό,τι γράφει η κάμερα.</p>` +
       `<button class="pill main wide" data-a="add-key">${I.key}<span>Πρόσθεσε keyframe από την τρέχουσα θέση</span></button>` +
       (keys.length
@@ -398,9 +404,47 @@ async function act(a: string, v: string | undefined) {
     }
     case 'presets':
       return openPresets()
+    case 'ready-tab':
+      readyTab = v as typeof readyTab
+      return openPresets()
+    case 'ready-scene': {
+      const sc = SCENES.find((x) => x.id === v)
+      if (!sc) return
+      const project = toProject(sc.scene, P())
+      store.replace(project)
+      closeModal()
+      ui.sel = null
+      ui.frame = false
+      ui.time = 0
+      ui.playing = true
+      centerOn(0, 0.9, 0)
+      refresh('sel')
+      return toast(`${sc.gr}. Δεν σου κάνει; Αναίρεση.`)
+    }
     case 'preset-fig':
       presetFig = v as string
       return openPresets()
+    case 'cuts': {
+      const f0 = P().figures.find((f) => f.id === presetFig) || P().figures[0]
+      if (!f0) return
+      const name = CUTS.find((x) => x.id === v)?.gr
+      store.commit((p) => {
+        const f = p.figures.find((x) => x.id === f0.id)
+        if (f) applyCuts(p, v as string, f)
+      })
+      closeModal()
+      ui.sel = null
+      ui.frame = false
+      ui.time = 0
+      ui.playing = true
+      refresh('sel')
+      return toast(`${name}: ${shotsOf(P().keys).length} πλάνα. Δεν σου κάνει; Αναίρεση.`)
+    }
+    case 'kcut':
+      return store.commit((p) => {
+        const k = p.keys.find((k) => k.id === s?.id)
+        if (k) k.cut = v === '1'
+      })
     case 'preset': {
       const f0 = P().figures.find((f) => f.id === presetFig) || P().figures[0]
       if (!f0) return
@@ -597,17 +641,26 @@ function openSettings() {
 }
 
 let presetFig = ''
+let readyTab: 'moves' | 'cuts' | 'scenes' = 'moves'
 function openPresets() {
   const figs = P().figures
-  if (!figs.length) return toast('Βάλε πρώτα μια φιγούρα')
+  if (!figs.length) readyTab = 'scenes'
   if (ui.sel?.kind === 'figure' && modal.hidden) presetFig = ui.sel.id
   if (!figs.some((f) => f.id === presetFig)) presetFig = figs[0].id
   openModal(
-    `<h2>Έτοιμες κινήσεις</h2>` +
-      `<div class="fld"><span>Γύρω από</span>${chips('preset-fig', figs.map((f) => ({ v: f.id, t: `Φιγούρα ${f.label}` })), presetFig)}</div>` +
+    `<h2>Έτοιμα</h2>` +
+      chips('ready-tab', [{ v: 'moves', t: `Κινήσεις κάμερας · ${PRESETS.length}` }, { v: 'cuts', t: `Μοντάζ με cuts · ${CUTS.length}` }, { v: 'scenes', t: `Ολόκληρες σκηνές · ${SCENES.length}` }], readyTab) +
       `<button class="pill wide ai" data-a="ai">${I.spark}<span>Ή περιέγραψε τη σκηνή με λόγια και στήνεται μόνη της</span></button>` +
-      `<div class="grid">${PRESETS.map((x) => `<button class="pill two" data-a="preset" data-v="${x.id}"><b>${x.gr}</b><small>${x.note}</small></button>`).join('')}</div>` +
-      `<p class="hint">Η κίνηση αντικαθιστά τα keyframes του πλάνου, με τον φακό και τη διάρκεια που έχεις ορίσει. Μετά τα πειράζεις όπως θες.</p>` +
+      (readyTab === 'moves'
+        ? `<div class="fld"><span>Γύρω από</span>${chips('preset-fig', figs.map((f) => ({ v: f.id, t: `Φιγούρα ${f.label}` })), presetFig)}</div>` +
+          `<div class="grid">${PRESETS.map((x) => `<button class="pill two" data-a="preset" data-v="${x.id}"><b>${x.gr}</b><small>${x.note}</small></button>`).join('')}</div>` +
+          `<p class="hint">Η κίνηση αντικαθιστά τα keyframes του πλάνου, με τον φακό και τη διάρκεια που έχεις ορίσει. Μετά τα πειράζεις όπως θες.</p>`
+        : readyTab === 'cuts'
+          ? `<div class="fld"><span>Πάνω σε</span>${chips('preset-fig', figs.map((f) => ({ v: f.id, t: `Φιγούρα ${f.label}` })), presetFig)}</div>` +
+            `<div class="grid">${CUTS.map((x) => `<button class="pill two" data-a="cuts" data-v="${x.id}"><b>${x.gr}</b><small>${x.note}</small></button>`).join('')}</div>` +
+            `<p class="hint">Πολλά πλάνα με cut μέσα στην ίδια διάρκεια. Τα πλάνα διαλόγου παίρνουν και τη φιγούρα που είναι πιο κοντά. Αντικαθιστά τα keyframes.</p>`
+          : `<div class="grid">${SCENES.map((x) => `<button class="pill two" data-a="ready-scene" data-v="${x.id}"><b>${x.gr}</b><small>${x.note}</small></button>`).join('')}</div>` +
+          `<p class="hint">Η σκηνή αντικαθιστά ό,τι έχεις στήσει: φιγούρες, χώρο και κίνηση κάμερας. Με την Αναίρεση γυρνάς πίσω.</p>`) +
       `<div class="foot"><div class="grow"></div><button class="pill" data-a="modal-close">Κλείσιμο</button></div>`,
   )
 }
@@ -670,7 +723,7 @@ function openHelp() {
   openModal(
     `<h2>Πώς δουλεύει</h2>` +
       step(1, 'Στήσε τη σκηνή', 'Σύρε τις φιγούρες με το δάχτυλο. Πάτα μία για στάση, ύψος, περιστροφή ή για να περπατήσει ως ένα σημείο.') +
-      step(2, 'Διάλεξε κίνηση κάμερας', 'Πάτα Κινήσεις και διάλεξε orbit, dolly, crane, vertigo και άλλες. Γίνεται με ένα πάτημα γύρω από τη φιγούρα που θες.') +
+      step(2, 'Διάλεξε κάτι έτοιμο', 'Στα Έτοιμα (το ραβδάκι) έχει κινήσεις κάμερας όπως orbit, dolly, crane, vertigo, και ολόκληρες σκηνές όπως διάλογος, walk and talk, καταδίωξη.') +
       step(3, 'Ή φτιάξ\'τη δική σου', 'Γύρνα τη Director view, διάλεξε χρόνο στο timeline και πάτα Keyframe. Με το Κάδρο φακού βλέπεις ό,τι γράφει η κάμερα.') +
       step(4, 'Ή γράψ\'την με λόγια', 'Στο Σκηνή με AI περιγράφεις τη σκηνή και το Claude στήνει φιγούρες, χώρο και κίνηση κάμερας. Θέλει ένα κλειδί Claude API.') +
       step(5, 'Πάρε το prompt', 'Το Prompt γράφει στα αγγλικά την κίνηση της κάμερας και των χαρακτήρων, έτοιμο για Seedance.') +

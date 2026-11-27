@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { Ease, Figure, Pose, Project } from './state'
-import { aspectRatio, camAt, vfov, type CamState } from './camera'
+import { aspectRatio, camAt, shotsOf, vfov, type CamState } from './camera'
 import { figAt, pathLength, POSE_HEIGHT } from './motion'
 import { DEG, sec } from './util'
 
@@ -176,7 +176,7 @@ function analyse(p: Project, t0: number, t1: number): Analysis {
   }
 
   // an arc keeps pointing at the figure, so the view turns with it; a truck slides past without turning
-  const isArc = !!subject && Math.abs(arc) >= 20 && (subjMoves || Math.abs(pan) >= 0.5 * Math.abs(arc))
+  const isArc = !!subject && Math.abs(arc) >= 15 && (subjMoves || Math.abs(pan) >= 0.5 * Math.abs(arc))
   if (isArc) {
     const dir = arc > 0 ? 'right' : 'left'
     const deg = roundTo(Math.abs(arc), 15)
@@ -223,7 +223,8 @@ function analyse(p: Project, t0: number, t1: number): Analysis {
       const by = dollyBy > 0.7 ? ` about ${metres(dollyBy)}` : ''
       moves.push({ key: 'dolly-' + dolly, base: `dolly ${dolly}${on}${by}`, ger: `dollying ${dolly}${by}` })
     }
-    if (zoom) moves.push({ key: 'zoom-' + zoom, base: `zoom ${zoom} from ${lensTxt}`, ger: `zooming ${zoom} from ${lensTxt}` })
+    const crash = zoom && dt < 1.2 && (zoomR > 1.8 || zoomR < 0.55)
+    if (zoom) moves.push({ key: (crash ? 'crash-' : 'zoom-') + zoom, base: `${crash ? 'crash zoom' : 'zoom'} ${zoom} from ${lensTxt}`, ger: `${crash ? 'crash zooming' : 'zooming'} ${zoom} from ${lensTxt}` })
   }
 
   if (!isArc && !tracking && Math.abs(lateral) > 0.5 && Math.abs(lateral) > Math.abs(ahead) * 0.6) {
@@ -257,9 +258,11 @@ function analyse(p: Project, t0: number, t1: number): Analysis {
   const dr = end.roll - start.roll
   if (Math.abs(dr) > 4) {
     const r1 = Math.round(end.roll)
+    const spin = heightClass(end, subject, t1) === 'overhead'
+    if (spin) moves.push({ key: 'spin', base: `rotate the frame ${dr > 0 ? 'clockwise' : 'counterclockwise'} ${roundTo(Math.abs(dr), 5)} degrees while looking straight down`, ger: `rotating the frame ${dr > 0 ? 'clockwise' : 'counterclockwise'} ${roundTo(Math.abs(dr), 5)} degrees` })
     const txt = Math.abs(r1) < 2 ? 'roll back to level' : `roll ${r1 > 0 ? 'clockwise' : 'counterclockwise'} into a ${Math.abs(r1)} degree dutch angle`
     const ger = Math.abs(r1) < 2 ? 'rolling back to level' : `rolling into a ${Math.abs(r1)} degree dutch angle`
-    moves.push({ key: 'roll', base: txt, ger })
+    if (!spin) moves.push({ key: 'roll', base: txt, ger })
   }
 
   return {
@@ -275,7 +278,7 @@ function analyse(p: Project, t0: number, t1: number): Analysis {
 }
 
 function speedWord(a: Analysis): string {
-  if (!a.moves.length || a.moves[0].key.startsWith('whip')) return ''
+  if (!a.moves.length || a.moves[0].key.startsWith('whip') || a.moves[0].key.startsWith('crash')) return ''
   if (a.moves[0].key.startsWith('arc')) return a.ang > 70 ? 'fast ' : a.ang < 20 ? 'slow ' : 'steady '
   if (a.lin > 1.5 || a.ang > 70) return 'fast '
   if (a.lin < 0.45 && a.ang < 22) return 'slow '
@@ -288,15 +291,17 @@ function easeWords(first: Ease, last: Ease): string {
   return i && o ? ', easing in and out' : i ? ', easing in from a standstill' : o ? ', easing out to a stop' : ', at constant speed'
 }
 
-function line(p: Project, t0: number, t1: number, firstEase: Ease, lastEase: Ease): string {
+/** One line of the camera part. `end` is where the analysis stops: just before the cut when the stretch ends on one. */
+function line(p: Project, t0: number, tShown: number, firstEase: Ease, lastEase: Ease, end = tShown, label = ''): string {
   const aspect = aspectRatio(p.shot.aspect)
+  const t1 = end
   const a = analyse(p, t0, t1)
-  const range = `${sec(t0)}-${sec(t1)}s`
+  const range = label || `${sec(t0)}-${sec(tShown)}s`
   const subj = a.subject || nearestInFrame(p, a.end, t1, aspect)
   const l0 = Math.round(a.start.lens)
   const l1 = Math.round(a.end.lens)
   const parts: string[] = []
-  const zoomed = a.moves.some((m) => m.key.startsWith('zoom') || m.key === 'vertigo')
+  const zoomed = a.moves.some((m) => m.key.startsWith('zoom') || m.key.startsWith('crash') || m.key === 'vertigo')
   parts.push(zoomed ? `${l0}mm to ${l1}mm` : `${l1}mm`)
   if (!a.moves.some((m) => m.key.startsWith('crane'))) {
     const h0 = heightClass(a.start, subj, t0)
@@ -311,6 +316,17 @@ function line(p: Project, t0: number, t1: number, firstEase: Ease, lastEase: Eas
     const s0 = shotSize(a.start, subj, t0, aspect)
     const s1 = shotSize(a.end, subj, t1, aspect)
     parts.push(s0 === s1 ? `holding ${art(s1)} ${s1} of ${subj.label}` : `from ${art(s0)} ${s0} to ${art(s1)} ${s1} of ${subj.label}`)
+    // another figure close to the lens, between the camera and its subject: an over the shoulder
+    const f1 = fwd(a.end)
+    const sd = a.end.pos.distanceTo(chest(subj, t1))
+    const sh = p.figures.find((o) => {
+      if (o === subj) return false
+      const st = figAt(o, t1)
+      const to = new THREE.Vector3(st.x, a.end.pos.y, st.z).sub(a.end.pos)
+      const d = to.length()
+      return d < 1.9 && d < sd && to.normalize().dot(f1) > 0.72
+    })
+    if (sh) parts.push(`over ${sh.label}'s shoulder, ${sh.label} soft in the foreground with their back to camera`)
     const v0 = viewOf(a.start, subj, t0)
     const v1 = viewOf(a.end, subj, t1)
     parts.push(v0 === v1 ? `seeing ${subj.label} in ${v1}` : `going from ${subj.label}'s ${v0} to ${v1}`)
@@ -405,34 +421,67 @@ function handheld(n: number): string {
   return ' Rough handheld camera with strong, nervous shake.'
 }
 
+interface Span { t0: number; t1: number; ease: Ease; end: number }
+
+/** Stretches that share a move become one line. */
+function merged(p: Project, spans: Span[]): { t0: number; t1: number; end: number; first: Ease; last: Ease }[] {
+  const groups: { t0: number; t1: number; end: number; first: Ease; last: Ease; sig: string }[] = []
+  for (const s of spans) {
+    const sig = analyse(p, s.t0, s.end).sig
+    const g = groups[groups.length - 1]
+    if (g && g.sig === sig) {
+      g.t1 = s.t1
+      g.end = s.end
+      g.last = s.ease
+    } else groups.push({ t0: s.t0, t1: s.t1, end: s.end, first: s.ease, last: s.ease, sig })
+  }
+  return groups
+}
+
 /** The English prompt for Seedance / MAGI-2, built from the keyframes and the figures' paths. */
 export function buildPrompt(p: Project): string {
   const keys = p.keys
   const dur = p.shot.duration
-  const lines: string[] = [FIRST_LINE, '', `One continuous ${sec(dur)} second shot, ${p.shot.aspect}, no cuts.${handheld(p.shot.shake)}`]
+  const shots = shotsOf(keys)
+  const multi = shots.length > 1
+  const head = multi
+    ? `${shots.length} shots with hard cuts, ${sec(dur)} seconds in total, ${p.shot.aspect}.`
+    : `One continuous ${sec(dur)} second shot, ${p.shot.aspect}, no cuts.`
+  const lines: string[] = [FIRST_LINE, '', `${head}${handheld(p.shot.shake)}`]
   const bl = blocking(p)
   if (bl.length) lines.push('', 'Blocking:', ...bl)
-  lines.push('', 'Camera:')
+  lines.push('', multi ? 'Shots:' : 'Camera:')
 
-  // segments: before the first key, between keys (merged while the move stays the same), after the last key
-  const spans: { t0: number; t1: number; ease: Ease }[] = []
-  if (keys.length < 2) spans.push({ t0: 0, t1: dur, ease: 'linear' })
-  else {
-    if (keys[0].t > 0.05) spans.push({ t0: 0, t1: keys[0].t, ease: 'linear' })
-    for (let i = 0; i < keys.length - 1; i++) if (keys[i + 1].t - keys[i].t > 0.01) spans.push({ t0: keys[i].t, t1: keys[i + 1].t, ease: keys[i].ease })
-    const last = keys[keys.length - 1].t
-    if (dur - last > 0.05) spans.push({ t0: last, t1: dur, ease: 'linear' })
+  if (!multi) {
+    // before the first key, between keys, after the last key
+    const spans: Span[] = []
+    if (keys.length < 2) spans.push({ t0: 0, t1: dur, ease: 'linear', end: dur })
+    else {
+      if (keys[0].t > 0.05) spans.push({ t0: 0, t1: keys[0].t, ease: 'linear', end: keys[0].t })
+      for (let i = 0; i < keys.length - 1; i++) if (keys[i + 1].t - keys[i].t > 0.01) spans.push({ t0: keys[i].t, t1: keys[i + 1].t, ease: keys[i].ease, end: keys[i + 1].t })
+      const last = keys[keys.length - 1].t
+      if (dur - last > 0.05) spans.push({ t0: last, t1: dur, ease: 'linear', end: dur })
+    }
+    for (const g of merged(p, spans)) lines.push(line(p, g.t0, g.t1, g.first, g.last))
+    lines.push('', 'Keep the motion smooth and continuous, with no cuts and no extra camera moves.')
+  } else {
+    shots.forEach((g, i) => {
+      const tS = i === 0 ? 0 : g[0].t
+      const tE = shots[i + 1] ? shots[i + 1][0].t : dur
+      // the analysis of a shot stops a hair before the cut that ends it
+      const stop = shots[i + 1] ? tE - 0.002 : tE
+      const spans: Span[] = []
+      if (g[0].t - tS > 0.05) spans.push({ t0: tS, t1: g[0].t, ease: 'linear', end: g[0].t })
+      for (let j = 0; j < g.length - 1; j++) if (g[j + 1].t - g[j].t > 0.01) spans.push({ t0: g[j].t, t1: g[j + 1].t, ease: g[j].ease, end: g[j + 1].t })
+      const last = g[g.length - 1].t
+      if (tE - last > 0.12 || !spans.length) spans.push({ t0: last, t1: tE, ease: 'linear', end: stop })
+      else spans[spans.length - 1].t1 = tE
+      merged(p, spans).forEach((m, j) => {
+        const label = j === 0 ? `Shot ${i + 1} (${sec(tS)}-${sec(tE)}s)${i ? ', hard cut' : ''}` : `  then, ${sec(m.t0)}-${sec(m.t1)}s`
+        lines.push(line(p, m.t0, m.t1, m.first, m.last, Math.min(m.end, stop), label))
+      })
+    })
+    lines.push('', 'Cut only at the times listed, with hard cuts and no transitions. Keep the characters, wardrobe, lighting and location identical in every shot, and no extra camera moves inside a shot.')
   }
-  const groups: { t0: number; t1: number; first: Ease; last: Ease; sig: string }[] = []
-  for (const s of spans) {
-    const sig = analyse(p, s.t0, s.t1).sig
-    const g = groups[groups.length - 1]
-    if (g && g.sig === sig) {
-      g.t1 = s.t1
-      g.last = s.ease
-    } else groups.push({ t0: s.t0, t1: s.t1, first: s.ease, last: s.ease, sig })
-  }
-  for (const g of groups) lines.push(line(p, g.t0, g.t1, g.first, g.last))
-  lines.push('', 'Keep the motion smooth and continuous, with no cuts and no extra camera moves.')
-  return lines.join('\n').replace(/[–—]/g, '-')
+  return lines.join('\n').replace(/[\u2013\u2014]/g, '-')
 }

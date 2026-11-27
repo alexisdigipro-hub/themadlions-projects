@@ -94,7 +94,10 @@ input[type='range']::-moz-range-thumb { width: 26px; height: 26px; border: 0; bo
 #ruler i { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, 0.07); }
 #ruler b { position: absolute; top: 4px; left: 4px; font: 500 10px/1 ui-monospace, Menlo, monospace; color: var(--dim); }
 #span, #keys, #head { position: absolute; left: 14px; right: 14px; top: 0; bottom: 0; pointer-events: none; }
-#span { top: 32px; bottom: auto; height: 3px; right: auto; background: rgba(232, 162, 58, 0.5); border-radius: 3px; margin-left: 14px; }
+#span i { position: absolute; top: 32px; height: 3px; background: rgba(232, 162, 58, 0.55); border-radius: 3px; }
+#span i.hold { background: rgba(232, 162, 58, 0.2); }
+.kf.cut::before { content: ''; position: absolute; left: 50%; top: -10px; bottom: -6px; width: 2px; margin-left: -1px; background: #fff; opacity: 0.75; border-radius: 2px; }
+.kf.cut::after { border-radius: 50%; transform: translate(-50%, -50%); }
 #keys { pointer-events: none; }
 .kf { position: absolute; top: 33px; width: 44px; height: 44px; margin: -22px 0 0 -22px; border: 0; background: transparent; cursor: grab; pointer-events: auto; padding: 0; touch-action: none; }
 .kf::after { content: ''; position: absolute; left: 50%; top: 50%; width: 13px; height: 13px; transform: translate(-50%, -50%) rotate(45deg); background: var(--accent); border-radius: 2px; box-shadow: 0 0 0 2px var(--bg); }

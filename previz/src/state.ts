@@ -5,13 +5,13 @@ export const LABELS = ['A', 'B', 'C', 'D'] as const
 export type Label = (typeof LABELS)[number]
 export type Pose = 'stand' | 'sit' | 'walk' | 'run' | 'kneel'
 export type Ease = 'linear' | 'in' | 'out' | 'inout'
-export type PropKind = 'box' | 'table' | 'chair' | 'door' | 'wall'
+export type PropKind = 'box' | 'table' | 'chair' | 'door' | 'wall' | 'sofa' | 'bed' | 'bar' | 'car' | 'mic' | 'tree' | 'column'
 export type Aspect = '16:9' | '9:16' | '2.39:1' | '1:1'
 
 export interface FigPath { x: number; z: number; t0: number; t1: number }
 export interface Figure { id: string; label: Label; x: number; z: number; rot: number; height: number; pose: Pose; path?: FigPath | null; name?: string }
 export interface Prop { id: string; kind: PropKind; x: number; z: number; rot: number }
-export interface Keyframe { id: string; t: number; pos: Vec3; target: Vec3; roll: number; lens: number; ease: Ease; look?: Label | null }
+export interface Keyframe { id: string; t: number; pos: Vec3; target: Vec3; roll: number; lens: number; ease: Ease; look?: Label | null; cut?: boolean }
 export interface Shot { aspect: Aspect; duration: number; fps: 24 | 25; lens: number; shake: number }
 export interface Project { v: 1; figures: Figure[]; props: Prop[]; keys: Keyframe[]; shot: Shot }
 
@@ -37,6 +37,13 @@ export const PROPS: { id: PropKind; gr: string }[] = [
   { id: 'chair', gr: 'Καρέκλα' },
   { id: 'door', gr: 'Πόρτα' },
   { id: 'wall', gr: 'Τοίχος' },
+  { id: 'sofa', gr: 'Καναπές' },
+  { id: 'bed', gr: 'Κρεβάτι' },
+  { id: 'bar', gr: 'Μπαρ' },
+  { id: 'car', gr: 'Αυτοκίνητο' },
+  { id: 'mic', gr: 'Μικρόφωνο' },
+  { id: 'tree', gr: 'Δέντρο' },
+  { id: 'column', gr: 'Κολόνα' },
 ]
 
 /** The example the tool opens with: two figures and an orbit of 180 degrees around A. */
@@ -84,6 +91,7 @@ export function normalize(p: Project): void {
     f.path.t1 = clamp(f.path.t1, f.path.t0 + 0.25, p.shot.duration)
   }
   p.keys.sort((a, b) => a.t - b.t)
+  if (p.keys[0]) p.keys[0].cut = false
 }
 
 /** Accept a stored project only if its shape is sound; otherwise start from the example. */

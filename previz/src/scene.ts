@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { Figure, Pose, Project, Prop, PropKind } from './state'
 import { FIG_COLORS } from './state'
-import { applyCam, camAt, hfov, keyTarget, vfov, type CamState } from './camera'
+import { applyCam, camAt, hfov, keyTarget, shotsOf, vfov, type CamState } from './camera'
 import { figAt, POSE_HEIGHT, type FigState } from './motion'
 import { DEG } from './util'
 
@@ -229,7 +229,7 @@ function poseFigure(o: FigObj, f: Figure, st: FigState, selected: boolean): void
 }
 
 /** Footprint of each prop (width, depth) for its selection mark. */
-const FOOT: Record<PropKind, [number, number]> = { box: [0.6, 0.6], table: [1.4, 0.8], chair: [0.45, 0.45], door: [1.14, 0.6], wall: [4, 0.15] }
+const FOOT: Record<PropKind, [number, number]> = { box: [0.6, 0.6], table: [1.4, 0.8], chair: [0.45, 0.45], door: [1.14, 0.6], wall: [4, 0.15], sofa: [1.9, 0.85], bed: [1.6, 2.05], bar: [2.4, 0.6], car: [1.8, 4.3], mic: [0.4, 0.4], tree: [1.2, 1.2], column: [0.6, 0.6] }
 
 function makeProp(kind: PropKind): THREE.Group {
   const g = new THREE.Group()
@@ -261,6 +261,42 @@ function makeProp(kind: PropKind): THREE.Group {
     g.add(leaf)
   }
   if (kind === 'wall') add(4, 2.6, 0.15, 0, 1.3, 0)
+  const cyl = (r: number, h: number, x: number, y: number, z: number, rz = 0) => {
+    const m = mesh(new THREE.CylinderGeometry(r, r, h, 20), propClay)
+    m.position.set(x, y, z)
+    m.rotation.z = rz
+    g.add(m)
+  }
+  if (kind === 'sofa') {
+    add(1.9, 0.42, 0.85, 0, 0.21, 0)
+    add(1.9, 0.45, 0.2, 0, 0.64, -0.325)
+    for (const x of [-0.85, 0.85]) add(0.2, 0.62, 0.85, x, 0.31, 0)
+  }
+  if (kind === 'bed') {
+    add(1.6, 0.45, 2, 0, 0.225, 0)
+    add(1.6, 1, 0.08, 0, 0.5, -1.02)
+    add(1.3, 0.12, 0.4, 0, 0.5, -0.7)
+  }
+  if (kind === 'bar') add(2.4, 1.05, 0.6, 0, 0.525, 0)
+  if (kind === 'car') {
+    add(1.8, 0.62, 4.3, 0, 0.66, 0)
+    add(1.6, 0.52, 2.1, 0, 1.22, -0.2)
+    for (const x of [-0.9, 0.9]) for (const z of [-1.4, 1.4]) cyl(0.33, 0.22, x, 0.33, z, Math.PI / 2)
+  }
+  if (kind === 'mic') {
+    cyl(0.16, 0.03, 0, 0.015, 0)
+    cyl(0.014, 1.45, 0, 0.74, 0)
+    const head = mesh(new THREE.SphereGeometry(0.045, 12, 8), propClay)
+    head.position.set(0, 1.5, 0)
+    g.add(head)
+  }
+  if (kind === 'tree') {
+    cyl(0.16, 2.3, 0, 1.15, 0)
+    const crown = mesh(new THREE.SphereGeometry(1.25, 14, 10), propClay)
+    crown.position.set(0, 3.2, 0)
+    g.add(crown)
+  }
+  if (kind === 'column') cyl(0.28, 3.2, 0, 1.6, 0)
   return g
 }
 
@@ -296,7 +332,7 @@ export class World {
   private props = new Map<string, THREE.Group>()
   private helpers = new THREE.Group()
   private keyGroup = new THREE.Group()
-  private pathLine: THREE.Line
+  private pathLine: THREE.LineSegments
   private cur: THREE.LineSegments
   private targetDot: THREE.Mesh
   private tmpCam = new THREE.PerspectiveCamera()
@@ -343,7 +379,7 @@ export class World {
     this.helpers.layers.set(HELP)
     this.scene.add(this.helpers)
     this.helpers.add(this.keyGroup)
-    this.pathLine = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xe8a23a, depthTest: false, transparent: true }))
+    this.pathLine = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xe8a23a, depthTest: false, transparent: true }))
     this.pathLine.renderOrder = 5
     this.pathLine.layers.set(HELP)
     this.helpers.add(this.pathLine)
@@ -441,11 +477,18 @@ export class World {
     const keys = p.keys
     // path
     const pts: THREE.Vector3[] = []
-    if (keys.length > 1) {
-      const t0 = keys[0].t
-      const t1 = keys[keys.length - 1].t
-      const n = Math.max(60, Math.round((t1 - t0) * 40))
-      for (let i = 0; i <= n; i++) pts.push(camAt(p, t0 + ((t1 - t0) * i) / n).pos)
+    // one piece of line per shot: a cut leaves a gap
+    for (const g of shotsOf(keys)) {
+      if (g.length < 2) continue
+      const t0 = g[0].t
+      const t1 = g[g.length - 1].t
+      const n = Math.max(24, Math.round((t1 - t0) * 40))
+      let prev = camAt(p, t0).pos
+      for (let i = 1; i <= n; i++) {
+        const cur = camAt(p, t0 + ((t1 - t0) * i) / n).pos
+        pts.push(prev, cur)
+        prev = cur
+      }
     }
     this.pathLine.geometry.dispose()
     this.pathLine.geometry = new THREE.BufferGeometry().setFromPoints(pts)
