@@ -834,3 +834,18 @@ requestAnimationFrame(loop)
 
 // for tests
 ;(window as unknown as { previz: unknown }).previz = { store, ui, world, buildPrompt: () => buildPrompt(P()) }
+
+// works with no signal after one visit (previz-sw.js keeps the last good copy)
+if ('serviceWorker' in navigator && location.protocol === 'https:' || location.hostname === 'localhost') {
+  navigator.serviceWorker
+    ?.register('../previz-sw.js', { scope: './' })
+    .then(() => navigator.serviceWorker.ready)
+    .then((reg) => {
+      const own = performance
+        .getEntriesByType('resource')
+        .map((r) => r.name)
+        .filter((u) => u.startsWith(location.origin))
+      reg.active?.postMessage({ cache: [location.href, ...own] })
+    })
+    .catch(() => {})
+}
