@@ -189,24 +189,20 @@ export default function Drives({ slot }) {
     </article>
   )
 
-  // a disk on the shelf: its series colour, its name and size, how full, the posters of what is on it
+  // a disk on the shelf as a ring that fills as the disk fills, the % inside (Alex, 27 Nov: version C of the sample);
+  // orange from 75%, red from 90%; an empty disk is a dashed ring in its place on the shelf
   const diskCard = (d) => {
     const u = diskUse(d)
-    const list = (d.items || []).map((it) => filmOf(it)).filter(Boolean)
-    const tone = u.pct === null ? '' : u.pct >= 90 ? 'hi' : u.pct >= 70 ? 'mid' : 'lo'
+    const n = (d.items || []).length
+    const empty = !n
+    const pct = u.pct ?? 0
+    const tone = empty ? 'none' : pct >= 90 ? 'hi' : pct >= 75 ? 'mid' : 'lo'
     return (
-      <article key={d.id} className={`drv-disk st-${d.status || 'inuse'}`} style={{ '--c': hue(seriesOf(d)) }} onClick={() => setOpenId(d.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') setOpenId(d.id) }}>
-        <div className="drv-disk-top">
-          <strong>{d.name}</strong>
-          {d.status === 'offline' ? <span className="drv-badge away">Not around</span> : d.status === 'full' ? <span className="drv-badge warn">Full</span> : null}
-        </div>
-        <div className={`drv-fill ${tone}`}><span style={{ width: `${u.pct ?? 0}%` }} /></div>
-        <span className="drv-meta">{u.cap ? (u.used ? `${fmtGB(u.used)} of ${fmtGB(u.cap)}` : fmtGB(u.cap)) : d.capacity || 'Size not set'}{u.pct !== null ? ` · ${u.pct}%` : ''}</span>
-        <div className="drv-stack">
-          {list.slice(0, 5).map((f, i) => <span key={f.key + i} className="drv-stack-i">{poster(f, 'xs')}</span>)}
-          {list.length > 5 && <span className="drv-more">+{list.length - 5}</span>}
-          <span className="drv-count">{list.length} {list.length === 1 ? 'film' : 'films'}</span>
-        </div>
+      <article key={d.id} className={`drv-ring-card st-${d.status || 'inuse'}${empty ? ' is-empty' : ''}`} style={{ '--c': hue(seriesOf(d)), '--p': empty ? 0 : pct }} onClick={() => setOpenId(d.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') setOpenId(d.id) }}>
+        <div className={`drv-ring ${tone}`}><div><b>{empty ? '–' : u.pct !== null ? `${pct}%` : '?'}</b><small>{empty ? 'empty' : u.used ? fmtGB(u.used) : `${n} ${n === 1 ? 'film' : 'films'}`}</small></div></div>
+        <strong className="drv-ring-name">{d.name}</strong>
+        <span className="drv-ring-meta">{empty ? (u.cap ? fmtGB(u.cap) : d.capacity || '') : `${n} ${n === 1 ? 'film' : 'films'}${u.cap ? ` · ${fmtGB(u.cap)}` : ''}`}</span>
+        {d.status === 'offline' ? <span className="drv-badge away">Not around</span> : d.status === 'full' ? <span className="drv-badge warn">Full</span> : null}
       </article>
     )
   }
@@ -255,14 +251,17 @@ export default function Drives({ slot }) {
             groups.map(([series, list]) => {
               const full = list.filter((d) => (d.items || []).length)
               const empty = list.filter((d) => !(d.items || []).length)
+              const gUse = list.map(diskUse)
+              const gCap = gUse.reduce((x, u) => x + (u.cap || 0), 0)
+              const gUsed = gUse.reduce((x, u) => x + (u.used || 0), 0)
               return (
                 <section key={series} {...sort.row('series', allSeries.indexOf(series))} className={`drv-series ${sort.cls('series', allSeries.indexOf(series))}`} style={{ '--c': hue(series) }}>
                   <h2 className="drv-series-title">
                     {editable && !seriesF && <Grip {...sort.grip('series', allSeries.indexOf(series))} />}
-                    <i />{series} <span className="muted small">{list.length} {list.length === 1 ? 'disk' : 'disks'}</span>
+                    <i />{series} <span className="muted small">{list.length} {list.length === 1 ? 'disk' : 'disks'} · {full.length} in use · {empty.length} empty{gCap ? ` · ${fmtGB(gUsed)} of ${fmtGB(gCap)}` : ''}</span>
+                    {gCap > 0 && <span className="drv-gbar"><span style={{ width: `${Math.min(100, Math.round((gUsed / gCap) * 100))}%` }} /></span>}
                   </h2>
-                  <div className="drv-shelf">{full.map(diskCard)}</div>
-                  {empty.length > 0 && <div className="drv-chips drv-empty"><span className="muted small">{empty.length} empty</span>{empty.map((d) => diskChip(d, 'ghost'))}</div>}
+                  <div className="drv-shelf drv-rings">{[...full, ...empty].map(diskCard)}</div>
                 </section>
               )
             })
