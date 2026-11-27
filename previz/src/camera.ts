@@ -115,8 +115,22 @@ export function camAt(p: Project, t: number, shake = false): CamState {
   return s
 }
 
+/** The shots of the timeline: a keyframe marked cut starts a new one, and the camera jumps to it. */
+export function shotsOf(keys: Keyframe[]): Keyframe[][] {
+  const out: Keyframe[][] = []
+  for (const k of keys) {
+    if (k.cut && out.length) out.push([k])
+    else if (out.length) out[out.length - 1].push(k)
+    else out.push([k])
+  }
+  return out
+}
+
 function base(p: Project, t: number): CamState {
-  const keys = p.keys
+  // the shot playing at t: the last one that has started (a shot holds its last keyframe until the next cut)
+  const groups = shotsOf(p.keys)
+  let keys = groups[0] || []
+  for (const g of groups) if (g[0].t <= t + 1e-6) keys = g
   if (!keys.length) return DEFAULT_CAM()
   if (keys.length === 1 || t <= keys[0].t) {
     const k = keys[0]

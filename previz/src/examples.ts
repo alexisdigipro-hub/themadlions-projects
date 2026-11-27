@@ -25,7 +25,7 @@ export const EXAMPLES: { text: string; scene: Record<string, unknown> }[] = [
       camera: [
         { t: 0, around: 'A', azimuth: 180, size: 'medium_wide', height: 1.6, look: 'A', lens: 35, ease: 'in' },
         { t: 5, around: 'A', azimuth: 180, size: 'medium_wide', height: 1.6, look: 'A', lens: 35, ease: 'inout' },
-        { t: 8, around: 'A', azimuth: 150, distance: 0.9, height: 1.6, look: 'B', lens: 50, ease: 'linear' },
+        { t: 8, around: 'A', azimuth: 150, distance: 1.3, height: 1.6, look: 'B', lens: 50, ease: 'linear' },
       ],
       notes: 'Έβαλα τον Νίκο να μπαίνει από την πόρτα και τη Μαρία καθιστή στο τραπέζι. Η κάμερα τον ακολουθεί από πίσω και κλείνει σε over the shoulder.',
     },
