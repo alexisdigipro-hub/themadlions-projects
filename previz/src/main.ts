@@ -6,6 +6,7 @@ import { applyCam, aspectRatio, camAt, keyTarget, shotsOf, vfov } from './camera
 import { figAt, pathLength } from './motion'
 import { CUTS, PRESETS, applyCuts, applyPreset } from './presets'
 import { SCENES } from './scenes'
+import { exportFrames, exportVideo, frameCount, frameSize, videoSupport } from './export'
 import { getKey, sceneFromText, setKey, toProject } from './ai'
 import { buildPrompt } from './prompt'
 import { I } from './icons'
@@ -55,6 +56,7 @@ fill('[data-a="presets"]', `${I.wand}<span>Έτοιμα</span>`)
 fill('[data-a="help"]', I.help)
 fill('#aiBtn', `${I.spark}<span>Σκηνή με AI</span>`)
 $('promptBtn').innerHTML = `${I.text}<span>Prompt</span>`
+$('exportBtn').innerHTML = `${I.down}<span>Export</span>`
 $('addKey').innerHTML = `${I.key}<span>Keyframe</span>`
 
 // ---------- refresh ----------
@@ -463,6 +465,35 @@ async function act(a: string, v: string | undefined) {
     }
     case 'help':
       return openHelp()
+    case 'export':
+      return openExport()
+    case 'ex-video':
+      return runVideo()
+    case 'ex-stop':
+      exStop.now = true
+      return
+    case 'ex-save':
+      return exResult && saveBlobs([exResult.blob], [exResult.name])
+    case 'ex-frame': {
+      const p = P()
+      const last = (frameCount(p) - 1) / p.shot.fps
+      const shots = shotsOf(p.keys)
+      const times = v === 'start' ? [0] : v === 'end' ? [last] : shots.map((g, i) => (i ? g[0].t : 0))
+      const names = v === 'start' ? ['previz-start.png'] : v === 'end' ? ['previz-end.png'] : times.map((_, i) => `previz-shot-${i + 1}.png`)
+      ui.playing = false
+      try {
+        const blobs = await exportFrames(world, p, times)
+        dirty = true
+        await saveBlobs(blobs, names)
+      } catch {
+        toast('Το καρέ δεν βγήκε. Δοκίμασε ξανά.')
+      }
+      return
+    }
+    case 'ex-project':
+      return saveBlobs([new Blob([JSON.stringify(P(), null, 1)], { type: 'application/json' })], ['scene.previz.json'])
+    case 'ex-open':
+      return $('fileIn').click()
     case 'share':
       await copyText(sceneLink())
       closeModal()
@@ -621,7 +652,7 @@ function openSettings() {
       `<div class="fld"><span>Διάρκεια <em id="dv">${gr(s.duration, 1)} s</em></span><input type="range" min="4" max="30" step="0.5" value="${s.duration}" id="durIn"></div>` +
       `<div class="fld"><span>Καρέ το δευτερόλεπτο</span>${chips('fps', [24, 25].map((f) => ({ v: f, t: `${f} fps` })), s.fps)}</div>` +
       `<p class="hint">Αλλάζοντας τη διάρκεια, τα keyframes απλώνονται ή μαζεύονται αναλογικά.</p>` +
-      `<div class="foot"><button class="pill" data-a="help">${I.help}<span>Οδηγίες</span></button><button class="pill" data-a="share">${I.copy}<span>Link σκηνής</span></button><button class="pill" data-a="clear-keys">${I.trash}<span>Κενό πλάνο</span></button><button class="pill" data-a="example">${I.refresh}<span>Το παράδειγμα</span></button><div class="grow"></div><button class="pill main" data-a="modal-close">Έτοιμο</button></div>`,
+      `<div class="foot"><button class="pill" data-a="help">${I.help}<span>Οδηγίες</span></button><button class="pill" data-a="share">${I.copy}<span>Link σκηνής</span></button><button class="pill" data-a="export">${I.down}<span>Export</span></button><button class="pill" data-a="clear-keys">${I.trash}<span>Κενό πλάνο</span></button><button class="pill" data-a="example">${I.refresh}<span>Το παράδειγμα</span></button><div class="grow"></div><button class="pill main" data-a="modal-close">Έτοιμο</button></div>`,
   )
   const inp = modal.querySelector<HTMLInputElement>('#durIn') as HTMLInputElement
   inp.addEventListener('input', () => ($('dv').textContent = `${gr(Number(inp.value), 1)} s`))
@@ -736,7 +767,7 @@ function openPrompt() {
   openModal(
     `<h2>Prompt</h2><p class="hint">Ανέβασε το βίντεο reference ως @Video1 και επικόλλησε αυτό το κείμενο.</p>` +
       `<textarea id="promptText" readonly spellcheck="false">${esc(text)}</textarea>` +
-      `<div class="foot"><button class="pill" data-a="approve">${I.check}<span>Σωστό πλάνο</span></button><div class="grow"></div><button class="pill" data-a="modal-close">Κλείσιμο</button><button class="pill main" data-a="copy" id="copyBtn">${I.copy}<span>Αντιγραφή</span></button></div>`,
+      `<div class="foot"><button class="pill" data-a="export">${I.down}<span>Export βίντεο</span></button><button class="pill" data-a="approve">${I.check}<span>Σωστό πλάνο</span></button><div class="grow"></div><button class="pill" data-a="modal-close">Κλείσιμο</button><button class="pill main" data-a="copy" id="copyBtn">${I.copy}<span>Αντιγραφή</span></button></div>`,
   )
 }
 async function copyText(text: string) {
@@ -751,6 +782,106 @@ async function copyText(text: string) {
     ta.remove()
   }
 }
+
+// ---------- export: video, stills, project file ----------
+const exStop = { now: false }
+let exResult: { blob: Blob; name: string } | null = null
+
+/** On a phone the share sheet saves to Photos or Files; elsewhere a plain download. */
+async function saveBlobs(blobs: Blob[], names: string[]) {
+  const files = blobs.map((b, i) => new File([b], names[i], { type: b.type }))
+  if (mq.matches && navigator.canShare?.({ files })) {
+    try {
+      await navigator.share({ files })
+      return
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return
+    }
+  }
+  for (const f of files) {
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(f)
+    a.download = f.name
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(a.href), 20000)
+    await new Promise((r) => setTimeout(r, 250))
+  }
+}
+
+function openExport() {
+  const p = P()
+  const { w, h } = frameSize(p)
+  const shots = shotsOf(p.keys).length
+  openModal(
+    `<h2>Export</h2>` +
+      `<p class="hint">${w} x ${h} · ${gr(p.shot.duration, p.shot.duration % 1 ? 1 : 0)} s · ${p.shot.fps} fps · ${frameCount(p)} καρέ${shots > 1 ? ` · ${shots} πλάνα` : ''}</p>` +
+      `<button class="pill main wide" data-a="ex-video">${I.film}<span>Βίντεο reference (MP4)</span></button>` +
+      `<p class="hint">Η Shot view καρέ καρέ, χωρίς τίποτα πάνω στο κάδρο. Το ανεβάζεις στο Seedance ως @Video1.</p>` +
+      `<div class="fld"><span>Καρέ σε PNG</span><div class="row wrap"><button class="pill" data-a="ex-frame" data-v="start">${I.image}<span>Start frame</span></button><button class="pill" data-a="ex-frame" data-v="end">${I.image}<span>End frame</span></button>${shots > 1 ? `<button class="pill" data-a="ex-frame" data-v="shots">${I.image}<span>Πρώτο καρέ κάθε πλάνου</span></button>` : ''}</div></div>` +
+      `<div class="fld"><span>Αρχείο σκηνής</span><div class="row wrap"><button class="pill" data-a="ex-project">${I.down}<span>Αποθήκευση</span></button><button class="pill" data-a="ex-open">${I.folder}<span>Άνοιγμα αρχείου</span></button></div></div>` +
+      `<div class="foot"><div class="grow"></div><button class="pill" data-a="modal-close">Κλείσιμο</button></div>`,
+  )
+}
+
+async function runVideo() {
+  const p = P()
+  if (!(await videoSupport(p)))
+    return openModal(`<h2>Export</h2><p class="big">Αυτός ο browser δεν γράφει MP4.</p><p class="hint">Θέλει Chrome, Edge ή Safari 16.4 και νεότερο. Τα καρέ PNG και το αρχείο σκηνής δουλεύουν παντού.</p><div class="foot"><div class="grow"></div><button class="pill main" data-a="export">Πίσω</button></div>`)
+  ui.playing = false
+  exStop.now = false
+  exResult = null
+  renderBars()
+  openModal(`<h2>Γράφω το βίντεο</h2><div class="bar"><i id="exBar"></i></div><p class="hint" id="exTxt">Ξεκινάω…</p><p class="hint">Κράτα την οθόνη ανοιχτή μέχρι να τελειώσει.</p><div class="foot"><div class="grow"></div><button class="pill" data-a="ex-stop">Άκυρο</button></div>`)
+  const t0 = performance.now()
+  try {
+    const blob = await exportVideo(
+      world,
+      p,
+      (done, total) => {
+        const bar = document.getElementById('exBar')
+        if (bar) bar.style.width = `${(done / total) * 100}%`
+        const txt = document.getElementById('exTxt')
+        if (txt) txt.textContent = `Καρέ ${done} από ${total}`
+      },
+      exStop,
+    )
+    exResult = { blob, name: 'previz-reference.mp4' }
+    const secs = Math.round((performance.now() - t0) / 1000)
+    openModal(
+      `<h2>Έτοιμο το βίντεο</h2><video class="preview" src="${URL.createObjectURL(blob)}" controls loop muted playsinline autoplay></video>` +
+        `<p class="hint">${frameCount(p)} καρέ · ${gr(blob.size / 1048576, 1)} MB · γράφτηκε σε ${secs} s</p>` +
+        `<div class="foot"><div class="grow"></div><button class="pill" data-a="export">Πίσω</button><button class="pill main" data-a="ex-save">${I.down}<span>Αποθήκευση</span></button></div>`,
+    )
+  } catch (e) {
+    const m = (e as Error).message
+    if (m === 'stopped') openExport()
+    else openModal(`<h2>Export</h2><p class="big">Το βίντεο δεν γράφτηκε.</p><p class="hint">${m === 'order' || m === 'encode' ? 'Ο κωδικοποιητής αυτής της συσκευής έδωσε κάτι που δεν διαβάζεται.' : 'Η συσκευή δεν άντεξε την κωδικοποίηση.'} Δοκίμασε μικρότερη διάρκεια ή από υπολογιστή.</p><div class="foot"><div class="grow"></div><button class="pill main" data-a="export">Πίσω</button></div>`)
+  }
+  dirty = true
+}
+
+$<HTMLInputElement>('fileIn').addEventListener('change', async (e) => {
+  const inp = e.target as HTMLInputElement
+  const file = inp.files?.[0]
+  inp.value = ''
+  if (!file) return
+  try {
+    const raw = JSON.parse(await file.text())
+    // a saved project, or a scene as Claude writes it
+    const project = raw && raw.v === 1 ? migrate(raw) : toProject(raw, P())
+    if (!project) throw new Error('bad')
+    store.replace(project)
+    closeModal()
+    ui.sel = null
+    ui.time = 0
+    refresh('sel')
+    toast('Άνοιξε η σκηνή. Η Αναίρεση φέρνει την προηγούμενη.')
+  } catch {
+    toast('Αυτό το αρχείο δεν είναι σκηνή του Previz')
+  }
+})
 
 // ---------- a scene in a link ----------
 function b64e(text: string): string {

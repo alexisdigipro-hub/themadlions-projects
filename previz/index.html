@@ -26,6 +26,7 @@
         <div class="grow"></div>
         <button class="ico" data-a="help" id="helpBtn" title="Οδηγίες" aria-label="Οδηγίες"></button>
         <button class="pill" data-a="settings" id="shotPill"></button>
+        <button class="pill" data-a="export" id="exportBtn"></button>
         <button class="pill main" data-a="prompt" id="promptBtn"></button>
       </header>
       <main id="main">
@@ -62,6 +63,7 @@
       </footer>
     </div>
     <div id="modal" hidden></div>
+    <input type="file" id="fileIn" accept=".json,application/json" hidden />
     <script type="module" src="./src/main.ts"></script>
   </body>
 </html>

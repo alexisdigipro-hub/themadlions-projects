@@ -548,6 +548,45 @@ export class World {
   }
 
   /** Draw one camera into a box of the canvas (CSS pixels from its top left). */
+  /**
+   * A second renderer at the size of the reference video. It draws the same scene through the shot camera
+   * (which never sees the Director's helpers), with the handheld of the shot.
+   */
+  exporter(w: number, h: number): { canvas: HTMLCanvasElement; render: (p: Project, t: number, aspect: number) => void; dispose: () => void } {
+    const canvas = document.createElement('canvas')
+    const r = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true })
+    r.setPixelRatio(1)
+    r.setSize(w, h, false)
+    r.shadowMap.enabled = true
+    r.shadowMap.type = THREE.PCFShadowMap
+    const cam = new THREE.PerspectiveCamera()
+    // the key light's shadow map belongs to the screen renderer: give this one its own for as long as it lives
+    const lights: { l: THREE.DirectionalLight; map: THREE.RenderTarget | null }[] = []
+    this.scene.traverse((o) => {
+      const l = o as THREE.DirectionalLight
+      if (l.isDirectionalLight && l.castShadow) lights.push({ l, map: l.shadow.map })
+    })
+    const mine: (THREE.RenderTarget | null)[] = lights.map(() => null)
+    return {
+      canvas,
+      render: (p, t, aspect) => {
+        this.syncScene(p, null, t)
+        applyCam(cam, camAt(p, t, true), aspect)
+        lights.forEach((x, i) => (x.l.shadow.map = mine[i]))
+        r.render(this.scene, cam)
+        lights.forEach((x, i) => {
+          mine[i] = x.l.shadow.map
+          x.l.shadow.map = x.map
+        })
+      },
+      dispose: () => {
+        mine.forEach((m) => m?.dispose())
+        r.dispose()
+        r.forceContextLoss()
+      },
+    }
+  }
+
   /** Show or hide what only the Director view draws (labels, path, frustums). */
   helpersOn(on: boolean): void {
     if (on) this.dirCam.layers.enable(HELP)
