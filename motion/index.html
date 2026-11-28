@@ -1,0 +1,1410 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Motion Library</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="A live sample book of interface animations: Liquid Glass, glass materials, pop-ups, transitions, micro-interactions, loaders, text, scroll, 3D, backgrounds and easing, each with a code and a name.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@200..800&family=Inter:wght@400..700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one sticky glass top row (title, search, category lens), then sections of soft tiles; every tile = live stage + code + name. Dark by design so glass reads. */
+:root{
+  --bg:#0a0c12; --panel:#131722; --panel2:#181d2b; --line:rgba(255,255,255,.07);
+  --fg:#eef0f6; --mut:#9097ad; --soft:#c9cede;
+  --acc:#8fd3ff; --coral:#ff7a6b; --vio:#9b7bff; --mint:#5fe0b5; --amber:#ffc65c; --rose:#ff7fb6;
+  --disp:"Sora",ui-sans-serif,system-ui,sans-serif;
+  --body:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --noise:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button{font:inherit;color:inherit}
+.wrap{max-width:1380px;margin:0 auto;padding-block:0 80px}
+
+/* top row */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:8;margin:0 -8px;padding:12px 8px 10px;background:rgba(10,12,18,.78);-webkit-backdrop-filter:blur(20px) saturate(1.5);backdrop-filter:blur(20px) saturate(1.5);border-bottom:1px solid var(--line)}
+.toprow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto;min-width:0}
+.brand h1{margin:0;font:700 24px/1.1 var(--disp);letter-spacing:-.02em}
+.brand span{color:var(--mut);font-size:13px;white-space:nowrap}
+.search{position:relative;flex:0 1 300px;min-width:180px}
+.search input{width:100%;height:38px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--fg);padding:0 14px 0 36px;font:14px var(--body);outline:none;transition:border-color .2s,background .2s}
+.search input:focus{border-color:rgba(143,211,255,.55);background:rgba(255,255,255,.09)}
+.search svg{position:absolute;left:12px;top:11px;width:16px;height:16px;stroke:var(--mut);fill:none;stroke-width:2}
+.cats{margin-top:10px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cats::-webkit-scrollbar{display:none}
+.seg{position:relative;display:inline-flex;gap:2px;padding:4px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);white-space:nowrap}
+.seg button{position:relative;z-index:1;border:0;background:none;height:32px;padding:0 14px;border-radius:999px;font-size:13px;font-weight:500;color:var(--soft);cursor:pointer;transition:color .2s}
+.seg button[aria-pressed="true"]{color:#fff}
+.seg button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.seg .lens{position:absolute;z-index:0;top:4px;left:0;height:32px;border-radius:999px;background:rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 0 0 1px rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.3);transition:transform .45s cubic-bezier(.3,1.35,.5,1),width .45s cubic-bezier(.3,1.35,.5,1)}
+.intro{color:var(--mut);font-size:14px;max-width:70ch;margin:16px 0 0}
+.intro b{color:var(--fg);font-weight:600}
+
+/* sections + tiles */
+section.cat{margin-top:34px}
+section.cat>header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+section.cat h2{margin:0;font:650 20px/1.2 var(--disp);letter-spacing:-.01em;text-wrap:balance}
+section.cat h2 small{font:600 12px var(--mono);color:var(--acc);margin-left:8px;vertical-align:2px}
+section.cat header p{margin:0;color:var(--mut);font-size:13.5px;flex:1 1 320px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:14px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:8px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.tile.wide{grid-column:1/-1}
+.tile,section.cat{scroll-margin-top:150px}
+.meta{padding:2px 8px 8px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.row1{display:flex;align-items:center;gap:8px}
+.code{font:600 11px/1 var(--mono);letter-spacing:.04em;padding:6px 8px;border-radius:999px;background:rgba(143,211,255,.12);color:var(--acc);border:0;cursor:pointer;flex:none}
+.tile h3{margin:0;font:600 16px/1.25 var(--disp);flex:1;min-width:0;letter-spacing:-.005em}
+.ibtn{width:32px;height:32px;flex:none;border-radius:50%;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.06);color:var(--fg);display:grid;place-items:center;cursor:pointer;transition:background .2s,transform .15s}
+.ibtn:hover{background:rgba(255,255,255,.12)}
+.ibtn:active{transform:scale(.92)}
+.ibtn:focus-visible,.code:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.ibtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.aka{margin:0;color:var(--mut);font-size:12.5px}
+.desc{margin:0;font-size:13.5px;color:var(--soft);line-height:1.5}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.tag{font-size:11px;padding:3px 9px 3px 7px;border-radius:999px;background:rgba(255,255,255,.06);display:inline-flex;gap:6px;align-items:center;color:var(--soft)}
+.tag i{width:6px;height:6px;border-radius:50%;background:var(--c,#999)}
+.empty{color:var(--mut);margin-top:40px;text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,140%);opacity:0;z-index:20;padding:10px 18px;border-radius:999px;background:rgba(30,36,52,.8);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 30px rgba(0,0,0,.4);font-size:14px;transition:transform .45s cubic-bezier(.3,1.4,.5,1),opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translate(-50%,0);opacity:1}
+
+/* stage */
+.stage{position:relative;height:186px;border-radius:16px;overflow:hidden;isolation:isolate;display:grid;place-items:center;background:radial-gradient(120% 90% at 20% 0%,#1d2336,#0d1019);user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.stage.tall{height:auto;min-height:186px;padding:16px}
+.stage.touch{touch-action:none}
+.hint{position:absolute;right:8px;top:8px;z-index:30;font:600 10.5px/1 var(--body);padding:5px 9px;border-radius:999px;background:rgba(0,0,0,.4);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff;pointer-events:none;letter-spacing:.02em}
+.tile.off .stage *,.tile.off .stage *::before,.tile.off .stage *::after,.tile.off .stage::before,.tile.off .stage::after{animation-play-state:paused!important}
+.photo{background:#141a2b}
+.photo::before{content:"";position:absolute;inset:-35%;z-index:-1;background:
+  radial-gradient(circle at 28% 42%,var(--coral) 0 11%,transparent 11.5%),
+  radial-gradient(circle at 66% 58%,var(--acc) 0 14%,transparent 14.5%),
+  radial-gradient(circle at 48% 28%,var(--vio) 0 9%,transparent 9.5%),
+  radial-gradient(circle at 78% 34%,var(--amber) 0 7%,transparent 7.5%),
+  radial-gradient(circle at 38% 70%,var(--mint) 0 8%,transparent 8.5%),
+  linear-gradient(135deg,#1a2140,#2a1838);
+  animation:drift 14s ease-in-out infinite alternate}
+@keyframes drift{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(6%,-4%) rotate(8deg)}100%{transform:translate(-5%,5%) rotate(-6deg)}}
+.pat{background-color:#141a2b;background-image:radial-gradient(circle,#ff7a6b 0 22%,transparent 23%),linear-gradient(45deg,rgba(143,211,255,.5) 25%,transparent 25% 50%,rgba(143,211,255,.5) 50% 75%,transparent 75%);background-size:36px 36px}
+.glass{background:rgba(255,255,255,.1);-webkit-backdrop-filter:blur(14px) saturate(1.7);backdrop-filter:blur(14px) saturate(1.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -1px 0 rgba(255,255,255,.08),inset 0 0 0 1px rgba(255,255,255,.14),0 8px 24px rgba(0,0,0,.28)}
+.ln{display:block;border-radius:4px;background:rgba(255,255,255,.16);flex:none}
+.scr{position:relative;width:210px;height:140px;border-radius:14px;overflow:hidden;background:#1b2132;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.lay{position:absolute;inset:0}
+.scr-in{position:absolute;inset:0;padding:12px;display:flex;flex-direction:column;gap:7px}
+.sa{background:#1c2540}.sb{background:#2a1f3a}
+.hd{display:flex;align-items:center;gap:8px}
+.av{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--coral),var(--vio));flex:none;display:block}
+.row3{display:flex;gap:6px;margin-top:auto}.row3 i{flex:1;height:34px;border-radius:9px;background:rgba(255,255,255,.08)}
+.img{height:54px;border-radius:10px;background:linear-gradient(135deg,#ff9a6b,#9b7bff 60%,#5fd3ff);flex:none}
+.phone{position:relative;width:118px;height:172px;border-radius:24px;background:#0d1018;border:3px solid #2b3040;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.45);opacity:0}
+.mb{flex:1;height:18px;border-radius:999px;background:rgba(255,255,255,.12);display:block}
+.mb.p{background:var(--acc)}
+.cursor{position:absolute;width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 0 4px rgba(255,255,255,.18);pointer-events:none;z-index:20;left:0;top:0}
+@media (max-width:640px){
+  .brand h1{font-size:21px}
+  .search{flex:1 1 100%}
+  .grid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){.toast,.seg .lens{transition:none}}
+</style>
+</head><body>
+
+<div class="wrap">
+  <div class="top">
+    <div class="toprow">
+      <div class="brand"><h1>Motion Library</h1><span id="count"></span></div>
+      <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search name, code or platform" autocomplete="off"></label>
+    </div>
+    <div class="cats"><div class="seg" id="seg"><span class="lens"></span></div></div>
+  </div>
+  <p class="intro">Every animation has a <b>code</b> and a <b>name</b>. Tap the code to copy it, then just say “LG-05 on the tab bar”. Everything plays live; tiles marked <b>Tap</b>, <b>Drag</b> or <b>Hover</b> also answer to you.</p>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="lgGoo" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
+      <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11" result="g"/>
+      <feGaussianBlur in="g" stdDeviation="2.5" result="gb"/>
+      <feComposite in="g" in2="gb" operator="arithmetic" k2="1" k3="-1" result="rim"/>
+      <feFlood flood-color="#ffffff" flood-opacity=".3"/><feComposite in2="g" operator="in" result="body"/>
+      <feFlood flood-color="#ffffff" flood-opacity=".95"/><feComposite in2="rim" operator="in" result="rimc"/>
+      <feOffset in="g" dx="0" dy="6" result="sh0"/><feGaussianBlur in="sh0" stdDeviation="6" result="sh1"/>
+      <feFlood flood-color="#000" flood-opacity=".1"/><feComposite in2="sh1" operator="in" result="sh"/>
+      <feMerge><feMergeNode in="sh"/><feMergeNode in="body"/><feMergeNode in="rimc"/></feMerge>
+    </filter>
+    <filter id="goo" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b"/>
+      <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/>
+      <feComposite in="SourceGraphic" in2="g" operator="atop"/>
+    </filter>
+  </defs>
+</svg>
+<script>
+"use strict";
+const CATS=[
+ ['lg','Liquid Glass','Apple’s material since iOS 26 / macOS Tahoe: glass that bends light, catches highlights, merges like liquid and reacts to touch.'],
+ ['gm','Glass & Materials','Glassmorphism and its cousins: frosted blur, Acrylic, Mica, vibrancy, sheen, holo and grain.'],
+ ['pu','Pop-ups & Overlays','Modals, sheets, drawers, toasts, menus, alerts: how things appear on top of the screen and leave again.'],
+ ['pt','Page Transitions','How one screen hands over to the next.'],
+ ['mi','Micro-interactions','Small replies to a tap, a hover or a drag.'],
+ ['ld','Loading & Progress','What fills the wait.'],
+ ['tx','Text','Words that arrive, change or move.'],
+ ['sc','Scroll','Animation driven by scrolling. Scroll inside the frames yourself.'],
+ ['d3','3D & Depth','Perspective, flips, tilts and rings.'],
+ ['bg','Backgrounds & Ambient','Living backdrops behind content.'],
+ ['ez','Easing Curves','The rhythm of every move above. Same distance, different curve.']
+];
+const TAGC={'iOS':'#8fd3ff','iOS 26':'#8fd3ff','iPadOS':'#8fd3ff','macOS':'#b9a6ff','macOS 26':'#b9a6ff','visionOS':'#ff9ad5','watchOS':'#ff9ad5','Android':'#5fe0b5','Material':'#5fe0b5','Windows':'#6fa8ff','Web':'#ffc65c','CSS':'#ffc65c','Apps':'#ff7a6b','Desktop':'#b9a6ff','Games':'#ff7fb6','Film':'#ff7fb6'};
+const DEMOS=[];const add=d=>DEMOS.push(d);
+const LN=(w,h=7,extra='')=>`<i class="ln" style="width:${w}%;height:${h}px;${extra}"></i>`;
+const SCR_A=`<div class="scr-in sa"><div class="hd"><i class="av"></i>${LN(40,8)}</div>${LN(90)}${LN(70)}${LN(80)}<div class="row3"><i></i><i></i><i></i></div></div>`;
+const SCR_B=`<div class="scr-in sb"><div class="img"></div>${LN(60,8)}${LN(85)}${LN(50)}</div>`;
+const ROWS=n=>Array.from({length:n},(_,i)=>`<div class="frow"><i style="background:hsl(${(i*47)%360} 70% 62%)"></i><span>${LN(70,6)}${LN(45,5,'opacity:.6')}</span></div>`).join('');
+const ICON={
+ plus:'<path d="M12 5v14M5 12h14"/>', cam:'<path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>', mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>', img:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/>',
+ home:'<path d="M4 11 12 4l8 7v9H4z"/>', search:'<circle cx="11" cy="11" r="6"/><path d="m20 20-4-4"/>', heart:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>', user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+ bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>', check:'<path d="m5 12 5 5 9-10"/>', copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>', send:'<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/>', trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>', star:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>', lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', chev:'<path d="m6 9 6 6 6-6"/>', replay:'<path d="M4 12a8 8 0 1 0 2.3-5.6L4 8.7"/><path d="M4 4v4.7h4.7"/>'
+};
+const ic=(n,s=18,w=2)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${ICON[n]}</svg>`;
+
+function ctxFor(stage){
+ const tile=stage.closest('.tile');const ids=[],offs=[];let alive=true;
+ const c={
+  get off(){return tile.classList.contains('off')||document.hidden},
+  every(ms,fn){const id=setInterval(()=>{if(alive&&!c.off)fn()},ms);ids.push(id);return id},
+  after(ms,fn){const id=setTimeout(()=>{if(alive)fn()},ms);ids.push(id);return id},
+  raf(fn){let last=performance.now();const loop=t=>{if(!alive)return;const dt=Math.min(64,t-last);last=t;if(!c.off)fn(dt,t);requestAnimationFrame(loop)};requestAnimationFrame(loop)},
+  on(el,ev,fn,o){el.addEventListener(ev,fn,o);offs.push(()=>el.removeEventListener(ev,fn,o))},
+  idle(el=stage,ms=4000){let until=0;const poke=()=>{until=performance.now()+ms};['pointerdown','wheel','touchstart','keydown','pointermove'].forEach(e=>c.on(el,e,ev=>{if(e!=='pointermove'||ev.pointerType==='mouse'&&ev.buttons)poke()},{passive:true}));const f=()=>performance.now()>until;f.poke=poke;return f},
+  restart(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls)},
+  dispose(){alive=false;ids.forEach(i=>{clearInterval(i);clearTimeout(i)});offs.forEach(f=>f())}
+ };return c}
+
+/* ---------- shared fake-list styles ---------- */
+const BASECSS=`
+.frow{display:flex;align-items:center;gap:7px;padding:6px 8px}
+.frow>i{width:18px;height:18px;border-radius:50%;flex:none}
+.frow>span{flex:1;display:flex;flex-direction:column;gap:4px}
+@keyframes dimk{0%,12%{opacity:0}22%,78%{opacity:1}88%,100%{opacity:0}}
+`;
+
+/* =================== LIQUID GLASS =================== */
+add({id:'LG-01',cat:'lg',name:'Lensing',aka:'Refraction · Light bending · Magnifier lens',tags:['iOS 26','macOS 26','visionOS'],bg:'pat touch',hint:'Drag',
+desc:'The core of Liquid Glass: the glass does not just blur what is behind it, it bends and magnifies it like a real lens, with a bright rim and a hint of colour split at the edge.',
+html:`<div class="lg1"></div>`,
+css:`.lg1{position:absolute;left:0;top:0;width:104px;height:104px;border-radius:50%;background-color:#141a2b;background-image:radial-gradient(circle,#ff7a6b 0 22%,transparent 23%),linear-gradient(45deg,rgba(143,211,255,.5) 25%,transparent 25% 50%,rgba(143,211,255,.5) 50% 75%,transparent 75%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.45),inset 3px 4px 6px rgba(255,255,255,.55),inset -4px -6px 10px rgba(0,0,0,.35),inset 2px 0 3px rgba(255,90,90,.45),inset -2px 0 3px rgba(80,170,255,.45),0 12px 28px rgba(0,0,0,.45);cursor:grab;will-change:transform}
+.lg1::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.55),transparent 28%),radial-gradient(circle,transparent 62%,rgba(255,255,255,.14) 74%,transparent 80%)}`,
+init(s,c){const L=s.querySelector('.lg1');const m=1.5,r=52,T=36;let x=0,y=0,tx=0,ty=0,t=0,drag=false,first=true;
+ const place=()=>{const lx=x-r,ly=y-r;L.style.transform=`translate(${lx}px,${ly}px)`;L.style.backgroundSize=`${T*m}px ${T*m}px`;const p=`${-m*(lx+r)+r}px ${-m*(ly+r)+r}px`;L.style.backgroundPosition=p+','+p};
+ const pos=e=>{const b=s.getBoundingClientRect();tx=e.clientX-b.left;ty=e.clientY-b.top};
+ c.on(s,'pointerdown',e=>{drag=true;s.setPointerCapture(e.pointerId);pos(e)});c.on(s,'pointermove',e=>{if(drag)pos(e)});c.on(s,'pointerup',()=>drag=false);c.on(s,'pointercancel',()=>drag=false);
+ const idle=c.idle();
+ c.raf(dt=>{const W=s.clientWidth,H=s.clientHeight;if(!drag&&idle()){t+=dt/1000;tx=W/2+Math.sin(t*.8)*W*.3;ty=H/2+Math.sin(t*1.25)*H*.2}if(first){x=tx;y=ty;first=false}x+=(tx-x)*.12;y+=(ty-y)*.12;place()})}
+});
+
+add({id:'LG-02',cat:'lg',name:'Specular Highlight',aka:'Edge glint · Gyro sheen · Rim light',tags:['iOS 26','macOS 26'],bg:'photo touch',hint:'Move',
+desc:'A thin line of light runs around the edge of the glass and slides as the phone tilts (gyroscope) or the pointer moves, as if a real light source sits above the screen.',
+html:`<div class="lg2 glass"><b>Glass</b><small>tilt the light</small></div>`,
+css:`.lg2{position:relative;width:190px;height:104px;border-radius:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#fff;--ang:120deg;--gx:30%;--gy:20%}
+.lg2 b{font:600 20px var(--disp)}.lg2 small{opacity:.75;font-size:12px}
+.lg2::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.6px;background:conic-gradient(from var(--ang),rgba(255,255,255,.95),rgba(255,255,255,.05) 18%,rgba(255,255,255,0) 40%,rgba(255,255,255,.75) 50%,rgba(255,255,255,.05) 68%,rgba(255,255,255,0) 90%,rgba(255,255,255,.95));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.lg2::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(160px 90px at var(--gx) var(--gy),rgba(255,255,255,.28),transparent 60%);pointer-events:none}`,
+init(s,c){const g=s.querySelector('.lg2');let px=null,py=null,t=0;const idle=c.idle();
+ c.on(s,'pointermove',e=>{const b=g.getBoundingClientRect();px=(e.clientX-b.left)/b.width;py=(e.clientY-b.top)/b.height});c.on(s,'pointerleave',()=>{px=null});
+ c.raf(dt=>{t+=dt/1000;let x,y;if(px!==null){x=px;y=py}else{x=.5+Math.cos(t*.9)*.6;y=.5+Math.sin(t*.9)*.6}const a=Math.atan2(y-.5,x-.5)*180/Math.PI+90;g.style.setProperty('--ang',a+'deg');g.style.setProperty('--gx',x*100+'%');g.style.setProperty('--gy',y*100+'%')})}
+});
+
+add({id:'LG-03',cat:'lg',name:'Glass Merge',aka:'glassEffectID morph · Metaball · Liquid split',tags:['iOS 26','macOS 26'],bg:'photo',
+desc:'Two glass shapes that come close melt into one drop, then pull apart again with a stretched neck between them. Apple uses it when buttons join into a group or a control splits off.',
+html:`<svg class="lg3" viewBox="0 0 300 186"><g filter="url(#lgGoo)" fill="#fff"><circle class="a" cx="105" cy="93" r="36"/><circle class="b" cx="200" cy="93" r="26"/></g></svg>`,
+css:`.lg3{width:300px;height:186px;position:absolute;left:50%;top:0;margin-left:-150px}
+.lg3 .a{animation:lg3a 4.4s cubic-bezier(.6,0,.3,1) infinite}.lg3 .b{animation:lg3b 4.4s cubic-bezier(.6,0,.3,1) infinite}
+@keyframes lg3a{0%,10%,100%{transform:translateX(-8px)}45%,60%{transform:translateX(34px)}}
+@keyframes lg3b{0%,10%,100%{transform:translateX(16px)}45%,60%{transform:translateX(-36px)}}`
+});
+
+add({id:'LG-04',cat:'lg',name:'Morphing Menu',aka:'Glass bloom · Action cluster · Button-to-menu',tags:['iOS 26','macOS 26'],bg:'photo',hint:'Tap',
+desc:'One round glass button swells and drips out into several buttons that fly to their places; closing pulls them back into one. The shapes stay liquid the whole way.',
+html:`<div class="lg4"><svg viewBox="0 0 300 186"><g filter="url(#lgGoo)" fill="#fff"><circle class="m" cx="150" cy="128" r="27"/><circle class="s s1" cx="150" cy="128" r="21"/><circle class="s s2" cx="150" cy="128" r="21"/><circle class="s s3" cx="150" cy="128" r="21"/></g></svg>
+<span class="ic m">${ic('plus',22,2.4)}</span><span class="ic i1">${ic('cam')}</span><span class="ic i2">${ic('mic')}</span><span class="ic i3">${ic('img')}</span></div>`,
+css:`.lg4{position:absolute;left:50%;top:0;width:300px;height:186px;margin-left:-150px;cursor:pointer}.lg4>svg{position:absolute;inset:0;width:300px;height:186px}
+.lg4 .s{transition:transform .6s cubic-bezier(.4,1.5,.5,1)}
+.lg4.open .s1{transform:translate(-74px,-46px)}.lg4.open .s2{transform:translate(0,-80px);transition-delay:.05s}.lg4.open .s3{transform:translate(74px,-46px);transition-delay:.1s}
+.lg4 .ic{position:absolute;left:150px;top:128px;width:0;height:0;display:grid;place-items:center;color:#fff;transition:transform .6s cubic-bezier(.4,1.5,.5,1),opacity .3s}
+.lg4 .ic svg{position:absolute;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.lg4 .ic.m{transition:transform .45s cubic-bezier(.4,1.6,.5,1)}.lg4.open .ic.m{transform:rotate(135deg)}
+.lg4 .i1,.lg4 .i2,.lg4 .i3{opacity:0}
+.lg4.open .i1{opacity:1;transform:translate(-74px,-46px)}.lg4.open .i2{opacity:1;transform:translate(0,-80px);transition-delay:.05s}.lg4.open .i3{opacity:1;transform:translate(74px,-46px);transition-delay:.1s}`,
+init(s,c){const m=s.querySelector('.lg4');const idle=c.idle();c.on(m,'click',()=>m.classList.toggle('open'));c.every(2200,()=>{if(idle())m.classList.toggle('open')})}
+});
+
+add({id:'LG-05',cat:'lg',name:'Sliding Lens',aka:'Liquid segmented control · Lens slide · Jelly selector',tags:['iOS 26','macOS 26','Web'],bg:'photo',hint:'Tap',
+desc:'The chosen option sits under a glass lens. Pick another and the lens slides over, stretching sideways while it travels and wobbling as it lands. This page’s own category bar uses it.',
+html:`<div class="lg5 glass"><span class="lens"></span><button>Day</button><button>Week</button><button>Month</button><button>Year</button></div>`,
+css:`.lg5{position:relative;display:flex;padding:4px;border-radius:999px}
+.lg5 button{position:relative;z-index:1;border:0;background:none;color:#fff;font-size:13px;font-weight:600;height:34px;padding:0 13px;border-radius:999px;cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.lg5 .lens{position:absolute;top:4px;left:0;height:34px;border-radius:999px;background:rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -2px 4px rgba(255,255,255,.15),inset 0 0 0 1px rgba(255,255,255,.25),0 6px 16px rgba(0,0,0,.25);transition:transform .5s cubic-bezier(.3,1.3,.5,1),width .5s cubic-bezier(.3,1.3,.5,1)}`,
+init(s,c){const bs=[...s.querySelectorAll('.lg5 button')],L=s.querySelector('.lg5 .lens');let cur=0;const idle=c.idle();
+ const sel=(i,anim=true)=>{cur=i;const b=bs[i];L.style.width=b.offsetWidth+'px';L.style.transform=`translateX(${b.offsetLeft}px)`;if(anim&&L.animate)L.animate([{scale:'1 1'},{scale:'1.22 .84',offset:.35},{scale:'.95 1.06',offset:.7},{scale:'1 1'}],{duration:560,easing:'ease-out'})};
+ c.after(30,()=>sel(1,false));bs.forEach((b,i)=>c.on(b,'click',()=>sel(i)));c.every(1700,()=>{if(idle())sel((cur+1)%bs.length)})}
+});
+
+add({id:'LG-06',cat:'lg',name:'Jelly Press',aka:'Interactive glass · .interactive() · Touch bloom · Squish',tags:['iOS 26','macOS 26'],bg:'photo',hint:'Press',
+desc:'Press a glass button and it swells slightly, glows from the exact spot of your finger, and when you let go it springs back with a small jiggle, like pressing a drop of water.',
+html:`<button class="lg6 glass">Hold me</button>`,
+css:`.lg6{position:relative;overflow:hidden;border:0;color:#fff;font:600 16px var(--disp);width:150px;height:56px;border-radius:999px;cursor:pointer;transition:transform .3s cubic-bezier(.3,1.6,.5,1);--px:50%;--py:50%;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.lg6::after{content:"";position:absolute;inset:0;background:radial-gradient(90px 90px at var(--px) var(--py),rgba(255,255,255,.55),transparent 65%);opacity:0;transition:opacity .35s}
+.lg6.down{transform:scale(1.13)}.lg6.down::after{opacity:1}`,
+init(s,c){const b=s.querySelector('.lg6');const idle=c.idle();
+ const down=(x,y)=>{b.style.setProperty('--px',x+'px');b.style.setProperty('--py',y+'px');b.classList.add('down')};
+ const up=()=>{if(!b.classList.contains('down'))return;b.classList.remove('down');b.animate&&b.animate([{transform:'scale(1.13)'},{transform:'scale(.93)',offset:.35},{transform:'scale(1.03)',offset:.7},{transform:'scale(1)'}],{duration:620,easing:'ease-out'})};
+ c.on(b,'pointerdown',e=>{const r=b.getBoundingClientRect();down(e.clientX-r.left,e.clientY-r.top)});c.on(b,'pointerup',up);c.on(b,'pointerleave',up);
+ c.every(2200,()=>{if(idle()){down(40+Math.random()*70,28);c.after(500,up)}})}
+});
+
+add({id:'LG-07',cat:'lg',name:'Materialize',aka:'Glass in · Condense · Lens fade',tags:['iOS 26','macOS 26'],bg:'photo',
+desc:'Glass does not fade in like a picture. It condenses: the bending and blur of the background grow from nothing until the panel is solid glass, and it melts away the same way.',
+html:`<div class="lg7"><b>Now Playing</b><small>Liquid Glass · 3:24</small><i></i></div>`,
+css:`.lg7{width:200px;height:96px;border-radius:26px;color:#fff;display:flex;flex-direction:column;justify-content:center;padding:0 22px;gap:2px;animation:lg7 4.4s cubic-bezier(.3,.7,.3,1) infinite}
+.lg7 b{font:600 16px var(--disp);animation:lg7t 4.4s ease infinite}.lg7 small{opacity:.75;animation:lg7t 4.4s ease infinite}
+.lg7 i{display:block;height:4px;border-radius:2px;background:rgba(255,255,255,.35);margin-top:8px;animation:lg7t 4.4s ease infinite}
+@keyframes lg7{0%,6%{transform:scale(.88);background:rgba(255,255,255,0);-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1);box-shadow:inset 0 0 0 0 rgba(255,255,255,0),0 0 0 rgba(0,0,0,0)}
+34%,74%{transform:scale(1);background:rgba(255,255,255,.12);-webkit-backdrop-filter:blur(16px) saturate(1.8);backdrop-filter:blur(16px) saturate(1.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 0 0 1px rgba(255,255,255,.18),0 10px 26px rgba(0,0,0,.3)}
+96%,100%{transform:scale(.92);background:rgba(255,255,255,0);-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1);box-shadow:inset 0 0 0 0 rgba(255,255,255,0),0 0 0 rgba(0,0,0,0)}}
+@keyframes lg7t{0%,20%{opacity:0}38%,72%{opacity:1}88%,100%{opacity:0}}`
+});
+
+add({id:'LG-08',cat:'lg',name:'Tab Bar Minimize',aka:'Collapse on scroll · tabBarMinimizeBehavior',tags:['iOS 26'],bg:'',hint:'Scroll',
+desc:'Scroll down and the floating glass tab bar shrinks into one small pill so the content gets the screen; scroll back up and it grows out again.',
+html:`<div class="phone lg8"><div class="sc">${ROWS(14)}</div><div class="bar glass"><span class="on">${ic('home',16)}</span><span>${ic('search',16)}</span><span>${ic('heart',16)}</span><span>${ic('user',16)}</span></div></div>`,
+css:`.lg8 .sc{position:absolute;inset:0;overflow-y:auto;padding:8px 2px 60px;scrollbar-width:none}.lg8 .sc::-webkit-scrollbar{display:none}
+.lg8 .bar{position:absolute;left:8px;bottom:8px;height:38px;width:96px;border-radius:999px;display:flex;align-items:center;justify-content:space-around;padding:0 4px;color:#fff;overflow:hidden;transition:width .5s cubic-bezier(.3,1.3,.5,1);background:rgba(40,46,64,.45)}
+.lg8 .bar span{display:grid;place-items:center;width:22px;flex:none;transition:opacity .3s,width .4s}.lg8 .bar span.on{color:var(--acc)}
+.lg8.min .bar{width:38px}.lg8.min .bar span:not(.on){opacity:0;width:0}`,
+init(s,c){const p=s.querySelector('.lg8'),sc=p.querySelector('.sc');let last=0;const idle=c.idle(sc);
+ c.on(sc,'scroll',()=>{const t=sc.scrollTop;if(t>last+2&&t>20)p.classList.add('min');else if(t<last-2)p.classList.remove('min');last=t},{passive:true});
+ c.every(2600,()=>{if(idle())sc.scrollTo({top:sc.scrollTop>40?0:sc.scrollHeight,behavior:'smooth'})})}
+});
+
+add({id:'LG-09',cat:'lg',name:'Scroll Edge Effect',aka:'Edge blur · Progressive top fade · Soft edge',tags:['iOS 26','macOS 26'],bg:'',
+desc:'Content that scrolls up under the top bar does not hit a hard line: it softly blurs and fades into the bar, so the glass title stays readable over anything.',
+html:`<div class="phone lg9"><div class="list">${ROWS(16)}</div><div class="edge"></div><b>Inbox</b></div>`,
+css:`.lg9 .list{position:absolute;left:0;right:0;top:0;animation:lg9 9s linear infinite}
+@keyframes lg9{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+.lg9 .edge{position:absolute;left:0;right:0;top:0;height:54px;-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);background:linear-gradient(rgba(13,16,24,.75),rgba(13,16,24,0));-webkit-mask:linear-gradient(#000 45%,transparent);mask:linear-gradient(#000 45%,transparent)}
+.lg9 b{position:absolute;left:12px;top:10px;font:700 16px var(--disp);color:#fff}`,
+init(s){const l=s.querySelector('.lg9 .list');l.innerHTML+=l.innerHTML}
+});
+
+add({id:'LG-10',cat:'lg',name:'Concentric Morph',aka:'Button-to-sheet · Zoom from source · Glass expand',tags:['iOS 26','macOS 26'],bg:'photo',hint:'Tap',
+desc:'A small glass button grows into the panel it opens: its corners stay concentric with the screen corners the whole way, and the contents fade in once the shape has arrived.',
+html:`<div class="lg10 glass"><span class="ic">${ic('plus',20,2.4)}</span><div class="body"><b>New Project</b>${LN(80,7)}${LN(60,7)}<div style="display:flex;gap:6px;margin-top:auto"><i class="mb"></i><i class="mb p"></i></div></div></div>`,
+css:`.lg10{position:absolute;right:14px;bottom:14px;width:48px;height:48px;border-radius:24px;overflow:hidden;color:#fff;cursor:pointer;transition:width .6s cubic-bezier(.3,1.25,.5,1),height .6s cubic-bezier(.3,1.25,.5,1),border-radius .6s}
+.lg10 .ic{position:absolute;right:0;bottom:0;width:48px;height:48px;display:grid;place-items:center;transition:opacity .2s,transform .5s}
+.lg10 .body{position:absolute;inset:0;padding:16px;display:flex;flex-direction:column;gap:8px;opacity:0;transition:opacity .25s}
+.lg10 .body b{font:600 15px var(--disp)}
+.lg10.open{width:calc(100% - 28px);height:150px;border-radius:26px}.lg10.open .ic{opacity:0;transform:rotate(90deg)}.lg10.open .body{opacity:1;transition-delay:.3s}`,
+init(s,c){const m=s.querySelector('.lg10');const idle=c.idle();c.on(m,'click',()=>m.classList.toggle('open'));c.every(2400,()=>{if(idle())m.classList.toggle('open')})}
+});
+
+add({id:'LG-11',cat:'lg',name:'Liquid Toggle',aka:'Glass thumb · Droplet switch · Stretch knob',tags:['iOS 26'],bg:'photo',hint:'Tap',
+desc:'While the switch moves, its white knob turns into clear glass, stretches with the speed, magnifies the track under it, then turns solid again when it lands.',
+html:`<div class="lg11"><i class="th"></i></div>`,
+css:`.lg11{position:relative;width:96px;height:44px;border-radius:999px;background:rgba(120,120,128,.45);cursor:pointer;transition:background .35s;box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
+.lg11.on{background:#34c759}
+.lg11 .th{position:absolute;top:3px;left:3px;width:52px;height:38px;border-radius:999px;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.25);transition:translate .55s cubic-bezier(.35,1.45,.5,1)}
+.lg11.on .th{translate:38px 0}
+.lg11 .th.go{animation:lg11 .55s ease}
+@keyframes lg11{0%{scale:1;background:#fff}30%,60%{scale:1.45 1.3;background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 0 0 1px rgba(255,255,255,.5),inset 0 -3px 6px rgba(255,255,255,.3),0 6px 14px rgba(0,0,0,.25);-webkit-backdrop-filter:blur(1px) saturate(1.6);backdrop-filter:blur(1px) saturate(1.6)}100%{scale:1;background:#fff}}`,
+init(s,c){const t=s.querySelector('.lg11'),th=t.querySelector('.th');const idle=c.idle();const flip=()=>{t.classList.toggle('on');c.restart(th,'go')};c.on(t,'click',flip);c.every(1800,()=>{if(idle())flip()})}
+});
+
+add({id:'LG-12',cat:'lg',name:'Adaptive Tint',aka:'Content-aware glass · Light/dark flip',tags:['iOS 26','macOS 26'],bg:'',
+desc:'The glass reads what passes under it: over light content it turns light with dark text, over dark content it turns dark with white text, so it is always legible.',
+html:`<div class="lg12b"></div><div class="lg12">Liquid Glass</div>`,
+css:`.lg12b{position:absolute;left:0;right:0;top:0;height:600px;background:repeating-linear-gradient(#eef0f5 0 100px,#121522 100px 200px);animation:lg12b 4s linear infinite}
+@keyframes lg12b{to{transform:translateY(-200px)}}
+.lg12{position:relative;padding:12px 26px;border-radius:999px;font:600 15px var(--disp);-webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 0 0 1px rgba(255,255,255,.2),0 8px 20px rgba(0,0,0,.25);animation:lg12 4s linear infinite}
+@keyframes lg12{0%,2%,58%,100%{background:rgba(255,255,255,.55);color:#111}6%,54%{background:rgba(30,32,44,.45);color:#fff}}`
+});
+
+/* =================== GLASS & MATERIALS =================== */
+add({id:'GM-01',cat:'gm',name:'Frosted Glass',aka:'Glassmorphism · Backdrop blur',tags:['Web','iOS','macOS','Windows'],bg:'photo',
+desc:'The classic glass card: whatever moves behind it is blurred and its colours turned up a little, with a thin light border and a soft shadow. The base of every glass look.',
+html:`<div class="gm1 glass"><b>Frosted Glass</b><small>backdrop blur 16px</small></div>`,
+css:`.gm1{width:200px;height:110px;border-radius:22px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:16px;gap:2px}.gm1 b{font:600 17px var(--disp)}.gm1 small{opacity:.7}`
+});
+
+add({id:'GM-02',cat:'gm',name:'Blur-in Reveal',aka:'Focus pull · Rack focus · Defocus in',tags:['Web','Apps','Film'],bg:'',
+desc:'Content arrives out of focus and sharpens into place, like a rack focus. Leaves the same way. Soft and calm, much used for hero titles and AI answers.',
+html:`<div class="gm2">Focus Pull</div>`,
+css:`.gm2{font:700 34px var(--disp);letter-spacing:-.02em;color:#fff;animation:gm2 3.6s cubic-bezier(.2,.7,.2,1) infinite}
+@keyframes gm2{0%,8%{filter:blur(18px);opacity:0;transform:scale(1.12)}36%,72%{filter:blur(0);opacity:1;transform:scale(1)}92%,100%{filter:blur(14px);opacity:0;transform:scale(.96)}}`
+});
+
+add({id:'GM-03',cat:'gm',name:'Progressive Blur',aka:'Variable blur · Gradient blur',tags:['iOS','Web','macOS'],bg:'photo',
+desc:'The blur is not even: zero at the top and getting stronger towards the edge, so there is no visible border where the blurred zone begins. Used under captions and toolbars.',
+html:`<div class="gm3"><i style="--b:1px;--s:0%"></i><i style="--b:3px;--s:20%"></i><i style="--b:6px;--s:40%"></i><i style="--b:12px;--s:60%"></i><span>Progressive</span></div>`,
+css:`.gm3{position:absolute;left:0;right:0;bottom:0;height:72%}
+.gm3 i{position:absolute;inset:0;-webkit-backdrop-filter:blur(var(--b));backdrop-filter:blur(var(--b));-webkit-mask:linear-gradient(transparent var(--s),#000 calc(var(--s) + 25%));mask:linear-gradient(transparent var(--s),#000 calc(var(--s) + 25%))}
+.gm3 span{position:absolute;left:16px;bottom:14px;font:600 18px var(--disp);color:#fff}`
+});
+
+add({id:'GM-04',cat:'gm',name:'Sheen Sweep',aka:'Shine · Gloss sweep · Shimmer pass',tags:['Web','Apps','Games'],bg:'photo',
+desc:'A diagonal band of light passes over the glass from left to right every few seconds. Says “premium” or draws the eye to a button.',
+html:`<div class="gm4 glass"><b>Upgrade</b></div>`,
+css:`.gm4{position:relative;overflow:hidden;width:180px;height:64px;border-radius:999px;display:grid;place-items:center;color:#fff}.gm4 b{font:600 17px var(--disp)}
+.gm4::after{content:"";position:absolute;top:0;bottom:0;width:60%;left:-70%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.55),transparent);animation:gm4 2.8s ease-in-out infinite}
+@keyframes gm4{0%,40%{left:-70%}80%,100%{left:120%}}`
+});
+
+add({id:'GM-05',cat:'gm',name:'Border Beam',aka:'Spinning gradient border · Glow border · Conic border',tags:['Web','Apps'],bg:'',
+desc:'A beam of light travels around the border of a card, endlessly. Popular on AI products and “new” badges to say “something is alive here”.',
+html:`<div class="gm5"><b>AI Assist</b></div>`,
+css:`.gm5{position:relative;width:200px;height:96px;border-radius:22px;overflow:hidden;display:grid;place-items:center;color:#fff}
+.gm5::before{content:"";position:absolute;width:300px;height:300px;left:50%;top:50%;margin:-150px 0 0 -150px;background:conic-gradient(transparent 0 62%,var(--vio) 76%,var(--acc) 86%,#fff 90%,transparent 94%);animation:spin 3s linear infinite}
+.gm5::after{content:"";position:absolute;inset:2px;border-radius:20px;background:#141927}
+.gm5 b{position:relative;z-index:1;font:600 17px var(--disp)}
+@keyframes spin{to{transform:rotate(360deg)}}`
+});
+
+add({id:'GM-06',cat:'gm',name:'Acrylic',aka:'Fluent Acrylic · Frost + noise + tint',tags:['Windows'],bg:'photo',
+desc:'Microsoft’s glass: heavy blur, a colour tint and a fine grain on top so it feels like a real frosted sheet, not a smooth filter. Windows menus and flyouts.',
+html:`<div class="gm6"><b>Acrylic</b><small>blur · tint · noise</small></div>`,
+css:`.gm6{width:200px;height:110px;border-radius:10px;padding:16px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;background:var(--noise),rgba(32,38,58,.45);background-blend-mode:overlay,normal;-webkit-backdrop-filter:blur(26px) saturate(1.4);backdrop-filter:blur(26px) saturate(1.4);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 10px 26px rgba(0,0,0,.35)}
+.gm6 b{font:600 17px "Segoe UI",var(--body)}.gm6 small{opacity:.7}`
+});
+
+add({id:'GM-07',cat:'gm',name:'Mica',aka:'Windows 11 Mica · Wallpaper tint',tags:['Windows'],bg:'',
+desc:'A desktop window whose background is a very soft, blurred tint of the wallpaper behind it at that spot. Drag the window and the tint shifts with the wallpaper.',
+html:`<div class="gm7w"></div><div class="gm7"><div class="t"><i></i><i></i><i></i></div><div class="tint"></div><div class="c">${LN(60,8)}${LN(80)}${LN(45)}</div></div>`,
+css:`.gm7w{position:absolute;inset:0;background:radial-gradient(circle at 15% 30%,#ff7a6b,transparent 40%),radial-gradient(circle at 85% 60%,#4f8cff,transparent 45%),radial-gradient(circle at 50% 100%,#5fe0b5,transparent 45%),#1a1d2e}
+.gm7{position:relative;width:170px;height:118px;border-radius:9px;overflow:hidden;background:#202230;box-shadow:0 0 0 1px rgba(255,255,255,.1),0 14px 30px rgba(0,0,0,.45);animation:gm7 6s ease-in-out infinite alternate}
+.gm7 .tint{position:absolute;width:400px;height:300px;left:50%;top:50%;margin:-150px 0 0 -200px;background:radial-gradient(circle at 15% 30%,#ff7a6b,transparent 40%),radial-gradient(circle at 85% 60%,#4f8cff,transparent 45%),radial-gradient(circle at 50% 100%,#5fe0b5,transparent 45%);filter:blur(30px);opacity:.45;animation:gm7t 6s ease-in-out infinite alternate}
+.gm7 .t{position:relative;z-index:1;height:24px;display:flex;gap:5px;align-items:center;justify-content:flex-end;padding:0 8px}.gm7 .t i{width:9px;height:2px;background:rgba(255,255,255,.6)}
+.gm7 .c{position:relative;z-index:1;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
+@keyframes gm7{from{transform:translateX(-60px)}to{transform:translateX(60px)}}
+@keyframes gm7t{from{transform:translateX(60px)}to{transform:translateX(-60px)}}`
+});
+
+add({id:'GM-08',cat:'gm',name:'Vibrancy',aka:'NSVisualEffectView · Sidebar material',tags:['macOS'],bg:'photo',
+desc:'The macOS sidebar: a heavy blur whose labels and icons are not plain grey but pull colour and light from what is behind them, so the panel feels part of the desktop.',
+html:`<div class="gm8"><span class="on">Projects</span><span>Calendar</span><span>Finance</span><span>Studio</span></div>`,
+css:`.gm8{width:150px;padding:8px;border-radius:14px;display:flex;flex-direction:column;gap:2px;background:rgba(40,40,52,.35);-webkit-backdrop-filter:blur(30px) saturate(2.2) brightness(1.05);backdrop-filter:blur(30px) saturate(2.2) brightness(1.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 10px 26px rgba(0,0,0,.3)}
+.gm8 span{padding:6px 10px;border-radius:7px;font-size:13px;font-weight:500;color:rgba(255,255,255,.7);mix-blend-mode:plus-lighter}
+.gm8 span.on{background:rgba(255,255,255,.16);color:#fff;mix-blend-mode:normal}`
+});
+
+add({id:'GM-09',cat:'gm',name:'Reveal Highlight',aka:'Spotlight border · Fluent Reveal · Cursor glow grid',tags:['Windows','Web'],bg:'touch',hint:'Hover',
+desc:'A soft light follows the pointer and lights up the borders of the buttons near it, so the grid feels like it is under a torch.',
+html:`<div class="gm9"><i>Copy</i><i>Paste</i><i>Cut</i><i>Undo</i><i>Redo</i><i>Find</i></div>`,
+css:`.gm9{--x:50%;--y:50%;display:grid;grid-template-columns:repeat(3,70px);gap:1px;padding:1px;border-radius:14px;background:radial-gradient(110px circle at var(--x) var(--y),rgba(143,211,255,.85),rgba(255,255,255,.06) 70%)}
+.gm9 i{font-style:normal;height:48px;display:grid;place-items:center;background:radial-gradient(90px circle at var(--x) var(--y),rgba(255,255,255,.08),transparent 70%) fixed,#121624;background-attachment:scroll;color:#cfd6ea;font-size:12.5px;border-radius:12px}
+.gm9 i{background:#121624}`,
+init(s,c){const g=s.querySelector('.gm9');let t=0,hover=false;
+ c.on(s,'pointermove',e=>{hover=true;const b=g.getBoundingClientRect();g.style.setProperty('--x',e.clientX-b.left+'px');g.style.setProperty('--y',e.clientY-b.top+'px')});c.on(s,'pointerleave',()=>hover=false);
+ c.raf(dt=>{if(hover)return;t+=dt/1000;const w=g.offsetWidth,h=g.offsetHeight;g.style.setProperty('--x',w/2+Math.cos(t*1.1)*w*.5+'px');g.style.setProperty('--y',h/2+Math.sin(t*1.7)*h*.6+'px')})}
+});
+
+add({id:'GM-10',cat:'gm',name:'Neumorphic Press',aka:'Soft UI · Neumorphism',tags:['Web','Apps'],bg:'',
+desc:'Buttons look pressed out of the same soft material as the background, lit from the top left. Pressing pushes them in. Gentle, tactile, low contrast.',
+html:`<div class="gm10w"><button class="gm10">${ic('heart',22)}</button><button class="gm10 b2">${ic('star',22)}</button></div>`,
+css:`.gm10w{position:absolute;inset:0;background:#e3e7ef;display:flex;gap:22px;align-items:center;justify-content:center}
+.gm10{width:66px;height:66px;border-radius:20px;border:0;background:#e3e7ef;color:#8a93a8;display:grid;place-items:center;cursor:pointer;box-shadow:8px 8px 16px #c3c8d3,-8px -8px 16px #ffffff;animation:gm10 2.6s ease-in-out infinite}
+.gm10.b2{animation-delay:1.3s}.gm10:active{box-shadow:inset 6px 6px 12px #c3c8d3,inset -6px -6px 12px #fff}
+@keyframes gm10{0%,40%,100%{box-shadow:8px 8px 16px #c3c8d3,-8px -8px 16px #fff;color:#8a93a8}50%,80%{box-shadow:inset 6px 6px 12px #c3c8d3,inset -6px -6px 12px #fff;color:#ff6b8a}}`
+});
+
+add({id:'GM-11',cat:'gm',name:'Holographic Foil',aka:'Iridescence · Holo card · Prism sheen',tags:['Web','Apps','Games'],bg:'touch',hint:'Move',
+desc:'A card with a rainbow foil that shifts colour and tilts as you move over it, like a holographic trading card or a credit card in Wallet.',
+html:`<div class="gm11"><b>TML</b><small>MEMBER · 2026</small></div>`,
+css:`.gm11{--mx:50%;--my:50%;--rx:0deg;--ry:0deg;position:relative;width:180px;height:112px;border-radius:14px;padding:14px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(135deg,#2b2f45,#1a1d2c);transform:perspective(500px) rotateX(var(--rx)) rotateY(var(--ry));overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.45)}
+.gm11::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 20%,#ff7ab6 35%,#ffd36b 42%,#6bffb8 50%,#6bc7ff 58%,#b57bff 65%,transparent 80%);background-size:250% 250%;background-position:var(--mx) var(--my);mix-blend-mode:color-dodge;opacity:.75}
+.gm11::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--mx) var(--my),rgba(255,255,255,.35),transparent 50%)}
+.gm11 b{position:relative;z-index:1;font:800 22px var(--disp);letter-spacing:.06em}.gm11 small{position:relative;z-index:1;font:600 10px var(--mono);letter-spacing:.12em;opacity:.8}`,
+init(s,c){const g=s.querySelector('.gm11');let px=null,py=null,t=0;
+ c.on(s,'pointermove',e=>{const b=g.getBoundingClientRect();px=(e.clientX-b.left)/b.width;py=(e.clientY-b.top)/b.height});c.on(s,'pointerleave',()=>px=null);
+ c.raf(dt=>{t+=dt/1000;let x=px,y=py;if(x===null){x=.5+Math.sin(t*1.1)*.45;y=.5+Math.cos(t*.8)*.4}g.style.setProperty('--mx',x*100+'%');g.style.setProperty('--my',y*100+'%');g.style.setProperty('--ry',(x-.5)*24+'deg');g.style.setProperty('--rx',(.5-y)*20+'deg')})}
+});
+
+add({id:'GM-12',cat:'gm',name:'Film Grain',aka:'Noise overlay · Grain',tags:['Web','Film','Apps'],bg:'',
+desc:'A living layer of fine grain over the picture, jumping a few times a second. Takes the digital flatness off gradients and gives a filmic texture.',
+html:`<div class="gm12"><b>35mm</b></div>`,
+css:`.gm12{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,#c66a4a,transparent 55%),radial-gradient(ellipse at 75% 65%,#2d4a7a,transparent 60%),#17131a;display:grid;place-items:center;overflow:hidden}
+.gm12 b{font:200 46px var(--disp);letter-spacing:.1em;color:rgba(255,240,225,.9)}
+.gm12::after{content:"";position:absolute;inset:-50%;background:var(--noise);background-size:160px;opacity:.45;mix-blend-mode:overlay;animation:grain .6s steps(4) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-8%,5%)}50%{transform:translate(6%,-7%)}75%{transform:translate(-4%,-3%)}100%{transform:translate(7%,4%)}}`
+});
+</script>
+<script>
+/* =================== POP-UPS & OVERLAYS =================== */
+const MDL=`<b style="font:600 12px var(--disp);color:#fff">Delete clip?</b>${LN(90,6)}${LN(60,6)}<div style="display:flex;gap:6px;margin-top:auto"><i class="mb"></i><i class="mb p"></i></div>`;
+const MDLCSS=`.mdl{position:absolute;left:50%;top:50%;width:140px;height:92px;margin:-46px 0 0 -70px;border-radius:16px;background:rgba(44,50,70,.92);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 14px 30px rgba(0,0,0,.45);padding:12px;display:flex;flex-direction:column;gap:6px}`;
+
+add({id:'PU-01',cat:'pu',name:'Scale Pop',aka:'Zoom in · Pop in · Modal fade-scale',tags:['Web','Apps','Material'],
+desc:'The window grows from 90% to full size while it fades in and the screen behind dims. Fast in, slightly faster out. The default modal everywhere.',
+html:`<div class="scr">${SCR_A}<div class="dim"></div><div class="mdl pu1">${MDL}</div></div>`,
+css:MDLCSS+`.pu1{animation:pu1 4s cubic-bezier(.2,.8,.2,1) infinite}.scr .dim{animation:dimk 4s ease infinite}
+@keyframes pu1{0%,12%{opacity:0;transform:scale(.88)}22%,78%{opacity:1;transform:scale(1)}86%,100%{opacity:0;transform:scale(.95)}}`
+});
+
+add({id:'PU-02',cat:'pu',name:'Spring Pop',aka:'Bounce pop · Overshoot · Back-out',tags:['iOS','Apps','Games'],
+desc:'Like Scale Pop but alive: the window overshoots a little past full size and settles back, as if on a spring. Friendlier and more playful.',
+html:`<div class="scr">${SCR_A}<div class="dim"></div><div class="mdl pu2">${MDL}</div></div>`,
+css:`.pu2{animation:pu2 4s infinite}
+@keyframes pu2{0%,12%{opacity:0;transform:scale(.4);animation-timing-function:cubic-bezier(.3,1.8,.5,1)}30%,78%{opacity:1;transform:scale(1);animation-timing-function:ease-in}86%,100%{opacity:0;transform:scale(.6)}}`
+});
+
+add({id:'PU-03',cat:'pu',name:'Origin-aware Popover',aka:'Anchored scale · Grow from trigger',tags:['Web','macOS','iOS'],
+desc:'The menu grows out of the button that opened it, not from the middle of the screen, so your eye knows where it came from and where it will go back.',
+html:`<div class="scr">${SCR_A}<span class="pu3b">Sort ${ic('chev',12)}</span><div class="pu3">${['Date','Name','Size','Kind'].map((t,i)=>`<span${i===0?' class="on"':''}>${t}</span>`).join('')}</div></div>`,
+css:`.pu3b{position:absolute;right:12px;top:10px;height:24px;padding:0 10px;border-radius:999px;background:rgba(255,255,255,.14);font-size:11px;color:#fff;display:flex;align-items:center;gap:3px;animation:pu3b 4s ease infinite}
+.pu3{position:absolute;right:12px;top:40px;width:104px;border-radius:12px;background:rgba(48,54,76,.95);box-shadow:0 12px 26px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.15);padding:4px;display:flex;flex-direction:column;transform-origin:85% 0;animation:pu3 4s infinite}
+.pu3 span{font-size:11px;color:#dfe4f2;padding:4px 8px;border-radius:7px}.pu3 span.on{background:var(--acc);color:#0b1020}
+@keyframes pu3{0%,14%{opacity:0;transform:scale(.25);animation-timing-function:cubic-bezier(.3,1.4,.5,1)}28%,76%{opacity:1;transform:scale(1);animation-timing-function:ease-in}84%,100%{opacity:0;transform:scale(.3)}}
+@keyframes pu3b{0%,8%,20%,100%{transform:scale(1)}12%{transform:scale(.9);background:rgba(255,255,255,.3)}}`
+});
+
+add({id:'PU-04',cat:'pu',name:'Bottom Sheet',aka:'Half sheet · Detents · Drawer from bottom',tags:['iOS','Android','Material'],
+desc:'A panel slides up from the bottom edge and stops at half height, can be pulled to almost full height, and slides away down again. Maps, Music, Share sheet.',
+html:`<div class="phone"><div style="padding:10px 2px">${ROWS(7)}</div><div class="dim pu4d"></div><div class="pu4"><i class="grab"></i>${LN(50,8,'margin:4px 0 8px')}${ROWS(5)}</div></div>`,
+css:`.pu4{position:absolute;left:0;right:0;bottom:0;height:88%;border-radius:18px 18px 0 0;background:#232a3c;box-shadow:0 -6px 20px rgba(0,0,0,.4);padding:6px 8px;animation:pu4 5s infinite}
+.pu4 .grab{display:block;width:30px;height:4px;border-radius:2px;background:rgba(255,255,255,.3);margin:0 auto 6px}
+.pu4d{animation:pu4d 5s infinite}
+@keyframes pu4{0%,8%{transform:translateY(100%);animation-timing-function:cubic-bezier(.3,1.25,.5,1)}24%,44%{transform:translateY(48%);animation-timing-function:cubic-bezier(.3,1.25,.5,1)}58%,76%{transform:translateY(4%);animation-timing-function:cubic-bezier(.5,0,.7,.4)}90%,100%{transform:translateY(100%)}}
+@keyframes pu4d{0%,8%{opacity:0}24%,76%{opacity:1}90%,100%{opacity:0}}`
+});
+
+add({id:'PU-05',cat:'pu',name:'Side Drawer',aka:'Off-canvas menu · Navigation drawer · Hamburger drawer',tags:['Android','Web','Material'],
+desc:'A panel slides in from the side over the page while the page dims, and slides back out. The classic hamburger menu.',
+html:`<div class="scr">${SCR_A}<div class="dim"></div><div class="pu5">${LN(60,9)}${LN(80)}${LN(70)}${LN(75)}${LN(50)}</div></div>`,
+css:`.pu5{position:absolute;left:0;top:0;bottom:0;width:62%;background:#262e44;box-shadow:8px 0 20px rgba(0,0,0,.35);padding:16px 12px;display:flex;flex-direction:column;gap:10px;animation:pu5 4s cubic-bezier(.3,.9,.3,1) infinite}
+@keyframes pu5{0%,12%{transform:translateX(-102%)}26%,76%{transform:translateX(0)}90%,100%{transform:translateX(-102%)}}`
+});
+
+add({id:'PU-06',cat:'pu',name:'Toast',aka:'Snackbar · Slide-up notice',tags:['Web','Android','Apps'],
+desc:'A short message slides up from the bottom (or down from the top), stays a moment, and slides away on its own. “Saved”, “Link copied”.',
+html:`<div class="scr">${SCR_A}<div class="pu6"><span>${ic('check',14,2.6)}</span>Saved</div></div>`,
+css:`.pu6{position:absolute;left:50%;bottom:12px;height:32px;padding:0 14px 0 6px;border-radius:999px;background:rgba(40,46,64,.92);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 8px 20px rgba(0,0,0,.4);display:flex;align-items:center;gap:8px;color:#fff;font-size:12px;font-weight:600;translate:-50% 0;animation:pu6 3.6s infinite}
+.pu6 span{width:22px;height:22px;border-radius:50%;background:#34c759;display:grid;place-items:center;color:#fff}
+@keyframes pu6{0%,10%{transform:translateY(60px);opacity:0;animation-timing-function:cubic-bezier(.3,1.5,.5,1)}26%,76%{transform:translateY(0);opacity:1;animation-timing-function:ease-in}88%,100%{transform:translateY(60px);opacity:0}}`
+});
+
+add({id:'PU-07',cat:'pu',name:'Stacked Toasts',aka:'Sonner stack · Notification pile · Fan out',tags:['Web','iOS'],hint:'Hover',
+desc:'Several notices pile up like cards, each one smaller and further back. Hover and the pile fans out so you can read all of them; leave and it folds back.',
+html:`<div class="scr pu7">${SCR_A}<div class="t t3">${LN(60,6)}</div><div class="t t2">${LN(70,6)}</div><div class="t t1"><b>Render finished</b>${LN(50,5)}</div></div>`,
+css:`.pu7 .t{position:absolute;left:14px;right:14px;bottom:12px;height:40px;border-radius:12px;background:#2f3750;box-shadow:0 8px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.12);padding:8px 12px;display:flex;flex-direction:column;justify-content:center;gap:4px;transition:transform .45s cubic-bezier(.3,1.3,.5,1),opacity .3s}
+.pu7 .t b{font-size:11px;color:#fff}
+.pu7 .t2{transform:translateY(-8px) scale(.93);opacity:.8}.pu7 .t3{transform:translateY(-16px) scale(.86);opacity:.55}
+.pu7.ex .t2,.stage:hover .pu7 .t2{transform:translateY(-46px);opacity:1}.pu7.ex .t3,.stage:hover .pu7 .t3{transform:translateY(-92px);opacity:1}`,
+init(s,c){const p=s.querySelector('.pu7');c.every(2000,()=>{if(!s.matches(':hover'))p.classList.toggle('ex')})}
+});
+
+add({id:'PU-08',cat:'pu',name:'Dynamic Island',aka:'Island expand · Live Activity morph · Pill to card',tags:['iOS'],
+desc:'The black pill at the top of the iPhone stretches into a rounded card that shows what is going on (music, a timer, a call), then shrinks back into the pill.',
+html:`<div class="phone" style="background:#e9ecf3"><div class="pu8"><div class="in"><i class="art"></i><span>${LN(80,6,'background:rgba(255,255,255,.7)')}${LN(55,5,'background:rgba(255,255,255,.35)')}</span><i class="eq"><b></b><b></b><b></b></i></div></div></div>`,
+css:`.pu8{position:absolute;left:50%;top:6px;width:44px;height:14px;margin-left:-22px;border-radius:999px;background:#000;overflow:hidden;animation:pu8 4.4s cubic-bezier(.3,1.25,.5,1) infinite}
+.pu8 .in{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;gap:7px;opacity:0;animation:pu8i 4.4s ease infinite}
+.pu8 .art{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--coral),var(--vio));flex:none}.pu8 .in span{flex:1;display:flex;flex-direction:column;gap:4px}
+.pu8 .eq{display:flex;gap:2px;align-items:flex-end;height:14px}.pu8 .eq b{width:3px;background:var(--mint);border-radius:2px;animation:eq .8s ease-in-out infinite alternate}.pu8 .eq b:nth-child(2){animation-delay:.2s}.pu8 .eq b:nth-child(3){animation-delay:.4s}
+@keyframes eq{from{height:3px}to{height:14px}}
+@keyframes pu8{0%,14%{width:44px;height:14px;margin-left:-22px;border-radius:999px}32%,74%{width:104px;height:46px;margin-left:-52px;border-radius:22px}90%,100%{width:44px;height:14px;margin-left:-22px;border-radius:999px}}
+@keyframes pu8i{0%,26%{opacity:0}36%,70%{opacity:1}78%,100%{opacity:0}}`
+});
+
+add({id:'PU-09',cat:'pu',name:'Context Menu Lift',aka:'Haptic Touch · Long-press peek · Preview & menu',tags:['iOS','macOS'],
+desc:'Long-press an item: it lifts up and grows a little, everything else blurs and darkens, and a menu blooms out right next to it.',
+html:`<div class="scr pu9"><div class="g">${Array.from({length:6},(_,i)=>`<i class="${i===1?'tg':'ot'}" style="background:hsl(${i*55+10} 70% 60%)"></i>`).join('')}</div><div class="m"><span>Share</span><span>Rename</span><span class="r">Delete</span></div></div>`,
+css:`.pu9 .g{position:absolute;inset:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-content:start}
+.pu9 .g i{height:46px;border-radius:12px;display:block}
+.pu9 .ot{animation:pu9o 4.4s ease infinite}.pu9 .tg{position:relative;z-index:2;animation:pu9t 4.4s cubic-bezier(.3,1.5,.5,1) infinite}
+.pu9 .m{position:absolute;z-index:3;left:72px;top:72px;width:100px;border-radius:12px;background:rgba(56,62,86,.95);box-shadow:0 12px 26px rgba(0,0,0,.45);padding:3px;transform-origin:30% 0;display:flex;flex-direction:column;animation:pu9m 4.4s infinite}
+.pu9 .m span{font-size:11px;color:#e6eaf5;padding:5px 9px;border-bottom:1px solid rgba(255,255,255,.07)}.pu9 .m span:last-child{border:0}.pu9 .m .r{color:#ff6b6b}
+@keyframes pu9o{0%,12%,86%,100%{filter:blur(0);opacity:1}24%,74%{filter:blur(3px);opacity:.45}}
+@keyframes pu9t{0%,10%,86%,100%{transform:scale(1);box-shadow:none}22%,74%{transform:scale(1.12);box-shadow:0 12px 24px rgba(0,0,0,.45)}}
+@keyframes pu9m{0%,18%{opacity:0;transform:scale(.3);animation-timing-function:cubic-bezier(.3,1.4,.5,1)}30%,74%{opacity:1;transform:scale(1)}84%,100%{opacity:0;transform:scale(.4)}}`
+});
+
+add({id:'PU-10',cat:'pu',name:'Genie',aka:'Magic lamp · Minimize to Dock',tags:['macOS'],
+desc:'A window gets sucked into its Dock icon like a genie into the lamp: it narrows into a funnel at the bottom and slips in. Restoring plays it backwards.',
+html:`<div class="scr pu10">${SCR_B}<div class="w">${SCR_A}</div><div class="dock"><i></i><i class="tg"></i><i></i><i></i></div></div>`,
+css:`.pu10{background:linear-gradient(135deg,#2a3354,#3a2440)}.pu10>.scr-in{opacity:.35}
+.pu10 .w{position:absolute;left:38px;top:10px;width:134px;height:88px;border-radius:9px;overflow:hidden;transform-origin:50% 100%;box-shadow:0 10px 20px rgba(0,0,0,.4);animation:pu10 4.6s ease-in-out infinite}
+.pu10 .w .scr-in{padding:8px;gap:5px}
+.pu10 .dock{position:absolute;left:50%;bottom:6px;translate:-50% 0;display:flex;gap:6px;padding:4px 6px;border-radius:9px;background:rgba(255,255,255,.14)}
+.pu10 .dock i{width:16px;height:16px;border-radius:5px;background:rgba(255,255,255,.45)}.pu10 .dock .tg{background:var(--acc)}
+@keyframes pu10{0%,14%{clip-path:polygon(0 0,100% 0,100% 100%,0 100%);transform:none;opacity:1}
+30%{clip-path:polygon(0 0,100% 0,62% 100%,38% 100%);transform:translateY(10px) scaleY(1.08)}
+44%{clip-path:polygon(28% 0,72% 0,54% 100%,46% 100%);transform:translate(-6px,32px) scale(.45,.6)}
+52%,66%{clip-path:polygon(45% 0,55% 0,52% 100%,48% 100%);transform:translate(-6px,44px) scale(.12,.15);opacity:0}
+76%{clip-path:polygon(20% 0,80% 0,58% 100%,42% 100%);transform:translate(-4px,24px) scale(.5,.65);opacity:1}
+90%,100%{clip-path:polygon(0 0,100% 0,100% 100%,0 100%);transform:none;opacity:1}}`
+});
+
+add({id:'PU-11',cat:'pu',name:'Shake to Reject',aka:'Error shake · Head shake · Wrong password wiggle',tags:['macOS','iOS','Web'],
+desc:'Wrong password: the field shakes left and right a few times, like a head saying no, and flashes red. No message needed.',
+html:`<div class="pu11"><span class="lk">${ic('lock',22)}</span><div class="f"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>`,
+css:`.pu11{display:flex;flex-direction:column;align-items:center;gap:12px;color:#fff}
+.pu11 .f{display:flex;gap:9px;padding:12px 18px;border-radius:999px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.15);animation:pu11 3s infinite}
+.pu11 .f i{width:9px;height:9px;border-radius:50%;background:#fff}
+@keyframes pu11{0%,30%{transform:translateX(0);box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}32%{transform:translateX(-12px);box-shadow:inset 0 0 0 1.5px #ff5a5a}35%{transform:translateX(10px)}38%{transform:translateX(-8px)}41%{transform:translateX(6px)}44%{transform:translateX(-3px)}47%,60%{transform:translateX(0);box-shadow:inset 0 0 0 1.5px #ff5a5a}70%,100%{box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}}`
+});
+
+add({id:'PU-12',cat:'pu',name:'iOS Alert',aka:'Zoom-out alert · System dialog',tags:['iOS','macOS'],
+desc:'Apple’s alert comes in slightly too big and shrinks into place while it fades in, the opposite of Scale Pop. On close it just fades.',
+html:`<div class="scr">${SCR_A}<div class="dim"></div><div class="pu12"><b>Discard changes?</b><small>This cannot be undone.</small><div class="bt"><span>Cancel</span><span class="r">Discard</span></div></div></div>`,
+css:`.pu12{position:absolute;left:50%;top:50%;width:150px;margin:-44px 0 0 -75px;border-radius:14px;background:rgba(60,64,82,.92);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);text-align:center;color:#fff;overflow:hidden;animation:pu12 4s infinite}
+.pu12 b{display:block;font-size:12px;padding:12px 8px 2px}.pu12 small{display:block;font-size:10px;opacity:.7;padding:0 8px 10px}
+.pu12 .bt{display:flex;border-top:1px solid rgba(255,255,255,.12)}.pu12 .bt span{flex:1;font-size:11px;padding:7px;color:#6db8ff}.pu12 .bt span+span{border-left:1px solid rgba(255,255,255,.12)}.pu12 .bt .r{color:#ff6b6b;font-weight:600}
+@keyframes pu12{0%,12%{opacity:0;transform:scale(1.2);animation-timing-function:cubic-bezier(.2,.9,.3,1)}24%,78%{opacity:1;transform:scale(1)}88%,100%{opacity:0;transform:scale(1)}}`
+});
+
+add({id:'PU-13',cat:'pu',name:'Tooltip',aka:'Hint · Hover label · Fade-slide tip',tags:['Web','macOS','Windows'],
+desc:'Rest on a button and after a short delay a small label fades in, nudging a few pixels towards you. Leaves faster than it came.',
+html:`<div class="pu13"><span class="tip">Export as MP4</span><button>${ic('send',18)}</button></div>`,
+css:`.pu13{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px}
+.pu13 button{width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;display:grid;place-items:center;animation:pu13b 3.4s ease infinite}
+.pu13 .tip{font-size:12px;padding:6px 10px;border-radius:8px;background:#f2f4f8;color:#111;font-weight:500;white-space:nowrap;animation:pu13 3.4s ease infinite;position:relative}
+.pu13 .tip::after{content:"";position:absolute;left:50%;bottom:-4px;width:8px;height:8px;margin-left:-4px;background:#f2f4f8;transform:rotate(45deg)}
+@keyframes pu13{0%,30%{opacity:0;transform:translateY(6px)}38%,76%{opacity:1;transform:translateY(0)}80%,100%{opacity:0;transform:translateY(2px)}}
+@keyframes pu13b{0%,12%,80%,100%{background:rgba(255,255,255,.07)}16%,76%{background:rgba(255,255,255,.16)}}`
+});
+
+add({id:'PU-14',cat:'pu',name:'Dropdown Cascade',aka:'Menu unfold · Staggered dropdown',tags:['Web','Apps'],
+desc:'The menu unrolls downwards from its button and the items drop in one after the other, a few hundredths of a second apart.',
+html:`<div class="pu14"><span class="b">Camera ${ic('chev',12)}</span><div class="m">${['ARRI Alexa 35','RED V-Raptor','Sony Venice 2','Blackmagic 12K'].map((t,i)=>`<span style="animation-delay:${i*.06}s">${t}</span>`).join('')}</div></div>`,
+css:`.pu14{position:absolute;top:18px;left:50%;width:150px;margin-left:-75px}
+.pu14 .b{display:flex;justify-content:space-between;align-items:center;height:32px;padding:0 12px;border-radius:10px;background:rgba(255,255,255,.1);font-size:12px;color:#fff}
+.pu14 .m{margin-top:6px;border-radius:12px;background:#283049;box-shadow:0 12px 26px rgba(0,0,0,.4);padding:4px;display:flex;flex-direction:column;animation:pu14 3.6s cubic-bezier(.3,.9,.3,1) infinite}
+.pu14 .m span{font-size:11.5px;color:#e3e8f5;padding:6px 9px;border-radius:7px;animation:pu14i 3.6s ease infinite}
+@keyframes pu14{0%,10%{clip-path:inset(0 0 100% 0 round 12px)}28%,78%{clip-path:inset(0 0 0 0 round 12px)}92%,100%{clip-path:inset(0 0 100% 0 round 12px)}}
+@keyframes pu14i{0%,12%{opacity:0;transform:translateY(-8px)}28%,78%{opacity:1;transform:translateY(0)}88%,100%{opacity:0}}`
+});
+
+add({id:'PU-15',cat:'pu',name:'Command Palette',aka:'⌘K · Spotlight · Quick open',tags:['macOS','Web','Desktop'],
+desc:'Press a shortcut: the page blurs back, a search box drops in from just above centre, and results slide in under it as you type.',
+html:`<div class="scr pu15">${SCR_A}<div class="bl"></div><div class="p"><div class="in">${ic('search',12)}<span class="ty">sched</span><kbd>⌘K</kbd></div><span class="r" style="--d:0s">Schedule</span><span class="r" style="--d:.07s">Scheduled posts</span><span class="r" style="--d:.14s">Shooting schedule</span></div></div>`,
+css:`.pu15 .bl{position:absolute;inset:0;animation:pu15b 4.4s ease infinite}
+.pu15 .p{position:absolute;left:22px;right:22px;top:16px;border-radius:12px;background:rgba(40,46,66,.95);box-shadow:0 14px 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.15);padding:4px;display:flex;flex-direction:column;animation:pu15 4.4s cubic-bezier(.2,.9,.3,1) infinite}
+.pu15 .in{display:flex;align-items:center;gap:6px;color:#fff;font-size:11px;padding:6px 6px 7px;border-bottom:1px solid rgba(255,255,255,.08)}
+.pu15 .ty{flex:1;overflow:hidden;white-space:nowrap;width:0;animation:pu15t 4.4s steps(5) infinite;max-width:40px}
+.pu15 kbd{font:600 9px var(--mono);padding:2px 5px;border-radius:5px;background:rgba(255,255,255,.12);color:#cfd6ea}
+.pu15 .r{font-size:10.5px;color:#d9dff0;padding:4px 7px;border-radius:6px;animation:pu15r 4.4s ease infinite;animation-delay:var(--d)}.pu15 .r:first-of-type{background:rgba(143,211,255,.18)}
+@keyframes pu15b{0%,8%,90%,100%{-webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);background:rgba(0,0,0,0)}18%,80%{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);background:rgba(0,0,0,.35)}}
+@keyframes pu15{0%,8%{opacity:0;transform:translateY(-12px) scale(.97)}20%,80%{opacity:1;transform:none}90%,100%{opacity:0;transform:scale(.98)}}
+@keyframes pu15t{0%,22%{width:0}40%,100%{width:40px}}
+@keyframes pu15r{0%,40%{opacity:0;transform:translateY(-4px)}48%,80%{opacity:1;transform:none}88%,100%{opacity:0}}`
+});
+
+add({id:'PU-16',cat:'pu',name:'Lightbox Zoom',aka:'Image expand · Hero zoom · Shared-element open',tags:['Web','iOS','Apps'],hint:'Tap',
+desc:'Tap a thumbnail and that very picture flies and grows to fill the screen; tap again and it flies back into its slot. The picture is never replaced, only moved.',
+html:`<div class="pu16">${Array.from({length:8},(_,i)=>`<i style="background:linear-gradient(135deg,hsl(${i*40+10} 75% 62%),hsl(${i*40+60} 70% 45%))"></i>`).join('')}</div>`,
+css:`.pu16{position:absolute;inset:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pu16 i{border-radius:10px;cursor:pointer;display:block}
+.pu16 .fly{position:absolute;z-index:5;border-radius:10px;transition:all .5s cubic-bezier(.3,1.1,.4,1);cursor:pointer;box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.pu16 .bd{position:absolute;inset:-14px;background:rgba(0,0,0,.6);opacity:0;transition:opacity .4s;z-index:4;pointer-events:none}`,
+init(s,c){const g=s.querySelector('.pu16'),th=[...g.querySelectorAll('i')];const bd=document.createElement('div');bd.className='bd';g.appendChild(bd);let fly=null,src=null,busy=false;const idle=c.idle();
+ const rel=el=>{const a=el.getBoundingClientRect(),b=g.getBoundingClientRect();return{l:a.left-b.left,t:a.top-b.top,w:a.width,h:a.height}};
+ const set=(el,r,rad)=>{el.style.left=r.l+'px';el.style.top=r.t+'px';el.style.width=r.w+'px';el.style.height=r.h+'px';el.style.borderRadius=rad+'px'};
+ const open=t=>{if(busy)return;busy=true;src=t;const r=rel(t);fly=document.createElement('div');fly.className='fly';fly.style.background=t.style.background;fly.style.transition='none';set(fly,r,10);g.appendChild(fly);t.style.visibility='hidden';void fly.offsetWidth;fly.style.transition='';set(fly,{l:-6,t:-6,w:g.clientWidth+12,h:g.clientHeight+12},14);bd.style.opacity=1;c.on(fly,'click',close);c.after(520,()=>busy=false)};
+ const close=()=>{if(busy||!fly)return;busy=true;set(fly,rel(src),10);bd.style.opacity=0;const f=fly,sr=src;c.after(520,()=>{sr.style.visibility='';f.remove();busy=false});fly=null};
+ th.forEach(t=>c.on(t,'click',()=>open(t)));
+ c.every(2000,()=>{if(!idle())return;if(fly)close();else open(th[Math.floor(Math.random()*th.length)])})}
+});
+
+add({id:'PU-17',cat:'pu',name:'Sheet Depth Push',aka:'Card modal · Push back · Page sheet',tags:['iOS'],
+desc:'When a sheet opens, the screen behind it shrinks back, rounds its corners and darkens, as if pushed away from you. The new card sits in front.',
+html:`<div class="phone pu17" style="background:#000"><div class="bgp">${ROWS(8)}</div><div class="sh"><i class="grab"></i>${LN(55,8,'margin:2px 0 6px')}${ROWS(4)}</div></div>`,
+css:`.pu17 .bgp{position:absolute;inset:0;background:#1a2032;padding:8px 2px;border-radius:0;transform-origin:50% 0;animation:pu17b 4.4s cubic-bezier(.3,1,.4,1) infinite}
+.pu17 .sh{position:absolute;left:0;right:0;bottom:0;top:22px;border-radius:14px 14px 0 0;background:#262d42;padding:6px 6px;animation:pu17s 4.4s cubic-bezier(.3,1,.4,1) infinite}
+.pu17 .grab{display:block;width:26px;height:4px;border-radius:2px;background:rgba(255,255,255,.3);margin:0 auto 6px}
+@keyframes pu17b{0%,12%,90%,100%{transform:none;border-radius:0;filter:brightness(1)}28%,74%{transform:translateY(10px) scale(.9);border-radius:14px;filter:brightness(.55)}}
+@keyframes pu17s{0%,12%,90%,100%{transform:translateY(105%)}28%,74%{transform:translateY(0)}}`
+});
+
+add({id:'PU-18',cat:'pu',name:'Notification Banner',aka:'Push banner · Drop-down alert',tags:['iOS','Android','macOS'],
+desc:'A notification drops in from the top edge with a little bounce, waits, then flicks back up and away.',
+html:`<div class="phone" style="background:linear-gradient(160deg,#3a4a80,#7a3a6a)"><div class="pu18"><i class="ap"></i><span><b>Roardino</b>${LN(90,5,'background:rgba(255,255,255,.5)')}</span></div></div>`,
+css:`.pu18{position:absolute;left:6px;right:6px;top:8px;height:42px;border-radius:14px;background:rgba(255,255,255,.22);-webkit-backdrop-filter:blur(14px) saturate(1.6);backdrop-filter:blur(14px) saturate(1.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 8px 18px rgba(0,0,0,.25);display:flex;align-items:center;gap:7px;padding:0 8px;animation:pu18 4s infinite}
+.pu18 .ap{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--amber),var(--coral));flex:none}.pu18 span{flex:1;display:flex;flex-direction:column;gap:4px}.pu18 b{font-size:10px;color:#fff}
+@keyframes pu18{0%,10%{transform:translateY(-130%);animation-timing-function:cubic-bezier(.3,1.6,.5,1)}26%,74%{transform:translateY(0);animation-timing-function:cubic-bezier(.6,0,.8,.4)}84%,100%{transform:translateY(-130%)}}`
+});
+
+add({id:'PU-19',cat:'pu',name:'Circular Reveal',aka:'Material reveal · Ink spread · Expand from FAB',tags:['Android','Material','Web'],
+desc:'A new layer opens as a circle spreading out from the button you pressed until it covers the screen, and closes back into the button.',
+html:`<div class="scr pu19">${SCR_A}<div class="ov"><b>New shot</b>${LN(80)}${LN(55)}</div><span class="fab">${ic('plus',16,2.6)}</span></div>`,
+css:`.pu19 .fab{position:absolute;right:12px;bottom:12px;width:34px;height:34px;border-radius:50%;background:var(--coral);color:#fff;display:grid;place-items:center;box-shadow:0 6px 14px rgba(0,0,0,.35);animation:pu19f 4s ease infinite}
+.pu19 .ov{position:absolute;inset:0;background:var(--coral);padding:16px;display:flex;flex-direction:column;gap:8px;color:#fff;animation:pu19 4s cubic-bezier(.5,0,.3,1) infinite}.pu19 .ov b{font:600 15px var(--disp)}.pu19 .ov .ln{background:rgba(255,255,255,.45)}
+@keyframes pu19{0%,14%{clip-path:circle(0 at 88% 85%)}36%,74%{clip-path:circle(150% at 88% 85%)}94%,100%{clip-path:circle(0 at 88% 85%)}}
+@keyframes pu19f{0%,8%,100%{transform:scale(1)}12%{transform:scale(.85)}}`
+});
+
+/* =================== PAGE TRANSITIONS =================== */
+const TWO=(a,b)=>`<div class="scr"><div class="lay ${a}">${SCR_A}</div><div class="lay ${b}">${SCR_B}</div></div>`;
+add({id:'PT-01',cat:'pt',name:'Crossfade',aka:'Dissolve · Fade',tags:['Web','Apps','Film'],
+desc:'The new screen fades in over the old one. The simplest, calmest handover; a dissolve in film.',
+html:TWO('','pt1'),css:`.pt1{animation:pt1 4s ease-in-out infinite}@keyframes pt1{0%,30%{opacity:0}45%,80%{opacity:1}95%,100%{opacity:0}}`});
+
+add({id:'PT-02',cat:'pt',name:'Push',aka:'iOS navigation push · Stack slide',tags:['iOS','Android'],
+desc:'The next screen slides in from the right edge while the current one slides a little to the left and darkens. Going back plays it in reverse. Every iPhone app.',
+html:TWO('pt2a','pt2b'),css:`.pt2a{animation:pt2a 4s cubic-bezier(.3,.9,.3,1) infinite}.pt2b{box-shadow:-10px 0 20px rgba(0,0,0,.35);animation:pt2b 4s cubic-bezier(.3,.9,.3,1) infinite}
+@keyframes pt2a{0%,25%,95%,100%{transform:none;filter:brightness(1)}42%,78%{transform:translateX(-30%);filter:brightness(.55)}}
+@keyframes pt2b{0%,25%,95%,100%{transform:translateX(102%)}42%,78%{transform:none}}`});
+
+add({id:'PT-03',cat:'pt',name:'Shared Axis',aka:'Material shared axis X · Slide-fade',tags:['Material','Android','Web'],
+desc:'Old screen slides a little and fades out, new one slides in from the same direction while fading in. Shows a step forward or back (onboarding steps, tabs).',
+html:TWO('pt3a','pt3b'),css:`.pt3a{animation:pt3a 4s ease infinite}.pt3b{animation:pt3b 4s ease infinite}
+@keyframes pt3a{0%,28%{opacity:1;transform:none}38%,82%{opacity:0;transform:translateX(-30px)}92%,100%{opacity:1;transform:none}}
+@keyframes pt3b{0%,30%{opacity:0;transform:translateX(30px)}42%,78%{opacity:1;transform:none}88%,100%{opacity:0;transform:translateX(30px)}}`});
+
+add({id:'PT-04',cat:'pt',name:'Fade Through',aka:'Material fade through',tags:['Material','Android'],
+desc:'The old screen fades out completely first, then the new one fades in while growing slightly. For screens with no direct relation (bottom tabs).',
+html:TWO('pt4a','pt4b'),css:`.pt4a{animation:pt4a 4s ease infinite}.pt4b{animation:pt4b 4s ease infinite}
+@keyframes pt4a{0%,28%{opacity:1}36%,88%{opacity:0}96%,100%{opacity:1}}
+@keyframes pt4b{0%,36%{opacity:0;transform:scale(.92)}48%,78%{opacity:1;transform:none}86%,100%{opacity:0;transform:scale(.92)}}`});
+
+add({id:'PT-05',cat:'pt',name:'Container Transform',aka:'Card to page · Morph to detail',tags:['Material','iOS','Web'],
+desc:'A card grows into the full page it opens: its edges stretch to the screen edges and its contents crossfade into the detail view.',
+html:`<div class="scr">${SCR_A}<div class="pt5"><div class="sm">${LN(60,7)}${LN(40,5)}</div><div class="lg">${SCR_B}</div></div></div>`,
+css:`.pt5{position:absolute;left:12px;right:12px;top:92px;bottom:12px;border-radius:10px;background:#33406a;overflow:hidden;animation:pt5 4.4s cubic-bezier(.3,.9,.3,1) infinite}
+.pt5 .sm{position:absolute;inset:0;padding:10px;display:flex;flex-direction:column;gap:5px;animation:pt5s 4.4s ease infinite}.pt5 .lg{position:absolute;inset:0;opacity:0;animation:pt5l 4.4s ease infinite}
+@keyframes pt5{0%,22%,96%,100%{left:12px;right:12px;top:92px;bottom:12px;border-radius:10px}42%,76%{left:0;right:0;top:0;bottom:0;border-radius:14px}}
+@keyframes pt5s{0%,24%,92%,100%{opacity:1}34%,82%{opacity:0}}@keyframes pt5l{0%,30%,88%,100%{opacity:0}42%,76%{opacity:1}}`
+});
+
+add({id:'PT-06',cat:'pt',name:'Zoom Transition',aka:'Navigation zoom · Grid to detail',tags:['iOS','Apps'],
+desc:'Tap a tile in a grid and the tile itself zooms up into the next screen while the rest of the grid falls back. Photos, App Store, iOS 18 zoom navigation.',
+html:`<div class="scr pt6">${Array.from({length:6},(_,i)=>`<i style="left:${12+(i%3)*64}px;top:${12+Math.floor(i/3)*61}px;background:hsl(${i*50+200} 55% ${i===4?62:40}%)"${i===4?' class="z"':''}></i>`).join('')}</div>`,
+css:`.pt6 i{position:absolute;width:58px;height:55px;border-radius:10px;display:block;animation:pt6o 4.4s ease infinite}
+.pt6 .z{z-index:2;background:linear-gradient(135deg,#ff9a6b,#9b7bff)!important;animation:pt6 4.4s cubic-bezier(.3,.9,.3,1) infinite}
+@keyframes pt6{0%,22%,96%,100%{left:76px;top:73px;width:58px;height:55px;border-radius:10px}42%,76%{left:0;top:0;width:210px;height:140px;border-radius:14px}}
+@keyframes pt6o{0%,22%,94%,100%{transform:none;opacity:1}40%,78%{transform:scale(.9);opacity:.3}}`
+});
+
+add({id:'PT-07',cat:'pt',name:'Magic Move',aka:'Shared element · Hero animation · View Transition morph',tags:['Web','iOS','Apps'],
+desc:'Elements that exist on both screens travel from their old place and size to the new ones, instead of disappearing and reappearing. Keynote calls it Magic Move.',
+html:`<div class="scr pt7"><i class="av a"></i><i class="ln t"></i><i class="c"></i></div>`,
+css:`.pt7{background:#1c2540}.pt7 i{position:absolute;display:block;animation-duration:4.4s;animation-iteration-count:infinite;animation-timing-function:cubic-bezier(.3,.9,.3,1)}
+.pt7 .a{animation-name:pt7a}.pt7 .t{height:10px;animation-name:pt7t}.pt7 .c{border-radius:10px;background:rgba(255,255,255,.1);animation-name:pt7c}
+@keyframes pt7a{0%,24%,96%,100%{left:12px;top:12px;width:24px;height:24px}44%,76%{left:75px;top:14px;width:60px;height:60px}}
+@keyframes pt7t{0%,24%,96%,100%{left:44px;top:19px;width:90px}44%,76%{left:50px;top:84px;width:110px}}
+@keyframes pt7c{0%,24%,96%,100%{left:12px;top:48px;width:186px;height:80px}44%,76%{left:12px;top:106px;width:186px;height:24px}}`
+});
+
+add({id:'PT-08',cat:'pt',name:'Wipe',aka:'Curtain · Directional reveal',tags:['Film','Web'],
+desc:'The new screen is uncovered by an edge travelling across, like a wipe in an edit, then wiped off the other way.',
+html:TWO('','pt8'),css:`.pt8{animation:pt8 4s cubic-bezier(.7,0,.3,1) infinite}.pt8::after{content:"";position:absolute;inset:0;box-shadow:inset 2px 0 0 #fff}
+@keyframes pt8{0%,22%{clip-path:inset(0 100% 0 0)}42%,74%{clip-path:inset(0 0 0 0)}94%,100%{clip-path:inset(0 0 0 100%)}}`});
+
+add({id:'PT-09',cat:'pt',name:'Iris',aka:'Iris in / iris out · Circle wipe',tags:['Film','Games','Web'],
+desc:'The old screen closes into a shrinking circle to black, then the new one opens out of a growing circle. Straight from silent cinema.',
+html:`<div class="scr" style="background:#000"><div class="lay pt9a">${SCR_A}</div><div class="lay pt9b">${SCR_B}</div></div>`,
+css:`.pt9a{animation:pt9a 4.6s ease-in-out infinite}.pt9b{animation:pt9b 4.6s ease-in-out infinite}
+@keyframes pt9a{0%,10%{clip-path:circle(80% at 50% 50%)}26%,88%{clip-path:circle(0 at 50% 50%)}100%{clip-path:circle(80% at 50% 50%)}}
+@keyframes pt9b{0%,28%{clip-path:circle(0 at 50% 50%)}44%,72%{clip-path:circle(80% at 50% 50%)}86%,100%{clip-path:circle(0 at 50% 50%)}}`});
+
+add({id:'PT-10',cat:'pt',name:'Swipe Deck',aka:'Card swipe · Tinder stack',tags:['iOS','Android','Apps'],
+desc:'The top card flies off to the side with a twist, and the one under it grows forward to take its place.',
+html:`<div class="pt10">${[0,1,2].map(i=>`<div class="cd" style="background:linear-gradient(160deg,hsl(${i*70+10} 70% 60%),hsl(${i*70+60} 60% 40%))"><b>${['Location A','Location B','Location C'][i]}</b></div>`).join('')}</div>`,
+css:`.pt10{position:relative;width:120px;height:150px}
+.pt10 .cd{position:absolute;inset:0;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.4);display:flex;align-items:flex-end;padding:10px;color:#fff;font-size:12px;transition:transform .5s cubic-bezier(.3,.9,.3,1),opacity .4s}
+.pt10 .p0{z-index:3;transform:none}.pt10 .p1{z-index:2;transform:translateY(8px) scale(.93)}.pt10 .p2{z-index:1;transform:translateY(16px) scale(.86);opacity:.7}
+.pt10 .fly{z-index:4;transform:translate(170px,-10px) rotate(22deg);opacity:0}`,
+init(s,c){const cards=[...s.querySelectorAll('.cd')];let order=[0,1,2];const lay=()=>order.forEach((ci,p)=>{cards[ci].className='cd p'+p});lay();
+ c.every(1900,()=>{const top=cards[order[0]];top.className='cd fly';c.after(450,()=>{top.style.transition='none';order.push(order.shift());lay();void top.offsetWidth;top.style.transition=''});order.slice(1).forEach((ci,p)=>cards[ci].className='cd p'+p)})}
+});
+
+add({id:'PT-11',cat:'pt',name:'Cube',aka:'3D cube rotate · Stories cube',tags:['Apps','Web'],
+desc:'Screens sit on the faces of a cube that turns to show the next one. Instagram Stories between people.',
+html:`<div class="pt11"><div class="cb">${[0,1,2,3].map(i=>`<div class="f" style="transform:rotateY(${i*90}deg) translateZ(80px);background:${['#1c2540','#2a1f3a','#1f3a33','#3a2a1f'][i]}"><div class="scr-in">${i%2?'<div class="img"></div>':''}${LN(60,8)}${LN(85)}${LN(50)}</div></div>`).join('')}</div></div>`,
+css:`.pt11{perspective:520px;width:160px;height:120px}.pt11 .cb{position:relative;width:160px;height:120px;transform-style:preserve-3d;animation:pt11 6s cubic-bezier(.6,0,.3,1) infinite}
+.pt11 .f{position:absolute;inset:0;border-radius:6px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}.pt11 .f .scr-in{padding:10px}
+@keyframes pt11{0%,15%{transform:translateZ(-80px) rotateY(0)}25%,40%{transform:translateZ(-80px) rotateY(-90deg)}50%,65%{transform:translateZ(-80px) rotateY(-180deg)}75%,90%{transform:translateZ(-80px) rotateY(-270deg)}100%{transform:translateZ(-80px) rotateY(-360deg)}}`
+});
+
+add({id:'PT-12',cat:'pt',name:'Page Flip',aka:'Book flip · Page turn',tags:['Apps','Web'],
+desc:'The right page lifts and turns over around the spine to the left, showing its back, like a real book or magazine.',
+html:`<div class="pt12"><div class="pg l">${LN(80)}${LN(60)}${LN(70)}</div><div class="pg r2">${LN(70)}${LN(85)}${LN(50)}</div><div class="pg fl"><div class="fr">${LN(80)}${LN(55)}${LN(70)}</div><div class="bk">${LN(65)}${LN(80)}</div></div></div>`,
+css:`.pt12{position:relative;width:200px;height:130px;perspective:700px}
+.pt12 .pg{position:absolute;top:0;width:100px;height:130px;padding:14px 12px;display:flex;flex-direction:column;gap:7px;background:#f1ece2}.pt12 .pg .ln{background:rgba(0,0,0,.15)}
+.pt12 .l{left:0;border-radius:6px 0 0 6px;box-shadow:inset -10px 0 14px rgba(0,0,0,.12)}.pt12 .r2{left:100px;border-radius:0 6px 6px 0}
+.pt12 .fl{left:100px;padding:0;background:none;transform-origin:0 50%;transform-style:preserve-3d;animation:pt12 3.8s cubic-bezier(.5,0,.3,1) infinite}
+.pt12 .fr,.pt12 .bk{position:absolute;inset:0;padding:14px 12px;display:flex;flex-direction:column;gap:7px;background:#faf6ee;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:0 6px 6px 0}
+.pt12 .bk{transform:rotateY(180deg);background:#e9e2d4;border-radius:6px 0 0 6px}
+@keyframes pt12{0%,20%{transform:rotateY(0)}60%,100%{transform:rotateY(-180deg)}}`
+});
+</script>
+<script>
+/* =================== MICRO-INTERACTIONS =================== */
+add({id:'MI-01',cat:'mi',name:'Hover Lift',aka:'Raise on hover · Elevation',tags:['Web','Desktop'],hint:'Hover',
+desc:'Point at a card and it rises a few pixels while its shadow grows and softens, as if it lifts off the table towards you.',
+html:`<div class="mi1"><div class="img"></div>${LN(70,7)}${LN(45,6)}</div>`,
+css:`.mi1{width:150px;padding:10px;border-radius:16px;background:#20263a;display:flex;flex-direction:column;gap:7px;box-shadow:0 2px 6px rgba(0,0,0,.25);animation:mi1 3s ease-in-out infinite;transition:transform .3s,box-shadow .3s}
+.mi1:hover{animation:none;transform:translateY(-8px);box-shadow:0 22px 36px rgba(0,0,0,.45)}
+@keyframes mi1{0%,30%,100%{transform:none;box-shadow:0 2px 6px rgba(0,0,0,.25)}50%,80%{transform:translateY(-8px);box-shadow:0 22px 36px rgba(0,0,0,.45)}}`
+});
+
+add({id:'MI-02',cat:'mi',name:'Press Shrink',aka:'Tap scale · Active state · Bounce tap',tags:['iOS','Web','Apps'],hint:'Press',
+desc:'On press the button shrinks to about 95% and springs back on release. Tiny, but it is what makes a button feel physical.',
+html:`<button class="mi2">Continue</button>`,
+css:`.mi2{border:0;height:50px;padding:0 30px;border-radius:999px;background:var(--acc);color:#0a1020;font:600 16px var(--disp);cursor:pointer;transition:transform .35s cubic-bezier(.3,1.8,.5,1);animation:mi2 2.4s infinite}
+.mi2:active{transform:scale(.93);transition-duration:.1s;animation:none}
+@keyframes mi2{0%,40%,100%{transform:scale(1)}45%,55%{transform:scale(.93)}65%{transform:scale(1.03)}}`
+});
+
+add({id:'MI-03',cat:'mi',name:'Ripple',aka:'Ink ripple · Material ink · Touch ripple',tags:['Material','Android','Web'],hint:'Tap',
+desc:'A circle of light spreads out from the exact point you touched and fades. Google’s signature touch reply.',
+html:`<button class="mi3">Tap anywhere</button>`,
+css:`.mi3{position:relative;overflow:hidden;border:0;width:200px;height:64px;border-radius:14px;background:#5b6cff;color:#fff;font:600 15px var(--body);cursor:pointer}
+.mi3 .rp{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:rgba(255,255,255,.45);transform:scale(0);animation:mi3 .7s ease-out forwards;pointer-events:none}
+@keyframes mi3{to{transform:scale(18);opacity:0}}`,
+init(s,c){const b=s.querySelector('.mi3');const idle=c.idle();const rip=(x,y)=>{const r=document.createElement('span');r.className='rp';r.style.left=x+'px';r.style.top=y+'px';b.appendChild(r);c.after(750,()=>r.remove())};
+ c.on(b,'pointerdown',e=>{const a=b.getBoundingClientRect();rip(e.clientX-a.left,e.clientY-a.top)});c.every(1300,()=>{if(idle())rip(30+Math.random()*140,15+Math.random()*34)})}
+});
+
+add({id:'MI-04',cat:'mi',name:'Magnetic Button',aka:'Cursor attraction · Magnet',tags:['Web'],bg:'touch',hint:'Move',
+desc:'As the pointer comes near, the button leans towards it as if pulled by a magnet, and snaps back when the pointer leaves. Agency and portfolio sites love it.',
+html:`<button class="mi4"><span>Showreel</span></button><i class="cursor mi4c"></i>`,
+css:`.mi4{border:0;width:120px;height:120px;border-radius:50%;background:#fff;color:#111;font:600 14px var(--disp);cursor:pointer;transition:transform .5s cubic-bezier(.3,1.6,.5,1)}.mi4 span{display:inline-block;transition:transform .5s cubic-bezier(.3,1.6,.5,1)}`,
+init(s,c){const b=s.querySelector('.mi4'),sp=b.firstChild,cur=s.querySelector('.mi4c');let real=false,t=0;
+ const apply=(x,y)=>{const r=b.getBoundingClientRect(),S=s.getBoundingClientRect();const cx=r.left-S.left+r.width/2-(parseFloat(b.dataset.tx)||0),cy=r.top-S.top+r.height/2-(parseFloat(b.dataset.ty)||0);const dx=x-cx,dy=y-cy,d=Math.hypot(dx,dy);const k=d<130?.35:0;const tx=dx*k,ty=dy*k;b.dataset.tx=tx;b.dataset.ty=ty;b.style.transform=`translate(${tx}px,${ty}px)`;sp.style.transform=`translate(${tx*.4}px,${ty*.4}px)`};
+ c.on(s,'pointermove',e=>{real=true;cur.style.opacity=0;const S=s.getBoundingClientRect();apply(e.clientX-S.left,e.clientY-S.top)});c.on(s,'pointerleave',()=>{real=false;cur.style.opacity=1});
+ c.raf(dt=>{if(real)return;t+=dt/1000;const W=s.clientWidth,H=s.clientHeight;const x=W/2+Math.cos(t*.9)*W*.38,y=H/2+Math.sin(t*1.8)*H*.32;cur.style.transform=`translate(${x-7}px,${y-7}px)`;apply(x,y)})}
+});
+
+add({id:'MI-05',cat:'mi',name:'Toggle Switch',aka:'Switch · On/off slide',tags:['iOS','Android','Web'],hint:'Tap',
+desc:'The knob slides across and the track fills with colour. On iOS the knob also stretches for a moment while you hold it.',
+html:`<div class="mi5"><i></i></div>`,
+css:`.mi5{width:64px;height:38px;border-radius:999px;background:#3a3f50;position:relative;cursor:pointer;transition:background .3s}
+.mi5 i{position:absolute;top:3px;left:3px;width:32px;height:32px;border-radius:999px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:left .35s cubic-bezier(.3,1.4,.5,1),width .2s}
+.mi5.on{background:#34c759}.mi5.on i{left:29px}.mi5:active i{width:38px}.mi5.on:active i{left:23px}`,
+init(s,c){const t=s.querySelector('.mi5');const idle=c.idle();c.on(t,'click',()=>t.classList.toggle('on'));c.every(1500,()=>{if(idle())t.classList.toggle('on')})}
+});
+
+add({id:'MI-06',cat:'mi',name:'Checkbox Draw',aka:'Stroke draw · Animated check',tags:['Web','Apps'],hint:'Tap',
+desc:'Tick the box: it fills with colour and the check mark draws itself as one quick pen stroke.',
+html:`<div class="mi6"><svg viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" rx="10"/><path d="M11 21l6 6 12-13"/></svg><span>Final cut approved</span></div>`,
+css:`.mi6{display:flex;align-items:center;gap:12px;color:#fff;font-size:15px;cursor:pointer}
+.mi6 svg{width:40px;height:40px}.mi6 rect{fill:transparent;stroke:rgba(255,255,255,.4);stroke-width:2.5;transition:fill .25s,stroke .25s}
+.mi6 path{fill:none;stroke:#fff;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:30;stroke-dashoffset:30;transition:stroke-dashoffset .35s ease .1s}
+.mi6.on rect{fill:var(--mint);stroke:var(--mint)}.mi6.on path{stroke-dashoffset:0}.mi6 span{transition:opacity .3s}.mi6.on span{opacity:.55}`,
+init(s,c){const t=s.querySelector('.mi6');const idle=c.idle();c.on(t,'click',()=>t.classList.toggle('on'));c.every(1600,()=>{if(idle())t.classList.toggle('on')})}
+});
+
+add({id:'MI-07',cat:'mi',name:'Like Burst',aka:'Heart pop · Particle burst · Twitter heart',tags:['iOS','Web','Apps'],hint:'Tap',
+desc:'Tap the heart: it pops bigger and turns red, a ring flashes out from it and small dots fly off in all directions.',
+html:`<div class="mi7"><i class="ring"></i>${Array.from({length:8},(_,i)=>`<i class="pt" style="--a:${i*45}deg;background:${['#ff7a6b','#ffc65c','#9b7bff','#5fe0b5'][i%4]}"></i>`).join('')}<span class="h">${ic('heart',38,2)}</span></div>`,
+css:`.mi7{position:relative;width:80px;height:80px;display:grid;place-items:center;cursor:pointer;color:#9aa1b5}
+.mi7 .h{display:grid;transition:color .2s}.mi7 .h svg{transition:fill .2s}
+.mi7 .ring{position:absolute;inset:10px;border-radius:50%;border:3px solid #ff4d6d;opacity:0}
+.mi7 .pt{position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px;border-radius:50%;opacity:0}
+.mi7.on .h{color:#ff3b5c;animation:mi7h .5s cubic-bezier(.3,1.8,.5,1)}.mi7.on .h svg{fill:#ff3b5c}
+.mi7.on .ring{animation:mi7r .45s ease-out}.mi7.on .pt{animation:mi7p .6s ease-out}
+@keyframes mi7h{0%{transform:scale(.3)}100%{transform:scale(1)}}
+@keyframes mi7r{0%{transform:scale(.3);opacity:1;border-width:10px}100%{transform:scale(1.3);opacity:0;border-width:0}}
+@keyframes mi7p{0%{transform:rotate(var(--a)) translateY(0) scale(1);opacity:1}100%{transform:rotate(var(--a)) translateY(-40px) scale(.2);opacity:0}}`,
+init(s,c){const t=s.querySelector('.mi7');const idle=c.idle();const tog=()=>{if(t.classList.contains('on'))t.classList.remove('on');else c.restart(t,'on')};c.on(t,'click',tog);c.every(1500,()=>{if(idle())tog()})}
+});
+
+add({id:'MI-08',cat:'mi',name:'Confetti',aka:'Celebration burst · Party popper',tags:['Web','Apps','Games'],hint:'Tap',
+desc:'Paper pieces burst out, tumble and fall under gravity. For “Done!”, “Paid”, “Published”.',
+html:`<canvas class="mi8"></canvas><b class="mi8t">Published!</b>`,
+css:`.mi8{position:absolute;inset:0;width:100%;height:100%}.mi8t{position:relative;font:700 22px var(--disp);color:#fff;pointer-events:none}`,
+init(s,c){const cv=s.querySelector('canvas'),x=cv.getContext('2d');let P=[];const idle=c.idle();const dpr=Math.min(2,devicePixelRatio||1);
+ const fit=()=>{cv.width=s.clientWidth*dpr;cv.height=s.clientHeight*dpr};fit();
+ const burst=(bx,by)=>{for(let i=0;i<70;i++){const a=-Math.PI/2+(Math.random()-.5)*2.2,v=4+Math.random()*6;P.push({x:bx,y:by,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:Math.random()*6,w:5+Math.random()*5,h:3+Math.random()*4,c:['#ff7a6b','#ffc65c','#8fd3ff','#9b7bff','#5fe0b5','#ff7fb6'][i%6],s:(Math.random()-.5)*.3,l:1})}};
+ c.on(s,'pointerdown',e=>{const b=s.getBoundingClientRect();burst(e.clientX-b.left,e.clientY-b.top)});
+ c.every(2400,()=>{if(idle())burst(s.clientWidth/2,s.clientHeight*.7)});c.after(100,()=>burst(s.clientWidth/2,s.clientHeight*.7));
+ c.raf(()=>{if(cv.width!==s.clientWidth*dpr)fit();x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,cv.width,cv.height);P=P.filter(p=>p.y<s.clientHeight+20&&p.l>0);P.forEach(p=>{p.vy+=.18;p.vx*=.985;p.x+=p.vx;p.y+=p.vy;p.r+=p.s;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.scale(1,Math.cos(p.r*2));x.fillStyle=p.c;x.fillRect(-p.w/2,-p.h/2,p.w,p.h);x.restore()})})}
+});
+
+add({id:'MI-09',cat:'mi',name:'Menu ↔ Close Morph',aka:'Hamburger to X · Icon morph',tags:['Web','Apps'],hint:'Tap',
+desc:'The three lines of the menu icon turn into an X: the middle one disappears, the other two rotate and meet.',
+html:`<div class="mi9"><i></i><i></i><i></i></div>`,
+css:`.mi9{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;cursor:pointer}
+.mi9 i{width:26px;height:3px;border-radius:2px;background:#fff;transition:transform .4s cubic-bezier(.3,1.4,.5,1),opacity .2s}
+.mi9.on i:nth-child(1){transform:translateY(9px) rotate(45deg)}.mi9.on i:nth-child(2){opacity:0;transform:scaleX(0)}.mi9.on i:nth-child(3){transform:translateY(-9px) rotate(-45deg)}`,
+init(s,c){const t=s.querySelector('.mi9');const idle=c.idle();c.on(t,'click',()=>t.classList.toggle('on'));c.every(1500,()=>{if(idle())t.classList.toggle('on')})}
+});
+
+add({id:'MI-10',cat:'mi',name:'Play ↔ Pause Morph',aka:'Media icon morph',tags:['iOS','Web','Apps'],hint:'Tap',
+desc:'The two bars of Pause melt into the triangle of Play and back, instead of the icon simply swapping.',
+html:`<div class="mi10"><i class="a"></i><i class="b"></i></div>`,
+css:`.mi10{position:relative;width:76px;height:76px;border-radius:50%;background:#fff;cursor:pointer}
+.mi10 i{position:absolute;left:27px;top:24px;width:28px;height:28px;background:#111;transition:clip-path .4s cubic-bezier(.5,0,.3,1)}
+.mi10 .a{clip-path:polygon(0 0,35% 0,35% 100%,0 100%)}.mi10 .b{clip-path:polygon(65% 0,100% 0,100% 100%,65% 100%)}
+.mi10.play .a{clip-path:polygon(0 0,50% 25%,50% 75%,0 100%)}.mi10.play .b{clip-path:polygon(50% 25%,100% 50%,100% 50%,50% 75%)}`,
+init(s,c){const t=s.querySelector('.mi10');const idle=c.idle();c.on(t,'click',()=>t.classList.toggle('play'));c.every(1500,()=>{if(idle())t.classList.toggle('play')})}
+});
+
+add({id:'MI-11',cat:'mi',name:'Tab Indicator Slide',aka:'Ink bar · Moving pill · Active indicator',tags:['Material','Web','Apps'],hint:'Tap',
+desc:'The highlight under the chosen tab glides to the next one, changing width to fit it, instead of jumping.',
+html:`<div class="mi11"><span class="ind"></span><button>Shots</button><button>Cast</button><button>Locations</button></div>`,
+css:`.mi11{position:relative;display:flex;gap:4px;padding:5px;border-radius:14px;background:rgba(255,255,255,.06)}
+.mi11 button{position:relative;z-index:1;border:0;background:none;color:#cfd6ea;font-size:13px;font-weight:600;height:34px;padding:0 14px;border-radius:10px;cursor:pointer;transition:color .25s}.mi11 button.on{color:#0b1020}
+.mi11 .ind{position:absolute;top:5px;left:0;height:34px;border-radius:10px;background:var(--amber);transition:transform .4s cubic-bezier(.3,1.2,.5,1),width .4s cubic-bezier(.3,1.2,.5,1)}`,
+init(s,c){const bs=[...s.querySelectorAll('.mi11 button')],I=s.querySelector('.ind');let cur=0;const idle=c.idle();const sel=i=>{cur=i;bs.forEach((b,j)=>b.classList.toggle('on',i===j));I.style.width=bs[i].offsetWidth+'px';I.style.transform=`translateX(${bs[i].offsetLeft}px)`};c.after(30,()=>sel(0));bs.forEach((b,i)=>c.on(b,'click',()=>sel(i)));c.every(1500,()=>{if(idle())sel((cur+1)%bs.length)})}
+});
+
+add({id:'MI-12',cat:'mi',name:'Floating Label',aka:'Label float · Input focus',tags:['Material','Web'],hint:'Type',
+desc:'The field’s label sits inside it like a placeholder; when you start typing it shrinks and floats up to the border, so it never disappears.',
+html:`<label class="mi12"><input id="mi12in" type="text" autocomplete="off"><span>Director</span></label>`,
+css:`.mi12{position:relative;display:block;width:210px}
+.mi12 input{width:100%;height:52px;border-radius:12px;border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.04);color:#fff;font:15px var(--body);padding:16px 14px 0;outline:none;transition:border-color .2s}
+.mi12 span{position:absolute;left:15px;top:16px;font-size:15px;color:#9097ad;pointer-events:none;transform-origin:0 0;transition:transform .25s cubic-bezier(.3,.9,.3,1),color .25s}
+.mi12.up span{transform:translateY(-9px) scale(.75);color:var(--acc)}.mi12.up input{border-color:var(--acc)}`,
+init(s,c){const l=s.querySelector('.mi12'),inp=l.querySelector('input');let user=false;const st=()=>l.classList.toggle('up',document.activeElement===inp||inp.value!=='');
+ c.on(inp,'focus',()=>{user=true;st()});c.on(inp,'blur',st);c.on(inp,'input',st);
+ const word='Alex K.';let i=0,dir=1;c.every(200,()=>{if(user)return;if(dir===1){i++;if(i>word.length+6){dir=-1}}else{i--;if(i<-6)dir=1}inp.value=word.slice(0,Math.max(0,Math.min(i,word.length)));l.classList.toggle('up',i>-3)})}
+});
+
+add({id:'MI-13',cat:'mi',name:'Jiggle Mode',aka:'Wiggle · Edit mode · Home screen jiggle',tags:['iOS','iPadOS'],
+desc:'Every item trembles slightly, each a little out of step, telling you they can now be moved or deleted. The iPhone home screen in edit mode.',
+html:`<div class="mi13">${Array.from({length:8},(_,i)=>`<i style="background:hsl(${i*45} 65% 58%);animation-delay:${-i*.13}s"><b>−</b></i>`).join('')}</div>`,
+css:`.mi13{display:grid;grid-template-columns:repeat(4,44px);gap:14px}
+.mi13 i{position:relative;width:44px;height:44px;border-radius:12px;display:block;animation:mi13 .32s ease-in-out infinite alternate}
+.mi13 b{position:absolute;left:-5px;top:-5px;width:16px;height:16px;border-radius:50%;background:#6b7080;color:#fff;font:700 12px/15px var(--body);text-align:center}
+@keyframes mi13{from{transform:rotate(-2.2deg)}to{transform:rotate(2.2deg)}}`
+});
+
+add({id:'MI-14',cat:'mi',name:'Dock Bounce',aka:'Attention bounce · Launch bounce',tags:['macOS'],
+desc:'An icon hops up from the Dock and drops back, twice, to say an app is opening or needs you.',
+html:`<div class="mi14">${Array.from({length:5},(_,i)=>`<i style="background:linear-gradient(135deg,hsl(${i*60+20} 70% 62%),hsl(${i*60+60} 65% 45%))"${i===2?' class="b"':''}></i>`).join('')}</div>`,
+css:`.mi14{position:absolute;bottom:18px;left:50%;translate:-50% 0;display:flex;gap:8px;padding:8px;border-radius:18px;background:rgba(255,255,255,.12);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.mi14 i{width:38px;height:38px;border-radius:10px;display:block}
+.mi14 .b{animation:mi14 2.6s infinite}
+@keyframes mi14{0%{transform:translateY(0);animation-timing-function:cubic-bezier(.2,.6,.4,1)}12%{transform:translateY(-34px);animation-timing-function:cubic-bezier(.6,0,.8,.4)}24%{transform:translateY(0);animation-timing-function:cubic-bezier(.2,.6,.4,1)}36%{transform:translateY(-34px);animation-timing-function:cubic-bezier(.6,0,.8,.4)}48%,100%{transform:translateY(0)}}`
+});
+
+add({id:'MI-15',cat:'mi',name:'Ping',aka:'Pulse ring · Radar · Live dot',tags:['Web','Apps'],
+desc:'A dot sends out rings that grow and fade, again and again. Means “live”, “recording” or “new”.',
+html:`<div class="mi15"><i></i><i></i><b></b><span>LIVE</span></div>`,
+css:`.mi15{position:relative;display:flex;align-items:center;gap:12px;color:#fff;font:700 14px var(--mono);letter-spacing:.1em}
+.mi15 b{position:relative;width:14px;height:14px;border-radius:50%;background:#ff3b3b}
+.mi15 i{position:absolute;left:0;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:#ff3b3b;animation:mi15 1.6s cubic-bezier(0,0,.2,1) infinite}.mi15 i+i{animation-delay:.8s}
+@keyframes mi15{0%{transform:scale(1);opacity:.7}100%{transform:scale(3.4);opacity:0}}`
+});
+
+add({id:'MI-16',cat:'mi',name:'Badge Pop',aka:'Counter bump · Notification count',tags:['iOS','Web','Apps'],
+desc:'A new notification arrives: the red number badge pops bigger and settles, and the bell gives a little ring.',
+html:`<div class="mi16"><span class="bl">${ic('bell',34,1.8)}</span><b>3</b></div>`,
+css:`.mi16{position:relative;color:#fff}.mi16 .bl{display:grid;transform-origin:50% 10%}
+.mi16 b{position:absolute;right:-8px;top:-6px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#ff3b3b;font:700 12px/22px var(--body);text-align:center;box-shadow:0 0 0 3px #161b2a}
+.mi16.go b{animation:mi16 .5s cubic-bezier(.3,1.8,.5,1)}.mi16.go .bl{animation:mi16b .6s ease}
+@keyframes mi16{0%{transform:scale(.4)}100%{transform:scale(1)}}
+@keyframes mi16b{0%,100%{transform:rotate(0)}20%{transform:rotate(14deg)}40%{transform:rotate(-12deg)}60%{transform:rotate(8deg)}80%{transform:rotate(-4deg)}}`,
+init(s,c){const m=s.querySelector('.mi16'),b=m.querySelector('b');let n=3;c.every(1600,()=>{n=n>=12?1:n+1;b.textContent=n;c.restart(m,'go')})}
+});
+
+add({id:'MI-17',cat:'mi',name:'Swipe to Delete',aka:'Swipe actions · Row reveal',tags:['iOS','Android','Apps'],
+desc:'Slide a row sideways and a red Delete button appears behind it; confirm and the row collapses while the ones below move up.',
+html:`<div class="mi17"><div class="r"><div class="bk">${ic('trash',16)}</div><div class="fx"><i class="av"></i>${LN(55,7)}</div></div><div class="r2"><div class="fx"><i class="av" style="background:linear-gradient(135deg,var(--mint),var(--acc))"></i>${LN(45,7)}</div></div><div class="r2"><div class="fx"><i class="av" style="background:linear-gradient(135deg,var(--amber),var(--coral))"></i>${LN(60,7)}</div></div></div>`,
+css:`.mi17{width:210px;display:flex;flex-direction:column}
+.mi17 .r{position:relative;height:46px;overflow:hidden;animation:mi17h 4s ease infinite}
+.mi17 .bk{position:absolute;inset:0 0 0 auto;width:100%;background:#ff3b3b;display:flex;align-items:center;justify-content:flex-end;padding-right:18px;color:#fff}
+.mi17 .fx{position:relative;height:46px;display:flex;align-items:center;gap:10px;padding:0 12px;background:#1f2538;border-bottom:1px solid rgba(255,255,255,.05)}
+.mi17 .r .fx{animation:mi17 4s cubic-bezier(.3,.9,.3,1) infinite}
+@keyframes mi17{0%,15%{transform:translateX(0)}30%,55%{transform:translateX(-64px)}68%,100%{transform:translateX(-110%)}}
+@keyframes mi17h{0%,66%{height:46px;opacity:1}80%,92%{height:0;opacity:1}93%{height:0;opacity:0}100%{height:46px;opacity:1}}`
+});
+
+add({id:'MI-18',cat:'mi',name:'Pull to Refresh',aka:'Refresh control · Pull down',tags:['iOS','Android'],
+desc:'Pull the list down past the top: a spinner appears in the gap, turns while new content loads, then the list snaps back up.',
+html:`<div class="phone mi18"><i class="sp"></i><div class="ls">${ROWS(7)}</div></div>`,
+css:`.mi18 .ls{position:absolute;inset:0;background:#0d1018;padding:8px 2px;animation:mi18 3.6s cubic-bezier(.3,.9,.3,1) infinite}
+.mi18 .sp{position:absolute;left:50%;top:14px;width:20px;height:20px;margin-left:-10px;border-radius:50%;border:2.5px solid rgba(255,255,255,.2);border-top-color:#fff;animation:spin .7s linear infinite,mi18s 3.6s ease infinite}
+@keyframes mi18{0%,8%{transform:translateY(0)}24%{transform:translateY(58px)}30%,68%{transform:translateY(46px)}82%,100%{transform:translateY(0)}}
+@keyframes mi18s{0%,10%{opacity:0}22%,70%{opacity:1}78%,100%{opacity:0}}`
+});
+
+add({id:'MI-19',cat:'mi',name:'Rubber Band',aka:'Elastic overscroll · Resistance drag · Spring back',tags:['iOS','macOS'],bg:'touch',hint:'Drag',
+desc:'Drag past the limit and it follows you with growing resistance; let go and it springs back into place. iOS does this at the end of every list.',
+html:`<div class="mi19"><b>Pull me</b></div>`,
+css:`.mi19{width:120px;height:80px;border-radius:20px;background:linear-gradient(135deg,var(--vio),var(--acc));display:grid;place-items:center;color:#fff;font:600 15px var(--disp);cursor:grab;box-shadow:0 12px 26px rgba(0,0,0,.4)}`,
+init(s,c){const el=s.querySelector('.mi19');let sx=0,sy=0,drag=false;const idle=c.idle();const rb=d=>Math.sign(d)*Math.pow(Math.abs(d),.72)*1.4;
+ const back=(x,y)=>{el.animate&&el.animate([{transform:`translate(${x}px,${y}px)`},{transform:'translate(0,0)'}],{duration:700,easing:'cubic-bezier(.3,1.6,.5,1)'});el.style.transform=''};let cx=0,cy=0;
+ c.on(el,'pointerdown',e=>{drag=true;sx=e.clientX;sy=e.clientY;el.setPointerCapture(e.pointerId)});c.on(el,'pointermove',e=>{if(!drag)return;cx=rb(e.clientX-sx);cy=rb(e.clientY-sy);el.style.transform=`translate(${cx}px,${cy}px)`});
+ const up=()=>{if(!drag)return;drag=false;back(cx,cy)};c.on(el,'pointerup',up);c.on(el,'pointercancel',up);
+ c.every(2400,()=>{if(!idle()||drag)return;const x=rb(140)*(Math.random()>.5?1:-1)*.6,y=rb(60)*(Math.random()-.5);el.animate&&el.animate([{transform:'translate(0,0)'},{transform:`translate(${x}px,${y}px)`,offset:.35,easing:'cubic-bezier(.3,1.6,.5,1)'},{transform:'translate(0,0)'}],{duration:1300,easing:'ease-out'})})}
+});
+
+add({id:'MI-20',cat:'mi',name:'Reorder',aka:'Drag to sort · FLIP · Sortable list',tags:['Web','iOS','Apps'],
+desc:'Pick up an item and the others slide out of its way; drop it and everything glides into the new order rather than jumping.',
+html:`<div class="mi20">${['Scene 1 · Kitchen','Scene 2 · Street','Scene 3 · Rooftop','Scene 4 · Car'].map((t,i)=>`<div class="it" style="--h:${i*60+200}">${t}<span>≡</span></div>`).join('')}</div>`,
+css:`.mi20{position:relative;width:200px;height:156px}
+.mi20 .it{position:absolute;left:0;right:0;height:34px;border-radius:10px;background:#222a40;border-left:4px solid hsl(var(--h) 70% 62%);display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:12px;color:#e3e8f5;transition:top .5s cubic-bezier(.3,1.25,.5,1),transform .3s,box-shadow .3s}
+.mi20 .it span{color:#7d8499}.mi20 .it.up{z-index:2;transform:scale(1.05);box-shadow:0 10px 22px rgba(0,0,0,.45)}`,
+init(s,c){const its=[...s.querySelectorAll('.it')];let ord=[0,1,2,3];const lay=()=>ord.forEach((k,p)=>its[k].style.top=p*40+'px');lay();
+ c.every(1800,()=>{const a=Math.floor(Math.random()*4);let b=(a+1+Math.floor(Math.random()*3))%4;const el=its[ord[a]];el.classList.add('up');c.after(250,()=>{const k=ord.splice(a,1)[0];ord.splice(b,0,k);lay();c.after(550,()=>el.classList.remove('up'))})})}
+});
+
+add({id:'MI-21',cat:'mi',name:'Accordion',aka:'Expand / collapse · Disclosure',tags:['Web','Apps'],hint:'Tap',
+desc:'Tap a row and it opens smoothly to show its contents, its arrow turning; the rows below glide down to make room.',
+html:`<div class="mi21">${['Camera','Lighting','Sound'].map(t=>`<div class="ac"><div class="h">${t}<span>${ic('chev',14)}</span></div><div class="b"><div>${LN(85,6)}${LN(60,6)}</div></div></div>`).join('')}</div>`,
+css:`.mi21{width:210px;display:flex;flex-direction:column;gap:6px}
+.mi21 .ac{border-radius:12px;background:#1f2538}
+.mi21 .h{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;font-size:13px;color:#fff;cursor:pointer}.mi21 .h span{display:grid;transition:transform .35s}
+.mi21 .b{display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s cubic-bezier(.3,.9,.3,1)}.mi21 .b>div{overflow:hidden;display:flex;flex-direction:column;gap:6px;padding:0 12px}
+.mi21 .ac.on .b{grid-template-rows:1fr}.mi21 .ac.on .b>div{padding-bottom:10px}.mi21 .ac.on .h span{transform:rotate(180deg)}`,
+init(s,c){const acs=[...s.querySelectorAll('.ac')];let cur=-1;const idle=c.idle();const open=i=>{cur=i;acs.forEach((a,j)=>a.classList.toggle('on',i===j))};acs.forEach((a,i)=>c.on(a.querySelector('.h'),'click',()=>open(cur===i?-1:i)));c.every(1600,()=>{if(idle())open((cur+1)%acs.length)})}
+});
+
+add({id:'MI-22',cat:'mi',name:'Star Rating',aka:'Rating fill · Sequential pop',tags:['Web','Apps'],hint:'Tap',
+desc:'Choose a rating and the stars light up one after another up to your choice, each with a small pop.',
+html:`<div class="mi22">${Array.from({length:5},(_,i)=>`<span data-i="${i}">${ic('star',30,1.6)}</span>`).join('')}</div>`,
+css:`.mi22{display:flex;gap:6px;color:#4a5068}.mi22 span{display:grid;cursor:pointer;transition:color .2s}.mi22 svg{transition:fill .2s}
+.mi22 span.on{color:var(--amber);animation:mi22 .4s cubic-bezier(.3,1.8,.5,1) both}.mi22 span.on svg{fill:var(--amber)}
+@keyframes mi22{0%{transform:scale(.5)}100%{transform:scale(1)}}`,
+init(s,c){const st=[...s.querySelectorAll('.mi22 span')];const idle=c.idle();const set=n=>st.forEach((e,i)=>{e.classList.remove('on');if(i<n){e.style.animationDelay=i*.07+'s';void e.offsetWidth;e.classList.add('on')}});
+ st.forEach((e,i)=>c.on(e,'click',()=>set(i+1)));let n=0;c.every(1700,()=>{if(idle()){n=n>=5?0:5;set(n)}})}
+});
+
+add({id:'MI-23',cat:'mi',name:'Send Whoosh',aka:'Paper plane · Send fly-off',tags:['Apps','Web'],
+desc:'Press Send and the icon takes off out of the button towards the top corner, and a fresh one fades back in.',
+html:`<div class="mi23"><span>${LN(60,7)}</span><button>${ic('send',18)}</button></div>`,
+css:`.mi23{display:flex;align-items:center;gap:8px;width:220px;padding:6px 6px 6px 14px;border-radius:999px;background:rgba(255,255,255,.08)}.mi23 span{flex:1;display:flex}
+.mi23 button{width:40px;height:40px;border:0;border-radius:50%;background:var(--acc);color:#0a1020;display:grid;place-items:center;overflow:visible}
+.mi23 svg{animation:mi23 2.6s ease-in infinite}
+@keyframes mi23{0%,30%{transform:none;opacity:1}50%{transform:translate(60px,-60px) rotate(10deg) scale(.6);opacity:0}51%{transform:translate(-20px,20px) scale(.6);opacity:0}70%,100%{transform:none;opacity:1}}`
+});
+
+add({id:'MI-24',cat:'mi',name:'Copy → Check',aka:'Success swap · Icon confirm',tags:['Web','Apps'],hint:'Tap',
+desc:'Press Copy and the icon spins away into a green check for a second, then turns back. Confirms without a message.',
+html:`<button class="mi24"><span class="a">${ic('copy',18)}</span><span class="b">${ic('check',18,2.6)}</span><em>Copy link</em></button>`,
+css:`.mi24{position:relative;display:flex;align-items:center;gap:8px;height:46px;padding:0 18px 0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;font:600 14px var(--body);cursor:pointer}
+.mi24 em{font-style:normal}.mi24 span{display:grid;width:18px;height:18px;transition:transform .35s cubic-bezier(.3,1.6,.5,1),opacity .2s}.mi24 .b{position:absolute;left:14px;color:var(--mint);transform:scale(0) rotate(-90deg);opacity:0}
+.mi24.on .a{transform:scale(0) rotate(90deg);opacity:0}.mi24.on .b{transform:none;opacity:1}`,
+init(s,c){const b=s.querySelector('.mi24'),em=b.querySelector('em');const go=()=>{b.classList.add('on');em.textContent='Copied';c.after(1200,()=>{b.classList.remove('on');em.textContent='Copy link'})};c.on(b,'click',go);c.every(2600,go)}
+});
+
+add({id:'MI-25',cat:'mi',name:'Hold to Confirm',aka:'Long-press fill · Press and hold',tags:['Apps','Games','Web'],hint:'Hold',
+desc:'For risky actions: keep pressing and the button fills up from left to right; let go early and it drains back; hold to the end and it confirms.',
+html:`<button class="mi25"><i></i><span>Hold to delete</span></button>`,
+css:`.mi25{position:relative;overflow:hidden;width:200px;height:52px;border-radius:999px;border:0;background:rgba(255,59,59,.18);color:#ffb3b3;font:600 15px var(--body);cursor:pointer;touch-action:none}
+.mi25 i{position:absolute;left:0;top:0;bottom:0;width:0;background:#ff3b3b;transition:width .4s ease}.mi25 span{position:relative}
+.mi25.hold i{width:100%;transition:width 1.3s linear}.mi25.done{color:#fff}.mi25.done i{width:100%;background:#34c759}`,
+init(s,c){const b=s.querySelector('.mi25'),sp=b.querySelector('span');let tm=null;const idle=c.idle();
+ const start=()=>{if(b.classList.contains('done'))return;b.classList.add('hold');sp.textContent='Keep holding…';tm=setTimeout(()=>{b.classList.remove('hold');b.classList.add('done');sp.textContent='Deleted';c.after(1200,()=>{b.classList.remove('done');sp.textContent='Hold to delete'})},1300)};
+ const stop=()=>{clearTimeout(tm);if(b.classList.contains('hold')){b.classList.remove('hold');sp.textContent='Hold to delete'}};
+ c.on(b,'pointerdown',start);c.on(b,'pointerup',stop);c.on(b,'pointerleave',stop);
+ let k=0;c.every(1000,()=>{if(!idle())return;k++;if(k%4===1){start()}else if(k%4===2&&Math.random()<.4){stop()}})}
+});
+
+/* =================== LOADING =================== */
+add({id:'LD-01',cat:'ld',name:'Ring Spinner',aka:'Spinner · Loading ring',tags:['Web','Android','Apps'],
+desc:'A ring with one coloured arc turning endlessly. The plainest “please wait”.',
+html:`<i class="ld1"></i>`,css:`.ld1{width:46px;height:46px;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:var(--acc);animation:spin .8s linear infinite}`});
+
+add({id:'LD-02',cat:'ld',name:'Activity Indicator',aka:'iOS spinner · Spokes',tags:['iOS','macOS'],
+desc:'Apple’s loading wheel: short spokes in a circle, with the brightness chasing round.',
+html:`<div class="ld2">${Array.from({length:8},(_,i)=>`<i style="transform:rotate(${i*45}deg);animation-delay:${-(8-i)*.1}s"></i>`).join('')}</div>`,
+css:`.ld2{position:relative;width:44px;height:44px}.ld2 i{position:absolute;left:19px;top:0;width:6px;height:14px;border-radius:3px;background:#fff;transform-origin:3px 22px;animation:ld2 .8s linear infinite}
+@keyframes ld2{0%{opacity:1}100%{opacity:.15}}`});
+
+add({id:'LD-03',cat:'ld',name:'Skeleton Shimmer',aka:'Placeholder shimmer · Ghost content',tags:['Web','iOS','Android'],
+desc:'Grey shapes stand where the content will be, with a light sweeping over them. The page feels ready before the data arrives.',
+html:`<div class="ld3"><div class="r"><i class="sk" style="width:38px;height:38px;border-radius:50%"></i><div style="flex:1;display:flex;flex-direction:column;gap:7px"><i class="sk" style="width:70%;height:9px"></i><i class="sk" style="width:45%;height:8px"></i></div></div><i class="sk" style="height:60px;border-radius:12px"></i><i class="sk" style="width:85%;height:9px"></i></div>`,
+css:`.ld3{width:220px;display:flex;flex-direction:column;gap:10px}.ld3 .r{display:flex;gap:10px;align-items:center}
+.sk{display:block;border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,.07) 30%,rgba(255,255,255,.18) 50%,rgba(255,255,255,.07) 70%);background-size:300% 100%;animation:sk 1.4s ease-in-out infinite}
+@keyframes sk{0%{background-position:100% 0}100%{background-position:0 0}}`});
+
+add({id:'LD-04',cat:'ld',name:'Typing Dots',aka:'Typing indicator · Is typing…',tags:['iOS','Apps','Web'],
+desc:'Three dots in a chat bubble rising one after another: the other person is typing.',
+html:`<div class="ld4"><i></i><i></i><i></i></div>`,
+css:`.ld4{display:flex;gap:5px;padding:14px 16px;border-radius:20px 20px 20px 6px;background:#2a3147}.ld4 i{width:8px;height:8px;border-radius:50%;background:#cfd6ea;animation:ld4 1.2s ease-in-out infinite}.ld4 i:nth-child(2){animation-delay:.15s}.ld4 i:nth-child(3){animation-delay:.3s}
+@keyframes ld4{0%,60%,100%{transform:none;opacity:.45}30%{transform:translateY(-6px);opacity:1}}`});
+
+add({id:'LD-05',cat:'ld',name:'Progress Bars',aka:'Determinate · Indeterminate bar',tags:['Web','Material','Desktop'],
+desc:'Top: a bar that fills as the job advances (we know how far we are). Bottom: a segment that keeps sliding through (we do not know yet).',
+html:`<div class="ld5"><small>Uploading 62%</small><div class="b"><i class="d"></i></div><small>Preparing…</small><div class="b"><i class="n"></i></div></div>`,
+css:`.ld5{width:220px;display:flex;flex-direction:column;gap:7px;color:#9097ad;font-size:11px}.ld5 .b{position:relative;height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin-bottom:8px}
+.ld5 .d{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--mint);animation:ld5d 3.6s cubic-bezier(.5,0,.3,1) infinite}
+.ld5 .n{position:absolute;top:0;bottom:0;width:40%;border-radius:3px;background:var(--acc);animation:ld5n 1.4s cubic-bezier(.6,0,.4,1) infinite}
+@keyframes ld5d{0%{width:0}80%,100%{width:100%}}@keyframes ld5n{0%{left:-40%}100%{left:100%}}`});
+
+add({id:'LD-06',cat:'ld',name:'Progress Ring',aka:'Circular progress · Activity ring',tags:['iOS','watchOS','Web'],
+desc:'A ring that closes as the job advances, with the number counting up in the middle.',
+html:`<div class="ld6"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34"/><circle class="f" cx="40" cy="40" r="34"/></svg><b>0%</b></div>`,
+css:`.ld6{position:relative;width:96px;height:96px;display:grid;place-items:center}.ld6 svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.ld6 circle{fill:none;stroke:rgba(255,255,255,.1);stroke-width:7}.ld6 .f{stroke:var(--coral);stroke-linecap:round;stroke-dasharray:213.6;stroke-dashoffset:213.6}
+.ld6 b{font:600 18px var(--disp);color:#fff;font-variant-numeric:tabular-nums}`,
+init(s,c){const f=s.querySelector('.f'),b=s.querySelector('b');let p=0;c.raf(dt=>{p+=dt/3000;if(p>1.25)p=0;const v=Math.min(1,p),e=1-Math.pow(1-v,3);f.style.strokeDashoffset=213.6*(1-e);b.textContent=Math.round(e*100)+'%'})}
+});
+
+add({id:'LD-07',cat:'ld',name:'Bouncing Dots',aka:'Dot loader · Three dots',tags:['Web','Apps'],
+desc:'Three dots bouncing in turn, like a little ball on the floor.',
+html:`<div class="ld7"><i></i><i></i><i></i></div>`,
+css:`.ld7{display:flex;gap:8px;align-items:flex-end;height:40px}.ld7 i{width:12px;height:12px;border-radius:50%;background:var(--amber);animation:ld7 .6s cubic-bezier(.3,0,.5,1) infinite alternate}.ld7 i:nth-child(2){animation-delay:.15s;background:var(--coral)}.ld7 i:nth-child(3){animation-delay:.3s;background:var(--vio)}
+@keyframes ld7{from{transform:translateY(0)}to{transform:translateY(-24px)}}`});
+
+add({id:'LD-08',cat:'ld',name:'Breathe',aka:'Breathing bloom · Mindfulness flower',tags:['watchOS','iOS','Apps'],
+desc:'Soft overlapping circles open out like a flower and close again, slowly, at breathing pace. Calm waiting or meditation.',
+html:`<div class="ld8">${Array.from({length:6},(_,i)=>`<i style="--r:${i*60}deg"></i>`).join('')}</div>`,
+css:`.ld8{position:relative;width:120px;height:120px;animation:ld8r 8s ease-in-out infinite}
+.ld8 i{position:absolute;left:30px;top:30px;width:60px;height:60px;border-radius:50%;background:rgba(95,224,181,.4);mix-blend-mode:screen;transform:rotate(var(--r)) translateX(0) scale(.4);animation:ld8 4s ease-in-out infinite alternate}
+@keyframes ld8{to{transform:rotate(var(--r)) translateX(28px) scale(1)}}@keyframes ld8r{to{transform:rotate(180deg)}}`});
+
+add({id:'LD-09',cat:'ld',name:'Equalizer',aka:'Audio bars · Now playing',tags:['Apps','Web'],
+desc:'Bars jumping up and down out of step, like a sound meter. Means “playing” or “listening”.',
+html:`<div class="ld9">${[.45,.7,.55,.8,.5].map((d,i)=>`<i style="animation-duration:${d}s;animation-delay:${-i*.13}s"></i>`).join('')}</div>`,
+css:`.ld9{display:flex;gap:5px;align-items:flex-end;height:50px}.ld9 i{width:8px;height:100%;border-radius:4px;background:linear-gradient(var(--rose),var(--vio));transform-origin:bottom;animation:ld9 .5s ease-in-out infinite alternate}
+@keyframes ld9{from{transform:scaleY(.15)}to{transform:scaleY(1)}}`});
+
+add({id:'LD-10',cat:'ld',name:'Gooey Loader',aka:'Liquid dots · Metaball loader',tags:['Web','Apps'],
+desc:'Dots that melt into each other and drip apart as they circle, like drops of liquid.',
+html:`<svg class="ld10" viewBox="0 0 200 120"><g filter="url(#goo)"><circle cx="100" cy="60" r="18" fill="#8fd3ff"/><circle class="o o1" cx="100" cy="60" r="12" fill="#9b7bff"/><circle class="o o2" cx="100" cy="60" r="12" fill="#ff7a6b"/></g></svg>`,
+css:`.ld10{width:200px;height:120px}.ld10 .o{transform-origin:100px 60px;transform-box:view-box}.ld10 .o1{animation:ld10 1.8s ease-in-out infinite}.ld10 .o2{animation:ld10 1.8s ease-in-out infinite reverse}
+@keyframes ld10{0%{transform:rotate(0) translateX(38px)}50%{transform:rotate(180deg) translateX(12px)}100%{transform:rotate(360deg) translateX(38px)}}`});
+
+add({id:'LD-11',cat:'ld',name:'Spinner → Check',aka:'Loading to success · Done state',tags:['Web','Apps','iOS'],
+desc:'The spinner turns, then closes into a full green circle and a check mark draws itself. The wait ends with a clear yes.',
+html:`<div class="ld11"><svg viewBox="0 0 60 60"><circle class="r" cx="30" cy="30" r="26"/><path d="M18 31l8 8 16-17"/></svg></div>`,
+css:`.ld11 svg{width:70px;height:70px}.ld11 .r{fill:none;stroke:var(--mint);stroke-width:4;stroke-linecap:round;stroke-dasharray:163;transform-origin:30px 30px;animation:ld11r 3.4s ease-in-out infinite}
+.ld11 path{fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:ld11p 3.4s ease infinite}
+@keyframes ld11r{0%{stroke-dashoffset:120;transform:rotate(0);fill:transparent}40%{stroke-dashoffset:120;transform:rotate(720deg);fill:transparent}52%{stroke-dashoffset:0;transform:rotate(900deg);fill:transparent}58%,90%{stroke-dashoffset:0;transform:rotate(900deg);fill:var(--mint)}100%{stroke-dashoffset:120;transform:rotate(1080deg);fill:transparent}}
+@keyframes ld11p{0%,56%{stroke-dashoffset:40}68%,88%{stroke-dashoffset:0}96%,100%{stroke-dashoffset:40}}`});
+
+add({id:'LD-12',cat:'ld',name:'Intelligence Glow',aka:'Siri edge glow · AI aura · Apple Intelligence',tags:['iOS','macOS','Web'],
+desc:'A soft multicolour light flows around the edge of the screen while the assistant listens or thinks. Apple Intelligence’s Siri, and now many AI apps.',
+html:`<div class="phone ld12"><i class="gl"></i><i class="gl b"></i><div class="in">${LN(50,8)}${LN(70)}${LN(60)}</div></div>`,
+css:`.ld12{border:0;background:#000;padding:3px}
+.ld12 .gl{position:absolute;inset:-60%;background:conic-gradient(from 0deg,#ff6ec4,#ffb86b,#6bffd8,#6b9bff,#b66bff,#ff6ec4);animation:spin 3s linear infinite}
+.ld12 .gl.b{filter:blur(10px);opacity:.9}
+.ld12 .in{position:absolute;inset:4px;border-radius:20px;background:#0d1018;padding:14px 10px;display:flex;flex-direction:column;gap:8px;box-shadow:inset 0 0 16px rgba(255,140,220,.35)}`});
+</script>
+<script>
+/* =================== TEXT =================== */
+add({id:'TX-01',cat:'tx',name:'Typewriter',aka:'Type-on · Character reveal',tags:['Web','Apps','Film'],
+desc:'Letters appear one at a time behind a blinking cursor, as if someone types them, then get deleted and the next line is typed.',
+html:`<div class="tx1"><span></span><i></i></div>`,
+css:`.tx1{font:500 20px var(--mono);color:#fff;display:flex;align-items:center;max-width:90%}.tx1 i{width:2px;height:24px;background:var(--acc);margin-left:3px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}`,
+init(s,c){const sp=s.querySelector('.tx1 span');const L=['INT. KITCHEN – NIGHT','EXT. ROOFTOP – DAWN','FADE IN:'];let li=0,i=0,dir=1,wait=0;c.every(70,()=>{if(wait>0){wait--;return}const w=L[li];i+=dir;sp.textContent=w.slice(0,i);if(i>=w.length){dir=-1;wait=18}else if(i<=0){dir=1;li=(li+1)%L.length;wait=4}})}
+});
+
+add({id:'TX-02',cat:'tx',name:'Scramble Decode',aka:'Text scramble · Matrix decode · Glyph shuffle',tags:['Web','Games'],
+desc:'The word starts as random flickering symbols that settle letter by letter into the real text, like a code being cracked.',
+html:`<div class="tx2"></div>`,css:`.tx2{font:600 24px var(--mono);color:var(--mint);letter-spacing:.06em}`,
+init(s,c){const el=s.querySelector('.tx2');const W=['THE MAD LIONS','ROARDINO','MOTION'],G='!<>-_\\/[]{}—=+*^?#ABCXYZ0123456789';let wi=0,f=0;const total=40;
+ c.every(45,()=>{const w=W[wi];f++;if(f>total+25){f=0;wi=(wi+1)%W.length;return}let out='';for(let i=0;i<w.length;i++){const settle=i*2+8;out+=f>=settle||w[i]===' '?w[i]:G[Math.floor(Math.random()*G.length)]}el.textContent=out})}
+});
+
+add({id:'TX-03',cat:'tx',name:'Split Text Stagger',aka:'Letter rise · Char stagger · SplitText',tags:['Web','Film'],
+desc:'The word is cut into letters and each one rises into place a moment after the one before, like a title sequence.',
+html:`<div class="tx3"></div>`,
+css:`.tx3{font:700 38px var(--disp);color:#fff;display:flex;overflow:hidden;letter-spacing:-.01em}.tx3 span{display:inline-block;animation:tx3 3.2s cubic-bezier(.2,.8,.2,1) infinite}
+@keyframes tx3{0%{transform:translateY(110%);opacity:0}20%,75%{transform:none;opacity:1}90%,100%{transform:translateY(-110%);opacity:0}}`,
+init(s){const el=s.querySelector('.tx3');el.innerHTML=[...'Cinema'].map((ch,i)=>`<span style="animation-delay:${i*.06}s">${ch}</span>`).join('')}
+});
+
+add({id:'TX-04',cat:'tx',name:'Streaming Words',aka:'Word-by-word blur in · AI typing · Token stream',tags:['Web','Apps'],
+desc:'An answer arrives word by word, each word coming out of a soft blur. How ChatGPT, Claude and other AI apps show replies.',
+html:`<p class="tx4"></p>`,
+css:`.tx4{margin:0;width:86%;font-size:15px;line-height:1.5;color:#e7eaf4}.tx4 span{display:inline-block;animation:tx4 .5s ease both;margin-right:.28em}
+@keyframes tx4{from{opacity:0;filter:blur(6px);transform:translateY(3px)}to{opacity:1;filter:none;transform:none}}`,
+init(s,c){const p=s.querySelector('.tx4');const T='Open on a wide shot of the empty street, hold for three seconds, then push in slowly as the neon sign flickers on.'.split(' ');let i=0;c.every(110,()=>{if(i<T.length){const w=document.createElement('span');w.textContent=T[i];p.appendChild(w)}i++;if(i>T.length+18){p.innerHTML='';i=0}})}
+});
+
+add({id:'TX-05',cat:'tx',name:'Shimmer Text',aka:'Thinking shimmer · Shine text · Gradient sweep',tags:['Web','Apps','iOS'],
+desc:'A band of light passes through the letters, over and over. AI apps use it for “Thinking…”, phones for “slide to unlock”.',
+html:`<div class="tx5">Thinking…</div>`,
+css:`.tx5{font:600 26px var(--disp);background:linear-gradient(100deg,#5d6378 35%,#fff 50%,#5d6378 65%);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:tx5 2s linear infinite}
+@keyframes tx5{from{background-position:100% 0}to{background-position:0 0}}`});
+
+add({id:'TX-06',cat:'tx',name:'Number Ticker',aka:'Count up · Rolling counter · Odometer',tags:['Web','Apps'],
+desc:'A number counts up quickly from zero and slows down as it reaches its value. For stats, prices, views.',
+html:`<div class="tx6"><b>0</b><small>views this week</small></div>`,
+css:`.tx6{text-align:center;color:#fff}.tx6 b{display:block;font:700 40px var(--disp);font-variant-numeric:tabular-nums;letter-spacing:-.02em}.tx6 small{color:#9097ad}`,
+init(s,c){const b=s.querySelector('b');let t=0;c.raf(dt=>{t+=dt/1000;const p=Math.min(1,t/1.8),e=1-Math.pow(1-p,4);b.textContent=Math.round(e*128450).toLocaleString('en-US');if(t>3.4)t=0})}
+});
+
+add({id:'TX-07',cat:'tx',name:'Word Rotator',aka:'Flip words · Slot words · Rotating headline',tags:['Web'],
+desc:'One word in a sentence keeps rolling up and being replaced by the next, like a slot machine.',
+html:`<div class="tx7">We make <span class="w"><span class="in"><b>films</b><b>ads</b><b>music videos</b><b>stories</b><b>films</b></span></span></div>`,
+css:`.tx7{font:600 22px var(--disp);color:#fff;display:flex;gap:.3em;align-items:center}.tx7 .w{display:inline-block;height:1.3em;overflow:hidden;color:var(--coral)}
+.tx7 .in{display:flex;flex-direction:column;animation:tx7 8s cubic-bezier(.7,0,.3,1) infinite}.tx7 b{height:1.3em;line-height:1.3em;font-weight:700;white-space:nowrap}
+@keyframes tx7{0%,18%{transform:translateY(0)}25%,43%{transform:translateY(-1.3em)}50%,68%{transform:translateY(-2.6em)}75%,93%{transform:translateY(-3.9em)}100%{transform:translateY(-5.2em)}}`});
+
+add({id:'TX-08',cat:'tx',name:'Marquee',aka:'Ticker · Crawl · Infinite scroll text',tags:['Web','Film'],
+desc:'A line of words or logos glides sideways forever without a seam. A news crawl, a client strip.',
+html:`<div class="tx8"><div class="r">${Array(2).fill('<span>DIRECTING</span><i>✦</i><span>EDITING</span><i>✦</i><span>COLOUR</span><i>✦</i><span>SOUND</span><i>✦</i>').join('')}</div></div>`,
+css:`.tx8{position:absolute;left:0;right:0;overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent);mask:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent)}
+.tx8 .r{display:flex;width:max-content;gap:18px;align-items:center;animation:tx8 10s linear infinite;font:700 26px var(--disp);color:#fff}.tx8 i{font-style:normal;color:var(--amber);font-size:16px}
+@keyframes tx8{to{transform:translateX(-50%)}}`,
+init(s){const r=s.querySelector('.r');r.style.paddingRight='18px'}
+});
+
+add({id:'TX-09',cat:'tx',name:'Highlighter Sweep',aka:'Marker highlight · Underlay draw',tags:['Web'],
+desc:'A marker stroke draws itself behind a key phrase from left to right, as if someone just highlighted it.',
+html:`<p class="tx9">Every frame should feel <mark>deliberate</mark>.</p>`,
+css:`.tx9{margin:0;font:600 20px var(--disp);color:#fff;width:80%;text-align:center}
+.tx9 mark{color:#111;background:linear-gradient(transparent 15%,var(--amber) 15%,var(--amber) 88%,transparent 88%) no-repeat 0 0/0% 100%;padding:0 3px;border-radius:3px;animation:tx9 3s cubic-bezier(.5,0,.2,1) infinite;color:#fff}
+@keyframes tx9{0%,15%{background-size:0% 100%;color:#fff}45%,85%{background-size:100% 100%;color:#111}100%{background-size:100% 100%;color:#111;opacity:0}}`});
+
+add({id:'TX-10',cat:'tx',name:'Line Mask Reveal',aka:'Masked slide-up · Title reveal',tags:['Web','Film'],
+desc:'Each line slides up from behind an invisible edge, one after the other, like titles rising from under a frame. Very common on agency sites.',
+html:`<div class="tx10"><span><b>The Mad</b></span><span><b style="animation-delay:.12s">Lions</b></span></div>`,
+css:`.tx10{display:flex;flex-direction:column;font:800 34px/1.05 var(--disp);color:#fff;letter-spacing:-.02em}.tx10 span{overflow:hidden;display:block}.tx10 b{display:block;animation:tx10 3.4s cubic-bezier(.7,0,.2,1) infinite}
+@keyframes tx10{0%{transform:translateY(105%)}25%,75%{transform:none}95%,100%{transform:translateY(-105%)}}`});
+
+add({id:'TX-11',cat:'tx',name:'Glitch',aka:'RGB split · Digital glitch · Chromatic jitter',tags:['Web','Games','Film'],
+desc:'The text jerks and splits into red and cyan copies for a split second, like a broken signal, then snaps back.',
+html:`<div class="tx11" data-t="SIGNAL">SIGNAL</div>`,
+css:`.tx11{position:relative;font:800 40px var(--disp);color:#fff;letter-spacing:.04em}
+.tx11::before,.tx11::after{content:attr(data-t);position:absolute;inset:0}
+.tx11::before{color:#ff2a6d;animation:tx11a 2.5s steps(1) infinite}.tx11::after{color:#05d9e8;animation:tx11b 2.5s steps(1) infinite;mix-blend-mode:screen}
+@keyframes tx11a{0%,70%,100%{transform:none;clip-path:inset(0 0 100% 0)}72%{transform:translate(-4px,1px);clip-path:inset(10% 0 55% 0)}75%{transform:translate(3px,-1px);clip-path:inset(60% 0 10% 0)}78%{transform:translate(-2px,0);clip-path:inset(30% 0 40% 0)}}
+@keyframes tx11b{0%,70%,100%{transform:none;clip-path:inset(0 0 100% 0)}72%{transform:translate(4px,-1px);clip-path:inset(50% 0 20% 0)}75%{transform:translate(-3px,1px);clip-path:inset(5% 0 70% 0)}78%{transform:translate(2px,0);clip-path:inset(70% 0 5% 0)}}`});
+
+add({id:'TX-12',cat:'tx',name:'Weight Wave',aka:'Variable font animation · Breathing type',tags:['Web'],
+desc:'A wave travels through the word, each letter getting bolder and lighter in turn. Only possible with variable fonts.',
+html:`<div class="tx12"></div>`,
+css:`.tx12{font:200 40px var(--disp);color:#fff;letter-spacing:-.01em}.tx12 span{display:inline-block;animation:tx12 1.8s ease-in-out infinite}
+@keyframes tx12{0%,100%{font-weight:200}50%{font-weight:800;color:var(--acc)}}`,
+init(s){s.querySelector('.tx12').innerHTML=[...'Rhythm'].map((ch,i)=>`<span style="animation-delay:${i*.12}s">${ch}</span>`).join('')}
+});
+
+/* =================== SCROLL =================== */
+const autoScroll=(c,el,axis='y')=>{const idle=c.idle(el);let dir=1,pause=0;c.raf(dt=>{if(!idle())return;if(pause>0){pause-=dt;return}const max=axis==='y'?el.scrollHeight-el.clientHeight:el.scrollWidth-el.clientWidth;const k=axis==='y'?'scrollTop':'scrollLeft';let v=el[k]+dir*dt*.045;if(v>=max){v=max;dir=-1;pause=900}if(v<=0){v=0;dir=1;pause=900}el[k]=v})};
+const SCCSS=`.fr{position:relative;width:220px;height:160px;border-radius:14px;overflow:hidden;background:#141927;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}.fr .sc{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none}.fr .sc::-webkit-scrollbar{display:none}`;
+
+add({id:'SC-01',cat:'sc',name:'Reveal on Scroll',aka:'Fade-up on enter · Scroll-triggered entrance',tags:['Web'],hint:'Scroll',
+desc:'Blocks fade and slide up into place as they enter the screen while you scroll, instead of already sitting there.',
+html:`<div class="fr"><div class="sc sc1">${Array.from({length:9},(_,i)=>`<div class="b" style="background:hsl(${i*40+190} 45% 30%)">${LN(60,7)}${LN(40,6)}</div>`).join('')}</div></div>`,
+css:SCCSS+`.sc1{padding:10px;display:flex;flex-direction:column;gap:10px}.sc1 .b{height:56px;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;opacity:0;transform:translateY(24px) scale(.97);transition:opacity .5s,transform .6s cubic-bezier(.2,.8,.2,1);flex:none}.sc1 .b.in{opacity:1;transform:none}`,
+init(s,c){const sc=s.querySelector('.sc1');const io=new IntersectionObserver(es=>es.forEach(e=>e.target.classList.toggle('in',e.isIntersecting)),{root:sc,threshold:.25});sc.querySelectorAll('.b').forEach(b=>io.observe(b));autoScroll(c,sc)}
+});
+
+add({id:'SC-02',cat:'sc',name:'Parallax',aka:'Depth scroll · Layered scroll',tags:['Web','iOS'],hint:'Scroll',
+desc:'Layers move at different speeds while you scroll: the far mountains slowly, the near ones fast, so the picture gets depth.',
+html:`<div class="fr"><div class="sc sc2"><div class="tall"></div></div><div class="ly"><i class="sky"></i><i class="sun"></i><i class="m1"></i><i class="m2"></i><i class="m3"></i><b>Parallax</b></div></div>`,
+css:SCCSS+`.sc2{z-index:2}.sc2 .tall{height:420px}
+.fr .ly{position:absolute;inset:0;pointer-events:none;overflow:hidden}.fr .ly i,.fr .ly b{position:absolute;left:0;right:0;will-change:transform}
+.ly .sky{inset:0;background:linear-gradient(#2a2350,#d9705a)}.ly .sun{left:60%;right:auto;top:40px;width:44px;height:44px;border-radius:50%;background:#ffd38a}
+.ly .m1{top:80px;height:200px;background:#6a4a7a;clip-path:polygon(0 40%,25% 10%,50% 35%,75% 5%,100% 30%,100% 100%,0 100%)}
+.ly .m2{top:105px;height:200px;background:#3e2e58;clip-path:polygon(0 30%,20% 50%,45% 15%,70% 45%,100% 20%,100% 100%,0 100%)}
+.ly .m3{top:130px;height:200px;background:#1a1530;clip-path:polygon(0 20%,30% 45%,55% 25%,80% 50%,100% 35%,100% 100%,0 100%)}
+.ly b{top:30px;text-align:center;font:700 20px var(--disp);color:#fff}`,
+init(s,c){const sc=s.querySelector('.sc2'),L=s.querySelectorAll('.ly i,.ly b');const sp=[.05,.15,.3,.55,.85,.1];c.on(sc,'scroll',()=>{const y=sc.scrollTop;L.forEach((e,i)=>e.style.transform=`translateY(${-y*sp[i]}px)`)},{passive:true});autoScroll(c,sc)}
+});
+
+add({id:'SC-03',cat:'sc',name:'Large Title Collapse',aka:'Big title shrink · Collapsing header',tags:['iOS','Android'],hint:'Scroll',
+desc:'A big bold title at the top shrinks and slides into the small centred title of the bar as you scroll down, and grows back at the top.',
+html:`<div class="phone sc3"><div class="sc"><div class="sp"></div>${ROWS(12)}</div><div class="bar"></div><b class="t">Projects</b></div>`,
+css:`.sc3 .sc{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none}.sc3 .sc::-webkit-scrollbar{display:none}.sc3 .sp{height:56px}
+.sc3 .bar{position:absolute;left:0;right:0;top:0;height:34px;background:rgba(20,24,36,.8);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:0;border-bottom:1px solid rgba(255,255,255,.08)}
+.sc3 .t{position:absolute;left:10px;top:26px;font:800 22px var(--disp);color:#fff;transform-origin:0 50%;white-space:nowrap}`,
+init(s,c){const sc=s.querySelector('.sc'),t=s.querySelector('.t'),bar=s.querySelector('.bar');const upd=()=>{const p=Math.min(1,sc.scrollTop/48);const sz=1-.42*p;const W=sc.clientWidth,tw=t.offsetWidth*sz;const x=10+(W/2-tw/2-10)*p,y=26+(-17)*p;t.style.transform=`translate(${x-10}px,${y-26}px) scale(${sz})`;bar.style.opacity=p};c.on(sc,'scroll',upd,{passive:true});upd();autoScroll(c,sc)}
+});
+
+add({id:'SC-04',cat:'sc',name:'Scroll Progress',aka:'Reading progress bar',tags:['Web'],hint:'Scroll',
+desc:'A thin bar at the top fills as you read down the page, showing how much is left.',
+html:`<div class="fr"><i class="pb"></i><div class="sc sc4"><b>Treatment</b>${Array.from({length:22},(_,i)=>LN(60+((i*37)%40),6)).join('')}</div></div>`,
+css:SCCSS+`.sc4{padding:18px 14px;display:flex;flex-direction:column;gap:8px}.sc4 b{color:#fff;font:700 16px var(--disp);margin-bottom:4px}
+.fr .pb{position:absolute;left:0;top:0;height:3px;width:0;z-index:2;background:linear-gradient(90deg,var(--coral),var(--amber))}`,
+init(s,c){const sc=s.querySelector('.sc4'),pb=s.querySelector('.pb');c.on(sc,'scroll',()=>{pb.style.width=sc.scrollTop/(sc.scrollHeight-sc.clientHeight)*100+'%'},{passive:true});autoScroll(c,sc)}
+});
+
+add({id:'SC-05',cat:'sc',name:'Snap Carousel',aka:'Scroll snap · Paging · Focus scale',tags:['iOS','Web','Android'],hint:'Swipe',
+desc:'Swipe sideways and the row always comes to rest with one card exactly centred; the centred card is a bit bigger and brighter.',
+html:`<div class="sc5">${Array.from({length:6},(_,i)=>`<div class="cd" style="background:linear-gradient(150deg,hsl(${i*55} 70% 60%),hsl(${i*55+50} 60% 38%))"><b>Shot ${i+1}</b></div>`).join('')}</div>`,
+css:`.sc5{position:absolute;left:0;right:0;top:50%;translate:0 -50%;display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:10px calc(50% - 60px);scrollbar-width:none}.sc5::-webkit-scrollbar{display:none}
+.sc5 .cd{flex:none;width:120px;height:140px;border-radius:18px;scroll-snap-align:center;display:flex;align-items:flex-end;padding:12px;color:#fff;font-size:13px;transition:transform .3s,opacity .3s;transform:scale(.86);opacity:.55}.sc5 .cd.on{transform:none;opacity:1}`,
+init(s,c){const sc=s.querySelector('.sc5'),cds=[...sc.children];const idle=c.idle(sc);let i=0;const mark=()=>{const mid=sc.scrollLeft+sc.clientWidth/2;let best=0,bd=1e9;cds.forEach((cd,k)=>{const d=Math.abs(cd.offsetLeft+cd.offsetWidth/2-mid);if(d<bd){bd=d;best=k}});i=best;cds.forEach((cd,k)=>cd.classList.toggle('on',k===best))};c.on(sc,'scroll',mark,{passive:true});c.after(50,mark);
+ c.every(1800,()=>{if(!idle())return;const n=(i+1)%cds.length;sc.scrollTo({left:cds[n].offsetLeft+cds[n].offsetWidth/2-sc.clientWidth/2,behavior:'smooth'})})}
+});
+
+add({id:'SC-06',cat:'sc',name:'Stacking Cards',aka:'Sticky stack · Card pile on scroll',tags:['Web'],hint:'Scroll',
+desc:'As you scroll, each card sticks near the top and the next one slides up over it, building a pile.',
+html:`<div class="fr"><div class="sc sc6">${Array.from({length:5},(_,i)=>`<div class="cd" style="top:${10+i*8}px;background:linear-gradient(150deg,hsl(${i*60+200} 55% 45%),hsl(${i*60+240} 50% 28%))"><b>Chapter ${i+1}</b></div>`).join('')}<div style="height:40px"></div></div></div>`,
+css:SCCSS+`.sc6{padding:10px 14px}.sc6 .cd{position:sticky;height:110px;border-radius:16px;margin-bottom:24px;padding:14px;color:#fff;font:600 14px var(--disp);box-shadow:0 -6px 18px rgba(0,0,0,.35)}`,
+init(s,c){autoScroll(c,s.querySelector('.sc6'))}
+});
+
+add({id:'SC-07',cat:'sc',name:'Scroll Scrub Zoom',aka:'Scroll-driven zoom · Scrubbing',tags:['Web','iOS'],hint:'Scroll',
+desc:'The animation is tied to the scroll position like a timeline you scrub: scroll down and the picture zooms out and the title appears; scroll up and it plays backwards. Apple product pages.',
+html:`<div class="fr"><div class="vis"><div class="im"></div><b>Vision</b></div><div class="sc sc7"><div style="height:480px"></div></div></div>`,
+css:SCCSS+`.sc7{z-index:2}.fr .vis{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden}
+.fr .vis .im{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#ffd38a 0 10%,transparent 11%),radial-gradient(ellipse at 50% 120%,#5a3a8a,transparent 60%),linear-gradient(#1a2048,#d9705a);border-radius:0;transform:scale(2.2)}
+.fr .vis b{position:relative;font:800 26px var(--disp);color:#fff;opacity:0}`,
+init(s,c){const sc=s.querySelector('.sc7'),im=s.querySelector('.im'),b=s.querySelector('.vis b');c.on(sc,'scroll',()=>{const p=sc.scrollTop/(sc.scrollHeight-sc.clientHeight);im.style.transform=`scale(${2.2-1.45*p})`;im.style.borderRadius=p*40+'px';b.style.opacity=Math.max(0,(p-.5)*2);b.style.transform=`translateY(${(1-p)*20}px)`},{passive:true});autoScroll(c,sc)}
+});
+
+/* =================== 3D =================== */
+add({id:'D3-01',cat:'d3',name:'Parallax Tilt',aka:'tvOS poster · 3D hover tilt · Depth card',tags:['Web','Apps'],bg:'touch',hint:'Move',
+desc:'The card tilts towards the pointer and its layers separate in depth, with a glare sliding across. Apple TV posters do this when focused.',
+html:`<div class="d31"><i class="bg"></i><i class="sun"></i><i class="hill"></i><b>THE ROOF</b><i class="gl"></i></div>`,
+css:`.d31{position:relative;width:130px;height:160px;border-radius:16px;transform-style:preserve-3d;transform:perspective(600px) rotateX(var(--rx,0)) rotateY(var(--ry,0));box-shadow:0 18px 34px rgba(0,0,0,.5)}
+.d31 i,.d31 b{position:absolute;display:block}.d31 .bg{inset:0;border-radius:16px;background:linear-gradient(#23285a,#e0785c)}
+.d31 .sun{left:44px;top:46px;width:42px;height:42px;border-radius:50%;background:#ffd38a;transform:translateZ(20px)}
+.d31 .hill{left:-6px;right:-6px;bottom:-4px;height:70px;border-radius:0 0 16px 16px;background:#1a1530;clip-path:polygon(0 40%,40% 10%,70% 35%,100% 15%,100% 100%,0 100%);transform:translateZ(40px)}
+.d31 b{left:0;right:0;bottom:16px;text-align:center;font:800 15px var(--disp);color:#fff;letter-spacing:.08em;transform:translateZ(60px)}
+.d31 .gl{inset:0;border-radius:16px;background:radial-gradient(circle at var(--gx,50%) var(--gy,0%),rgba(255,255,255,.45),transparent 50%);transform:translateZ(61px)}`,
+init(s,c){const d=s.querySelector('.d31');let px=null,py=null,t=0;c.on(s,'pointermove',e=>{const b=s.getBoundingClientRect();px=(e.clientX-b.left)/b.width;py=(e.clientY-b.top)/b.height});c.on(s,'pointerleave',()=>px=null);
+ c.raf(dt=>{t+=dt/1000;let x=px,y=py;if(x===null){x=.5+Math.sin(t)*.4;y=.5+Math.cos(t*1.3)*.35}d.style.setProperty('--ry',(x-.5)*30+'deg');d.style.setProperty('--rx',(.5-y)*26+'deg');d.style.setProperty('--gx',x*100+'%');d.style.setProperty('--gy',y*100+'%')})}
+});
+
+add({id:'D3-02',cat:'d3',name:'Card Flip',aka:'Flip over · Front/back',tags:['Web','Apps','Games'],hint:'Tap',
+desc:'The card turns over in 3D around its middle to show its back side, and turns back.',
+html:`<div class="d32"><div class="in"><div class="f">FRONT</div><div class="b">BACK</div></div></div>`,
+css:`.d32{width:130px;height:160px;perspective:700px;cursor:pointer}.d32 .in{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.4,1.3,.5,1)}
+.d32.on .in{transform:rotateY(180deg)}
+.d32 .f,.d32 .b{position:absolute;inset:0;border-radius:16px;display:grid;place-items:center;font:800 16px var(--disp);letter-spacing:.1em;color:#fff;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.d32 .f{background:linear-gradient(150deg,var(--vio),#3a2a8a)}.d32 .b{background:linear-gradient(150deg,var(--coral),#8a2a3a);transform:rotateY(180deg)}`,
+init(s,c){const d=s.querySelector('.d32');const idle=c.idle();c.on(d,'click',()=>d.classList.toggle('on'));c.every(1900,()=>{if(idle())d.classList.toggle('on')})}
+});
+
+add({id:'D3-03',cat:'d3',name:'Coverflow',aka:'Cover Flow · Angled carousel',tags:['Apps','Web','iOS'],hint:'Tap',
+desc:'Covers stand in a row: the middle one faces you, the others are turned at an angle on both sides. Moving on swings the next one to the front. The old iPod and iTunes.',
+html:`<div class="d33">${Array.from({length:7},(_,i)=>`<i style="background:linear-gradient(150deg,hsl(${i*50} 70% 60%),hsl(${i*50+40} 60% 35%))"></i>`).join('')}</div>`,
+css:`.d33{position:relative;width:100%;height:130px;perspective:600px;transform-style:preserve-3d}
+.d33 i{position:absolute;left:50%;top:0;width:100px;height:100px;margin-left:-50px;border-radius:10px;display:block;cursor:pointer;transition:transform .55s cubic-bezier(.3,1,.4,1),filter .5s;-webkit-box-reflect:below 4px linear-gradient(transparent 60%,rgba(255,255,255,.25))}`,
+init(s,c){const it=[...s.querySelectorAll('.d33 i')];let cur=3;const idle=c.idle();const lay=()=>it.forEach((e,i)=>{const d=i-cur;const a=Math.sign(d);e.style.transform=d===0?'translateZ(60px)':`translateX(${d*34+a*40}px) rotateY(${-a*60}deg)`;e.style.zIndex=10-Math.abs(d);e.style.filter=`brightness(${d===0?1:.6})`});lay();
+ it.forEach((e,i)=>c.on(e,'click',()=>{cur=i;lay()}));let dir=1;c.every(1500,()=>{if(!idle())return;cur+=dir;if(cur>=it.length-1||cur<=0)dir*=-1;lay()})}
+});
+
+add({id:'D3-04',cat:'d3',name:'3D Ring Carousel',aka:'Circular carousel · Rotating ring',tags:['Web','Games'],
+desc:'Panels stand around a circle in 3D and the whole ring slowly turns, the front ones near and clear, the back ones far and faint.',
+html:`<div class="d34"><div class="ring">${Array.from({length:8},(_,i)=>`<i style="transform:rotateY(${i*45}deg) translateZ(118px);background:linear-gradient(150deg,hsl(${i*45} 70% 60%),hsl(${i*45+40} 60% 35%))"></i>`).join('')}</div></div>`,
+css:`.d34{perspective:700px;width:100%;height:140px;display:grid;place-items:center}.d34 .ring{position:relative;width:70px;height:90px;transform-style:preserve-3d;animation:d34 14s linear infinite}
+.d34 i{position:absolute;inset:0;border-radius:10px;display:block;opacity:.92}
+@keyframes d34{from{transform:rotateX(-8deg) rotateY(0)}to{transform:rotateX(-8deg) rotateY(-360deg)}}`});
+
+add({id:'D3-05',cat:'d3',name:'Fold',aka:'Origami unfold · Paper fold',tags:['Web','Apps'],
+desc:'A panel folds out of itself like a folded paper: section by section it unfolds downward, then folds back up.',
+html:`<div class="d35"><div class="p p1">${LN(60,7)}</div><div class="hinge"><div class="p p2">${LN(80,6)}</div><div class="hinge"><div class="p p3">${LN(50,6)}</div></div></div></div>`,
+css:`.d35{width:180px;perspective:600px}.d35 .p{height:42px;padding:16px;background:#2a3350;display:flex}.d35 .p1{border-radius:12px 12px 0 0;background:#334070}.d35 .p3{border-radius:0 0 12px 12px;background:#232b44}
+.d35 .hinge{transform-origin:50% 0;transform-style:preserve-3d;animation:d35 3.6s cubic-bezier(.5,0,.3,1) infinite}
+@keyframes d35{0%,15%{transform:rotateX(-90deg)}45%,80%{transform:rotateX(0)}100%{transform:rotateX(-90deg)}}`});
+
+/* =================== BACKGROUNDS =================== */
+add({id:'BG-01',cat:'bg',name:'Aurora',aka:'Mesh gradient · Northern lights · Blob gradient',tags:['Web','Apps'],
+desc:'Big soft clouds of colour drift and blend behind the content, slowly and endlessly. Stripe, Apple Music, many landing pages.',
+html:`<div class="bg1"><i></i><i></i><i></i><i></i></div>`,
+css:`.bg1{position:absolute;inset:0;background:#0d0f1c;filter:blur(28px) saturate(1.3)}.bg1 i{position:absolute;width:60%;height:70%;border-radius:50%;opacity:.8}
+.bg1 i:nth-child(1){background:#5b3cff;left:-10%;top:-10%;animation:bg1a 9s ease-in-out infinite alternate}.bg1 i:nth-child(2){background:#00c2a8;right:-10%;top:10%;animation:bg1b 11s ease-in-out infinite alternate}
+.bg1 i:nth-child(3){background:#ff5e8a;left:20%;bottom:-20%;animation:bg1c 10s ease-in-out infinite alternate}.bg1 i:nth-child(4){background:#ffb347;right:10%;bottom:-10%;width:35%;height:45%;animation:bg1a 8s ease-in-out infinite alternate-reverse}
+@keyframes bg1a{to{transform:translate(40%,30%) scale(1.2)}}@keyframes bg1b{to{transform:translate(-40%,20%) scale(.8)}}@keyframes bg1c{to{transform:translate(20%,-40%) scale(1.3)}}`});
+
+add({id:'BG-02',cat:'bg',name:'Lava Lamp',aka:'Gooey blobs · Metaballs',tags:['Web'],
+desc:'Coloured blobs float up and down, and when two meet they melt together like wax in a lava lamp.',
+html:`<svg class="bg2" viewBox="0 0 300 186" preserveAspectRatio="xMidYMid slice"><g filter="url(#goo)">${[[80,'#ff7a6b',30,6],[150,'#ffc65c',24,8],[210,'#ff7fb6',34,7],[120,'#9b7bff',20,9],[240,'#ff9a6b',22,5.5]].map(([x,cl,r,d],i)=>`<circle cx="${x}" cy="93" r="${r}" fill="${cl}" style="animation:bg2 ${d}s ease-in-out ${-i*1.3}s infinite alternate"/>`).join('')}</g></svg>`,
+css:`.bg2{position:absolute;inset:0;width:100%;height:100%;background:#1a0f24}@keyframes bg2{from{transform:translateY(70px)}to{transform:translateY(-70px)}}`});
+
+add({id:'BG-03',cat:'bg',name:'Starfield',aka:'Warp speed · Hyperspace',tags:['Web','Games'],
+desc:'Stars rush towards you from the centre of the screen, like flying through space.',
+html:`<canvas class="cv"></canvas>`,css:`.cv{position:absolute;inset:0;width:100%;height:100%;background:#05060c}`,
+init(s,c){const cv=s.querySelector('canvas'),x=cv.getContext('2d');const dpr=Math.min(2,devicePixelRatio||1);const S=Array.from({length:180},()=>({x:(Math.random()-.5)*2,y:(Math.random()-.5)*2,z:Math.random()}));
+ c.raf(dt=>{const W=s.clientWidth,H=s.clientHeight;if(cv.width!==W*dpr){cv.width=W*dpr;cv.height=H*dpr}x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle='rgba(5,6,12,.35)';x.fillRect(0,0,W,H);S.forEach(st=>{st.z-=dt*.00035;if(st.z<=.02){st.z=1;st.x=(Math.random()-.5)*2;st.y=(Math.random()-.5)*2}const k=.5/st.z;const px=W/2+st.x*W*k*.5,py=H/2+st.y*H*k*.5;const r=Math.max(.4,(1-st.z)*2.2);x.fillStyle=`rgba(220,230,255,${1-st.z})`;x.beginPath();x.arc(px,py,r,0,7);x.fill()})})}
+});
+
+add({id:'BG-04',cat:'bg',name:'Spotlight',aka:'Cursor light · Torch reveal',tags:['Web'],bg:'touch',hint:'Move',
+desc:'The page is dark and a soft circle of light follows the pointer, revealing a hidden grid or texture under it.',
+html:`<div class="bg4"><div class="g"></div><b>Find the light</b></div>`,
+css:`.bg4{--x:50%;--y:50%;position:absolute;inset:0;background:#07080d;display:grid;place-items:center}
+.bg4 .g{position:absolute;inset:0;background-image:linear-gradient(rgba(143,211,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(143,211,255,.5) 1px,transparent 1px);background-size:22px 22px;-webkit-mask:radial-gradient(110px circle at var(--x) var(--y),#000,transparent);mask:radial-gradient(110px circle at var(--x) var(--y),#000,transparent)}
+.bg4::after{content:"";position:absolute;inset:0;background:radial-gradient(150px circle at var(--x) var(--y),rgba(143,211,255,.16),transparent 70%)}
+.bg4 b{position:relative;z-index:1;font:600 16px var(--disp);color:rgba(255,255,255,.75)}`,
+init(s,c){const b=s.querySelector('.bg4');let h=false,t=0;c.on(s,'pointermove',e=>{h=true;const r=s.getBoundingClientRect();b.style.setProperty('--x',e.clientX-r.left+'px');b.style.setProperty('--y',e.clientY-r.top+'px')});c.on(s,'pointerleave',()=>h=false);
+ c.raf(dt=>{if(h)return;t+=dt/1000;b.style.setProperty('--x',s.clientWidth*(.5+Math.cos(t*.8)*.38)+'px');b.style.setProperty('--y',s.clientHeight*(.5+Math.sin(t*1.4)*.32)+'px')})}
+});
+
+add({id:'BG-05',cat:'bg',name:'Dot Wave',aka:'Dot grid ripple · Halftone wave',tags:['Web'],
+desc:'A grid of dots where a wave rolls through, dots swelling and shrinking as it passes. Tech and audio sites.',
+html:`<canvas class="cv"></canvas>`,
+init(s,c){const cv=s.querySelector('canvas'),x=cv.getContext('2d');const dpr=Math.min(2,devicePixelRatio||1);let t=0;
+ c.raf(dt=>{t+=dt/1000;const W=s.clientWidth,H=s.clientHeight;if(cv.width!==W*dpr){cv.width=W*dpr;cv.height=H*dpr}x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);const g=14;for(let yy=g/2;yy<H;yy+=g)for(let xx=g/2;xx<W;xx+=g){const d=Math.hypot(xx-W/2,yy-H/2);const v=(Math.sin(d*.05-t*3)+1)/2;x.fillStyle=`hsla(${190+v*80},90%,${55+v*20}%,${.25+v*.75})`;x.beginPath();x.arc(xx,yy,.6+v*2.6,0,7);x.fill()}})}
+});
+
+add({id:'BG-06',cat:'bg',name:'Gradient Shift',aka:'Animated gradient · Colour drift',tags:['Web','Apps'],
+desc:'A wide colour gradient slides slowly behind the content so the colours keep changing without anything visibly moving.',
+html:`<div class="bg6"><b>Always on</b></div>`,
+css:`.bg6{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(120deg,#ff7a6b,#ffc65c,#5fe0b5,#8fd3ff,#9b7bff,#ff7fb6,#ff7a6b);background-size:400% 400%;animation:bg6 12s ease-in-out infinite alternate}.bg6 b{font:700 22px var(--disp);color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.25)}
+@keyframes bg6{from{background-position:0% 50%}to{background-position:100% 50%}}`});
+
+add({id:'BG-07',cat:'bg',name:'Ken Burns',aka:'Slow zoom-pan · Documentary move',tags:['Film','Web','Apps'],
+desc:'A still picture slowly zooms in while drifting sideways, so it feels like footage. Named after the documentary filmmaker who made it famous.',
+html:`<div class="bg7"><div class="im"><i class="sun"></i><i class="h1"></i><i class="h2"></i></div></div>`,
+css:`.bg7{position:absolute;inset:0;overflow:hidden}.bg7 .im{position:absolute;inset:0;background:linear-gradient(#1c2350 0%,#7a3f6a 55%,#f08a5a 100%);animation:bg7 10s ease-in-out infinite alternate}
+.bg7 i{position:absolute;display:block}.bg7 .sun{left:58%;top:52%;width:54px;height:54px;border-radius:50%;background:#ffd38a;box-shadow:0 0 50px 20px rgba(255,200,120,.35)}
+.bg7 .h1{left:-10%;right:-10%;bottom:-5%;height:55%;background:#3d2448;clip-path:polygon(0 40%,20% 20%,45% 45%,70% 15%,100% 35%,100% 100%,0 100%)}.bg7 .h2{left:-10%;right:-10%;bottom:-8%;height:40%;background:#150e22;clip-path:polygon(0 30%,35% 55%,60% 25%,100% 50%,100% 100%,0 100%)}
+@keyframes bg7{from{transform:scale(1) translate(0,0)}to{transform:scale(1.3) translate(-6%,-4%)}}`});
+
+add({id:'BG-08',cat:'bg',name:'Meteors',aka:'Shooting stars · Light streaks',tags:['Web'],
+desc:'Thin streaks of light shoot diagonally across a dark backdrop at random moments.',
+html:`<div class="bg8">${Array.from({length:9},(_,i)=>`<i style="left:${10+i*11}%;animation-delay:${(i*.73)%3.2}s;animation-duration:${2.2+(i%3)*.6}s"></i>`).join('')}</div>`,
+css:`.bg8{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 120%,#1a2550,#05060c)}
+.bg8 i{position:absolute;top:-20px;width:2px;height:70px;background:linear-gradient(transparent,#fff);border-radius:2px;transform:rotate(215deg);opacity:0;animation:bg8 2.6s linear infinite}
+@keyframes bg8{0%{transform:rotate(215deg) translateY(0);opacity:0}10%{opacity:1}70%{opacity:1}100%{transform:rotate(215deg) translateY(-320px);opacity:0}}`});
+
+/* =================== EASING =================== */
+const EZ=[['EZ-01','Linear','Same speed start to end. Mechanical. Good only for spinners and loops.','linear'],
+['EZ-02','Ease In','Starts slow, ends fast. For things leaving the screen.','cubic-bezier(.5,0,.75,0)'],
+['EZ-03','Ease Out','Starts fast, lands softly. For things arriving. The most used curve.','cubic-bezier(.2,.8,.2,1)'],
+['EZ-04','Ease In-Out','Slow, fast, slow. For things moving from one place to another on screen.','cubic-bezier(.65,0,.35,1)'],
+['EZ-05','Back · Overshoot','Goes a little past the target and comes back.','cubic-bezier(.34,1.56,.64,1)'],
+['EZ-06','Anticipate','Pulls back first, like a wind-up, then goes, and overshoots.','cubic-bezier(.68,-.6,.32,1.6)'],
+['EZ-07','Spring','Physics: overshoots and settles with a couple of small wobbles. Apple’s default feel.','linear(0,.009,.035 2.1%,.141,.281 6.7%,.723 12.9%,.938 16.7%,1.017,1.077,1.121,1.149 24.3%,1.159,1.163,1.161,1.154 29.9%,1.129 32.8%,1.051 39.6%,1.017 43.1%,.991,.977 51%,.974 53.8%,.975 57.1%,.997 69.8%,1.003 76.9%,1)'],
+['EZ-08','Bounce','Hits the end and bounces like a ball on the floor.','linear(0,.004,.016,.035,.063,.098,.141 13.6%,.25,.391,.563,.765,1,.891 40.9%,.848,.813,.785,.766,.754,.75,.754,.766,.785,.813,.848,.891 68.2%,1 72.7%,.973,.953,.941,.938,.941,.953,.973,1,.988,.984,.988,1)'],
+['EZ-09','Elastic','Snaps past the target and shakes like a rubber band.','linear(0,.218 2.1%,.862 6.5%,1.114,1.296 10.7%,1.346,1.37 12.9%,1.373,1.364 14.5%,1.315 16.2%,1.032 21.8%,.941 24%,.891 25.9%,.877,.869 27.8%,.87,.882 30.7%,.907 32.4%,.981 36.7%,1.012 38.5%,1.027,1.035 41.2%,1.037,1.034 44.1%,1.008 49.9%,.995 52.4%,.993 53.7%,.996 58.6%,1 61%,1)'],
+['EZ-10','Steps','Jumps in fixed steps, no in-between. Stop-motion, retro, clocks.','steps(6,end)']];
+add({id:'EZ-00',cat:'ez',name:'Easing Curves',aka:'Timing functions · Motion curves · Interpolation',tags:['CSS','iOS','Android','Web'],wide:true,bg:'tall',hint:'Tap a row to copy',
+desc:'Every animation above uses one of these rhythms. The ball travels the same distance in the same time on every row; only the curve changes. Name a row (e.g. “EZ-07 Spring”) to ask for that feel.',
+html:`<div class="ez">${EZ.map(([id,n,d,f])=>`<div class="ezr" data-copy="${id} ${n}" title="${d}"><span class="ezc">${id}</span><b>${n}</b><div class="trk"><i style="animation-timing-function:ease;animation-timing-function:${f}"></i></div><small>${d}</small></div>`).join('')}</div>`,
+css:`.ez{width:100%;display:flex;flex-direction:column;gap:6px}
+.ezr{display:grid;grid-template-columns:58px 130px 1fr minmax(0,320px);align-items:center;gap:12px;padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.03);cursor:pointer;transition:background .2s}.ezr:hover{background:rgba(255,255,255,.07)}
+.ezc{font:600 11px var(--mono);color:var(--acc)}.ezr b{font:600 14px var(--disp);color:#fff}.ezr small{color:#9097ad;font-size:12px}
+.trk{position:relative;height:18px;border-radius:999px;background:rgba(255,255,255,.06)}.trk i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px rgba(255,198,92,.5);animation-name:ezm;animation-duration:2.4s;animation-iteration-count:infinite}
+@keyframes ezm{0%{left:2px}65%,100%{left:calc(100% - 16px)}}
+@media (max-width:760px){.ezr{grid-template-columns:52px 1fr;row-gap:6px}.ezr .trk{grid-column:1/-1}.ezr small{grid-column:1/-1}}`
+});
+</script>
+<script>
+(function boot(){
+ const st=document.createElement('style');st.textContent=BASECSS+DEMOS.map(d=>d.css||'').join('\n');document.head.appendChild(st);
+ const main=document.getElementById('main'),seg=document.getElementById('seg'),lens=seg.querySelector('.lens'),q=document.getElementById('q'),toast=document.getElementById('toast');
+ const esc=t=>String(t).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+ let animCount=DEMOS.filter(d=>d.id!=='EZ-00').length+EZ.length;
+ document.getElementById('count').textContent=animCount+' animations';
+ let tt;const say=m=>{toast.textContent=m;toast.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove('show'),1600)};
+ const copy=txt=>{const done=()=>say('Copied “'+txt+'”');try{navigator.clipboard.writeText(txt).then(done,()=>fallback(txt))}catch(e){fallback(txt)}};
+ const fallback=txt=>{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}ta.remove();say(ok?'Copied “'+txt+'”':txt)};
+
+ const mount=(d,stage)=>{if(stage._c)stage._c.dispose();stage.innerHTML=d.html+(d.hint?`<span class="hint">${d.hint}</span>`:'');const c=ctxFor(stage);stage._c=c;try{d.init&&d.init(stage,c)}catch(e){console.error(d.id,e)}};
+ const io=new IntersectionObserver(es=>es.forEach(e=>{const tile=e.target;tile.classList.toggle('off',!e.isIntersecting);if(e.isIntersecting&&!tile._m){tile._m=1;mount(tile._d,tile.querySelector('.stage'))}}),{rootMargin:'150px 0px'});
+
+ CATS.forEach(([key,title,blurb])=>{const list=DEMOS.filter(d=>d.cat===key);if(!list.length)return;
+  const sec=document.createElement('section');sec.className='cat';sec.dataset.cat=key;sec.id=key;
+  const n=key==='ez'?EZ.length:list.length;
+  sec.innerHTML=`<header><h2>${esc(title)}<small>${n}</small></h2><p>${esc(blurb)}</p></header><div class="grid"></div>`;
+  const grid=sec.querySelector('.grid');
+  list.forEach(d=>{const t=document.createElement('article');t.className='tile off'+(d.wide?' wide':'');t._d=d;t.id=d.id;
+   t.dataset.text=(d.id+' '+d.name+' '+d.aka+' '+d.desc+' '+d.tags.join(' ')+(d.id==='EZ-00'?' '+EZ.map(e=>e.join(' ')).join(' '):'')).toLowerCase();
+   const code=d.id==='EZ-00'?'EZ':d.id;
+   t.innerHTML=`<div class="stage ${d.bg||''}"></div><div class="meta"><div class="row1"><button class="code" title="Copy code and name">${code}</button><h3>${esc(d.name)}</h3><button class="ibtn rep" title="Replay" aria-label="Replay ${esc(d.name)}">${ic('replay',15)}</button><button class="ibtn cp" title="Copy code and name" aria-label="Copy ${esc(d.id)}">${ic('copy',15)}</button></div><p class="aka">aka ${esc(d.aka)}</p><p class="desc">${esc(d.desc)}</p><div class="tags">${d.tags.map(g=>`<span class="tag" style="--c:${TAGC[g]||'#999'}"><i></i>${esc(g)}</span>`).join('')}</div></div>`;
+   const label=d.id==='EZ-00'?'Easing Curves':`${d.id} ${d.name}`;
+   t.querySelector('.code').onclick=()=>copy(label);t.querySelector('.cp').onclick=()=>copy(label);
+   t.querySelector('.rep').onclick=()=>{t._m=1;mount(d,t.querySelector('.stage'))};
+   grid.appendChild(t);io.observe(t)});
+  main.appendChild(sec)});
+ main.addEventListener('click',e=>{const r=e.target.closest('[data-copy]');if(r)copy(r.dataset.copy)});
+ const empty=document.createElement('p');empty.className='empty';empty.hidden=true;empty.textContent='Nothing matches. Try “glass”, “sheet”, “iOS” or a code like PU-08.';main.appendChild(empty);
+
+ /* category lens */
+ let cat='all';const btns=[];
+ [['all','All'],...CATS.map(c=>[c[0],c[1]])].forEach(([k,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.k=k;b.setAttribute('aria-pressed',k==='all');b.onclick=()=>{cat=k;btns.forEach(x=>x.setAttribute('aria-pressed',x===b));moveLens(true);filter();window.scrollTo({top:0,behavior:'smooth'})};seg.appendChild(b);btns.push(b)});
+ const moveLens=(anim)=>{const b=btns.find(x=>x.dataset.k===cat);lens.style.width=b.offsetWidth+'px';lens.style.transform=`translateX(${b.offsetLeft}px)`;if(anim&&lens.animate)lens.animate([{scale:'1 1'},{scale:'1.15 .86',offset:.35},{scale:'.97 1.05',offset:.7},{scale:'1 1'}],{duration:520,easing:'ease-out'});const box=seg.parentElement;const l=b.offsetLeft-box.clientWidth/2+b.offsetWidth/2;box.scrollTo({left:l,behavior:anim?'smooth':'auto'})};
+ const filter=()=>{const s=q.value.trim().toLowerCase();let any=false;document.querySelectorAll('section.cat').forEach(sec=>{const okCat=cat==='all'||sec.dataset.cat===cat;let vis=0;sec.querySelectorAll('.tile').forEach(t=>{const ok=okCat&&(!s||s.split(/\s+/).every(w=>t.dataset.text.includes(w)));t.hidden=!ok;if(ok)vis++});sec.hidden=!vis;if(vis)any=true});empty.hidden=any};
+ q.addEventListener('input',filter);
+ const ready=()=>moveLens(false);
+ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(ready);setTimeout(ready,60);addEventListener('resize',ready);
+ if(location.hash){const el=document.getElementById(location.hash.slice(1));if(el)setTimeout(()=>el.scrollIntoView({block:'center'}),200)}
+})();
+</script>
+</body></html>

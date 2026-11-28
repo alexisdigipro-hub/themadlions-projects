@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0c0e" />
+    <title>Camera Previz · The Mad Lions</title>
+    <link rel="icon" href="../favicon.svg" />
+    <link rel="manifest" href="../previz.webmanifest" />
+    <link rel="apple-touch-icon" href="../icons/previz-180.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Previz" />
+    <script type="module" crossorigin src="../assets/previz-BRHVIM7n.js"></script>
+    <link rel="modulepreload" crossorigin href="../assets/modulepreload-polyfill-B5Qt9EMX.js">
+    <link rel="stylesheet" crossorigin href="../assets/previz-CzfU1CJp.css">
+  </head>
+  <body>
+    <div id="app" class="view-director">
+      <header id="top">
+        <div class="brand"><b>Camera Previz</b><span>για Seedance · MAGI-2</span></div>
+        <button class="ico" data-a="undo" title="Αναίρεση" aria-label="Αναίρεση"></button>
+        <button class="ico" data-a="redo" title="Επανάληψη" aria-label="Επανάληψη"></button>
+        <div class="seg" id="viewSeg">
+          <button data-a="view" data-v="director">Director</button>
+          <button data-a="view" data-v="shot">Shot</button>
+        </div>
+        <div class="grow"></div>
+        <button class="ico" data-a="help" id="helpBtn" title="Οδηγίες" aria-label="Οδηγίες"></button>
+        <button class="pill" data-a="settings" id="shotPill"></button>
+        <button class="pill" data-a="export" id="exportBtn"></button>
+        <button class="pill main" data-a="prompt" id="promptBtn"></button>
+      </header>
+      <main id="main">
+        <div id="stage">
+          <canvas id="gl"></canvas>
+          <section class="pane" id="dirPane">
+            <div class="pane-head"><b>DIRECTOR</b><span id="dirInfo"></span></div>
+            <div class="view" id="dirView"><button id="pip" aria-label="Δες το Shot"></button></div>
+          </section>
+          <section class="pane" id="shotPane">
+            <div class="pane-head"><b>SHOT</b><span id="shotInfo"></span></div>
+            <div class="view" id="shotView"></div>
+          </section>
+        </div>
+        <aside id="inspector"></aside>
+      </main>
+      <footer id="dock">
+        <div id="timeline">
+          <button class="ico" data-a="play" id="playBtn" aria-label="Play"></button>
+          <div class="tc" id="tc">00:00</div>
+          <div id="track"><div id="ruler"></div><div id="span"></div><div id="keys"></div><div id="head"></div></div>
+          <button class="ico" data-a="loop" id="loopBtn" aria-label="Loop"></button>
+        </div>
+        <div id="tools">
+          <button class="tool" data-a="add-fig" id="addFig"></button>
+          <button class="tool" data-a="add-prop"></button>
+          <button class="tool" data-a="camera" id="lensBtn"></button>
+          <button class="tool" data-a="frame" id="frameBtn"></button>
+          <button class="tool" data-a="presets" id="presetsBtn"></button>
+          <button class="tool" data-a="ai" id="aiBtn"></button>
+          <div class="grow"></div>
+          <button class="pill main big" data-a="add-key" id="addKey"></button>
+        </div>
+      </footer>
+    </div>
+    <div id="modal" hidden></div>
+    <input type="file" id="fileIn" accept=".json,application/json" hidden />
+  </body>
+</html>

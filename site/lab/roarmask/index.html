@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en" class="booting"><head><meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://bzmjhbnwhdwmncxkqkdl.supabase.co; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'; manifest-src 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="RoarMask: draw pixel-exact masks for LED screens in the browser. Boxes, rounds, lines, arcs and pen shapes on a grid with rulers, snapping and the screen's LED cabinets, a reference picture to trace, folders, rotation and Combine, any colour or transparent, exported as a PNG or SVG at the screen's exact size. Free with a Roar Account, your masks on any computer.">
+<link rel="canonical" href="https://themadlions.com/lab/roarmask/">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta property="og:title" content="RoarMask · The Mad Lions Lab">
+<meta property="og:description" content="Pixel-exact masks for LED screens, in the browser.">
+<meta property="og:image" content="https://themadlions.com/lab/roarmask.jpg">
+<style>*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0}</style>
+<title>RoarMask</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@700&text=ROARMSK&display=swap">
+<link rel="stylesheet" href="app.css?v=2">
+
+<!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"RoarMask","url":"https://themadlions.com/lab/roarmask/","description":"RoarMask: draw pixel-exact masks for LED screens in the browser. Boxes, rounds, lines, arcs and pen shapes on a grid with rulers, snapping and the screen's LED cabinets, a reference picture to trace, folders, rotation and Combine, any colour or transparent, exported as a PNG or SVG at the screen's exact size. Free with a Roar Account, your masks on any computer.","applicationCategory":"DesignApplication","operatingSystem":"Web","image":"https://themadlions.com/lab/roarmask.jpg","screenshot":"https://themadlions.com/lab/roarmask.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
+</head><body>
+<div class="app">
+  <header class="top">
+    <a class="brand" href="../" title="The Mad Lions Lab" style="color:inherit;text-decoration:none">ROAR<b>MASK</b></a>
+    <button class="pill" id="btnProjects" title="All your masks"><svg class="i" viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5"/><path d="M6 10v9h12v-9"/></svg><span class="w">Home</span></button>
+    <div class="docname"><input id="docName" aria-label="Mask name" spellcheck="false" autocomplete="off"></div>
+    <span class="docsize" id="docSize"></span>
+    <div class="spacer"></div>
+    <div class="grp">
+      <button class="round sm" id="undoBtn" title="Undo (Ctrl/Cmd+Z)"><svg class="i" viewBox="0 0 24 24"><path d="M9 7L4 12l5 5"/><path d="M4 12h10a6 6 0 0 1 0 12h-2" transform="translate(0 -6)"/></svg></button>
+      <button class="round sm" id="redoBtn" title="Redo (Shift+Ctrl/Cmd+Z)"><svg class="i" viewBox="0 0 24 24"><path d="M15 7l5 5-5 5"/><path d="M20 12H10a6 6 0 0 0 0 12h2" transform="translate(0 -6)"/></svg></button>
+    </div>
+    <div class="grp">
+      <button class="round sm" id="zoomOut" title="Zoom out (-)"><svg class="i" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
+      <button class="pill sm" id="zoomVal" title="Actual pixels (1)" style="min-width:64px;justify-content:center;font-family:var(--f-num)">100%</button>
+      <button class="round sm" id="zoomIn" title="Zoom in (+)"><svg class="i" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></svg></button>
+      <button class="pill sm" id="fitBtn" title="Fit the screen in the window (0)">Fit</button>
+    </div>
+    <button class="round sm" id="keysBtn" title="Keyboard shortcuts (?)"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/></svg></button>
+    <button class="round sm on" id="sideBtn" title="Show or hide the panels (Tab)"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M8.5 4.5v15M15.5 4.5v15"/></svg></button>
+    <div class="xwrap"><button class="pill main" id="exportBtn" aria-haspopup="menu"><svg class="i" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 19h14"/></svg><span class="w">Export</span><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="xmenu" id="xMenu" role="menu" hidden>
+        <button role="menuitem" id="exportPng"><b>PNG</b><small>The mask at the screen's exact size</small></button>
+        <button role="menuitem" id="exportSvg"><b>SVG</b><small>A drawing that scales</small></button>
+        <button role="menuitem" id="exportMap"><b>Cabinet map</b><small>PNG with every cabinet's line and name, for the crew</small></button>
+        <hr>
+        <button role="menuitem" id="saveJson"><b>Project file</b><small>.json, to keep or send the mask itself</small></button>
+        <button role="menuitem" id="openJson"><b>Open a project file</b><small>Bring a .json back in</small></button>
+      </div></div>
+  </header>
+
+  <div class="body">
+    <nav class="tools" aria-label="Tools">
+<span class="tg-l">Select</span>
+<button class="tool" data-tool="select" title="Select and move (V)" aria-label="Move"><svg class="i" viewBox="0 0 24 24"><path d="M6 3.5l12 8-5.2 1.1L10 18.5z"/></svg><span>Move</span></button>
+<button class="tool" data-tool="hand" title="Pan the view, or hold Space (H)" aria-label="Hand"><svg class="i" viewBox="0 0 24 24"><path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12m0-6.5V5a1.5 1.5 0 0 1 3 0v7m0-6a1.5 1.5 0 0 1 3 0v8a6 6 0 0 1-6 6h-1a6 6 0 0 1-5-2.7L4.2 14a1.5 1.5 0 0 1 2.4-1.8L8 14"/></svg><span>Hand</span></button>
+<span class="tg-l">Shapes</span>
+<button class="tool" data-tool="rect" title="Box. Shift for a square (R)" aria-label="Box"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1.5"/></svg><span>Box</span></button>
+<button class="tool" data-tool="pill" title="Box with rounded ends (U)" aria-label="Rounded"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="5"/></svg><span>Rounded</span></button>
+<button class="tool" data-tool="ellipse" title="Circle or ellipse. Shift for a circle (E)" aria-label="Round"><svg class="i" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="8.5" ry="6.5"/></svg><span>Round</span></button>
+<button class="tool" data-tool="polygon" title="Polygon or star: set the sides in Design (O)" aria-label="Polygon"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l8.5 6.2-3.2 10H6.7l-3.2-10z"/></svg><span>Polygon</span></button>
+<span class="tg-l">Lines</span>
+<button class="tool" data-tool="line" title="Straight line. Shift for 45° steps (L)" aria-label="Line"><svg class="i" viewBox="0 0 24 24"><path d="M5 19L19 5"/></svg><span>Line</span></button>
+<button class="tool" data-tool="arc" title="Part of a circle (A)" aria-label="Arc"><svg class="i" viewBox="0 0 24 24"><path d="M9 4a10 10 0 0 0 0 16"/></svg><span>Arc</span></button>
+<button class="tool" data-tool="pen" title="Pen: click the points, then the first one or Enter (P)" aria-label="Pen"><svg class="i" viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"/><path d="M2 2l7.6 7.6"/><circle cx="11" cy="11" r="2"/></svg><span>Pen</span></button>
+<span class="tg-l">Colour</span>
+<button class="tool" data-tool="pick" title="Eyedropper: a colour from the picture or the mask (I)" aria-label="Picker"><svg class="i" viewBox="0 0 24 24"><path d="M14.5 4.5l5 5M12 7l5 5-8.5 8.5H4v-4.5z"/><path d="M15 3.5l2-2a2.1 2.1 0 0 1 3 3l-2 2"/></svg><span>Picker</span></button>
+    </nav>
+
+    <aside class="lpanel">
+      <div class="ptabs" data-side="l"><button class="ptab" data-pane="layers">Layers<i id="layerCount"></i></button><button class="ptab" data-pane="history">History<i id="histCount"></i></button></div>
+      <div class="pane" data-pane="layers"><div class="layers" id="layers"></div>
+        <div class="lfoot">
+          <button class="round sm" id="lDup" title="Duplicate (Ctrl/Cmd+J)"><svg class="i" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
+          <button class="round sm" id="lGrp" title="Put in a folder (Ctrl/Cmd+G)"><svg class="i" viewBox="0 0 24 24"><path d="M3.5 7a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M12 10v6M9 13h6"/></svg></button>
+          <button class="round sm" id="lUp" title="Move up"><svg class="i" viewBox="0 0 24 24"><path d="M12 19V6M6 12l6-6 6 6"/></svg></button>
+          <button class="round sm" id="lDown" title="Move down"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v13M6 12l6 6 6-6"/></svg></button>
+          <button class="round sm danger" id="lDel" title="Delete (Del)"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg></button>
+        </div></div>
+      <div class="pane" data-pane="history"><div class="hlist" id="hlist"></div><p class="hint" style="margin-top:10px">Tap a step to go back to it.</p></div>
+    </aside>
+
+    <main class="stagewrap">
+      <div class="corner"></div>
+      <canvas id="rulerTop" title="Drag down to place a guide"></canvas>
+      <canvas id="rulerLeft" title="Drag right to place a guide"></canvas>
+      <div class="stage" id="stageBox"><canvas id="stage"></canvas></div>
+      <div class="status"><div id="status"></div>
+        <div class="vtg">
+          <button id="tgGrid" title="Show the grid (G)"><svg class="i" viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M9 4v16M15 4v16"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>Grid</button>
+          <button id="tgSnap" title="Snap to the grid (S)"><svg class="i" viewBox="0 0 24 24"><path d="M6 4v8a6 6 0 0 0 12 0V4"/><path d="M6 8h4M14 8h4"/></svg>Snap</button>
+          <button id="tgPx" title="Pixel grid when zoomed in"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>Pixels</button>
+          <button id="tgCab" title="LED cabinets"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M9 5v14M15 5v14M3 12h18"/></svg>Cabinets</button>
+        </div></div>
+    </main>
+
+    <aside class="side">
+      <div class="ptabs" data-side="r"><button class="ptab" data-pane="design">Design</button><button class="ptab" data-pane="screen">Screen</button></div>
+      <div class="pane" data-pane="design"><div id="selSec"></div></div>
+      <div class="pane" data-pane="screen"><div id="docSec"></div></div>
+    </aside>
+  </div>
+</div>
+<div class="boot-v" aria-hidden="true"><div class="brand">ROAR<b>MASK</b></div></div>
+<div id="gate" class="gate" hidden></div>
+<input type="file" id="fileIn" accept=".json,application/json" hidden>
+<input type="file" id="refIn" accept="image/*" hidden>
+
+<script src="app.js?v=2"></script>
+
+</body></html>

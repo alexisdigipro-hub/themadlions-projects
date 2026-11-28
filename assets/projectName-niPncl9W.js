@@ -1,0 +1,1 @@
+function s(t){if((t==null?void 0:t.artist)!=null||(t==null?void 0:t.shortTitle)!=null)return{artist:t.artist||"",shortTitle:t.shortTitle||""};const i=(t==null?void 0:t.title)||"",r=i.indexOf(" - ");return r>0?{artist:i.slice(0,r).trim(),shortTitle:i.slice(r+3).trim()}:{artist:"",shortTitle:i}}const e=(t,i)=>[t.trim(),i.trim()].filter(Boolean).join(" - ");export{e as j,s as n};
